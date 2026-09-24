@@ -16,7 +16,6 @@
 #include "engine/resource/geometry/ui_mesh_geometry.h"
 
 #include <stddef.h>
-#include <string.h>
 #include <stdint.h>
 
 #include "engine/base/choco_macros.h"
@@ -66,7 +65,6 @@ resource_result_t ui_mesh_geometry_create_from_vertices(size_t vertex_count_, co
         ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_geometry, 0, sizeof(ui_mesh_geometry_t));
 
     ret = initialize_from_vertices(tmp_geometry, vertex_count_, vertices_);
     if(RESOURCE_SUCCESS != ret) {

@@ -168,7 +168,6 @@ fs_path_result_t fs_path_create(fs_path_t** out_path_, const char* base_path_, c
         ERROR_MESSAGE("fs_path_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_path, 0, sizeof(fs_path_t));
 
     tmp_path->fullpath = tmp_fullpath;
     tmp_fullpath = NULL;
@@ -246,7 +245,6 @@ fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_path_)
         ERROR_MESSAGE("fs_path_create_from_executable_directory(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_path, 0, sizeof(fs_path_t));
 
     tmp_path->fullpath = tmp_fullpath;
     tmp_fullpath = NULL;

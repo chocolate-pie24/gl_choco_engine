@@ -18,7 +18,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -66,7 +65,6 @@ resource_result_t lit_mesh_geometry_create_from_vertices(size_t vertex_count_, c
         ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_geometry, 0, sizeof(lit_mesh_geometry_t));
 
     ret = initialize_from_vertices(tmp_geometry, vertex_count_, vertices_);
     if(RESOURCE_SUCCESS != ret) {

@@ -4,7 +4,6 @@
 #include "engine/camera/flight_camera.h"
 
 #include <stdbool.h>
-#include <string.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -73,7 +72,6 @@ camera_result_t flight_camera_create(const flight_camera_key_bind_t keybinds_[FL
         ERROR_MESSAGE("flight_camera_create(%s) - general_allocator_allocate failed.", camera_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_flight_camera, 0, sizeof(flight_camera_t));
 
     ret = camera_create(fovy_, aspect_, near_clip_, far_clip_, &tmp_camera);
     if(CAMERA_SUCCESS != ret) {

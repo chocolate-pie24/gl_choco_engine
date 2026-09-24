@@ -4,7 +4,6 @@
 #include "engine/io_utils/fs_stream.h"
 
 #include <stdbool.h>
-#include <string.h>
 #include <stddef.h>
 
 #include "engine/base/choco_macros.h"
@@ -69,7 +68,6 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullp
         ERROR_MESSAGE("fs_stream_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_stream, 0, sizeof(fs_stream_t));
 
     ret_filesystem = filesystem_create(&tmp_stream->filesystem, fullpath_, mode_);
     if(FILESYSTEM_SUCCESS != ret_filesystem) {

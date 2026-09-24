@@ -15,7 +15,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <string.h> // for memset
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -82,7 +81,6 @@ filesystem_result_t filesystem_create(filesystem_t** out_filesystem_, const char
         ERROR_MESSAGE("filesystem_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_filesystem, 0, sizeof(filesystem_t));
 
     open_mode_str = fs_open_mode_c_str(mode_);
     if(NULL == open_mode_str) {

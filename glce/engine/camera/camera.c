@@ -4,7 +4,6 @@
 #include "engine/camera/camera.h"
 
 #include <stdbool.h>
-#include <string.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -90,7 +89,6 @@ camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, floa
         ERROR_MESSAGE("camera_create(%s) - Failed to allocate memory for camera.", camera_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_camera, 0, sizeof(camera_t));
 
     tmp_camera->frustum = tmp_frustum;
 

@@ -109,7 +109,6 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
         ERROR_MESSAGE("ring_queue_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_queue, 0, sizeof(ring_queue_t));
 
     ret_general_allocator = general_allocator_allocate(capacity, GENERAL_ALLOCATOR_MEMORY_TAG_RING_QUEUE, (void**)&tmp_queue->memory_pool);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -117,7 +116,6 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
         ERROR_MESSAGE("ring_queue_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_queue->memory_pool, 0, capacity);
 
     tmp_queue->capacity = capacity;
     tmp_queue->element_align = element_align_;

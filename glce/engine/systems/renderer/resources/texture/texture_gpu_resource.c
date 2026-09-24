@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h> // for memset
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -55,7 +54,6 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
         ERROR_MESSAGE("texture_gpu_resource_create(%s) - general_allocator_allocate failed.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_texture_gpu_resource, 0, sizeof(texture_gpu_resource_t));
 
     ret_renderer_backend = renderer_backend_texture_create(backend_context_, texture_unit_index_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, &tmp_texture_gpu_resource->backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {

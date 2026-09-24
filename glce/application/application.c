@@ -15,7 +15,6 @@
 #include "application/application.h"
 
 #include <stddef.h>
-#include <string.h> // for memset
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -169,7 +168,6 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", application_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_state, 0, sizeof(*tmp_state));
 
     // Linear Allocator
     //   全サブシステムのpreinitを先に実行し、リニアアロケータで必要な容量を計算可能だが、
@@ -184,7 +182,6 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", application_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_state->linear_allocator, 0, tmp_state->linear_alloc_mem_req);
 
     tmp_state->linear_alloc_pool_size = 128 * KIB;
     ret_general_allocator = general_allocator_allocate(tmp_state->linear_alloc_pool_size, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_state->linear_alloc_pool);

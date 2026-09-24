@@ -7,6 +7,7 @@
 #include <stdalign.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "config/build_config.h"
 
@@ -177,6 +178,7 @@ general_allocator_result_t general_allocator_allocate(size_t allocation_size_, g
         goto cleanup;
     }
 
+    memset(tmp_ptr, 0, allocation_size_);
     s_general_allocator.mem_tag_allocated[memory_tag_] += allocation_size_;
     s_general_allocator.total_allocated += allocation_size_;
 

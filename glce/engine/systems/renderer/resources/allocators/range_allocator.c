@@ -167,7 +167,6 @@
 #include "engine/systems/renderer/resources/allocators/range_allocator.h"
 
 #include <stdio.h>  // for fprintf
-#include <string.h> // for memset
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -477,7 +476,6 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
         ERROR_MESSAGE("range_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_allocator, 0, sizeof(range_allocator_t));
 
     ret_general_allocator = general_allocator_allocate(node_pool_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_allocator->node_pool);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -485,10 +483,8 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
         ERROR_MESSAGE("range_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_allocator->node_pool, 0, node_pool_size);
 
     for(size_t i = 0; i != max_node_count; ++i) {
-        memset(&tmp_allocator->node_pool[i], 0, sizeof(node_t));
         set_node_to_not_used(&tmp_allocator->node_pool[i]);
     }
 

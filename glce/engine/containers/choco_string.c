@@ -70,7 +70,6 @@ choco_string_result_t choco_string_default_create(choco_string_t** out_string_) 
         ERROR_MESSAGE("choco_string_default_create(%s) - Failed to allocate memory for 'tmp_string'.", result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_string, 0, sizeof(*tmp_string));
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(tmp_string)) {
@@ -351,7 +350,6 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
                 ERROR_MESSAGE("choco_string_concat(%s) - Failed to allocate memory for 'tmp_buffer'.", result_to_str(ret));
                 goto cleanup;
             }
-            memset(tmp_buffer, 0, dst_len_new + 1);
             if(0 != dst_->len) {
                 memcpy(tmp_buffer, dst_->buffer, dst_->len);
             }
@@ -424,7 +422,6 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
                 ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Failed to allocate memory for 'tmp_buffer'.", result_to_str(ret));
                 goto cleanup;
             }
-            memset(tmp_buffer, 0, dst_len_new + 1);
             if(0 != dst_->len) {
                 memcpy(tmp_buffer, dst_->buffer, dst_->len);
             }
@@ -552,7 +549,6 @@ choco_string_result_t choco_string_key_value_key_get(const char* line_, choco_st
         ERROR_MESSAGE("choco_string_key_value_key_get(%s) - Failed to get key-value key. reason=tmp_buffer_allocate_failed, bytes=%zu", result_to_str(ret), buff_size);
         goto cleanup;
     }
-    memset(tmp_buff, 0, buff_size);
 
     for(size_t i = start_index, j = 0; i != equal_index; ++i, ++j) {
         tmp_buff[j] = line_[i];
@@ -651,7 +647,6 @@ choco_string_result_t choco_string_key_value_value_get(const char* line_, choco_
         ERROR_MESSAGE("choco_string_key_value_value_get(%s) - Failed to get key-value value. reason=tmp_buffer_allocate_failed, bytes=%zu", result_to_str(ret), buff_size);
         goto cleanup;
     }
-    memset(tmp_buff, 0, buff_size);
 
     for(size_t i = (equal_index + 1), j = 0; i != len; ++i, ++j) {
         tmp_buff[j] = line_[i];
@@ -772,7 +767,6 @@ static choco_string_result_t buffer_reserve(size_t size_, choco_string_t* string
         ret = result_convert_general_allocator(ret_general_allocator);
         goto cleanup;
     }
-    memset(tmp_buffer, 0, size_);
     string_->buffer = tmp_buffer;
     string_->len = 0;
     string_->capacity = size_;
@@ -807,7 +801,6 @@ static choco_string_result_t buffer_resize(size_t size_, choco_string_t* string_
         ret = result_convert_general_allocator(ret_general_allocator);
         goto cleanup;
     }
-    memset(tmp_buffer, 0, size_);
 
     // Commit.
     if(0 != string_->capacity) {

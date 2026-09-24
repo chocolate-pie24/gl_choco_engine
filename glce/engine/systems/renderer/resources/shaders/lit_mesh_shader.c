@@ -18,7 +18,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdalign.h>
-#include <string.h> // for memset
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -99,7 +98,6 @@ shader_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_conte
         ERROR_MESSAGE("lit_mesh_shader_create(%s) - general_allocator_allocate failed.", shader_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_lit_mesh_shader, 0, sizeof(lit_mesh_shader_t));
 
     tmp_lit_mesh_shader->backend_context = backend_context_;
 

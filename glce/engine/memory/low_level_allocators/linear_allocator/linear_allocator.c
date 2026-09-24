@@ -7,8 +7,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h> // for malloc TODO: remove this!!
-#include <string.h> // for memset
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
