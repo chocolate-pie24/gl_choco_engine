@@ -13,7 +13,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -37,9 +37,11 @@ static const renderer_vao_vtable_t* vao_vtable_get(void);
 static const renderer_vbo_vtable_t* vbo_vtable_get(void);
 static const renderer_texture_vtable_t* texture_vtable_get(void);
 
-renderer_backend_result_t renderer_backend_create(linear_allocator_t* allocator_, renderer_backend_context_t** out_backend_context_) {
+renderer_backend_result_t renderer_backend_create(subsystem_allocator_t* allocator_, renderer_backend_context_t** out_backend_context_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
+
     renderer_backend_context_t* tmp_backend_context = NULL;
 
     // Preconditions.
@@ -48,10 +50,10 @@ renderer_backend_result_t renderer_backend_create(linear_allocator_t* allocator_
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "*out_backend_context_")
 
     // Simulation.
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), alignof(renderer_backend_context_t), (void**)&tmp_backend_context);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = renderer_backend_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("renderer_backend_create(%s) - Failed to allocate memory for renderer backend context.", renderer_backend_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_backend_context);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = renderer_backend_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("renderer_backend_create(%s) - subsystem_allocator_allocate failed.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_backend_context, 0, sizeof(renderer_backend_context_t));

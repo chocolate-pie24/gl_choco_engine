@@ -15,9 +15,9 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
 
-#include "engine/core/geometry_primitive/vertex.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/io_utils/fs_path.h"
 
@@ -47,11 +47,11 @@ struct ui_mesh_render_resource {
 static render_resource_result_t shader_create(const ui_mesh_shader_config_t* config_, renderer_backend_context_t* backend_context_, const char* executable_directory_, const char* shader_dir_, ui_mesh_shader_t** out_shader_);
 static bool is_valid_shallow(const ui_mesh_render_resource_t* render_resource_);
 
-render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_config_t* config_, size_t max_geometry_count_, size_t max_texture_count_, renderer_backend_context_t* backend_context_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, ui_mesh_render_resource_t** out_render_resource_) {
+render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_config_t* config_, size_t max_geometry_count_, size_t max_texture_count_, renderer_backend_context_t* backend_context_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, ui_mesh_render_resource_t** out_render_resource_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
     ui_mesh_render_resource_t* tmp_render_resource = NULL;
     ui_mesh_shader_t* tmp_shader = NULL;
@@ -66,9 +66,9 @@ render_resource_result_t ui_mesh_render_resource_create(const ui_mesh_shader_con
     IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "ui_mesh_render_resource_create", "out_render_resource_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "ui_mesh_render_resource_create", "*out_render_resource_")
 
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(ui_mesh_render_resource_t), alignof(ui_mesh_render_resource_t), (void**)&tmp_render_resource);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = render_resource_result_convert_linear_allocator(ret_linear_allocator);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(ui_mesh_render_resource_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_render_resource);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = render_resource_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("ui_mesh_render_resource_create(%s) - Failed to allocate ui_mesh_render_resource_t instance.", render_resource_result_to_str(ret));
         goto cleanup;
     }

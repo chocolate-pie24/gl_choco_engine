@@ -3,8 +3,8 @@
 
 #include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 #include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -56,14 +56,20 @@ const char* shader_result_to_str(shader_result_t result_) {
     }
 }
 
-shader_result_t shader_result_convert_linear_allocator(linear_allocator_result_t result_) {
+shader_result_t shader_result_convert_subsystem_allocator(subsystem_allocator_result_t result_) {
     switch(result_) {
-    case LINEAR_ALLOCATOR_SUCCESS:
+    case SUBSYSTEM_ALLOCATOR_SUCCESS:
         return SHADER_SUCCESS;
-    case LINEAR_ALLOCATOR_NO_MEMORY:
+    case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
+        return SHADER_BAD_OPERATION;
+    case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
+        return SHADER_DATA_CORRUPTED;
+    case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
         return SHADER_NO_MEMORY;
-    case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
+    case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return SHADER_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
+        return SHADER_UNDEFINED_ERROR;
     default:
         return SHADER_UNDEFINED_ERROR;
     }

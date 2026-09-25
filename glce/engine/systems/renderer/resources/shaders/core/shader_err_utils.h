@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 #include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -22,7 +22,7 @@ extern "C" {
 
 const char* shader_result_to_str(shader_result_t result_);
 
-shader_result_t shader_result_convert_linear_allocator(linear_allocator_result_t result_);
+shader_result_t shader_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 
 shader_result_t shader_result_convert_choco_string(choco_string_result_t result_);
 

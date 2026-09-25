@@ -28,13 +28,13 @@ extern "C" {
 
 typedef struct line_mesh_geometry_registry line_mesh_geometry_registry_t;   /**< 線分描画用ジオメトリレジストリのopaque型 */
 
-typedef struct linear_allocator linear_allocator_t;                                 /**< リニアアロケータのopaque型 */
+typedef struct subsystem_allocator subsystem_allocator_t;
 typedef struct line_mesh_geometry line_mesh_geometry_t;                     /**< 線分描画用ジオメトリのopaque型 */
 typedef struct vbo_range vbo_range_t;
 typedef struct draw_range draw_range_t;
 typedef struct line_mesh_shader line_mesh_shader_t;
 
-resource_registry_result_t line_mesh_geometry_registry_create(size_t max_geometry_count_, linear_allocator_t* allocator_, line_mesh_geometry_registry_t** out_registry_);
+resource_registry_result_t line_mesh_geometry_registry_create(size_t max_geometry_count_, subsystem_allocator_t* allocator_, line_mesh_geometry_registry_t** out_registry_);
 
 /**
  * @brief registry_に登録された全ジオメトリを破棄し、登録内容を空に戻す

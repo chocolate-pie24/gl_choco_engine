@@ -12,11 +12,11 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
-
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/platform_system/core/platform_event_view.h"
@@ -59,7 +59,7 @@ struct event_system {
 };
 
 // Initialization / lifecycle helpers
-static event_system_result_t event_storage_initialize(const event_system_config_t* config_, linear_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_);
+static event_system_result_t event_storage_initialize(const event_system_config_t* config_, subsystem_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_);
 
 // Per-frame update helpers
 static void event_storage_counts_reset(window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_);
@@ -76,10 +76,10 @@ static bool keyboard_event_storage_is_valid(const keyboard_event_storage_t* even
 static bool mouse_event_storage_is_valid(const mouse_event_storage_t* event_storage_);
 static bool is_valid_shallow(const event_system_t* event_system_);
 
-event_system_result_t event_system_create(const event_system_config_t* config_, linear_allocator_t* allocator_, platform_system_t* platform_system_, event_system_t** out_event_system_) {
+event_system_result_t event_system_create(const event_system_config_t* config_, subsystem_allocator_t* allocator_, platform_system_t* platform_system_, event_system_t** out_event_system_) {
     event_system_result_t ret = EVENT_SYSTEM_INVALID_ARGUMENT;
 
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
     event_system_t* tmp_system = NULL;
 
@@ -95,10 +95,10 @@ event_system_result_t event_system_create(const event_system_config_t* config_, 
     }
 
     // event system
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(event_system_t), alignof(event_system_t), (void**)&tmp_system);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = event_system_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("event_system_create(%s) - linear_allocator_allocate failed.", event_system_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(event_system_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT_SYSTEM, (void**)&tmp_system);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = event_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("event_system_create(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_system, 0, sizeof(event_system_t));
@@ -263,10 +263,10 @@ bool event_system_is_valid(const event_system_t* event_system_) {
 // ============================================================
 // Initialization / lifecycle helpers
 // ============================================================
-static event_system_result_t event_storage_initialize(const event_system_config_t* config_, linear_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_) {
+static event_system_result_t event_storage_initialize(const event_system_config_t* config_, subsystem_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_) {
     event_system_result_t ret = EVENT_SYSTEM_INVALID_ARGUMENT;
 
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t allocation_size = 0;
 
@@ -287,10 +287,10 @@ static event_system_result_t event_storage_initialize(const event_system_config_
         goto cleanup;
     }
     allocation_size = sizeof(window_event_t) * config_->max_window_event_count;
-    ret_linear_allocator = linear_allocator_allocate(allocator_, allocation_size, alignof(window_event_t), (void**)&tmp_window_event_storage);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = event_system_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("event_storage_initialize(%s) - linear_allocator_allocate failed.", event_system_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT_SYSTEM, (void**)&tmp_window_event_storage);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = event_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_window_event_storage, 0, allocation_size);
@@ -302,10 +302,10 @@ static event_system_result_t event_storage_initialize(const event_system_config_
         goto cleanup;
     }
     allocation_size = sizeof(keyboard_event_t) * config_->max_keyboard_event_count;
-    ret_linear_allocator = linear_allocator_allocate(allocator_, allocation_size, alignof(keyboard_event_t), (void**)&tmp_keyboard_event_storage);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = event_system_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("event_storage_initialize(%s) - linear_allocator_allocate failed.", event_system_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT_SYSTEM, (void**)&tmp_keyboard_event_storage);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = event_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_keyboard_event_storage, 0, allocation_size);
@@ -317,10 +317,10 @@ static event_system_result_t event_storage_initialize(const event_system_config_
         goto cleanup;
     }
     allocation_size = sizeof(mouse_event_t) * config_->max_mouse_event_count;
-    ret_linear_allocator = linear_allocator_allocate(allocator_, allocation_size, alignof(mouse_event_t), (void**)&tmp_mouse_event_storage);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = event_system_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("event_storage_initialize(%s) - linear_allocator_allocate failed.", event_system_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT_SYSTEM, (void**)&tmp_mouse_event_storage);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = event_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_mouse_event_storage, 0, allocation_size);

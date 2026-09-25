@@ -22,7 +22,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -56,9 +56,10 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_);
 static bool geometry_id_is_valid(const line_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 static bool find_by_name(const line_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_);
 
-resource_registry_result_t line_mesh_geometry_registry_create(size_t max_geometry_count_, linear_allocator_t* allocator_, line_mesh_geometry_registry_t** out_registry_) {
+resource_registry_result_t line_mesh_geometry_registry_create(size_t max_geometry_count_, subsystem_allocator_t* allocator_, line_mesh_geometry_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
     line_mesh_geometry_registry_t* tmp_registry = NULL;
     registry_entry_t* tmp_entry_array = NULL;
@@ -72,9 +73,9 @@ resource_registry_result_t line_mesh_geometry_registry_create(size_t max_geometr
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "line_mesh_geometry_registry_create", "*out_registry_")
 
     // geometry_registry_tメモリ確保
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(line_mesh_geometry_registry_t), alignof(line_mesh_geometry_registry_t), (void**)&tmp_registry);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = resource_registry_result_convert_linear_allocator(ret_linear_allocator);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(line_mesh_geometry_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_registry);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("line_mesh_geometry_registry_create(%s) - Failed to allocate registry instance. target=line_mesh_geometry_registry_t, bytes=%zu, align=%zu, max_geometry_count=%zu", resource_registry_result_to_str(ret), sizeof(line_mesh_geometry_registry_t), alignof(line_mesh_geometry_registry_t), max_geometry_count_);
         goto cleanup;
     }
@@ -86,9 +87,9 @@ resource_registry_result_t line_mesh_geometry_registry_create(size_t max_geometr
         goto cleanup;
     }
     entry_array_size = sizeof(registry_entry_t) * max_geometry_count_;
-    ret_linear_allocator = linear_allocator_allocate(allocator_, entry_array_size, alignof(registry_entry_t), (void**)&tmp_entry_array);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = resource_registry_result_convert_linear_allocator(ret_linear_allocator);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, entry_array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_entry_array);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("line_mesh_geometry_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }

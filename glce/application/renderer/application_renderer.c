@@ -16,7 +16,7 @@
 #include "engine/core/geometry_primitive/aabb_3d.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/renderer/config/renderer_config.h"
 
@@ -46,11 +46,11 @@ struct application_renderer {
 
 static bool is_valid_shallow(const application_renderer_t* renderer_);
 
-application_result_t application_renderer_create(const renderer_config_t* config_, linear_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_renderer_) {
+application_result_t application_renderer_create(const renderer_config_t* config_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_renderer_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     application_renderer_t* tmp_application_renderer = NULL;
@@ -67,9 +67,9 @@ application_result_t application_renderer_create(const renderer_config_t* config
     IF_ARG_NULL_GOTO_CLEANUP(out_renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_create", "out_renderer_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "application_renderer_create", "*out_renderer_")
 
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(application_renderer_t), alignof(application_renderer_t), (void**)&tmp_application_renderer);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = application_result_convert_linear_allocator(ret_linear_allocator);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(application_renderer_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_application_renderer);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = application_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("application_renderer_create(%s) - Failed to allocate application_renderer_t instance.", application_result_to_str(ret));
         goto cleanup;
     }

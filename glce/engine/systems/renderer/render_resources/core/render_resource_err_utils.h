@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
 
@@ -22,7 +22,7 @@ extern "C" {
 
 const char* render_resource_result_to_str(render_resource_result_t result_);
 
-render_resource_result_t render_resource_result_convert_linear_allocator(linear_allocator_result_t result_);
+render_resource_result_t render_resource_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 
 render_resource_result_t render_resource_result_convert_fs_path(fs_path_result_t result_);
 

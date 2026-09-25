@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/resource/core/resource_types.h"
 
@@ -35,14 +35,7 @@ extern "C" {
  */
 const char* resource_registry_result_to_str(resource_registry_result_t result_);
 
-/**
- * @brief 下位モジュールであるlinear_allocatorが出力する実行結果コードをresource_registriesの実行結果コードに変換する
- *
- * @param[in] result_ linear_allocatorモジュールが出力する実行結果コード
- *
- * @return resource_registry_result_t 変換されたresource_registriesの実行結果コード
- */
-resource_registry_result_t resource_registry_result_convert_linear_allocator(linear_allocator_result_t result_);
+resource_registry_result_t resource_registry_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 
 /**
  * @brief resourceレイヤーが出力する実行結果コードをresource_registriesの実行結果コードに変換する

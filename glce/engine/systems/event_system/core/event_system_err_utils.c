@@ -3,7 +3,7 @@
 
 #include "engine/systems/event_system/core/event_system_err_utils.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 
@@ -42,14 +42,20 @@ const char* event_system_result_to_str(event_system_result_t result_) {
     }
 }
 
-event_system_result_t event_system_result_convert_linear_allocator(linear_allocator_result_t result_) {
+event_system_result_t event_system_result_convert_subsystem_allocator(subsystem_allocator_result_t result_) {
     switch(result_) {
-    case LINEAR_ALLOCATOR_SUCCESS:
+    case SUBSYSTEM_ALLOCATOR_SUCCESS:
         return EVENT_SYSTEM_SUCCESS;
-    case LINEAR_ALLOCATOR_NO_MEMORY:
+    case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
+        return EVENT_SYSTEM_BAD_OPERATION;
+    case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
+        return EVENT_SYSTEM_DATA_CORRUPTED;
+    case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
         return EVENT_SYSTEM_NO_MEMORY;
-    case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
+    case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return EVENT_SYSTEM_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
+        return EVENT_SYSTEM_UNDEFINED_ERROR;
     default:
         return EVENT_SYSTEM_UNDEFINED_ERROR;
     }

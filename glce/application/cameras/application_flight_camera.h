@@ -19,12 +19,12 @@ extern "C" {
 
 typedef struct application_flight_camera application_flight_camera_t;
 
+typedef struct subsystem_allocator subsystem_allocator_t;
 typedef struct mat4x4f mat4x4f_t;
-typedef struct linear_allocator linear_allocator_t;
 typedef struct application_frame_state application_frame_state_t;
 typedef struct engine_event_view engine_event_view_t;
 
-application_result_t application_flight_camera_create(size_t max_flight_camera_count_, linear_allocator_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_flight_camera_);
+application_result_t application_flight_camera_create(size_t max_flight_camera_count_, subsystem_allocator_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_flight_camera_);
 
 void application_flight_camera_deinitialize(application_flight_camera_t* flight_camera_);
 

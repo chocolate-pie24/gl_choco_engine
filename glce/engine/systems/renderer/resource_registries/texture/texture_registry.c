@@ -12,7 +12,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -42,9 +42,10 @@ static bool registry_entry_is_valid(const texture_registry_entry_t* entry_);
 
 static bool find_by_name(const texture_registry_t* registry_, const char* name_, size_t* out_index_);
 
-resource_registry_result_t texture_registry_create(size_t max_texture_count_, linear_allocator_t* allocator_, texture_registry_t** out_registry_) {
+resource_registry_result_t texture_registry_create(size_t max_texture_count_, subsystem_allocator_t* allocator_, texture_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
     texture_registry_t* tmp_registry = NULL;
     texture_registry_entry_t* tmp_entries = NULL;
@@ -61,9 +62,9 @@ resource_registry_result_t texture_registry_create(size_t max_texture_count_, li
         goto cleanup;
     }
 
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(texture_registry_t), alignof(texture_registry_t), (void**)&tmp_registry);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = resource_registry_result_convert_linear_allocator(ret_linear_allocator);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(texture_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_registry);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("texture_registry_create(%s) - Failed to allocate registry instance. target=texture_registry_create, bytes=%zu, align=%zu, max_texture_count=%zu", resource_registry_result_to_str(ret), sizeof(texture_registry_t), alignof(texture_registry_t), max_texture_count_);
         goto cleanup;
     }
@@ -75,9 +76,9 @@ resource_registry_result_t texture_registry_create(size_t max_texture_count_, li
         goto cleanup;
     }
     array_size = sizeof(texture_registry_entry_t) * max_texture_count_;
-    ret_linear_allocator = linear_allocator_allocate(allocator_, array_size, alignof(texture_registry_entry_t), (void**)&tmp_entries);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = resource_registry_result_convert_linear_allocator(ret_linear_allocator);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_entries);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("texture_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }

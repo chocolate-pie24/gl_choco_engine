@@ -10,11 +10,11 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
-
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/platform_system/core/platform_system_err_utils.h"
@@ -33,10 +33,10 @@ static const platform_backend_vtable_t* backend_vtable_get(void);
 
 static bool is_valid_shallow(const platform_system_t* platform_system_);
 
-platform_system_result_t platform_system_create(const platform_system_config_t* config_, linear_allocator_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_system_t** out_platform_system_) {
+platform_system_result_t platform_system_create(const platform_system_config_t* config_, subsystem_allocator_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_system_t** out_platform_system_) {
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
     platform_backend_t* tmp_backend = NULL;
     platform_system_t* tmp_system = NULL;
@@ -56,10 +56,10 @@ platform_system_result_t platform_system_create(const platform_system_config_t* 
     }
 
     // Simulation.
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(platform_system_t), alignof(platform_system_t), (void**)&tmp_system);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = platform_system_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("platform_system_create(%s) - Failed to allocate memory for platform system.", platform_system_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(platform_system_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_system);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("platform_system_create(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_system, 0, sizeof(platform_system_t));

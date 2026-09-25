@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
@@ -16,7 +16,7 @@ extern "C" {
 
 const char* event_system_result_to_str(event_system_result_t result_);
 
-event_system_result_t event_system_result_convert_linear_allocator(linear_allocator_result_t result_);
+event_system_result_t event_system_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 
 event_system_result_t event_system_result_convert_platform_system(platform_system_result_t result_);
 

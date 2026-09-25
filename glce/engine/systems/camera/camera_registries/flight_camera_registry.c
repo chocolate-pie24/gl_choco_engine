@@ -12,7 +12,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -40,10 +40,10 @@ static bool find_by_name(const flight_camera_registry_t* registry_, const char* 
 
 static bool is_valid_shallow(const flight_camera_registry_t* registry_);
 
-camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_count_, linear_allocator_t* allocator_, flight_camera_registry_t** out_registry_) {
+camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_count_, subsystem_allocator_t* allocator_, flight_camera_registry_t** out_registry_) {
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
     flight_camera_registry_t* tmp_registry = NULL;
     registry_entry_t* tmp_entry_array = NULL;
@@ -60,9 +60,9 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
     }
 
     // flight_camera_registry_tメモリ確保
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), (void**)&tmp_registry);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = camera_registry_result_convert_linear_allocator(ret_linear_allocator);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(flight_camera_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_FLIGHT_CAMERA_SYSTEM, (void**)&tmp_registry);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = camera_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("flight_camera_registry_create(%s) - Failed to allocate registry instance. target=flight_camera_registry_t, bytes=%zu, align=%zu, max_flight_camera_count=%zu", camera_registry_result_to_str(ret), sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), max_flight_camera_count_);
         goto cleanup;
     }
@@ -74,9 +74,9 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
         goto cleanup;
     }
     entry_array_size = sizeof(registry_entry_t) * max_flight_camera_count_;
-    ret_linear_allocator = linear_allocator_allocate(allocator_, entry_array_size, alignof(registry_entry_t), (void**)&tmp_entry_array);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = camera_registry_result_convert_linear_allocator(ret_linear_allocator);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, entry_array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_FLIGHT_CAMERA_SYSTEM, (void**)&tmp_entry_array);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = camera_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("flight_camera_registry_create(%s) - allocation failed.", camera_registry_result_to_str(ret));
         goto cleanup;
     }

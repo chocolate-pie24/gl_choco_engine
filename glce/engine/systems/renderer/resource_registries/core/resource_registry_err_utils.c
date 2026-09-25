@@ -13,7 +13,7 @@
  */
 #include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -56,14 +56,20 @@ const char* resource_registry_result_to_str(resource_registry_result_t result_) 
     }
 }
 
-resource_registry_result_t resource_registry_result_convert_linear_allocator(linear_allocator_result_t result_) {
+resource_registry_result_t resource_registry_result_convert_subsystem_allocator(subsystem_allocator_result_t result_) {
     switch(result_) {
-    case LINEAR_ALLOCATOR_SUCCESS:
+    case SUBSYSTEM_ALLOCATOR_SUCCESS:
         return RESOURCE_REGISTRY_SUCCESS;
-    case LINEAR_ALLOCATOR_NO_MEMORY:
+    case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
+        return RESOURCE_REGISTRY_BAD_OPERATION;
+    case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
+        return RESOURCE_REGISTRY_DATA_CORRUPTED;
+    case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
         return RESOURCE_REGISTRY_NO_MEMORY;
-    case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
+    case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
+        return RESOURCE_REGISTRY_UNDEFINED_ERROR;
     default:
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;
     }

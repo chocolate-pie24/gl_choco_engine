@@ -21,8 +21,8 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/geometry_primitive_types.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 #include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/ring_queue.h"
 
@@ -56,14 +56,7 @@ extern "C" {
  */
 const char* application_result_to_str(application_result_t result_);
 
-/**
- * @brief Linear Allocatorモジュールの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
- *
- * @param[in] result_ Linear Allocatorモジュール実行結果コード
- *
- * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
- */
-application_result_t application_result_convert_linear_allocator(linear_allocator_result_t result_);
+application_result_t application_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 
 application_result_t application_result_convert_platform_system(platform_system_result_t result_);
 

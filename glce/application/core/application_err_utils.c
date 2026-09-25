@@ -12,8 +12,8 @@
  */
 #include "application/core/application_err_utils.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 #include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/ring_queue.h"
 
@@ -69,14 +69,20 @@ const char* application_result_to_str(application_result_t result_) {
     }
 }
 
-application_result_t application_result_convert_linear_allocator(linear_allocator_result_t result_) {
+application_result_t application_result_convert_subsystem_allocator(subsystem_allocator_result_t result_) {
     switch(result_) {
-    case LINEAR_ALLOCATOR_SUCCESS:
+    case SUBSYSTEM_ALLOCATOR_SUCCESS:
         return APPLICATION_SUCCESS;
-    case LINEAR_ALLOCATOR_NO_MEMORY:
+    case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
-    case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
+    case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return APPLICATION_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }

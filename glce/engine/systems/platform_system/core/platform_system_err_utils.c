@@ -3,7 +3,7 @@
 
 #include "engine/systems/platform_system/core/platform_system_err_utils.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -69,14 +69,20 @@ platform_system_result_t platform_system_result_convert_choco_string(choco_strin
     }
 }
 
-platform_system_result_t platform_system_result_convert_linear_allocator(linear_allocator_result_t result_) {
+platform_system_result_t platform_system_result_convert_subsystem_allocator(subsystem_allocator_result_t result_) {
     switch(result_) {
-    case LINEAR_ALLOCATOR_SUCCESS:
+    case SUBSYSTEM_ALLOCATOR_SUCCESS:
         return PLATFORM_SYSTEM_SUCCESS;
-    case LINEAR_ALLOCATOR_NO_MEMORY:
+    case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
+        return PLATFORM_SYSTEM_BAD_OPERATION;
+    case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
+        return PLATFORM_SYSTEM_DATA_CORRUPTED;
+    case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
         return PLATFORM_SYSTEM_NO_MEMORY;
-    case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
+    case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return PLATFORM_SYSTEM_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
+        return PLATFORM_SYSTEM_UNDEFINED_ERROR;
     default:
         return PLATFORM_SYSTEM_UNDEFINED_ERROR;
     }

@@ -15,7 +15,7 @@
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/window_event.h"
 
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/camera/core/camera_types.h"
 #include "engine/camera/flight_camera.h"
@@ -46,10 +46,10 @@ static void default_keybinds_initialize(void);
 static bool is_valid_shallow(const application_flight_camera_t* flight_camera_);
 
 // id = 0はデフォルトカメラでデフォルトキーバインドのflight cameraが生成され(*out_flight_camera_)->active_cameraにアドレスが格納される
-application_result_t application_flight_camera_create(size_t max_flight_camera_count_, linear_allocator_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_flight_camera_) {
+application_result_t application_flight_camera_create(size_t max_flight_camera_count_, subsystem_allocator_t* allocator_, int framebuffer_width_, int framebuffer_height_, application_flight_camera_t** out_flight_camera_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
     camera_registry_result_t ret_camera_registry = CAMERA_REGISTRY_INVALID_ARGUMENT;
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
 
@@ -74,9 +74,9 @@ application_result_t application_flight_camera_create(size_t max_flight_camera_c
         goto cleanup;
     }
 
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(application_flight_camera_t), alignof(application_flight_camera_t), (void**)&tmp_application_flight_camera);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = application_result_convert_linear_allocator(ret_linear_allocator);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(application_flight_camera_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_FLIGHT_CAMERA_SYSTEM, (void**)&tmp_application_flight_camera);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = application_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("application_flight_camera_create(%s) - Failed to allocate application_flight_camera_t instance.", application_result_to_str(ret));
         goto cleanup;
     }

@@ -26,11 +26,11 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+
 #include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 #include "engine/core/event/window_event.h"
-
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -99,7 +99,7 @@ struct platform_backend {
 };
 
 // Backend entry points / vtable implementation
-static platform_system_result_t platform_glfw_create(const platform_system_config_t* config_, linear_allocator_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_backend_);
+static platform_system_result_t platform_glfw_create(const platform_system_config_t* config_, subsystem_allocator_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_backend_);
 static void platform_glfw_deinitialize(platform_backend_t* backend_);
 static platform_system_result_t platform_glfw_update(platform_backend_t* backend_, const platform_event_view_t** out_event_view_);
 static platform_system_result_t platform_glfw_swap_buffers(platform_backend_t* backend_);
@@ -108,7 +108,7 @@ static bool platform_glfw_is_valid(const platform_backend_t* backend_);
 // Initialization / lifecycle helpers
 static platform_system_result_t glfw_runtime_initialize(void);
 static platform_system_result_t glfw_window_create(const char* window_label_, int window_width_, int window_height_, int* out_framebuffer_width_, int* out_framebuffer_height_, GLFWwindow** out_window_);
-static platform_system_result_t event_storage_initialize(const platform_system_config_t* config_, linear_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_);
+static platform_system_result_t event_storage_initialize(const platform_system_config_t* config_, subsystem_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_);
 static void snapshot_reset(platform_glfw_snapshot_t* snapshot_);
 
 // Per-frame update helpers
@@ -153,10 +153,10 @@ const platform_backend_vtable_t* platform_glfw_vtable_get(void) {
 // ============================================================
 // Backend entry points
 // ============================================================
-static platform_system_result_t platform_glfw_create(const platform_system_config_t* config_, linear_allocator_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_backend_) {
+static platform_system_result_t platform_glfw_create(const platform_system_config_t* config_, subsystem_allocator_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_backend_t** out_backend_) {
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     platform_backend_t* tmp_backend = NULL;
@@ -174,10 +174,10 @@ static platform_system_result_t platform_glfw_create(const platform_system_confi
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_result_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_glfw_create", "*out_backend_")
 
     // platform backend
-    ret_linear_allocator = linear_allocator_allocate(allocator_, sizeof(platform_backend_t), alignof(platform_backend_t), (void**)&tmp_backend);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = platform_system_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("platform_glfw_create(%s) - linear_allocator_allocate failed.", platform_system_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(platform_backend_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_backend);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("platform_glfw_create(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_backend, 0, sizeof(platform_backend_t));
@@ -494,10 +494,10 @@ cleanup:
     return ret;
 }
 
-static platform_system_result_t event_storage_initialize(const platform_system_config_t* config_, linear_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_) {
+static platform_system_result_t event_storage_initialize(const platform_system_config_t* config_, subsystem_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_) {
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t allocation_size = 0;
 
@@ -518,10 +518,10 @@ static platform_system_result_t event_storage_initialize(const platform_system_c
         goto cleanup;
     }
     allocation_size = sizeof(window_event_t) * config_->max_window_event_count;
-    ret_linear_allocator = linear_allocator_allocate(allocator_, allocation_size, alignof(window_event_t), (void**)&tmp_window_event_storage);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = platform_system_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("event_storage_initialize(%s) - linear_allocator_allocate failed.", platform_system_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_window_event_storage);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_window_event_storage, 0, allocation_size);
@@ -533,10 +533,10 @@ static platform_system_result_t event_storage_initialize(const platform_system_c
         goto cleanup;
     }
     allocation_size = sizeof(keyboard_event_t) * config_->max_keyboard_event_count;
-    ret_linear_allocator = linear_allocator_allocate(allocator_, allocation_size, alignof(keyboard_event_t), (void**)&tmp_keyboard_event_storage);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = platform_system_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("event_storage_initialize(%s) - linear_allocator_allocate failed.", platform_system_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_keyboard_event_storage);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_keyboard_event_storage, 0, allocation_size);
@@ -548,10 +548,10 @@ static platform_system_result_t event_storage_initialize(const platform_system_c
         goto cleanup;
     }
     allocation_size = sizeof(mouse_event_t) * config_->max_mouse_event_count;
-    ret_linear_allocator = linear_allocator_allocate(allocator_, allocation_size, alignof(mouse_event_t), (void**)&tmp_mouse_event_storage);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = platform_system_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("event_storage_initialize(%s) - linear_allocator_allocate failed.", platform_system_result_to_str(ret));
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_mouse_event_storage);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
     memset(tmp_mouse_event_storage, 0, allocation_size);

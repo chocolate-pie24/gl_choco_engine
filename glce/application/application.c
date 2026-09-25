@@ -28,11 +28,10 @@
 #include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
-
-#include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
 
@@ -77,12 +76,9 @@ typedef struct application_state {
     // 実行ファイルパス
     fs_path_t* executable_directory;
 
-    // Linear Allocator
-    size_t linear_alloc_mem_req;    /**< リニアアロケータ構造体インスタンスに必要なメモリ量 */
-    size_t linear_alloc_align_req;  /**< リニアアロケータ構造体インスタンスが要求するメモリアライメント */
-    size_t linear_alloc_pool_size;  /**< リニアアロケータ構造体インスタンスが使用するメモリプールのサイズ */
-    void* linear_alloc_pool;        /**< リニアアロケータ構造体インスタンスが使用するメモリプールのアドレス */
-    linear_allocator_t* linear_allocator;   /**< リニアアロケータ構造体インスタンス */
+    // Subsystem Allocator
+    size_t subsystem_memory_pool_size;
+    subsystem_allocator_t* subsystem_allocator;
 
     // Platform System
     platform_system_t* platform_system;
@@ -146,7 +142,7 @@ static application_result_t executable_directory_get(application_state_t* state_
 application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
 
-    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -169,35 +165,14 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    // Linear Allocator
-    //   全サブシステムのpreinitを先に実行し、リニアアロケータで必要な容量を計算可能だが、
-    //   各サブシステムのアライメント要件を考慮すると単純に総和を取れば良いと言うものではなく、ちょっと複雑
-    //   当面は実施せず、多めにメモリを確保する方針にする
-    INFO_MESSAGE("Initializing linear allocator...");
-    tmp_state->linear_allocator = NULL;
-    linear_allocator_preinit(&tmp_state->linear_alloc_mem_req, &tmp_state->linear_alloc_align_req);
-    ret_general_allocator = general_allocator_allocate(tmp_state->linear_alloc_mem_req, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_state->linear_allocator);
-    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = application_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate linear allocator memory.", application_result_to_str(ret));
+    // Subsystem Allocator
+    tmp_state->subsystem_memory_pool_size = 128 * KIB;
+    ret_subsystem_allocator = subsystem_allocator_create(tmp_state->subsystem_memory_pool_size, &tmp_state->subsystem_allocator);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = application_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for subsystem allocator.", application_result_to_str(ret));
         goto cleanup;
     }
-
-    tmp_state->linear_alloc_pool_size = 128 * KIB;
-    ret_general_allocator = general_allocator_allocate(tmp_state->linear_alloc_pool_size, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_state->linear_alloc_pool);
-    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = application_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for the linear allocator pool.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_linear_allocator = linear_allocator_initialize(tmp_state->linear_allocator, tmp_state->linear_alloc_pool_size, tmp_state->linear_alloc_pool);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
-        ret = application_result_convert_linear_allocator(ret_linear_allocator);
-        ERROR_MESSAGE("application_create(%s) - Failed to initialize linear allocator.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("linear_allocator initialized successfully.");
 
     // 実行ファイルパス取得
     ret = executable_directory_get(tmp_state);
@@ -213,7 +188,7 @@ application_result_t application_create(void) {
     tmp_state->window_width = 1024;
     tmp_state->window_height = 768;
 
-    ret_platform_system = platform_system_create(&tmp_state->platform_system_config, tmp_state->linear_allocator, &tmp_state->frame_state.framebuffer_width, &tmp_state->frame_state.framebuffer_height, &tmp_state->platform_system);
+    ret_platform_system = platform_system_create(&tmp_state->platform_system_config, tmp_state->subsystem_allocator, &tmp_state->frame_state.framebuffer_width, &tmp_state->frame_state.framebuffer_height, &tmp_state->platform_system);
     if(PLATFORM_SYSTEM_SUCCESS != ret_platform_system) {
         ret = application_result_convert_platform_system(ret_platform_system);
         ERROR_MESSAGE("application_create(%s) - platform_system_create failed.", application_result_to_str(ret));
@@ -224,7 +199,7 @@ application_result_t application_create(void) {
     // Event System
     INFO_MESSAGE("Creating event system...");
     event_system_config_initialize(&tmp_state->event_system_config);
-    ret_event_system = event_system_create(&tmp_state->event_system_config, tmp_state->linear_allocator, tmp_state->platform_system, &tmp_state->event_system);
+    ret_event_system = event_system_create(&tmp_state->event_system_config, tmp_state->subsystem_allocator, tmp_state->platform_system, &tmp_state->event_system);
     if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
         ret = application_result_convert_event_system(ret_event_system);
         ERROR_MESSAGE("application_create(%s) - event_system_create failed.", application_result_to_str(ret));
@@ -234,7 +209,7 @@ application_result_t application_create(void) {
 
     // application flight camera
     INFO_MESSAGE("Creating flight camera system...");
-    ret = application_flight_camera_create(8, tmp_state->linear_allocator, tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_state->flight_camera);
+    ret = application_flight_camera_create(8, tmp_state->subsystem_allocator, tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_state->flight_camera);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - application_flight_camera_create failed.", application_result_to_str(ret));
         goto cleanup;
@@ -244,7 +219,7 @@ application_result_t application_create(void) {
     // application renderer
     INFO_MESSAGE("Creating renderer system...");
     renderer_config_initialize(&tmp_state->renderer_config);
-    ret = application_renderer_create(&tmp_state->renderer_config, tmp_state->linear_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_state->renderer);
+    ret = application_renderer_create(&tmp_state->renderer_config, tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_state->renderer);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - application_renderer_create failed.", application_result_to_str(ret));
         goto cleanup;
@@ -276,12 +251,7 @@ cleanup:
             if(NULL != tmp_state->executable_directory) {
                 fs_path_destroy(&tmp_state->executable_directory);
             }
-            if(NULL != tmp_state->linear_alloc_pool) {
-                general_allocator_free((void**)&tmp_state->linear_alloc_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-            }
-            if(NULL != tmp_state->linear_allocator) {
-                general_allocator_free((void**)&tmp_state->linear_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-            }
+            subsystem_allocator_destroy(&tmp_state->subsystem_allocator);
             general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
         }
     }
@@ -312,13 +282,8 @@ void application_destroy(void) {
     if(NULL != s_application_state->executable_directory) {
         fs_path_destroy(&s_application_state->executable_directory);
     }
-    if(NULL != s_application_state->linear_alloc_pool) {
-        general_allocator_free((void**)&s_application_state->linear_alloc_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-    }
-    if(NULL != s_application_state->linear_allocator) {
-        general_allocator_free((void**)&s_application_state->linear_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-    }
 
+    subsystem_allocator_destroy(&s_application_state->subsystem_allocator);
     general_allocator_free((void**)&s_application_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     INFO_MESSAGE("Freed all memory.");
     // memory_system_report();
