@@ -16,9 +16,7 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 
 struct subsystem_allocator {
-    size_t allocator_memory_requirement;     /**< リニアアロケータ構造体インスタンスに必要なメモリ量 */
     size_t allocator_alignment_requirement;  /**< リニアアロケータ構造体インスタンスが要求するメモリアライメント */
-    size_t allocator_pool_size;              /**< リニアアロケータ構造体インスタンスが使用するメモリプールのサイズ */
     void* linear_allocator_pool;             /**< リニアアロケータ構造体インスタンスが使用するメモリプールのアドレス */
     linear_allocator_t* linear_allocator;    /**< リニアアロケータ構造体インスタンス */
 
@@ -40,7 +38,6 @@ static const char* const s_memory_tag_event = "EVENT_SYSTEM";
 static const char* const s_memory_tag_camera = "CAMERA_SYSTEM";
 static const char* const s_memory_tag_undefined = "UNDEFINED";
 
-static const char* memory_tag_c_str(subsystem_allocator_memory_tag_t memory_tag_);
 static const char* result_to_str(subsystem_allocator_result_t result_);
 static subsystem_allocator_result_t result_convert_linear_allocator(linear_allocator_result_t result_);
 static subsystem_allocator_result_t result_convert_general_allocator(general_allocator_result_t result_);
@@ -98,9 +95,6 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
         goto cleanup;
     }
 
-    tmp_allocator->allocator_alignment_requirement = tmp_alignment_requirement;
-    tmp_allocator->allocator_memory_requirement = tmp_memory_requirement;
-    tmp_allocator->allocator_pool_size = memory_pool_size_;
     tmp_allocator->linear_allocator = tmp_linear_allocator;
     tmp_allocator->linear_allocator_pool = tmp_memory_pool;
 
@@ -233,6 +227,81 @@ cleanup:
     return ret;
 }
 
+// subsystem_allocator_status_get Validation Policy
+//
+// - allocator_およびout_status_はNULLでないことを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
+//   allocator_がvalidなStable stateであることを確認する。
+// - 本APIはallocator_を変更しないread-only operationであるため、
+//   成功時のPostcondition canonical validationは行わない。
+// - RELEASE_BUILDではautomatic canonical validationを行わず、
+//   Module Internal Contractが成立していることを前提としてstatusを算出する。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
+subsystem_allocator_result_t subsystem_allocator_status_get(const subsystem_allocator_t* allocator_, subsystem_allocator_status_t* out_status_) {
+    subsystem_allocator_result_t ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
+
+    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    linear_allocator_status_t linear_allocator_status = { 0 };
+    size_t memory_pool_size = 0;
+    size_t used_size = 0;
+    size_t free_size = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_status_get", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_status_get", "out_status_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!subsystem_allocator_is_valid(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_status_get(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_linear_allocator = linear_allocator_status_get(allocator_->linear_allocator, &linear_allocator_status);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("subsystem_allocator_status_get(%s) - linear_allocator_status_get failed.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    memory_pool_size = linear_allocator_status.memory_pool_size;
+    used_size = linear_allocator_status.used_size;
+    free_size = linear_allocator_status.free_size;
+
+    out_status_->free_size = free_size;
+    out_status_->memory_pool_size = memory_pool_size;
+    out_status_->used_size = used_size;
+    out_status_->total_allocated = allocator_->total_allocated;
+    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        out_status_->memory_tag_allocated[i] = allocator_->memory_tag_allocated[i];
+    }
+
+    ret = SUBSYSTEM_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+const char* subsystem_allocator_memory_tag_to_str(subsystem_allocator_memory_tag_t memory_tag_) {
+    switch(memory_tag_) {
+    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM:
+        return s_memory_tag_platform;
+    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER:
+        return s_memory_tag_renderer;
+    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT:
+        return s_memory_tag_event;
+    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_CAMERA:
+        return s_memory_tag_camera;
+    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX:
+        return s_memory_tag_undefined;
+    default:
+        return s_memory_tag_undefined;
+    }
+}
+
 bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
     size_t total_tag_allocated = 0;
 
@@ -244,15 +313,6 @@ bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
     }
 
     if(!linear_allocator_is_valid(allocator_->linear_allocator)) {
-        return false;
-    }
-
-    // linear_allocatorのインスタンスのアライメント
-    if(0 != ((uintptr_t)allocator_->linear_allocator % allocator_->allocator_alignment_requirement)) {
-        return false;
-    }
-
-    if(allocator_->allocator_pool_size < allocator_->total_allocated) {
         return false;
     }
 
@@ -271,22 +331,6 @@ bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
     return true;
 }
 
-static const char* memory_tag_c_str(subsystem_allocator_memory_tag_t memory_tag_) {
-    switch(memory_tag_) {
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM:
-        return s_memory_tag_platform;
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER:
-        return s_memory_tag_renderer;
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT:
-        return s_memory_tag_event;
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_CAMERA:
-        return s_memory_tag_camera;
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX:
-        return s_memory_tag_undefined;
-    default:
-        return s_memory_tag_undefined;
-    }
-}
 static const char* result_to_str(subsystem_allocator_result_t result_) {
     switch(result_) {
     case SUBSYSTEM_ALLOCATOR_SUCCESS:
@@ -354,15 +398,6 @@ static bool is_valid_shallow(const subsystem_allocator_t* allocator_) {
         return false;
     }
 
-    if(0 == allocator_->allocator_memory_requirement) {
-        return false;
-    }
-    if(0 == allocator_->allocator_alignment_requirement) {
-        return false;
-    }
-    if(0 == allocator_->allocator_pool_size) {
-        return false;
-    }
     return true;
 }
 
