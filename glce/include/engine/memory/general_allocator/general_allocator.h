@@ -35,6 +35,22 @@ typedef enum {
     GENERAL_ALLOCATOR_MEMORY_TAG_MAX,         /**< メモリタグカウント用max値 */
 } general_allocator_memory_tag_t;
 
+typedef struct general_allocator_status {
+    size_t memory_pool_size;
+
+    size_t allocated_block_size;
+    size_t free_block_size;
+
+    size_t allocated_block_count;
+    size_t free_block_count;
+
+    size_t largest_free_block_size;
+    size_t max_allocation_size;
+
+    size_t total_allocated;
+    size_t memory_tag_allocated[GENERAL_ALLOCATOR_MEMORY_TAG_MAX];
+} general_allocator_status_t;
+
 general_allocator_result_t general_allocator_create(void);
 
 void general_allocator_destroy(void);
@@ -42,6 +58,10 @@ void general_allocator_destroy(void);
 general_allocator_result_t general_allocator_allocate(size_t allocation_size_, general_allocator_memory_tag_t memory_tag_, void** out_ptr_);
 
 void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_tag_);
+
+general_allocator_result_t general_allocator_status_get(general_allocator_status_t* out_status_);
+
+const char* general_allocator_memory_tag_to_str(general_allocator_memory_tag_t memory_tag_);
 
 bool general_allocator_is_valid(void);
 
