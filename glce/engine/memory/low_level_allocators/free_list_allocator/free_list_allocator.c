@@ -487,6 +487,85 @@ cleanup:
     return ret;
 }
 
+// free_list_allocator_status_get Validation Policy
+//
+// - allocator_、out_status_はNULLでないことを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用する。
+// - RELEASE_BUILDではblock chainのcanonical validationは行わず、
+//   Module Internal Contractが成立していることを前提としてstatusを取得する。
+// - 本APIはallocatorおよびblockを変更しないqueryであるため、Postcondition validationは行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
+free_list_allocator_result_t free_list_allocator_status_get(const free_list_allocator_t* allocator_, free_list_allocator_status_t* out_status_) {
+    free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
+
+    const free_list_block_header_t* block = NULL;
+
+    size_t memory_pool_size = 0;
+    size_t allocated_payload_size = 0;
+    size_t allocated_block_size = 0;
+    size_t free_block_size = 0;
+    size_t allocated_block_count = 0;
+    size_t free_block_count = 0;
+    size_t largest_free_block_size = 0;
+    size_t max_allocation_size = 0;
+
+    size_t aligned_block_size = 0;
+
+    bool free_block_found = false;
+
+    // Preconditions.
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_status_get", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_status_get", "out_status_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!free_list_allocator_is_valid(allocator_)) {
+        ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("free_list_allocator_status_get(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    memory_pool_size = allocator_->memory_pool_size;
+    block = allocator_->head;
+    while(NULL != block) {
+        if(FREE_LIST_BLOCK_STATE_ALLOCATED == block->block_state) {
+            allocated_payload_size += block->allocation_size;
+            allocated_block_size += block->block_size;
+            allocated_block_count++;
+        }
+        if(FREE_LIST_BLOCK_STATE_FREE == block->block_state) {
+            if(!free_block_found) {
+                largest_free_block_size = block->block_size;
+                free_block_found = true;
+            }
+            free_block_size += block->block_size;
+            free_block_count++;
+            largest_free_block_size = (largest_free_block_size < block->block_size) ? block->block_size : largest_free_block_size;
+        }
+        block = block->next;
+    }
+    if(free_block_found) {
+        aligned_block_size = largest_free_block_size - (largest_free_block_size % alignof(max_align_t));
+        max_allocation_size = aligned_block_size - allocator_->payload_offset;
+    }
+
+    out_status_->allocated_block_count = allocated_block_count;
+    out_status_->allocated_block_size = allocated_block_size;
+    out_status_->allocated_payload_size = allocated_payload_size;
+    out_status_->free_block_count = free_block_count;
+    out_status_->free_block_size = free_block_size;
+    out_status_->largest_free_block_size = largest_free_block_size;
+    out_status_->max_allocation_size = max_allocation_size;
+    out_status_->memory_pool_size = memory_pool_size;
+
+    ret = FREE_LIST_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 bool free_list_allocator_is_valid(const free_list_allocator_t* allocator_) {
     const free_list_block_header_t* node = NULL;
     const free_list_block_header_t* prev_node = NULL;

@@ -56,6 +56,20 @@ typedef enum {
     FREE_LIST_BLOCK_STATE_ALLOCATED,
 } free_list_block_state_t;
 
+typedef struct free_list_allocator_status {
+    size_t memory_pool_size;
+
+    size_t allocated_payload_size;
+    size_t allocated_block_size;
+    size_t free_block_size;
+
+    size_t allocated_block_count;
+    size_t free_block_count;
+
+    size_t largest_free_block_size;
+    size_t max_allocation_size;
+} free_list_allocator_status_t;
+
 typedef struct free_list_block_header {
     struct free_list_block_header* prev;
     struct free_list_block_header* next;
@@ -89,6 +103,8 @@ free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* all
 bool free_list_allocator_ptr_is_allocated(const free_list_allocator_t* allocator_, const void* ptr_);
 
 free_list_allocator_result_t free_list_allocator_allocation_info_get(const free_list_allocator_t* allocator_, const void* ptr_, size_t* out_allocated_size_);
+
+free_list_allocator_result_t free_list_allocator_status_get(const free_list_allocator_t* allocator_, free_list_allocator_status_t* out_status_);
 
 bool free_list_allocator_is_valid(const free_list_allocator_t* allocator_);
 
