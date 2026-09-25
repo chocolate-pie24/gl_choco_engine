@@ -60,7 +60,7 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
     }
 
     // flight_camera_registry_tメモリ確保
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(flight_camera_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_FLIGHT_CAMERA_SYSTEM, (void**)&tmp_registry);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(flight_camera_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_CAMERA, (void**)&tmp_registry);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = camera_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("flight_camera_registry_create(%s) - Failed to allocate registry instance. target=flight_camera_registry_t, bytes=%zu, align=%zu, max_flight_camera_count=%zu", camera_registry_result_to_str(ret), sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), max_flight_camera_count_);
@@ -74,7 +74,7 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
         goto cleanup;
     }
     entry_array_size = sizeof(registry_entry_t) * max_flight_camera_count_;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, entry_array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_FLIGHT_CAMERA_SYSTEM, (void**)&tmp_entry_array);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, entry_array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_CAMERA, (void**)&tmp_entry_array);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = camera_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("flight_camera_registry_create(%s) - allocation failed.", camera_registry_result_to_str(ret));

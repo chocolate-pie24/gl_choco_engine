@@ -74,7 +74,7 @@ application_result_t application_flight_camera_create(size_t max_flight_camera_c
         goto cleanup;
     }
 
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(application_flight_camera_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_FLIGHT_CAMERA_SYSTEM, (void**)&tmp_application_flight_camera);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(application_flight_camera_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_CAMERA, (void**)&tmp_application_flight_camera);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = application_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("application_flight_camera_create(%s) - Failed to allocate application_flight_camera_t instance.", application_result_to_str(ret));

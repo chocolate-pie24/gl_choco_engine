@@ -56,7 +56,7 @@ platform_system_result_t platform_system_create(const platform_system_config_t* 
     }
 
     // Simulation.
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(platform_system_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_system);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(platform_system_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM, (void**)&tmp_system);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("platform_system_create(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));

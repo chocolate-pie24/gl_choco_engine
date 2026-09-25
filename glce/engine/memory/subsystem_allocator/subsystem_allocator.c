@@ -32,10 +32,10 @@ static const char* const s_result_str_no_memory = "NO_MEMORY";
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
 static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
-static const char* const s_memory_tag_platform_system = "PLATFORM_SYSTEM";
-static const char* const s_memory_tag_renderer_system = "RENDERER_SYSTEM";
-static const char* const s_memory_tag_event_system = "EVENT_SYSTEM";
-static const char* const s_memory_tag_flight_camera_system = "FLIGHT_CAMERA_SYSTEM";
+static const char* const s_memory_tag_platform = "PLATFORM_SYSTEM";
+static const char* const s_memory_tag_renderer = "RENDERER_SYSTEM";
+static const char* const s_memory_tag_event = "EVENT_SYSTEM";
+static const char* const s_memory_tag_camera = "FLIGHT_CAMERA_SYSTEM";
 static const char* const s_memory_tag_undefined = "UNDEFINED";
 
 static const char* memory_tag_c_str(subsystem_allocator_memory_tag_t memory_tag_);
@@ -195,14 +195,14 @@ bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
 
 static const char* memory_tag_c_str(subsystem_allocator_memory_tag_t memory_tag_) {
     switch(memory_tag_) {
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM:
-        return s_memory_tag_platform_system;
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM:
-        return s_memory_tag_renderer_system;
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT_SYSTEM:
-        return s_memory_tag_event_system;
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_FLIGHT_CAMERA_SYSTEM:
-        return s_memory_tag_flight_camera_system;
+    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM:
+        return s_memory_tag_platform;
+    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER:
+        return s_memory_tag_renderer;
+    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT:
+        return s_memory_tag_event;
+    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_CAMERA:
+        return s_memory_tag_camera;
     case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX:
         return s_memory_tag_undefined;
     default:

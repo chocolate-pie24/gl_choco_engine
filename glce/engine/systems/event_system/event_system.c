@@ -95,7 +95,7 @@ event_system_result_t event_system_create(const event_system_config_t* config_, 
     }
 
     // event system
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(event_system_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT_SYSTEM, (void**)&tmp_system);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(event_system_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT, (void**)&tmp_system);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = event_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("event_system_create(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
@@ -287,7 +287,7 @@ static event_system_result_t event_storage_initialize(const event_system_config_
         goto cleanup;
     }
     allocation_size = sizeof(window_event_t) * config_->max_window_event_count;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT_SYSTEM, (void**)&tmp_window_event_storage);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT, (void**)&tmp_window_event_storage);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = event_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
@@ -302,7 +302,7 @@ static event_system_result_t event_storage_initialize(const event_system_config_
         goto cleanup;
     }
     allocation_size = sizeof(keyboard_event_t) * config_->max_keyboard_event_count;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT_SYSTEM, (void**)&tmp_keyboard_event_storage);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT, (void**)&tmp_keyboard_event_storage);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = event_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
@@ -317,7 +317,7 @@ static event_system_result_t event_storage_initialize(const event_system_config_
         goto cleanup;
     }
     allocation_size = sizeof(mouse_event_t) * config_->max_mouse_event_count;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT_SYSTEM, (void**)&tmp_mouse_event_storage);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT, (void**)&tmp_mouse_event_storage);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = event_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));

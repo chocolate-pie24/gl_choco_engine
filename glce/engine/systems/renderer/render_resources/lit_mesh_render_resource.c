@@ -62,7 +62,7 @@ render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_c
     IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_create", "out_render_resource_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDER_RESOURCE_BAD_OPERATION, render_resource_result_to_str(RENDER_RESOURCE_BAD_OPERATION), "lit_mesh_render_resource_create", "*out_render_resource_")
 
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(lit_mesh_render_resource_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_render_resource);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(lit_mesh_render_resource_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_render_resource);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = render_resource_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("lit_mesh_render_resource_create(%s) - Failed to allocate lit_mesh_render_resource_t instance.", render_resource_result_to_str(ret));

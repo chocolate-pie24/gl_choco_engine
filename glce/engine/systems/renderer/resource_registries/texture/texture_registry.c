@@ -62,7 +62,7 @@ resource_registry_result_t texture_registry_create(size_t max_texture_count_, su
         goto cleanup;
     }
 
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(texture_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_registry);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(texture_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_registry);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("texture_registry_create(%s) - Failed to allocate registry instance. target=texture_registry_create, bytes=%zu, align=%zu, max_texture_count=%zu", resource_registry_result_to_str(ret), sizeof(texture_registry_t), alignof(texture_registry_t), max_texture_count_);
@@ -76,7 +76,7 @@ resource_registry_result_t texture_registry_create(size_t max_texture_count_, su
         goto cleanup;
     }
     array_size = sizeof(texture_registry_entry_t) * max_texture_count_;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_entries);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_entries);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("texture_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));

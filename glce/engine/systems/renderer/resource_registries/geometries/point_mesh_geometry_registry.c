@@ -73,7 +73,7 @@ resource_registry_result_t point_mesh_geometry_registry_create(size_t max_geomet
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_create", "*out_registry_")
 
     // geometry_registry_tメモリ確保
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(point_mesh_geometry_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_registry);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(point_mesh_geometry_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_registry);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("point_mesh_geometry_registry_create(%s) - Failed to allocate registry instance. target=point_mesh_geometry_registry_t, bytes=%zu, align=%zu, max_geometry_count=%zu", resource_registry_result_to_str(ret), sizeof(point_mesh_geometry_registry_t), alignof(point_mesh_geometry_registry_t), max_geometry_count_);
@@ -87,7 +87,7 @@ resource_registry_result_t point_mesh_geometry_registry_create(size_t max_geomet
         goto cleanup;
     }
     entry_array_size = sizeof(registry_entry_t) * max_geometry_count_;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, entry_array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_entry_array);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, entry_array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_entry_array);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("point_mesh_geometry_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));

@@ -50,7 +50,7 @@ renderer_backend_result_t renderer_backend_create(subsystem_allocator_t* allocat
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "*out_backend_context_")
 
     // Simulation.
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER_SYSTEM, (void**)&tmp_backend_context);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_backend_context);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = renderer_backend_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("renderer_backend_create(%s) - subsystem_allocator_allocate failed.", renderer_backend_result_to_str(ret));

@@ -174,7 +174,7 @@ static platform_system_result_t platform_glfw_create(const platform_system_confi
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_result_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_glfw_create", "*out_backend_")
 
     // platform backend
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(platform_backend_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_backend);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(platform_backend_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM, (void**)&tmp_backend);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("platform_glfw_create(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
@@ -518,7 +518,7 @@ static platform_system_result_t event_storage_initialize(const platform_system_c
         goto cleanup;
     }
     allocation_size = sizeof(window_event_t) * config_->max_window_event_count;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_window_event_storage);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM, (void**)&tmp_window_event_storage);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
@@ -533,7 +533,7 @@ static platform_system_result_t event_storage_initialize(const platform_system_c
         goto cleanup;
     }
     allocation_size = sizeof(keyboard_event_t) * config_->max_keyboard_event_count;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_keyboard_event_storage);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM, (void**)&tmp_keyboard_event_storage);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
@@ -548,7 +548,7 @@ static platform_system_result_t event_storage_initialize(const platform_system_c
         goto cleanup;
     }
     allocation_size = sizeof(mouse_event_t) * config_->max_mouse_event_count;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM_SYSTEM, (void**)&tmp_mouse_event_storage);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM, (void**)&tmp_mouse_event_storage);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
