@@ -15,10 +15,8 @@
  */
 #include "engine/systems/platform_system/platform_concretes/glfw/platform_glfw.h"
 
-#include <stdalign.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -180,7 +178,6 @@ static platform_system_result_t platform_glfw_create(const platform_system_confi
         ERROR_MESSAGE("platform_glfw_create(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_backend, 0, sizeof(platform_backend_t));
 
     // event array, event count
     ret = event_storage_initialize(config_, allocator_, &tmp_backend->window_event_storage, &tmp_backend->keyboard_event_storage, &tmp_backend->mouse_event_storage);
@@ -524,7 +521,6 @@ static platform_system_result_t event_storage_initialize(const platform_system_c
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_window_event_storage, 0, allocation_size);
 
     // keyboard event
     if((SIZE_MAX / config_->max_keyboard_event_count) < sizeof(keyboard_event_t)) {
@@ -539,7 +535,6 @@ static platform_system_result_t event_storage_initialize(const platform_system_c
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_keyboard_event_storage, 0, allocation_size);
 
     // mouse event
     if((SIZE_MAX / config_->max_mouse_event_count) < sizeof(mouse_event_t)) {
@@ -554,7 +549,6 @@ static platform_system_result_t event_storage_initialize(const platform_system_c
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_mouse_event_storage, 0, allocation_size);
 
     window_event_storage_->current_event_count = 0;
     window_event_storage_->max_event_count = config_->max_window_event_count;

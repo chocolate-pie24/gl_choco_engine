@@ -3,11 +3,9 @@
 
 #include "engine/systems/event_system/event_system.h"
 
-#include <stdalign.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -101,7 +99,6 @@ event_system_result_t event_system_create(const event_system_config_t* config_, 
         ERROR_MESSAGE("event_system_create(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_system, 0, sizeof(event_system_t));
 
     // event array, event count
     ret = event_storage_initialize(config_, allocator_, &tmp_system->window_event_storage, &tmp_system->keyboard_event_storage, &tmp_system->mouse_event_storage);
@@ -293,7 +290,6 @@ static event_system_result_t event_storage_initialize(const event_system_config_
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_window_event_storage, 0, allocation_size);
 
     // keyboard event
     if((SIZE_MAX / config_->max_keyboard_event_count) < sizeof(keyboard_event_t)) {
@@ -308,7 +304,6 @@ static event_system_result_t event_storage_initialize(const event_system_config_
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_keyboard_event_storage, 0, allocation_size);
 
     // mouse event
     if((SIZE_MAX / config_->max_mouse_event_count) < sizeof(mouse_event_t)) {
@@ -323,7 +318,6 @@ static event_system_result_t event_storage_initialize(const event_system_config_
         ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", event_system_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_mouse_event_storage, 0, allocation_size);
 
     window_event_storage_->current_event_count = 0;
     window_event_storage_->max_event_count = config_->max_window_event_count;

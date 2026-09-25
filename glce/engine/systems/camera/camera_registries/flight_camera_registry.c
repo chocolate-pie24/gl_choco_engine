@@ -5,8 +5,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdalign.h>
-#include <string.h> // for memset
 #include <stdbool.h>
 
 #include "engine/base/choco_macros.h"
@@ -63,10 +61,9 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(flight_camera_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_CAMERA, (void**)&tmp_registry);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = camera_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("flight_camera_registry_create(%s) - Failed to allocate registry instance. target=flight_camera_registry_t, bytes=%zu, align=%zu, max_flight_camera_count=%zu", camera_registry_result_to_str(ret), sizeof(flight_camera_registry_t), alignof(flight_camera_registry_t), max_flight_camera_count_);
+        ERROR_MESSAGE("flight_camera_registry_create(%s) - Failed to allocate registry instance. target=flight_camera_registry_t, bytes=%zu, max_flight_camera_count=%zu", camera_registry_result_to_str(ret), sizeof(flight_camera_registry_t), max_flight_camera_count_);
         goto cleanup;
     }
-    memset(tmp_registry, 0, sizeof(flight_camera_registry_t));
 
     if((SIZE_MAX / max_flight_camera_count_) < sizeof(registry_entry_t)) {
         ret = CAMERA_REGISTRY_OVERFLOW;
@@ -80,7 +77,6 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
         ERROR_MESSAGE("flight_camera_registry_create(%s) - allocation failed.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_entry_array, 0, entry_array_size);
 
     tmp_registry->max_flight_camera_count = max_flight_camera_count_;
     tmp_registry->entries = tmp_entry_array;

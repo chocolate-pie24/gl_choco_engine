@@ -5,8 +5,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdalign.h>
-#include <string.h> // for memset
 #include <stdbool.h>
 
 #include "engine/base/choco_macros.h"
@@ -65,10 +63,9 @@ resource_registry_result_t texture_registry_create(size_t max_texture_count_, su
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(texture_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_registry);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("texture_registry_create(%s) - Failed to allocate registry instance. target=texture_registry_create, bytes=%zu, align=%zu, max_texture_count=%zu", resource_registry_result_to_str(ret), sizeof(texture_registry_t), alignof(texture_registry_t), max_texture_count_);
+        ERROR_MESSAGE("texture_registry_create(%s) - Failed to allocate registry instance. target=texture_registry_create, bytes=%zu, max_texture_count=%zu", resource_registry_result_to_str(ret), sizeof(texture_registry_t), max_texture_count_);
         goto cleanup;
     }
-    memset(tmp_registry, 0, sizeof(texture_registry_t));
 
     if((SIZE_MAX / max_texture_count_) < sizeof(texture_registry_entry_t)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
@@ -82,7 +79,6 @@ resource_registry_result_t texture_registry_create(size_t max_texture_count_, su
         ERROR_MESSAGE("texture_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_entries, 0, array_size);
 
     tmp_registry->max_texture_count = max_texture_count_;
     tmp_registry->entries = tmp_entries;

@@ -15,7 +15,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdalign.h>
 #include <string.h> // for memset
 #include <stdbool.h>
 
@@ -76,10 +75,9 @@ resource_registry_result_t ui_mesh_geometry_registry_create(size_t max_geometry_
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(ui_mesh_geometry_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_registry);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("ui_mesh_geometry_registry_create(%s) - Failed to allocate registry instance. target=ui_mesh_geometry_registry_t, bytes=%zu, align=%zu, max_geometry_count=%zu", resource_registry_result_to_str(ret), sizeof(ui_mesh_geometry_registry_t), alignof(ui_mesh_geometry_registry_t), max_geometry_count_);
+        ERROR_MESSAGE("ui_mesh_geometry_registry_create(%s) - Failed to allocate registry instance. target=ui_mesh_geometry_registry_t, bytes=%zu, max_geometry_count=%zu", resource_registry_result_to_str(ret), sizeof(ui_mesh_geometry_registry_t), max_geometry_count_);
         goto cleanup;
     }
-    memset(tmp_registry, 0, sizeof(ui_mesh_geometry_registry_t));
 
     if((SIZE_MAX / max_geometry_count_) < sizeof(registry_entry_t)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
@@ -93,7 +91,6 @@ resource_registry_result_t ui_mesh_geometry_registry_create(size_t max_geometry_
         ERROR_MESSAGE("ui_mesh_geometry_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_entry_array, 0, entry_array_size);
 
     tmp_registry->max_geometry_count = max_geometry_count_;
     tmp_registry->entries = tmp_entry_array;

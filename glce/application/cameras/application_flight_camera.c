@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
 #include <stdalign.h>
 
 #include "engine/base/choco_macros.h"
@@ -80,7 +79,6 @@ application_result_t application_flight_camera_create(size_t max_flight_camera_c
         ERROR_MESSAGE("application_flight_camera_create(%s) - Failed to allocate application_flight_camera_t instance.", application_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_application_flight_camera, 0, sizeof(application_flight_camera_t));
 
     ret_camera_registry = flight_camera_registry_create(max_flight_camera_count_, allocator_, &tmp_flight_camera_registry);
     if(CAMERA_REGISTRY_SUCCESS != ret_camera_registry) {

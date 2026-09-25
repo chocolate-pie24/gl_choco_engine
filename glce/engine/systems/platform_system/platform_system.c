@@ -4,8 +4,6 @@
 #include "engine/systems/platform_system/platform_system.h"
 
 #include <stdbool.h>
-#include <stdalign.h>
-#include <string.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -62,7 +60,6 @@ platform_system_result_t platform_system_create(const platform_system_config_t* 
         ERROR_MESSAGE("platform_system_create(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_system, 0, sizeof(platform_system_t));
 
     tmp_system->vtable = backend_vtable_get();
     if(NULL == tmp_system->vtable) {

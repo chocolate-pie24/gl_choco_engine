@@ -5,8 +5,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdalign.h>
-#include <string.h>
 #include <stdint.h>
 
 #include <GL/glew.h>    // TODO: remove this!! glfwSwapBuffersをrendererに移したら削除
@@ -68,7 +66,6 @@ render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_c
         ERROR_MESSAGE("lit_mesh_render_resource_create(%s) - Failed to allocate lit_mesh_render_resource_t instance.", render_resource_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_render_resource, 0, sizeof(lit_mesh_render_resource_t));
 
     ret = shader_create(config_, backend_context_, executable_directory_, shader_dir_, &tmp_shader);
     if(RENDER_RESOURCE_SUCCESS != ret) {

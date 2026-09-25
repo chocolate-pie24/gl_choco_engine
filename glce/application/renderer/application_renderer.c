@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stdalign.h>
-#include <string.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -73,7 +72,6 @@ application_result_t application_renderer_create(const renderer_config_t* config
         ERROR_MESSAGE("application_renderer_create(%s) - Failed to allocate application_renderer_t instance.", application_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_application_renderer, 0, sizeof(application_renderer_t));
 
     ret_renderer_backend = renderer_backend_create(allocator_, &tmp_renderer_backend_context);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {

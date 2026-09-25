@@ -177,8 +177,8 @@ general_allocator_result_t general_allocator_allocate(size_t allocation_size_, g
         ERROR_MESSAGE("general_allocator_allocate(%s) - free_list_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
-
     memset(tmp_ptr, 0, allocation_size_);
+
     s_general_allocator.mem_tag_allocated[memory_tag_] += allocation_size_;
     s_general_allocator.total_allocated += allocation_size_;
 

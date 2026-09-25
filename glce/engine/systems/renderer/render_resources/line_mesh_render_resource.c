@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdalign.h>
 #include <string.h>
 #include <stdint.h>
 
@@ -66,7 +65,6 @@ render_resource_result_t line_mesh_render_resource_create(const line_mesh_shader
         ERROR_MESSAGE("line_mesh_render_resource_create(%s) - Failed to allocate line_mesh_render_resource_t instance.", render_resource_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_render_resource, 0, sizeof(line_mesh_render_resource_t));
 
     ret = shader_create(config_, backend_context_, executable_directory_, shader_dir_, &tmp_shader);
     if(RENDER_RESOURCE_SUCCESS != ret) {

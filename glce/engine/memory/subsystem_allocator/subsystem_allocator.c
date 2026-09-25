@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdalign.h>
+#include <string.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -35,7 +36,7 @@ static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 static const char* const s_memory_tag_platform = "PLATFORM_SYSTEM";
 static const char* const s_memory_tag_renderer = "RENDERER_SYSTEM";
 static const char* const s_memory_tag_event = "EVENT_SYSTEM";
-static const char* const s_memory_tag_camera = "FLIGHT_CAMERA_SYSTEM";
+static const char* const s_memory_tag_camera = "CAMERA_SYSTEM";
 static const char* const s_memory_tag_undefined = "UNDEFINED";
 
 static const char* memory_tag_c_str(subsystem_allocator_memory_tag_t memory_tag_);
@@ -162,6 +163,7 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
         ERROR_MESSAGE("subsystem_allocator_allocate(%s) - linear_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
+    memset(tmp_ptr, 0, allocation_size_);
 
     allocator_->total_allocated += allocation_size_;
     allocator_->memory_tag_allocated[memory_tag_] += allocation_size_;

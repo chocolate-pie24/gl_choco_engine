@@ -7,8 +7,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <stdalign.h>
-#include <string.h> // for memset
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -56,7 +54,6 @@ renderer_backend_result_t renderer_backend_create(subsystem_allocator_t* allocat
         ERROR_MESSAGE("renderer_backend_create(%s) - subsystem_allocator_allocate failed.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
-    memset(tmp_backend_context, 0, sizeof(renderer_backend_context_t));
 
     // shaderバックエンドメモリ確保+初期化
     tmp_backend_context->shader_vtable = shader_vtable_get();
