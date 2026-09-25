@@ -16,6 +16,8 @@ void application_frame_state_begin_frame(application_frame_state_t* frame_state_
     frame_state_->projection_dirty = false;
     frame_state_->view_dirty = false;
     frame_state_->window_resized = false;
+    frame_state_->runtime_status_report_requested = false;
+    frame_state_->validation_report_requested = false;
 }
 
 bool application_frame_state_is_valid(const application_frame_state_t* frame_state_) {
