@@ -32,6 +32,7 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
+#include "engine/core/event/keyboard_event.h"
 
 #include "engine/io_utils/fs_path.h"
 
@@ -57,6 +58,7 @@
 #include "application/event/application_frame_state.h"
 #include "application/cameras/application_flight_camera.h"
 #include "application/renderer/application_renderer.h"
+#include "application/diagnostics/application_diagnostics.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -67,6 +69,7 @@ typedef struct application_state {
     renderer_config_t renderer_config;
     platform_system_config_t platform_system_config;
     event_system_config_t event_system_config;
+    application_diagnostics_config_t diag_config;
 
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
@@ -226,10 +229,15 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("renderer system created successfully.");
 
+    // diagnostic config
+    tmp_state->diag_config.runtime_status_report = KEY_1;
+    tmp_state->diag_config.validation_report = KEY_2;
+
+    application_diagnostics_status_report(tmp_state->subsystem_allocator);
+
     // commit
     s_application_state = tmp_state;
     INFO_MESSAGE("Application created successfully.");
-    // memory_system_report();
 
     ret = APPLICATION_SUCCESS;
 
@@ -412,6 +420,15 @@ application_result_t application_run(void) {
             ERROR_MESSAGE("application_run(%s) - app_state_update failed.", application_result_to_str(ret));
             goto cleanup;
         }
+        if(s_application_state->frame_state.runtime_status_report_requested) {
+            ret = application_diagnostics_status_report(s_application_state->subsystem_allocator);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - application_diagnostics_status_report failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+        } else if(s_application_state->frame_state.validation_report_requested) {
+            WARN_MESSAGE("application_run(%s) - not impremented yet...");
+        }
 
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -512,6 +529,12 @@ static application_result_t app_state_update(void) {
     ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_diagnostics_update(&s_application_state->diag_config, s_application_state->engine_event_view, &s_application_state->frame_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("app_state_update(%s) - application_diagnostics_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
 

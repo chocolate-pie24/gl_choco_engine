@@ -14,6 +14,7 @@ extern "C" {
 
 typedef struct application_frame_state application_frame_state_t;
 typedef struct engine_event_view engine_event_view_t;
+typedef struct subsystem_allocator subsystem_allocator_t;
 
 typedef struct application_diagnostics_config {
     keycode_t runtime_status_report;
@@ -21,6 +22,8 @@ typedef struct application_diagnostics_config {
 } application_diagnostics_config_t;
 
 application_result_t application_diagnostics_update(const application_diagnostics_config_t* config_, const engine_event_view_t* event_view_, application_frame_state_t* frame_state_);
+
+application_result_t application_diagnostics_status_report(const subsystem_allocator_t* subsystem_allocator_);
 
 #ifdef __cplusplus
 }
