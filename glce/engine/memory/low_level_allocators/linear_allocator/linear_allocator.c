@@ -23,10 +23,13 @@ struct linear_allocator {
 
 static const char* const s_result_str_success = "SUCCESS";                     /**< 実行結果種別文字列(処理成功) */
 static const char* const s_result_str_no_memory = "NO_MEMORY";                 /**< 実行結果種別文字列(メモリ確保失敗) */
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果種別文字列(無効な引数) */
 static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";     /**< 実行結果種別文字列(不明なエラー) */
 
 static const char* result_to_str(linear_allocator_result_t result_);
+
+static bool is_valid_shallow(const linear_allocator_t* allocator_);
 
 void linear_allocator_preinit(size_t* out_memory_requirement_, size_t* out_align_requirement_) {
     if(NULL == out_memory_requirement_ || NULL == out_align_requirement_) {
@@ -55,6 +58,7 @@ cleanup:
 
 linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t required_size_, size_t required_align_, void** out_ptr_) {
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
     uintptr_t head = 0;
     uintptr_t align = 0;
     uintptr_t size = 0;
@@ -113,6 +117,98 @@ cleanup:
     return ret;
 }
 
+// linear_allocator_reset Validation Policy
+//
+// - allocator_はNULLでないことを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、allocator_がvalidなStable stateであることを確認する。
+// - Commitでは、canonical validation済みのmemory_poolをhead_ptrへ代入するだけであり、
+//   複数field間のmutation、下位APIの呼び出し、複雑なstate transitionを伴わない。そのため、成功時のPostcondition canonical validationは行わない。
+// - RELEASE_BUILDではautomatic canonical validationを行わず、Module Internal Contractが成立していることを前提としてresetを実行する。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
+linear_allocator_result_t linear_allocator_reset(linear_allocator_t* allocator_) {
+    linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    // Preconditions
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_reset", "allocator_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!linear_allocator_is_valid(allocator_)) {
+        ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("linear_allocator_reset(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    allocator_->head_ptr = allocator_->memory_pool;
+
+    ret = LINEAR_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// linear_allocator_status_get Validation Policy
+//
+// - allocator_およびout_status_はNULLでないことを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
+//   allocator_がvalidなStable stateであることを確認する。
+// - 本APIはallocator_を変更しないread-only operationであるため、
+//   成功時のPostcondition canonical validationは行わない。
+// - RELEASE_BUILDではautomatic canonical validationを行わず、
+//   Module Internal Contractが成立していることを前提としてstatusを算出する。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
+linear_allocator_result_t linear_allocator_status_get(const linear_allocator_t* allocator_, linear_allocator_status_t* out_status_) {
+    linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    uintptr_t head_address = 0;
+    uintptr_t pool_address = 0;
+
+    size_t memory_pool_size = 0;
+    size_t used_size = 0;
+    size_t free_size = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_status_get", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_status_get", "out_status_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!linear_allocator_is_valid(allocator_)) {
+        ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("linear_allocator_status_get(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    head_address = (uintptr_t)allocator_->head_ptr;
+    pool_address = (uintptr_t)allocator_->memory_pool;
+
+    memory_pool_size = allocator_->capacity;
+    used_size = (size_t)(head_address - pool_address);
+    free_size = memory_pool_size - used_size;
+
+    out_status_->free_size = free_size;
+    out_status_->memory_pool_size = memory_pool_size;
+    out_status_->used_size = used_size;
+
+    ret = LINEAR_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+bool linear_allocator_is_valid(const linear_allocator_t* allocator_) {
+    if(NULL == allocator_) {
+        return false;
+    }
+    if(!is_valid_shallow(allocator_)) {
+        return false;
+    }
+    return true;
+}
+
 /**
  * @brief 実行結果コードを文字列に変換する
  *
@@ -125,9 +221,43 @@ static const char* result_to_str(linear_allocator_result_t result_) {
         return s_result_str_success;
     case LINEAR_ALLOCATOR_NO_MEMORY:
         return s_result_str_no_memory;
+    case LINEAR_ALLOCATOR_DATA_CORRUPTED:
+        return s_result_str_data_corrupted;
     case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
         return s_result_str_invalid_argument;
     default:
         return s_result_str_undefined_error;
     }
+}
+
+static bool is_valid_shallow(const linear_allocator_t* allocator_) {
+    uintptr_t head_address = 0;
+    uintptr_t pool_address = 0;
+    uintptr_t end_address = 0;
+
+    if(NULL == allocator_) {
+        return false;
+    }
+
+    if(NULL == allocator_->head_ptr) {
+        return false;
+    }
+    if(NULL == allocator_->memory_pool) {
+        return false;
+    }
+    if(0 == allocator_->capacity) {
+        return false;
+    }
+
+    head_address = (uintptr_t)allocator_->head_ptr;
+    pool_address = (uintptr_t)allocator_->memory_pool;
+    if((UINTPTR_MAX - pool_address) < allocator_->capacity) {
+        return false;
+    }
+    end_address = pool_address + allocator_->capacity;
+    if(head_address < pool_address || head_address > end_address) {
+        return false;
+    }
+
+    return true;
 }

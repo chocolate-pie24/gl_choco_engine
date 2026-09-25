@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdalign.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -177,21 +178,96 @@ cleanup:
     return ret;
 }
 
+// subsystem_allocator_reset Validation Policy
+//
+// - allocator_はNULLでないことを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
+//   allocator_およびowned Linear Allocatorを含むownership closureがvalidなStable stateであることを確認する。
+//   resetはcorrupted stateを修復するためのAPIとして扱わない。
+// - DEBUG_BUILD / TEST_BUILDでは、すべてのreset処理が完了したStable boundaryで
+//   canonical validatorを実行し、owned Linear Allocatorを含むSubsystem Allocator全体が
+//   validなStable stateへ戻ったことをPostconditionとして確認する。
+// - RELEASE_BUILDではautomatic canonical validationを行わず、
+//   Module Internal Contractが成立していることを前提としてresetを実行する。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* allocator_) {
-    if(NULL == allocator_) {
-        return SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
+    subsystem_allocator_result_t ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
+
+    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_reset", "allocator_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!subsystem_allocator_is_valid(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_reset(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
     }
-    // TODO: linear_allocator_reset実装後に実装
-    return SUBSYSTEM_ALLOCATOR_SUCCESS;
+#endif
+
+    ret_linear_allocator = linear_allocator_reset(allocator_->linear_allocator);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("subsystem_allocator_reset(%s) - linear_allocator_reset failed.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    allocator_->total_allocated = 0;
+    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        allocator_->memory_tag_allocated[i] = 0;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!subsystem_allocator_is_valid(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_reset(%s) - " "Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = SUBSYSTEM_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
 bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
+    size_t total_tag_allocated = 0;
+
     if(NULL == allocator_) {
         return false;
     }
     if(!is_valid_shallow(allocator_)) {
         return false;
     }
+
+    if(!linear_allocator_is_valid(allocator_->linear_allocator)) {
+        return false;
+    }
+
+    // linear_allocatorのインスタンスのアライメント
+    if(0 != ((uintptr_t)allocator_->linear_allocator % allocator_->allocator_alignment_requirement)) {
+        return false;
+    }
+
+    if(allocator_->allocator_pool_size < allocator_->total_allocated) {
+        return false;
+    }
+
+    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        // total_tag_allocatedに対する加算をを安全に実行できることを確認
+        if(allocator_->memory_tag_allocated[i] > (allocator_->total_allocated - total_tag_allocated)) {
+            return false;
+        }
+        total_tag_allocated += allocator_->memory_tag_allocated[i];
+    }
+
+    if(total_tag_allocated != allocator_->total_allocated) {
+        return false;
+    }
+
     return true;
 }
 
@@ -236,6 +312,8 @@ static subsystem_allocator_result_t result_convert_linear_allocator(linear_alloc
         return SUBSYSTEM_ALLOCATOR_SUCCESS;
     case LINEAR_ALLOCATOR_NO_MEMORY:
         return SUBSYSTEM_ALLOCATOR_NO_MEMORY;
+    case LINEAR_ALLOCATOR_DATA_CORRUPTED:
+        return SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
     case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
         return SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
     default:
@@ -266,6 +344,23 @@ static subsystem_allocator_result_t result_convert_general_allocator(general_all
 
 static bool is_valid_shallow(const subsystem_allocator_t* allocator_) {
     if(NULL == allocator_) {
+        return false;
+    }
+
+    if(NULL == allocator_->linear_allocator) {
+        return false;
+    }
+    if(NULL == allocator_->linear_allocator_pool) {
+        return false;
+    }
+
+    if(0 == allocator_->allocator_memory_requirement) {
+        return false;
+    }
+    if(0 == allocator_->allocator_alignment_requirement) {
+        return false;
+    }
+    if(0 == allocator_->allocator_pool_size) {
         return false;
     }
     return true;
