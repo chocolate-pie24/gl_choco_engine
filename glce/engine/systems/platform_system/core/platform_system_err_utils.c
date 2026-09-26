@@ -81,6 +81,8 @@ platform_system_result_t platform_system_result_convert_subsystem_allocator(subs
         return PLATFORM_SYSTEM_NO_MEMORY;
     case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return PLATFORM_SYSTEM_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_OVERFLOW:
+        return PLATFORM_SYSTEM_OVERFLOW;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return PLATFORM_SYSTEM_UNDEFINED_ERROR;
     default:

@@ -54,6 +54,8 @@ event_system_result_t event_system_result_convert_subsystem_allocator(subsystem_
         return EVENT_SYSTEM_NO_MEMORY;
     case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return EVENT_SYSTEM_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_OVERFLOW:
+        return EVENT_SYSTEM_OVERFLOW;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return EVENT_SYSTEM_UNDEFINED_ERROR;
     default:

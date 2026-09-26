@@ -59,6 +59,8 @@ render_resource_result_t render_resource_result_convert_subsystem_allocator(subs
         return RENDER_RESOURCE_NO_MEMORY;
     case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return RENDER_RESOURCE_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_OVERFLOW:
+        return RENDER_RESOURCE_OVERFLOW;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return RENDER_RESOURCE_UNDEFINED_ERROR;
     default:

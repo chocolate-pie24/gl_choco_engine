@@ -61,6 +61,8 @@ renderer_backend_result_t renderer_backend_result_convert_subsystem_allocator(su
         return RENDERER_BACKEND_NO_MEMORY;
     case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return RENDERER_BACKEND_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_OVERFLOW:
+        return RENDERER_BACKEND_OVERFLOW;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return RENDERER_BACKEND_UNDEFINED_ERROR;
     default:

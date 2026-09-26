@@ -19,6 +19,7 @@ typedef enum {
     LINEAR_ALLOCATOR_SUCCESS = 0,       /**< 処理成功 */
     LINEAR_ALLOCATOR_NO_MEMORY,         /**< メモリ不足 */
     LINEAR_ALLOCATOR_DATA_CORRUPTED,
+    LINEAR_ALLOCATOR_BAD_OPERATION,
     LINEAR_ALLOCATOR_INVALID_ARGUMENT,  /**< 無効な引数 */
     LINEAR_ALLOCATOR_OVERFLOW,
     LINEAR_ALLOCATOR_UNDEFINED_ERROR,
@@ -30,13 +31,13 @@ typedef struct linear_allocator_status {
     size_t free_size;
 } linear_allocator_status_t;
 
-typedef struct linear_allocator_allocation_metadata {
-    size_t allocation_size;
-} linear_allocator_allocation_metadata_t;
+typedef struct linear_allocator_rollback_point {
+    size_t offset;
+} linear_allocator_rollback_point_t;
 
 typedef struct linear_allocator {
     size_t capacity;    /**< アロケータが管理するメモリ容量(byte) */
-    void* head_ptr;     /**< 次にメモリを確保する際の先頭アドレス(実際にはアライメント要件分オフセットされたアドレスを渡す) */
+    void* head_ptr;     /**< 次にメモリを確保する際の先頭アドレス */
     void* memory_pool;  /**< アロケータが管理するメモリ領域 */
 } linear_allocator_t;
 
@@ -46,7 +47,13 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
 
 linear_allocator_result_t linear_allocator_reset(linear_allocator_t* allocator_);
 
+linear_allocator_result_t linear_allocator_rollback_point_get(const linear_allocator_t* allocator_, linear_allocator_rollback_point_t* out_rollback_point_);
+
+linear_allocator_result_t linear_allocator_rollback(linear_allocator_t* allocator_, const linear_allocator_rollback_point_t* rollback_point_);
+
 linear_allocator_result_t linear_allocator_status_get(const linear_allocator_t* allocator_, linear_allocator_status_t* out_status_);
+
+bool linear_allocator_ptr_is_in_use_range(const linear_allocator_t* allocator_, const void* ptr_);
 
 bool linear_allocator_is_valid(const linear_allocator_t* allocator_);
 

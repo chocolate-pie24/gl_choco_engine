@@ -29,6 +29,7 @@ static const char* const s_result_str_bad_operation = "BAD_OPERATION";
 static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
 static const char* const s_result_str_no_memory = "NO_MEMORY";
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_result_str_overflow = "OVERFLOW";
 static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
 static const char* const s_memory_tag_platform = "PLATFORM_SYSTEM";
@@ -110,7 +111,6 @@ void subsystem_allocator_destroy(subsystem_allocator_t** allocator_) {
     }
     general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-    *allocator_ = NULL;
 }
 
 subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t* allocator_, size_t allocation_size_, subsystem_allocator_memory_tag_t memory_tag_, void** out_ptr_) {
@@ -120,6 +120,7 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
 
     void* tmp_ptr = NULL;
 
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "*out_ptr_")
     if(!memory_tag_is_valid(memory_tag_)) {
@@ -324,6 +325,8 @@ static const char* result_to_str(subsystem_allocator_result_t result_) {
         return s_result_str_no_memory;
     case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return s_result_str_invalid_argument;
+    case SUBSYSTEM_ALLOCATOR_OVERFLOW:
+        return s_result_str_overflow;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return s_result_str_undefined_error;
     default:
@@ -339,8 +342,14 @@ static subsystem_allocator_result_t result_convert_linear_allocator(linear_alloc
         return SUBSYSTEM_ALLOCATOR_NO_MEMORY;
     case LINEAR_ALLOCATOR_DATA_CORRUPTED:
         return SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+    case LINEAR_ALLOCATOR_BAD_OPERATION:
+        return SUBSYSTEM_ALLOCATOR_BAD_OPERATION;
     case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
         return SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
+    case LINEAR_ALLOCATOR_OVERFLOW:
+        return SUBSYSTEM_ALLOCATOR_OVERFLOW;
+    case LINEAR_ALLOCATOR_UNDEFINED_ERROR:
+        return SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR;
     default:
         return SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR;
     }
@@ -359,7 +368,7 @@ static subsystem_allocator_result_t result_convert_general_allocator(general_all
     case GENERAL_ALLOCATOR_NO_MEMORY:
         return SUBSYSTEM_ALLOCATOR_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
-        return SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR;
+        return SUBSYSTEM_ALLOCATOR_OVERFLOW;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR;
     default:

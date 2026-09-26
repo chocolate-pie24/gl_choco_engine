@@ -81,6 +81,8 @@ application_result_t application_result_convert_subsystem_allocator(subsystem_al
         return APPLICATION_NO_MEMORY;
     case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return APPLICATION_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_OVERFLOW:
+        return APPLICATION_OVERFLOW;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:

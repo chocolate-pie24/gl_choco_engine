@@ -15,11 +15,11 @@
 static const char* const s_result_str_success = "SUCCESS";                     /**< 実行結果種別文字列(処理成功) */
 static const char* const s_result_str_no_memory = "NO_MEMORY";                 /**< 実行結果種別文字列(メモリ確保失敗) */
 static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果種別文字列(無効な引数) */
 static const char* const s_result_str_overflow = "OVERFLOW";
 static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";     /**< 実行結果種別文字列(不明なエラー) */
 
-static linear_allocator_result_t allocation_layout_calc(size_t allocation_size_, size_t* out_payload_offset_, size_t* out_required_block_size_);
 static linear_allocator_result_t allocation_is_ready(const linear_allocator_t* allocator_, size_t required_block_size_);
 
 static const char* result_to_str(linear_allocator_result_t result_);
@@ -29,6 +29,7 @@ static bool is_valid_shallow(const linear_allocator_t* allocator_);
 linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* allocator_, size_t capacity_, void* memory_pool_) {
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
+    const uintptr_t pool_address = (uintptr_t)memory_pool_;
     bool is_aligned = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "allocator_")
@@ -42,6 +43,11 @@ linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* alloca
     if(!is_aligned) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided memory_pool_ is not valid.", result_to_str(ret));
+        goto cleanup;
+    }
+    if((UINTPTR_MAX - pool_address) < capacity_) {
+        ret = LINEAR_ALLOCATOR_OVERFLOW;
+        ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided capacity_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -58,9 +64,8 @@ cleanup:
 linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t required_size_, void** out_ptr_) {
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
-    linear_allocator_allocation_metadata_t* metadata = NULL;
-    uintptr_t start_addr = 0;
-    size_t payload_offset = 0;
+    uintptr_t current_head_addr = 0;
+    uintptr_t next_head_addr = 0;
     size_t block_size = 0;
 
     // Preconditions
@@ -72,10 +77,16 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
         ret = LINEAR_ALLOCATOR_SUCCESS;
         goto cleanup;
     }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!linear_allocator_is_valid(allocator_)) {
+        ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
-    ret = allocation_layout_calc(required_size_, &payload_offset, &block_size);
-    if(LINEAR_ALLOCATOR_SUCCESS != ret) {
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - allocation_layout_calc failed.", result_to_str(ret));
+    if(!memory_utility_align_up(required_size_, alignof(max_align_t), &block_size)) {
+        ret = LINEAR_ALLOCATOR_OVERFLOW;
         goto cleanup;
     }
 
@@ -85,13 +96,19 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
         goto cleanup;
     }
 
-    metadata = (linear_allocator_allocation_metadata_t*)allocator_->head_ptr;
-    metadata->allocation_size = required_size_;
+    current_head_addr = (uintptr_t)allocator_->head_ptr;
+    next_head_addr = (uintptr_t)allocator_->head_ptr + (uintptr_t)block_size;
+    allocator_->head_ptr = (void*)next_head_addr;
 
-    *out_ptr_ = (void*)((uintptr_t)allocator_->head_ptr + payload_offset);
-    start_addr = (uintptr_t)allocator_->head_ptr;
-    start_addr += (uintptr_t)block_size;
-    allocator_->head_ptr = (void*)start_addr;
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!linear_allocator_is_valid(allocator_)) {
+        ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    *out_ptr_ = (void*)current_head_addr;
 
     ret = LINEAR_ALLOCATOR_SUCCESS;
 
@@ -124,6 +141,91 @@ linear_allocator_result_t linear_allocator_reset(linear_allocator_t* allocator_)
 #endif
 
     allocator_->head_ptr = allocator_->memory_pool;
+
+    ret = LINEAR_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+linear_allocator_result_t linear_allocator_rollback_point_get(const linear_allocator_t* allocator_, linear_allocator_rollback_point_t* out_rollback_point_) {
+    linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    uintptr_t start_addr = 0;
+    uintptr_t end_addr = 0;
+    size_t offset = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback_point_get", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_rollback_point_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback_point_get", "out_rollback_point_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!linear_allocator_is_valid(allocator_)) {
+        ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("linear_allocator_rollback_point_get(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    start_addr = (uintptr_t)allocator_->memory_pool;
+    end_addr = (uintptr_t)allocator_->head_ptr;
+    offset = end_addr - start_addr;
+
+    out_rollback_point_->offset = offset;
+
+    ret = LINEAR_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+linear_allocator_result_t linear_allocator_rollback(linear_allocator_t* allocator_, const linear_allocator_rollback_point_t* rollback_point_) {
+    linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    bool is_aligned = false;
+    size_t used_range = 0;
+    uintptr_t start_addr = 0;
+    uintptr_t end_addr = 0;
+    uintptr_t next_end_addr = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(rollback_point_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback", "rollback_point_")
+    if(!memory_utility_is_aligned((uintptr_t)(rollback_point_->offset), alignof(max_align_t), &is_aligned)) {
+        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("linear_allocator_rollback(%s) - memory_utility_is_aligned failed.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!is_aligned) {
+        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("linear_allocator_rollback(%s) - Provided offset is not valid.", result_to_str(ret));
+        goto cleanup;
+    }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!linear_allocator_is_valid(allocator_)) {
+        ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("linear_allocator_rollback(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    start_addr = (uintptr_t)allocator_->memory_pool;
+    end_addr = (uintptr_t)allocator_->head_ptr;
+    used_range = end_addr - start_addr;
+    if(used_range < rollback_point_->offset) {
+        ret = LINEAR_ALLOCATOR_BAD_OPERATION;
+        ERROR_MESSAGE("linear_allocator_rollback(%s) - Provided offset is not valid.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    next_end_addr = start_addr + rollback_point_->offset;
+
+    allocator_->head_ptr = (void*)next_end_addr;
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!linear_allocator_is_valid(allocator_)) {
+        ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("linear_allocator_rollback(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     ret = LINEAR_ALLOCATOR_SUCCESS;
 
@@ -181,6 +283,25 @@ cleanup:
     return ret;
 }
 
+bool linear_allocator_ptr_is_in_use_range(const linear_allocator_t* allocator_, const void* ptr_) {
+    uintptr_t start_addr = 0;
+    uintptr_t end_addr = 0;
+    uintptr_t ptr_addr = 0;
+
+    if(NULL == allocator_ || NULL == ptr_) {
+        return false;
+    }
+
+    start_addr = (uintptr_t)allocator_->memory_pool;
+    end_addr = (uintptr_t)allocator_->head_ptr;
+    ptr_addr = (uintptr_t)ptr_;
+
+    if(ptr_addr < start_addr || ptr_addr >= end_addr) {
+        return false;
+    }
+    return true;
+}
+
 bool linear_allocator_is_valid(const linear_allocator_t* allocator_) {
     if(NULL == allocator_) {
         return false;
@@ -189,45 +310,6 @@ bool linear_allocator_is_valid(const linear_allocator_t* allocator_) {
         return false;
     }
     return true;
-}
-
-static linear_allocator_result_t allocation_layout_calc(size_t allocation_size_, size_t* out_payload_offset_, size_t* out_required_block_size_) {
-    linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
-
-    size_t payload_offset = 0;
-    size_t required_block_size = 0;
-
-    IF_ARG_NULL_GOTO_CLEANUP(out_payload_offset_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "allocation_layout_calc", "out_payload_offset_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_required_block_size_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "allocation_layout_calc", "out_required_block_size_")
-    if(0 == allocation_size_) {
-        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_layout_calc(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));
-        goto cleanup;
-    }
-
-    if(!memory_utility_align_up(sizeof(linear_allocator_allocation_metadata_t), alignof(max_align_t), &payload_offset)) {
-        ret = LINEAR_ALLOCATOR_OVERFLOW;
-        goto cleanup;
-    }
-
-    if((SIZE_MAX - allocation_size_) < payload_offset) {
-        ret = LINEAR_ALLOCATOR_OVERFLOW;
-        ERROR_MESSAGE("allocation_layout_calc(%s) - block size overflow.", result_to_str(ret));
-        goto cleanup;
-    }
-
-    if(!memory_utility_align_up(payload_offset + allocation_size_, alignof(max_align_t), &required_block_size)) {
-        ret = LINEAR_ALLOCATOR_OVERFLOW;
-        goto cleanup;
-    }
-
-    *out_payload_offset_ = payload_offset;
-    *out_required_block_size_ = required_block_size;
-
-    ret = LINEAR_ALLOCATOR_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
 static linear_allocator_result_t allocation_is_ready(const linear_allocator_t* allocator_, size_t required_block_size_) {
@@ -243,7 +325,7 @@ static linear_allocator_result_t allocation_is_ready(const linear_allocator_t* a
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "allocation_is_ready", "allocator_")
     if(0 == required_block_size_) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("allocation_layout_calc(%s) - Provided required_block_size_ is not valid.", result_to_str(ret));
+        ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -256,7 +338,7 @@ static linear_allocator_result_t allocation_is_ready(const linear_allocator_t* a
 
     if(required_block_size_ > free_size) {
         ret = LINEAR_ALLOCATOR_NO_MEMORY;
-        ERROR_MESSAGE("allocation_layout_calc(%s) - no memory.", result_to_str(ret));
+        ERROR_MESSAGE("allocation_is_ready(%s) - no memory.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -280,16 +362,21 @@ static const char* result_to_str(linear_allocator_result_t result_) {
         return s_result_str_no_memory;
     case LINEAR_ALLOCATOR_DATA_CORRUPTED:
         return s_result_str_data_corrupted;
+    case LINEAR_ALLOCATOR_BAD_OPERATION:
+        return s_result_str_bad_operation;
     case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
         return s_result_str_invalid_argument;
     case LINEAR_ALLOCATOR_OVERFLOW:
         return s_result_str_overflow;
+    case LINEAR_ALLOCATOR_UNDEFINED_ERROR:
+        return s_result_str_undefined_error;
     default:
         return s_result_str_undefined_error;
     }
 }
 
 static bool is_valid_shallow(const linear_allocator_t* allocator_) {
+    bool is_aligned = false;
     uintptr_t head_address = 0;
     uintptr_t pool_address = 0;
     uintptr_t end_address = 0;
@@ -310,6 +397,19 @@ static bool is_valid_shallow(const linear_allocator_t* allocator_) {
 
     head_address = (uintptr_t)allocator_->head_ptr;
     pool_address = (uintptr_t)allocator_->memory_pool;
+    if(!memory_utility_is_aligned(head_address, alignof(max_align_t), &is_aligned)) {
+        return false;
+    }
+    if(!is_aligned) {
+        return false;
+    }
+    if(!memory_utility_is_aligned(pool_address, alignof(max_align_t), &is_aligned)) {
+        return false;
+    }
+    if(!is_aligned) {
+        return false;
+    }
+
     if((UINTPTR_MAX - pool_address) < allocator_->capacity) {
         return false;
     }
