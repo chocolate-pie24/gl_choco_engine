@@ -20,6 +20,8 @@ typedef enum {
     LINEAR_ALLOCATOR_NO_MEMORY,         /**< メモリ不足 */
     LINEAR_ALLOCATOR_DATA_CORRUPTED,
     LINEAR_ALLOCATOR_INVALID_ARGUMENT,  /**< 無効な引数 */
+    LINEAR_ALLOCATOR_OVERFLOW,
+    LINEAR_ALLOCATOR_UNDEFINED_ERROR,
 } linear_allocator_result_t;
 
 typedef struct linear_allocator_status {

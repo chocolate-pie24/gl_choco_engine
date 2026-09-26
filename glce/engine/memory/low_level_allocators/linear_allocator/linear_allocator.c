@@ -16,7 +16,11 @@ static const char* const s_result_str_success = "SUCCESS";                     /
 static const char* const s_result_str_no_memory = "NO_MEMORY";                 /**< 実行結果種別文字列(メモリ確保失敗) */
 static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果種別文字列(無効な引数) */
+static const char* const s_result_str_overflow = "OVERFLOW";
 static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";     /**< 実行結果種別文字列(不明なエラー) */
+
+static linear_allocator_result_t allocation_layout_calc(size_t allocation_size_, size_t* out_payload_offset_, size_t* out_required_block_size_);
+static linear_allocator_result_t allocation_is_ready(const linear_allocator_t* allocator_, size_t required_block_size_);
 
 static const char* result_to_str(linear_allocator_result_t result_);
 
@@ -54,13 +58,10 @@ cleanup:
 linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t required_size_, void** out_ptr_) {
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
-    uintptr_t head = 0;
-    uintptr_t align = 0;
-    uintptr_t size = 0;
-    uintptr_t offset = 0;
+    linear_allocator_allocation_metadata_t* metadata = NULL;
     uintptr_t start_addr = 0;
-    uintptr_t pool = 0;
-    uintptr_t cap = 0;
+    size_t payload_offset = 0;
+    size_t block_size = 0;
 
     // Preconditions
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "allocator_")
@@ -72,38 +73,25 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
         goto cleanup;
     }
 
-    // Simulation
-    head = (uintptr_t)allocator_->head_ptr;
-    align = (uintptr_t)alignof(max_align_t);
-    size = (uintptr_t)required_size_;
-    offset = head % align;
-    if(0 != offset) {
-        offset = align - offset;    // 要求アライメントに先頭アドレスを調整
-    }
-    if(UINTPTR_MAX - offset < head) {
-        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested alignment offset is too large.", result_to_str(ret));
-        goto cleanup;
-    }
-    start_addr = head + offset;
-    if(UINTPTR_MAX - size < start_addr) {
-        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Requested size is too large.", result_to_str(ret));
-        goto cleanup;
-    }
-    pool = (uintptr_t)allocator_->memory_pool;
-    cap = (uintptr_t)allocator_->capacity;
-    if((start_addr + size) > (pool + cap)) {
-        uintptr_t free_space = pool + cap - start_addr;
-        ret = LINEAR_ALLOCATOR_NO_MEMORY;
-        ERROR_MESSAGE("linear_allocator_allocate(%s) - Cannot allocate requested size. Requested size: %zu / Free space: %zu", result_to_str(ret), required_size_, (size_t)free_space);
+    ret = allocation_layout_calc(required_size_, &payload_offset, &block_size);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - allocation_layout_calc failed.", result_to_str(ret));
         goto cleanup;
     }
 
-    // commit
-    *out_ptr_ = (void*)start_addr;
-    head += offset + size;
-    allocator_->head_ptr = (void*)head;
+    ret = allocation_is_ready(allocator_, block_size);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("linear_allocator_allocate(%s) - allocation_is_ready failed.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    metadata = (linear_allocator_allocation_metadata_t*)allocator_->head_ptr;
+    metadata->allocation_size = required_size_;
+
+    *out_ptr_ = (void*)((uintptr_t)allocator_->head_ptr + payload_offset);
+    start_addr = (uintptr_t)allocator_->head_ptr;
+    start_addr += (uintptr_t)block_size;
+    allocator_->head_ptr = (void*)start_addr;
 
     ret = LINEAR_ALLOCATOR_SUCCESS;
 
@@ -203,6 +191,81 @@ bool linear_allocator_is_valid(const linear_allocator_t* allocator_) {
     return true;
 }
 
+static linear_allocator_result_t allocation_layout_calc(size_t allocation_size_, size_t* out_payload_offset_, size_t* out_required_block_size_) {
+    linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    size_t payload_offset = 0;
+    size_t required_block_size = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(out_payload_offset_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "allocation_layout_calc", "out_payload_offset_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_required_block_size_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "allocation_layout_calc", "out_required_block_size_")
+    if(0 == allocation_size_) {
+        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("allocation_layout_calc(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    if(!memory_utility_align_up(sizeof(linear_allocator_allocation_metadata_t), alignof(max_align_t), &payload_offset)) {
+        ret = LINEAR_ALLOCATOR_OVERFLOW;
+        goto cleanup;
+    }
+
+    if((SIZE_MAX - allocation_size_) < payload_offset) {
+        ret = LINEAR_ALLOCATOR_OVERFLOW;
+        ERROR_MESSAGE("allocation_layout_calc(%s) - block size overflow.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    if(!memory_utility_align_up(payload_offset + allocation_size_, alignof(max_align_t), &required_block_size)) {
+        ret = LINEAR_ALLOCATOR_OVERFLOW;
+        goto cleanup;
+    }
+
+    *out_payload_offset_ = payload_offset;
+    *out_required_block_size_ = required_block_size;
+
+    ret = LINEAR_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static linear_allocator_result_t allocation_is_ready(const linear_allocator_t* allocator_, size_t required_block_size_) {
+    linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    uintptr_t head_address = 0;
+    uintptr_t pool_address = 0;
+
+    size_t memory_pool_size = 0;
+    size_t used_size = 0;
+    size_t free_size = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "allocation_is_ready", "allocator_")
+    if(0 == required_block_size_) {
+        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("allocation_layout_calc(%s) - Provided required_block_size_ is not valid.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    head_address = (uintptr_t)allocator_->head_ptr;
+    pool_address = (uintptr_t)allocator_->memory_pool;
+
+    memory_pool_size = allocator_->capacity;
+    used_size = (size_t)(head_address - pool_address);
+    free_size = memory_pool_size - used_size;
+
+    if(required_block_size_ > free_size) {
+        ret = LINEAR_ALLOCATOR_NO_MEMORY;
+        ERROR_MESSAGE("allocation_layout_calc(%s) - no memory.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = LINEAR_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 /**
  * @brief 実行結果コードを文字列に変換する
  *
@@ -219,6 +282,8 @@ static const char* result_to_str(linear_allocator_result_t result_) {
         return s_result_str_data_corrupted;
     case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
         return s_result_str_invalid_argument;
+    case LINEAR_ALLOCATOR_OVERFLOW:
+        return s_result_str_overflow;
     default:
         return s_result_str_undefined_error;
     }

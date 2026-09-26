@@ -16,9 +16,8 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 
 struct subsystem_allocator {
-    size_t allocator_alignment_requirement;  /**< リニアアロケータ構造体インスタンスが要求するメモリアライメント */
     void* linear_allocator_pool;             /**< リニアアロケータ構造体インスタンスが使用するメモリプールのアドレス */
-    linear_allocator_t* linear_allocator;    /**< リニアアロケータ構造体インスタンス */
+    linear_allocator_t linear_allocator;    /**< リニアアロケータ構造体インスタンス */
 
     // memory使用量管理
     size_t total_allocated;                     /**< メモリ総割り当て量 */
@@ -52,7 +51,6 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     subsystem_allocator_t* tmp_allocator = NULL;
-    linear_allocator_t* tmp_linear_allocator = NULL;
     void* tmp_memory_pool = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_create", "out_allocator_")
@@ -77,28 +75,23 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
         goto cleanup;
     }
 
-    ret_linear_allocator = linear_allocator_initialize(tmp_linear_allocator, memory_pool_size_, tmp_memory_pool);
+    ret_linear_allocator = linear_allocator_initialize(&tmp_allocator->linear_allocator, memory_pool_size_, tmp_memory_pool);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
         ERROR_MESSAGE("subsystem_allocator_create(%s) - linear_allocator_initialize failed.", result_to_str(ret));
         goto cleanup;
     }
 
-    tmp_allocator->linear_allocator = tmp_linear_allocator;
     tmp_allocator->linear_allocator_pool = tmp_memory_pool;
 
     *out_allocator_ = tmp_allocator;
 
     tmp_allocator = NULL;
     tmp_memory_pool = NULL;
-    tmp_linear_allocator = NULL;
 
     ret = SUBSYSTEM_ALLOCATOR_SUCCESS;
 
 cleanup:
-    if(NULL != tmp_linear_allocator) {
-        general_allocator_free((void**)&tmp_linear_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-    }
     if(NULL != tmp_memory_pool) {
         general_allocator_free((void**)&tmp_memory_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     }
@@ -116,7 +109,6 @@ void subsystem_allocator_destroy(subsystem_allocator_t** allocator_) {
         return;
     }
     general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-    general_allocator_free((void**)&(*allocator_)->linear_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     *allocator_ = NULL;
 }
@@ -141,7 +133,7 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
         goto cleanup;
     }
 
-    ret_linear_allocator = linear_allocator_allocate(allocator_->linear_allocator, allocation_size_, (void**)&tmp_ptr);
+    ret_linear_allocator = linear_allocator_allocate(&allocator_->linear_allocator, allocation_size_, (void**)&tmp_ptr);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
         ERROR_MESSAGE("subsystem_allocator_allocate(%s) - linear_allocator_allocate failed.", result_to_str(ret));
@@ -190,7 +182,7 @@ subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* al
     }
 #endif
 
-    ret_linear_allocator = linear_allocator_reset(allocator_->linear_allocator);
+    ret_linear_allocator = linear_allocator_reset(&allocator_->linear_allocator);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
         ERROR_MESSAGE("subsystem_allocator_reset(%s) - linear_allocator_reset failed.", result_to_str(ret));
@@ -249,7 +241,7 @@ subsystem_allocator_result_t subsystem_allocator_status_get(const subsystem_allo
     }
 #endif
 
-    ret_linear_allocator = linear_allocator_status_get(allocator_->linear_allocator, &linear_allocator_status);
+    ret_linear_allocator = linear_allocator_status_get(&allocator_->linear_allocator, &linear_allocator_status);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
         ERROR_MESSAGE("subsystem_allocator_status_get(%s) - linear_allocator_status_get failed.", result_to_str(ret));
@@ -301,7 +293,7 @@ bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
         return false;
     }
 
-    if(!linear_allocator_is_valid(allocator_->linear_allocator)) {
+    if(!linear_allocator_is_valid(&allocator_->linear_allocator)) {
         return false;
     }
 
@@ -380,9 +372,6 @@ static bool is_valid_shallow(const subsystem_allocator_t* allocator_) {
         return false;
     }
 
-    if(NULL == allocator_->linear_allocator) {
-        return false;
-    }
     if(NULL == allocator_->linear_allocator_pool) {
         return false;
     }
