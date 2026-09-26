@@ -12,12 +12,6 @@ extern "C" {
 #include <stdbool.h>
 
 /**
- * @brief linear_allocator構造体前方宣言
- * @note 内部データ構造はlinear_allocator.cで定義し、外部からは隠蔽する
- */
-typedef struct linear_allocator linear_allocator_t;
-
-/**
  * @brief linear_allocator実行結果コードリスト
  *
  */
@@ -34,11 +28,19 @@ typedef struct linear_allocator_status {
     size_t free_size;
 } linear_allocator_status_t;
 
-void linear_allocator_preinit(size_t* out_memory_requirement_, size_t* out_align_requirement_);
+typedef struct linear_allocator_allocation_metadata {
+    size_t allocation_size;
+} linear_allocator_allocation_metadata_t;
+
+typedef struct linear_allocator {
+    size_t capacity;    /**< アロケータが管理するメモリ容量(byte) */
+    void* head_ptr;     /**< 次にメモリを確保する際の先頭アドレス(実際にはアライメント要件分オフセットされたアドレスを渡す) */
+    void* memory_pool;  /**< アロケータが管理するメモリ領域 */
+} linear_allocator_t;
 
 linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* allocator_, size_t capacity_, void* memory_pool_);
 
-linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t required_size_, size_t required_align_, void** out_ptr_);
+linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t required_size_, void** out_ptr_);
 
 linear_allocator_result_t linear_allocator_reset(linear_allocator_t* allocator_);
 

@@ -10,16 +10,7 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
-
-/**
- * @brief linear_allocator_t内部データ構造
- * @todo 必要であればメモリトラッキング追加(現状では入れる予定はなし)
- */
-struct linear_allocator {
-    size_t capacity;    /**< アロケータが管理するメモリ容量(byte) */
-    void* head_ptr;     /**< 次にメモリを確保する際の先頭アドレス(実際にはアライメント要件分オフセットされたアドレスを渡す) */
-    void* memory_pool;  /**< アロケータが管理するメモリ領域 */
-};
+#include "engine/base/memory_utility.h"
 
 static const char* const s_result_str_success = "SUCCESS";                     /**< 実行結果種別文字列(処理成功) */
 static const char* const s_result_str_no_memory = "NO_MEMORY";                 /**< 実行結果種別文字列(メモリ確保失敗) */
@@ -31,20 +22,24 @@ static const char* result_to_str(linear_allocator_result_t result_);
 
 static bool is_valid_shallow(const linear_allocator_t* allocator_);
 
-void linear_allocator_preinit(size_t* out_memory_requirement_, size_t* out_align_requirement_) {
-    if(NULL == out_memory_requirement_ || NULL == out_align_requirement_) {
-        return;
-    }
-    *out_memory_requirement_ = sizeof(linear_allocator_t);
-    *out_align_requirement_ = alignof(linear_allocator_t);
-}
-
 linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* allocator_, size_t capacity_, void* memory_pool_) {
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    bool is_aligned = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "memory_pool_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != capacity_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "capacity_")
+    if(!memory_utility_is_aligned((uintptr_t)(memory_pool_), alignof(max_align_t), &is_aligned)) {
+        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("linear_allocator_initialize(%s) - memory_utility_is_aligned failed.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!is_aligned) {
+        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided memory_pool_ is not valid.", result_to_str(ret));
+        goto cleanup;
+    }
 
     allocator_->capacity = capacity_;
     allocator_->head_ptr = memory_pool_;
@@ -56,7 +51,7 @@ cleanup:
     return ret;
 }
 
-linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t required_size_, size_t required_align_, void** out_ptr_) {
+linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocator_, size_t required_size_, void** out_ptr_) {
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     uintptr_t head = 0;
@@ -71,16 +66,15 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
-    if(0 == required_align_ || 0 == required_size_) {
-        WARN_MESSAGE("linear_allocator_allocate - No-op: required_align_ or required_size_ is 0.");
+    if(0 == required_size_) {
+        WARN_MESSAGE("linear_allocator_allocate - No-op: required_size_ is 0.");
         ret = LINEAR_ALLOCATOR_SUCCESS;
         goto cleanup;
     }
-    IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(required_align_), ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "required_align_")
 
     // Simulation
     head = (uintptr_t)allocator_->head_ptr;
-    align = (uintptr_t)required_align_;
+    align = (uintptr_t)alignof(max_align_t);
     size = (uintptr_t)required_size_;
     offset = head % align;
     if(0 != offset) {

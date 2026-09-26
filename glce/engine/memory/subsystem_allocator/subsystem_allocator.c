@@ -55,9 +55,6 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     linear_allocator_t* tmp_linear_allocator = NULL;
     void* tmp_memory_pool = NULL;
 
-    size_t tmp_memory_requirement = 0;
-    size_t tmp_alignment_requirement = 0;
-
     IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_create", "out_allocator_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_create", "*out_allocator_")
     if(0 == memory_pool_size_) {
@@ -67,14 +64,6 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     }
 
     ret_general_allocator = general_allocator_allocate(sizeof(subsystem_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_allocator);
-    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("subsystem_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
-        goto cleanup;
-    }
-
-    linear_allocator_preinit(&tmp_memory_requirement, &tmp_alignment_requirement);
-    ret_general_allocator = general_allocator_allocate(tmp_memory_requirement, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_linear_allocator);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("subsystem_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
@@ -152,7 +141,7 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
         goto cleanup;
     }
 
-    ret_linear_allocator = linear_allocator_allocate(allocator_->linear_allocator, allocation_size_, alignof(max_align_t), (void**)&tmp_ptr);
+    ret_linear_allocator = linear_allocator_allocate(allocator_->linear_allocator, allocation_size_, (void**)&tmp_ptr);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
         ERROR_MESSAGE("subsystem_allocator_allocate(%s) - linear_allocator_allocate failed.", result_to_str(ret));
