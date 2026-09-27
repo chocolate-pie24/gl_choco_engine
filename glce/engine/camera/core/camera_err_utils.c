@@ -53,6 +53,8 @@ camera_result_t camera_result_convert_general_allocator(general_allocator_result
         return CAMERA_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return CAMERA_UNDEFINED_ERROR;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return CAMERA_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return CAMERA_UNDEFINED_ERROR;
     default:

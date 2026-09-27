@@ -348,6 +348,8 @@ static fs_stream_result_t result_convert_general_allocator(general_allocator_res
         return FS_STREAM_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return FS_STREAM_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return FS_STREAM_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return FS_STREAM_UNDEFINED_ERROR;
     default:

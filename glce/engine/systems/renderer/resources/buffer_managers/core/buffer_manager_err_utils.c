@@ -171,6 +171,8 @@ buffer_manager_result_t buffer_manager_result_convert_general_allocator(general_
         return BUFFER_MANAGER_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return BUFFER_MANAGER_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return BUFFER_MANAGER_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return BUFFER_MANAGER_UNDEFINED_ERROR;
     default:

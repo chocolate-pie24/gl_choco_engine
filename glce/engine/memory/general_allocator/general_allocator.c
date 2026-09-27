@@ -26,6 +26,9 @@ struct general_allocator {
     size_t memory_tag_allocated[GENERAL_ALLOCATOR_MEMORY_TAG_MAX];   /**< 各メモリタグごとのメモリ割り当て量 */
 };
 
+// ============================================================
+// Private Constants
+// ============================================================
 static general_allocator_t s_general_allocator;
 
 static const char* const s_result_str_success = "SUCCESS";
@@ -34,6 +37,7 @@ static const char* const s_result_str_bad_operation = "BAD_OPERATION";
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
 static const char* const s_result_str_no_memory = "NO_MEMORY";
 static const char* const s_result_str_overflow = "OVERFLOW";
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
 static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
 static const char* const s_memory_tag_system = "SYSTEM";
@@ -52,30 +56,42 @@ alignas(max_align_t)
 static unsigned char s_memory_pool[GLCE_BUILD_MEMORY_POOL_SIZE];
 #endif
 
+// ============================================================
+// Private Function Declarations
+// ============================================================
+// Initialize, Deinitialize helpers
+static general_allocator_result_t memory_pool_initialize(void);
+static void memory_pool_deinitialize(void);
+static void accounting_reset(void);
+static bool general_allocator_is_initialized(void);
+
+// Utilities
 static const char* result_to_str(general_allocator_result_t result_);
 static general_allocator_result_t result_convert_free_list_allocator(free_list_allocator_result_t result_);
 
+// Validators
 static bool is_valid_shallow(void);
 static bool memory_tag_is_valid(general_allocator_memory_tag_t memory_tag_);
+static bool accounting_is_valid(void);
+
+// ============================================================
+// Public API
+// ============================================================
 
 general_allocator_result_t general_allocator_create(void) {
     general_allocator_result_t ret = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     free_list_allocator_result_t ret_free_list_allocator = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
-    // memory poolの初期化
-#if defined(GLCE_BUILD_MEMORY_POLICY_EMBEDDED)
-    s_general_allocator.memory_pool = (void*)s_memory_pool;
-#elif defined(GLCE_BUILD_MEMORY_POLICY_DESKTOP)
-    s_general_allocator.memory_pool = malloc(GLCE_BUILD_MEMORY_POOL_SIZE);
-#else
-    ret = GENERAL_ALLOCATOR_UNDEFINED_ERROR;
-    ERROR_MESSAGE("general_allocator_create(%s) - Undefined build config.", result_to_str(ret));
-    goto cleanup;
-#endif
-    if(NULL == s_general_allocator.memory_pool) {
-        ret = GENERAL_ALLOCATOR_NO_MEMORY;
-        ERROR_MESSAGE("general_allocator_create(%s) - Failed to allocate memory for memory pool.", result_to_str(ret));
+    if(general_allocator_is_initialized()) {
+        ret = GENERAL_ALLOCATOR_BAD_OPERATION;
+        ERROR_MESSAGE("general_allocator_create(%s) - general allocator is already initialized.", result_to_str(ret));
+        return ret;
+    }
+
+    ret = memory_pool_initialize();
+    if(GENERAL_ALLOCATOR_SUCCESS != ret) {
+        ERROR_MESSAGE("general_allocator_create(%s) - memory_pool_initialize failed.", result_to_str(ret));
         goto cleanup;
     }
 
@@ -86,10 +102,7 @@ general_allocator_result_t general_allocator_create(void) {
         goto cleanup;
     }
 
-    s_general_allocator.total_allocated = 0;
-    for(size_t i = 0; i != GENERAL_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
-        s_general_allocator.memory_tag_allocated[i] = 0;
-    }
+    accounting_reset();
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -103,11 +116,8 @@ general_allocator_result_t general_allocator_create(void) {
     ret = GENERAL_ALLOCATOR_SUCCESS;
 
 cleanup:
-    if(GENERAL_ALLOCATOR_SUCCESS != ret) {
-#if defined(GLCE_BUILD_MEMORY_POLICY_DESKTOP)
-        free(s_general_allocator.memory_pool);
-        s_general_allocator.memory_pool = NULL;
-#endif
+    if(GENERAL_ALLOCATOR_SUCCESS != ret && GENERAL_ALLOCATOR_DATA_CORRUPTED != ret) {
+        memory_pool_deinitialize();
     }
     return ret;
 }
@@ -128,19 +138,9 @@ void general_allocator_destroy(void) {
         ERROR_MESSAGE("general_allocator_destroy(%s) - free_list_allocator_deinitialize failed.", result_to_str(GENERAL_ALLOCATOR_DATA_CORRUPTED));
         return;
     }
-#if defined(GLCE_BUILD_MEMORY_POLICY_DESKTOP)
-    free(s_general_allocator.memory_pool);
-    s_general_allocator.memory_pool = NULL;
-#elif defined(GLCE_BUILD_MEMORY_POLICY_EMBEDDED)
-    s_general_allocator.memory_pool = NULL;
-#else
-    // general allocatorがvalidであることを確認済みなので処理は不要
-#endif
 
-    s_general_allocator.total_allocated = 0;
-    for(size_t i = 0; i != GENERAL_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
-        s_general_allocator.memory_tag_allocated[i] = 0;
-    }
+    memory_pool_deinitialize();
+    accounting_reset();
 }
 
 general_allocator_result_t general_allocator_allocate(size_t allocation_size_, general_allocator_memory_tag_t memory_tag_, void** out_ptr_) {
@@ -150,6 +150,7 @@ general_allocator_result_t general_allocator_allocate(size_t allocation_size_, g
 
     void* tmp_ptr = NULL;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT, result_to_str(GENERAL_ALLOCATOR_INVALID_ARGUMENT), "general_allocator_allocate", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, GENERAL_ALLOCATOR_BAD_OPERATION, result_to_str(GENERAL_ALLOCATOR_BAD_OPERATION), "general_allocator_allocate", "*out_ptr_")
     if(0 == allocation_size_) {
@@ -163,13 +164,29 @@ general_allocator_result_t general_allocator_allocate(size_t allocation_size_, g
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!general_allocator_is_valid()) {
+    if(!is_valid_shallow()) {
+        ret = GENERAL_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("general_allocator_allocate(%s) - Precondition validation failed for 's_general_allocator'.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!accounting_is_valid()) {
         ret = GENERAL_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("general_allocator_allocate(%s) - Precondition validation failed for 's_general_allocator'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
+    if((SIZE_MAX - allocation_size_) < s_general_allocator.total_allocated) {
+        ret = GENERAL_ALLOCATOR_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("general_allocator_allocate(%s) - general allocator limit exceeded.", result_to_str(ret));
+        goto cleanup;
+    }
+    if((SIZE_MAX - allocation_size_) < s_general_allocator.memory_tag_allocated[memory_tag_]) {
+        ret = GENERAL_ALLOCATOR_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("general_allocator_allocate(%s) - general allocator limit exceeded.", result_to_str(ret));
+        goto cleanup;
+    }
 
+    // Commit.
     ret_free_list_allocator = free_list_allocator_allocate(&s_general_allocator.free_list_allocator, allocation_size_, &tmp_ptr);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret_free_list_allocator) {
         ret = result_convert_free_list_allocator(ret_free_list_allocator);
@@ -181,6 +198,16 @@ general_allocator_result_t general_allocator_allocate(size_t allocation_size_, g
     s_general_allocator.memory_tag_allocated[memory_tag_] += allocation_size_;
     s_general_allocator.total_allocated += allocation_size_;
 
+    // Postconditions.
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!accounting_is_valid()) {
+        ret = GENERAL_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("general_allocator_allocate(%s) - Postcondition validation failed for 's_general_allocator'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    // Output.
     *out_ptr_ = tmp_ptr;
 
     ret = GENERAL_ALLOCATOR_SUCCESS;
@@ -194,6 +221,7 @@ void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_t
 
     size_t allocation_size = 0;
 
+    // Preconditions.
     if(NULL == ptr_ || NULL == *ptr_) {
         ERROR_MESSAGE("general_allocator_free(%s) - Provided ptr_ is not valid.", result_to_str(GENERAL_ALLOCATOR_INVALID_ARGUMENT));
         return;
@@ -203,13 +231,23 @@ void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_t
         return;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!general_allocator_is_valid()) {
+    if(!is_valid_shallow()) {
+        ERROR_MESSAGE("general_allocator_free(%s) - Precondition validation failed for 's_general_allocator'.", result_to_str(GENERAL_ALLOCATOR_DATA_CORRUPTED));
+        return;
+    }
+    if(!accounting_is_valid()) {
         ERROR_MESSAGE("general_allocator_free(%s) - Precondition validation failed for 's_general_allocator'.", result_to_str(GENERAL_ALLOCATOR_DATA_CORRUPTED));
         return;
     }
 #endif
 
+    // Prepare.
     ret_free_list_allocator = free_list_allocator_allocation_info_get(&s_general_allocator.free_list_allocator, *ptr_, &allocation_size);
+    // FREE_LIST_ALLOCATOR_INVALID_ARGUMENTを返した場合はptr_がaliveではないため、BAD_OPERATIONエラーを表示する
+    if(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT == ret_free_list_allocator) {
+        ERROR_MESSAGE("general_allocator_free(%s) - Provided ptr_ is already freed.", result_to_str(GENERAL_ALLOCATOR_BAD_OPERATION));
+        return;
+    }
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret_free_list_allocator) {
         ERROR_MESSAGE("general_allocator_free(%s) - general allocator is corrupted.", result_to_str(GENERAL_ALLOCATOR_DATA_CORRUPTED));
         return;
@@ -223,6 +261,7 @@ void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_t
         return;
     }
 
+    // Commit.
     ret_free_list_allocator = free_list_allocator_free(&s_general_allocator.free_list_allocator, *ptr_);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret_free_list_allocator) {
         ERROR_MESSAGE("general_allocator_free(%s) - general allocator is corrupted.", result_to_str(GENERAL_ALLOCATOR_DATA_CORRUPTED));
@@ -232,22 +271,25 @@ void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_t
     s_general_allocator.total_allocated -= allocation_size;
     s_general_allocator.memory_tag_allocated[memory_tag_] -= allocation_size;
 
+    // Postconditions.
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!accounting_is_valid()) {
+        ERROR_MESSAGE("general_allocator_free(%s) - Postcondition validation failed for 's_general_allocator'.", result_to_str(GENERAL_ALLOCATOR_DATA_CORRUPTED));
+        return;
+    }
+#endif
+
     *ptr_ = NULL;
 }
 
-// general_allocator_status_get Validation Policy
-//
-// - allocator_およびout_status_はNULLでないことを要求する。
-// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
-//   allocator_がvalidなStable stateであることを確認する。
-// - 本APIはallocator_を変更しないread-only operationであるため、
-//   成功時のPostcondition canonical validationは行わない。
-// - RELEASE_BUILDではautomatic canonical validationを行わず、
-//   Module Internal Contractが成立していることを前提としてstatusを算出する。
-//
-// AI支援:
-// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
-// - 実装コードはプロジェクト作成者が作成した。
+bool general_allocator_ptr_is_allocated(const void* ptr_) {
+    if(NULL == ptr_) {
+        return false;
+    }
+
+    return free_list_allocator_ptr_is_allocated(&s_general_allocator.free_list_allocator, ptr_);
+}
+
 general_allocator_result_t general_allocator_status_get(general_allocator_status_t* out_status_) {
     general_allocator_result_t ret = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -263,15 +305,22 @@ general_allocator_result_t general_allocator_status_get(general_allocator_status
     size_t largest_free_block_size = 0;
     size_t max_allocation_size = 0;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT, result_to_str(GENERAL_ALLOCATOR_INVALID_ARGUMENT), "general_allocator_status_get", "out_status_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!general_allocator_is_valid()) {
+    if(!is_valid_shallow()) {
+        ret = GENERAL_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("general_allocator_status_get(%s) - Precondition validation failed for 's_general_allocator'.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!accounting_is_valid()) {
         ret = GENERAL_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("general_allocator_status_get(%s) - Precondition validation failed for 's_general_allocator'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
 
+    // Prepare.
     ret_free_list_allocator = free_list_allocator_status_get(&s_general_allocator.free_list_allocator, &free_list_allocator_status);
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret_free_list_allocator) {
         ret = result_convert_free_list_allocator(ret_free_list_allocator);
@@ -287,6 +336,7 @@ general_allocator_result_t general_allocator_status_get(general_allocator_status
     largest_free_block_size = free_list_allocator_status.largest_free_block_size;
     max_allocation_size = free_list_allocator_status.max_allocation_size;
 
+    // Output.
     out_status_->total_allocated = s_general_allocator.total_allocated;
     for(size_t i = 0; i != GENERAL_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
         out_status_->memory_tag_allocated[i] = s_general_allocator.memory_tag_allocated[i];
@@ -334,10 +384,62 @@ bool general_allocator_is_valid(void) {
     if(!is_valid_shallow()) {
         return false;
     }
-    // 後で実装
+    if(!accounting_is_valid()) {
+        return false;
+    }
+    if(s_general_allocator.memory_pool != s_general_allocator.free_list_allocator.memory_pool) {
+        return false;
+    }
+    if(!free_list_allocator_is_valid(&s_general_allocator.free_list_allocator)) {
+        return false;
+    }
     return true;
 }
 
+// ============================================================
+// Initialize, Deinitialize helpers
+// ============================================================
+static general_allocator_result_t memory_pool_initialize(void) {
+#if defined(GLCE_BUILD_MEMORY_POLICY_EMBEDDED)  // 組み込み用静的メモリ領域(mallocを使わない)
+    s_general_allocator.memory_pool = (void*)s_memory_pool;
+#elif defined(GLCE_BUILD_MEMORY_POLICY_DESKTOP)
+    s_general_allocator.memory_pool = malloc(GLCE_BUILD_MEMORY_POOL_SIZE);  // デスクトップ用ヒープメモリ領域(mallocで確保)
+#else
+    return GENERAL_ALLOCATOR_UNDEFINED_ERROR;
+#endif
+
+    if(NULL == s_general_allocator.memory_pool) {
+        return GENERAL_ALLOCATOR_NO_MEMORY;
+    }
+
+    return GENERAL_ALLOCATOR_SUCCESS;
+}
+
+// memory_pool_deinitialize()の実行前に必ずcanonical validatorによる検証を済ませておくこと(create APIの失敗時ロールバックは除く)
+static void memory_pool_deinitialize(void) {
+#if defined(GLCE_BUILD_MEMORY_POLICY_DESKTOP)
+    if(NULL != s_general_allocator.memory_pool) {
+        free(s_general_allocator.memory_pool);
+    }
+#endif
+
+    s_general_allocator.memory_pool = NULL;
+}
+
+static void accounting_reset(void) {
+    s_general_allocator.total_allocated = 0;
+    for(size_t i = 0; i != GENERAL_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        s_general_allocator.memory_tag_allocated[i] = 0;
+    }
+}
+
+static bool general_allocator_is_initialized(void) {
+    return NULL != s_general_allocator.memory_pool;
+}
+
+// ============================================================
+// Utilities
+// ============================================================
 static const char* result_to_str(general_allocator_result_t result_) {
     switch(result_) {
     case GENERAL_ALLOCATOR_SUCCESS:
@@ -352,6 +454,8 @@ static const char* result_to_str(general_allocator_result_t result_) {
         return s_result_str_no_memory;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return s_result_str_overflow;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return s_result_str_limit_exceeded;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return s_result_str_undefined_error;
     default:
@@ -380,12 +484,33 @@ static general_allocator_result_t result_convert_free_list_allocator(free_list_a
     }
 }
 
+// ============================================================
+// Validators
+// ============================================================
 static bool is_valid_shallow(void) {
+    if(NULL == s_general_allocator.memory_pool) {
+        return false;
+    }
     return true;
 }
 
 static bool memory_tag_is_valid(general_allocator_memory_tag_t memory_tag_) {
     if(memory_tag_ >= GENERAL_ALLOCATOR_MEMORY_TAG_MAX || 0 > (int)memory_tag_) {
+        return false;
+    }
+    return true;
+}
+
+// NOTE: General Allocatorのlogical accountingとFree List Allocatorが保持するlive allocation payload総量のcross-layer整合性検証は将来検討する。
+static bool accounting_is_valid(void) {
+    size_t expected_total_size = 0;
+    for(size_t i = 0; i != GENERAL_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        if((SIZE_MAX - s_general_allocator.memory_tag_allocated[i]) < expected_total_size) {
+            return false;
+        }
+        expected_total_size += s_general_allocator.memory_tag_allocated[i];
+    }
+    if(s_general_allocator.total_allocated != expected_total_size) {
         return false;
     }
     return true;

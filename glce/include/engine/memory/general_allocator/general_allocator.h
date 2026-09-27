@@ -20,6 +20,7 @@ typedef enum {
     GENERAL_ALLOCATOR_INVALID_ARGUMENT,
     GENERAL_ALLOCATOR_NO_MEMORY,
     GENERAL_ALLOCATOR_OVERFLOW,
+    GENERAL_ALLOCATOR_LIMIT_EXCEEDED,
     GENERAL_ALLOCATOR_UNDEFINED_ERROR,
 } general_allocator_result_t;
 
@@ -58,6 +59,8 @@ void general_allocator_destroy(void);
 general_allocator_result_t general_allocator_allocate(size_t allocation_size_, general_allocator_memory_tag_t memory_tag_, void** out_ptr_);
 
 void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_tag_);
+
+bool general_allocator_ptr_is_allocated(const void* ptr_);
 
 general_allocator_result_t general_allocator_status_get(general_allocator_status_t* out_status_);
 

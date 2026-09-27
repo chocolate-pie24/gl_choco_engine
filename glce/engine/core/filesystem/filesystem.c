@@ -285,6 +285,8 @@ static filesystem_result_t result_convert_general_allocator(general_allocator_re
         return FILESYSTEM_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return FILESYSTEM_UNDEFINED_ERROR;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return FILESYSTEM_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return FILESYSTEM_UNDEFINED_ERROR;
     default:

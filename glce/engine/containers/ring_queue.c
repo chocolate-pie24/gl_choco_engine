@@ -395,6 +395,8 @@ static ring_queue_result_t result_convert_general_allocator(general_allocator_re
         return RING_QUEUE_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return RING_QUEUE_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return RING_QUEUE_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return RING_QUEUE_UNDEFINED_ERROR;
     default:

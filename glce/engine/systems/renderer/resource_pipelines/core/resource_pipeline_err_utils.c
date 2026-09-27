@@ -264,6 +264,8 @@ resource_pipeline_result_t resource_pipeline_result_convert_general_allocator(ge
         return RESOURCE_PIPELINE_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return RESOURCE_PIPELINE_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     default:

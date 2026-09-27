@@ -201,6 +201,8 @@ shader_result_t shader_result_convert_general_allocator(general_allocator_result
         return SHADER_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return SHADER_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return SHADER_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return SHADER_UNDEFINED_ERROR;
     default:

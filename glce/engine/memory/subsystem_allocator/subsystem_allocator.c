@@ -141,6 +141,9 @@ static const char* const s_memory_tag_undefined = "UNDEFINED";
 // ============================================================
 // Private Function Declarations
 // ============================================================
+// Initialize, Deinitialize helpers
+static void accounting_reset(subsystem_allocator_t* allocator_);
+
 // Utilities
 static const char* result_to_str(subsystem_allocator_result_t result_);
 static subsystem_allocator_result_t result_convert_linear_allocator(linear_allocator_result_t result_);
@@ -215,10 +218,7 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     }
 
     tmp_allocator->linear_allocator_pool = tmp_memory_pool;
-    tmp_allocator->total_allocated = 0;
-    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
-        tmp_allocator->memory_tag_allocated[i] = 0;
-    }
+    accounting_reset(tmp_allocator);
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -278,6 +278,7 @@ void subsystem_allocator_destroy(subsystem_allocator_t** allocator_) {
     }
 #endif
 
+    accounting_reset(*allocator_);
     general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
 }
@@ -428,11 +429,7 @@ subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* al
         ERROR_MESSAGE("subsystem_allocator_reset(%s) - linear_allocator_reset failed.", result_to_str(ret));
         goto cleanup;
     }
-
-    allocator_->total_allocated = 0;
-    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
-        allocator_->memory_tag_allocated[i] = 0;
-    }
+    accounting_reset(allocator_);
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -776,6 +773,19 @@ bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
 }
 
 // ============================================================
+// Initialize, Deinitialize helpers
+// ============================================================
+static void accounting_reset(subsystem_allocator_t* allocator_) {
+    if(NULL == allocator_) {
+        return;
+    }
+    allocator_->total_allocated = 0;
+    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        allocator_->memory_tag_allocated[i] = 0;
+    }
+}
+
+// ============================================================
 // Utilities
 // ============================================================
 static const char* result_to_str(subsystem_allocator_result_t result_) {
@@ -836,6 +846,8 @@ static subsystem_allocator_result_t result_convert_general_allocator(general_all
         return SUBSYSTEM_ALLOCATOR_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return SUBSYSTEM_ALLOCATOR_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR;
     default:

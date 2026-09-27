@@ -3598,6 +3598,8 @@ static range_allocator_result_t result_convert_general_allocator(general_allocat
         return RANGE_ALLOCATOR_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return RANGE_ALLOCATOR_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return RANGE_ALLOCATOR_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return RANGE_ALLOCATOR_UNDEFINED_ERROR;
     default:

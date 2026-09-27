@@ -559,6 +559,8 @@ static fs_path_result_t result_convert_general_allocator(general_allocator_resul
         return FS_PATH_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return FS_PATH_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return FS_PATH_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return FS_PATH_UNDEFINED_ERROR;
     default:

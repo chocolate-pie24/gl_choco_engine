@@ -57,6 +57,8 @@ texture_gpu_resource_result_t texture_gpu_resource_result_convert_general_alloca
         return TEXTURE_GPU_RESOURCE_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return TEXTURE_GPU_RESOURCE_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return TEXTURE_GPU_RESOURCE_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return TEXTURE_GPU_RESOURCE_UNDEFINED_ERROR;
     default:

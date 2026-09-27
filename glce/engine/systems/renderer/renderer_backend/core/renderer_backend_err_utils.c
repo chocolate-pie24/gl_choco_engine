@@ -86,6 +86,8 @@ renderer_backend_result_t renderer_backend_result_convert_general_allocator(gene
         return RENDERER_BACKEND_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return RENDERER_BACKEND_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return RENDERER_BACKEND_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return RENDERER_BACKEND_UNDEFINED_ERROR;
     default:

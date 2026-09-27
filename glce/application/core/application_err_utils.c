@@ -393,6 +393,8 @@ application_result_t application_result_convert_general_allocator(general_alloca
         return APPLICATION_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return APPLICATION_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:

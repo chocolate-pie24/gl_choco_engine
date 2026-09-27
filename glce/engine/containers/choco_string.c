@@ -742,6 +742,8 @@ static choco_string_result_t result_convert_general_allocator(general_allocator_
         return CHOCO_STRING_NO_MEMORY;
     case GENERAL_ALLOCATOR_OVERFLOW:
         return CHOCO_STRING_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return CHOCO_STRING_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return CHOCO_STRING_UNDEFINED_ERROR;
     default:
