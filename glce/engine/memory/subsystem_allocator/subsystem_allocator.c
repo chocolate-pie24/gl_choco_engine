@@ -209,6 +209,64 @@ cleanup:
     return ret;
 }
 
+subsystem_allocator_result_t subsystem_allocator_rollback_point_get(const subsystem_allocator_t* allocator_, subsystem_allocator_rollback_point_t* out_rollback_point_) {
+    subsystem_allocator_result_t ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
+
+    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    linear_allocator_rollback_point_t rollback_point = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback_point_get", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback_point_get", "out_rollback_point_")
+
+    ret_linear_allocator = linear_allocator_rollback_point_get(&allocator_->linear_allocator, &rollback_point);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("subsystem_allocator_rollback_point_get(%s) - linear_allocator_rollback_point_get failed.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    out_rollback_point_->total_allocated = allocator_->total_allocated;
+    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        out_rollback_point_->memory_tag_allocated[i] = allocator_->memory_tag_allocated[i];
+    }
+    out_rollback_point_->offset = rollback_point.offset;
+
+    ret = SUBSYSTEM_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+subsystem_allocator_result_t subsystem_allocator_rollback(subsystem_allocator_t* allocator_, const subsystem_allocator_rollback_point_t* rollback_point_) {
+    subsystem_allocator_result_t ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
+
+    linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+
+    linear_allocator_rollback_point_t rollback_point = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback", "rollback_point_")
+
+    rollback_point.offset = rollback_point_->offset;
+    ret_linear_allocator = linear_allocator_rollback(&allocator_->linear_allocator, &rollback_point);
+    if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
+        ret = result_convert_linear_allocator(ret_linear_allocator);
+        ERROR_MESSAGE("subsystem_allocator_rollback(%s) - linear_allocator_rollback failed.", result_to_str(ret));
+        goto cleanup;
+    }
+
+    allocator_->total_allocated = rollback_point_->total_allocated;
+    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        allocator_->memory_tag_allocated[i] = rollback_point_->memory_tag_allocated[i];
+    }
+
+    ret = SUBSYSTEM_ALLOCATOR_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 // subsystem_allocator_status_get Validation Policy
 //
 // - allocator_およびout_status_はNULLでないことを要求する。
@@ -265,6 +323,15 @@ subsystem_allocator_result_t subsystem_allocator_status_get(const subsystem_allo
 
 cleanup:
     return ret;
+}
+
+bool subsystem_allocator_ptr_is_in_use_range(const subsystem_allocator_t* allocator_, const void* ptr_) {
+    if(NULL == allocator_ || NULL == ptr_) {
+        ERROR_MESSAGE("subsystem_allocator_ptr_is_in_use_range(%s) - Provided allocator_ or ptr_ is not valid.", result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT));
+        return false;
+    }
+
+    return linear_allocator_ptr_is_in_use_range(&allocator_->linear_allocator, ptr_);
 }
 
 const char* subsystem_allocator_memory_tag_to_str(subsystem_allocator_memory_tag_t memory_tag_) {

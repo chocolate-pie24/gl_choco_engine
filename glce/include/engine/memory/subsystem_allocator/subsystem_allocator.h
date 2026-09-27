@@ -31,6 +31,12 @@ typedef enum {
     SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX,
 } subsystem_allocator_memory_tag_t;
 
+typedef struct subsystem_allocator_rollback_point {
+    size_t offset;
+    size_t total_allocated;
+    size_t memory_tag_allocated[SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX];
+} subsystem_allocator_rollback_point_t;
+
 typedef struct subsystem_allocator_status {
     size_t memory_pool_size;
     size_t used_size;
@@ -48,7 +54,13 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
 
 subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* allocator_);
 
+subsystem_allocator_result_t subsystem_allocator_rollback_point_get(const subsystem_allocator_t* allocator_, subsystem_allocator_rollback_point_t* out_rollback_point_);
+
+subsystem_allocator_result_t subsystem_allocator_rollback(subsystem_allocator_t* allocator_, const subsystem_allocator_rollback_point_t* rollback_point_);
+
 subsystem_allocator_result_t subsystem_allocator_status_get(const subsystem_allocator_t* allocator_, subsystem_allocator_status_t* out_status_);
+
+bool subsystem_allocator_ptr_is_in_use_range(const subsystem_allocator_t* allocator_, const void* ptr_);
 
 const char* subsystem_allocator_memory_tag_to_str(subsystem_allocator_memory_tag_t memory_tag_);
 
