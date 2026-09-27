@@ -84,6 +84,10 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     }
 
     tmp_allocator->linear_allocator_pool = tmp_memory_pool;
+    tmp_allocator->total_allocated = 0;
+    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        tmp_allocator->memory_tag_allocated[i] = 0;
+    }
 
     *out_allocator_ = tmp_allocator;
 
