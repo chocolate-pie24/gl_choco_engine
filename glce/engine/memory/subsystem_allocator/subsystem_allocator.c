@@ -15,6 +15,102 @@
 #include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
 #include "engine/memory/general_allocator/general_allocator.h"
 
+/*
+ * Module Internal Contract
+ *
+ * Stable state:
+ * - initializedなsubsystem_allocator_tは、
+ *   有効なowned backing memory poolとinitializedなLinear Allocatorを保持する。
+ * - linear_allocator_pool != NULLである。
+ * - linear_allocator.memory_pool == linear_allocator_poolである。
+ *
+ * Ownership:
+ * - subsystem_allocator_t自身のstorageはGeneral Allocatorから取得し、Subsystem Allocatorが所有する。
+ * - linear_allocator_poolはGeneral Allocatorから取得し、Subsystem Allocatorが所有する。
+ * - destroy時はlinear_allocator_poolを先に解放し、その後subsystem_allocator_t自身を解放する。
+ *
+ * Accounting:
+ * - total_allocatedはcallerが要求した論理allocation sizeの累積値を表す。
+ * - memory_tag_allocated[i]は各memory tagについて、callerが要求した論理allocation sizeの累積値を表す。
+ * - Stable stateでは、sum(memory_tag_allocated[]) == total_allocatedが成立する。
+ * - accounting値にはLinear Allocatorが消費するalignment paddingを含めない。
+ *
+ * Allocation:
+ * - Linear Allocatorによるallocation成功後、callerへ返すallocation_size byteを0で初期化する。
+ * - allocation成功時はtotal_allocatedおよび対応するmemory tag accountingへallocation_sizeを加算する。
+ *
+ * Reset:
+ * - physical allocation stateのresetはembedded Linear Allocatorへ委譲する。
+ * - Linear Allocatorのreset成功後、total_allocatedおよびすべてのmemory tag accountingを0へ戻す。
+ *
+ * Rollback:
+ * - rollback pointはLinear Allocatorのoffset snapshotと、Subsystem Allocatorのlogical accounting snapshotを保持する。
+ * - Linear Allocatorのrollbackが成功した後、total_allocatedおよびmemory tag accountingをrollback pointのsnapshotへ戻す。
+ * - Linear Allocator固有のrollback offset semanticsはSubsystem Allocatorでは再定義しない。
+ *
+ * Pointer range query:
+ * - pointer range判定はembedded Linear Allocatorへ委譲する。
+ * - Subsystem Allocator独自のallocation identityまたはallocation boundaryは保持しない。
+ *
+ * State Transition:
+ * - Public APIのentry / exitではStable stateを維持する。
+ * - allocateではLinear Allocatorのallocation成功からaccounting更新完了まで、
+ *   Linear stateとSubsystem accountingが一時的に異なる時点を許容する。
+ * - resetではLinear Allocatorのreset成功からaccounting reset完了まで、
+ *   同様のtransient stateを許容する。
+ * - rollbackではLinear Allocatorのrollback成功からaccounting restore完了まで、
+ *   同様のtransient stateを許容する。
+ * - Commit完了時にはStable stateへ復帰する。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
+
+ /*
+ * Module Validation Policy
+ *
+ * - ValidationはModule Internal Contractを基準として行う。
+ *
+ * - canonical validatorはinitializedなStable stateについて、
+ *   Subsystem Allocator自身のlocal invariant、logical accounting invariant、
+ *   owned backing memory poolとLinear Allocatorのownership relation、
+ *   およびowned Linear Allocatorのcanonical validityを検証する。
+ *
+ * - shallow validatorはSubsystem Allocator rootについて、
+ *   operationを開始するために必要なlocal structural invariantのみを検証する。
+ * - 現在のshallow validatorはlinear_allocator_poolが存在することを確認する。
+ *
+ * - accounting_is_valid()はSubsystem Allocatorが所有するlogical accounting invariantを検証する。
+ * - memory_tag_allocated[]の合計がoverflowせず計算可能であり、
+ *   その合計がtotal_allocatedと一致することを要求する。
+ *
+ * - public APIのPreconditionsでは、Subsystem Allocator自身が直接使用または変更するstateについて必要なvalidationを行う。
+ * - Linear Allocator固有のstateおよびsemantic invariantは、対応するLinear Allocator public APIへvalidationを委譲し、
+ *   Subsystem Allocator側では重複して検証しない。
+ *
+ * - canonical validator内でlinear_allocator_is_valid()を実行する。
+ *   これはowned childを含むSubsystem Allocator全体のownership closureをcanonical validationするためであり、
+ *   通常Public APIのPreconditionでLinear Allocator固有validationを重複実行することとは区別する。
+ *
+ * - Postcondition validationでは、
+ *   current operationによってSubsystem Allocator自身が変更したstateを検証する。
+ * - Linear Allocator自身のPostcondition validationは対応するLinear Allocator APIへ委譲する。
+ *
+ * - DATA_CORRUPTEDが確定した後は通常cleanupを継続しない。
+ * - create途中のrecoverable failureでは、
+ *   それまでにGeneral Allocatorから取得したtemporary resourceをcleanupする。
+ *
+ * - DEBUG_BUILD / TEST_BUILD / RELEASE_BUILDごとのvalidation実行条件は、
+ *   各Public APIのValidation Policyで個別に定義する。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
+
 struct subsystem_allocator {
     void* linear_allocator_pool;             /**< リニアアロケータ構造体インスタンスが使用するメモリプールのアドレス */
     linear_allocator_t linear_allocator;    /**< リニアアロケータ構造体インスタンス */
@@ -24,6 +120,9 @@ struct subsystem_allocator {
     size_t memory_tag_allocated[SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX];   /**< 各メモリタグごとのメモリ割り当て量 */
 };
 
+// ============================================================
+// Private Constants
+// ============================================================
 static const char* const s_result_str_success = "SUCCESS";
 static const char* const s_result_str_bad_operation = "BAD_OPERATION";
 static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
@@ -39,14 +138,42 @@ static const char* const s_memory_tag_event = "EVENT_SYSTEM";
 static const char* const s_memory_tag_camera = "CAMERA_SYSTEM";
 static const char* const s_memory_tag_undefined = "UNDEFINED";
 
+// ============================================================
+// Private Function Declarations
+// ============================================================
+// Utilities
 static const char* result_to_str(subsystem_allocator_result_t result_);
 static subsystem_allocator_result_t result_convert_linear_allocator(linear_allocator_result_t result_);
 static subsystem_allocator_result_t result_convert_general_allocator(general_allocator_result_t result_);
 
+// Validators
 static bool is_valid_shallow(const subsystem_allocator_t* allocator_);
 static bool memory_tag_is_valid(subsystem_allocator_memory_tag_t memory_tag_);
 static bool accounting_is_valid(const subsystem_allocator_t* allocator_);
 
+// ============================================================
+// Public API
+// ============================================================
+// subsystem_allocator_create Validation Policy
+//
+// - out_allocator_はNULLでなく、*out_allocator_ == NULLであることを要求する。
+// - memory_pool_size_は0より大きいことを要求する。
+// - create前には有効なsubsystem_allocator_tが存在しないため、PreconditionsではSubsystem Allocatorのvalidatorを使用しない。
+//
+// - allocator objectおよびbacking memory poolのallocationに関するvalidationはGeneral Allocatorへ委譲する。
+// - Linear Allocatorのinitializationに関するvalidationはLinear Allocatorへ委譲する。
+//
+// - DEBUG_BUILD / TEST_BUILDでは、allocator object、backing memory pool、
+//   Linear Allocatorおよびlogical accountingの初期化が完了したStable boundaryでcanonical validatorを実行する。
+// - canonical validation成功後に*out_allocator_へ完成済みobjectを公開する。
+// - RELEASE_BUILDではautomatic canonical validationを行わない。
+//
+// - recoverable failureではcreate中に取得したtemporary resourceをcleanupする。
+// - DATA_CORRUPTEDが確定した場合は通常cleanupを行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_, subsystem_allocator_t** out_allocator_) {
     subsystem_allocator_result_t ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -56,6 +183,7 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     subsystem_allocator_t* tmp_allocator = NULL;
     void* tmp_memory_pool = NULL;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_create", "out_allocator_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_create", "*out_allocator_")
     if(0 == memory_pool_size_) {
@@ -64,6 +192,7 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
         goto cleanup;
     }
 
+    // Prepare.
     ret_general_allocator = general_allocator_allocate(sizeof(subsystem_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_allocator);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
@@ -91,6 +220,7 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
         tmp_allocator->memory_tag_allocated[i] = 0;
     }
 
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!subsystem_allocator_is_valid(tmp_allocator)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
@@ -99,8 +229,8 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     }
 #endif
 
+    // Output.
     *out_allocator_ = tmp_allocator;
-
     tmp_allocator = NULL;
     tmp_memory_pool = NULL;
 
@@ -119,6 +249,21 @@ cleanup:
     return ret;
 }
 
+// subsystem_allocator_destroy Validation Policy
+//
+// - allocator_ == NULLまたは*allocator_ == NULLの場合は何も行わずreturnする。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
+//   Subsystem Allocator自身、owned backing memory pool、logical accounting、
+//   およびowned Linear Allocatorを含むownership closureがvalidなStable stateであることを確認する。
+// - canonical validationに失敗した場合はownership releaseを行わずreturnする。
+//
+// - backing memory poolおよびallocator objectのfreeに関するvalidationはGeneral Allocatorへ委譲する。
+// - RELEASE_BUILDではautomatic canonical validationを行わず、Module Internal Contractが成立していることを前提としてdestroyを実行する。
+// - destroyによってobject lifetimeが終了するため、Postcondition validationは行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 void subsystem_allocator_destroy(subsystem_allocator_t** allocator_) {
     if(NULL == allocator_) {
         return;
@@ -137,6 +282,30 @@ void subsystem_allocator_destroy(subsystem_allocator_t** allocator_) {
     general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
 }
 
+// subsystem_allocator_allocate Validation Policy
+//
+// - allocator_およびout_ptr_はNULLでなく、*out_ptr_ == NULLであることを要求する。
+// - memory_tag_はSubsystem Allocatorが定義する有効なmemory tagであることを要求する。
+// - allocation_size_は0より大きいことを要求する。
+//
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorを使用し、
+//   Subsystem Allocator rootのlocal structural invariantを確認する。
+// - DEBUG_BUILD / TEST_BUILDではaccounting_is_valid()を使用し、現在のlogical accountingが整合していることを確認する。
+// - Linear Allocator固有のstate validationはlinear_allocator_allocate()へ委譲する。
+//
+// - total_allocatedおよび対象memory tagのaccountingへallocation_size_を加算した結果が
+//   size_tで管理可能な上限を超えないことを全BUILDでLinear allocation開始前に検証する。
+// - 上限を超える場合はSUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDEDを返し、allocator stateを変更しない。
+//
+// - Linear Allocatorによるphysical allocation成功後にlogical accountingを更新する。
+// - DEBUG_BUILD / TEST_BUILDではaccounting更新完了後のStable boundaryで
+//   accounting_is_valid()を実行し、Subsystem Allocator自身が変更したlogical accountingのPostconditionを確認する。
+// - Linear Allocator自身のPostcondition validationはLinear Allocatorへ委譲する。
+// - RELEASE_BUILDではautomatic shallow / accounting validationを行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t* allocator_, size_t allocation_size_, subsystem_allocator_memory_tag_t memory_tag_, void** out_ptr_) {
     subsystem_allocator_result_t ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -144,6 +313,7 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
 
     void* tmp_ptr = NULL;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "out_ptr_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "*out_ptr_")
@@ -180,6 +350,7 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
         goto cleanup;
     }
 
+    // Commit.
     ret_linear_allocator = linear_allocator_allocate(&allocator_->linear_allocator, allocation_size_, (void**)&tmp_ptr);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
@@ -191,6 +362,7 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
     allocator_->total_allocated += allocation_size_;
     allocator_->memory_tag_allocated[memory_tag_] += allocation_size_;
 
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!accounting_is_valid(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
@@ -199,6 +371,7 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
     }
 #endif
 
+    // Output.
     *out_ptr_ = tmp_ptr;
     tmp_ptr = NULL;
 
@@ -211,13 +384,18 @@ cleanup:
 // subsystem_allocator_reset Validation Policy
 //
 // - allocator_はNULLでないことを要求する。
-// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
-//   allocator_およびowned Linear Allocatorを含むownership closureがvalidなStable stateであることを確認する。
-//   resetはcorrupted stateを修復するためのAPIとして扱わない。
-// - DEBUG_BUILD / TEST_BUILDでは、すべてのreset処理が完了したStable boundaryで
-//   canonical validatorを実行し、owned Linear Allocatorを含むSubsystem Allocator全体が
-//   validなStable stateへ戻ったことをPostconditionとして確認する。
-// - RELEASE_BUILDではautomatic canonical validationを行わず、
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorを使用し、
+//   Subsystem Allocator rootのlocal structural invariantを確認する。
+// - DEBUG_BUILD / TEST_BUILDではaccounting_is_valid()を使用し、reset前のlogical accountingが整合していることを確認する。
+// - resetはcorruptedなlogical accountingを修復するためのAPIとして扱わない。
+// - Linear Allocator固有のstate validationはlinear_allocator_reset()へ委譲する。
+//
+// - Linear Allocatorのreset成功後にtotal_allocatedおよびmemory_tag_allocated[]を0へ戻す。
+// - DEBUG_BUILD / TEST_BUILDではaccounting reset完了後のStable boundaryで
+//   accounting_is_valid()を実行し、Subsystem Allocator自身が変更した
+//   logical accountingのPostconditionを確認する。
+// - Linear Allocator自身のPostcondition validationはLinear Allocatorへ委譲する。
+// - RELEASE_BUILDではautomatic shallow / accounting validationを行わず、
 //   Module Internal Contractが成立していることを前提としてresetを実行する。
 //
 // AI支援:
@@ -228,6 +406,7 @@ subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* al
 
     linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_reset", "allocator_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(allocator_)) {
@@ -242,6 +421,7 @@ subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* al
     }
 #endif
 
+    // Commit.
     ret_linear_allocator = linear_allocator_reset(&allocator_->linear_allocator);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
@@ -254,6 +434,7 @@ subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* al
         allocator_->memory_tag_allocated[i] = 0;
     }
 
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!accounting_is_valid(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
@@ -268,6 +449,24 @@ cleanup:
     return ret;
 }
 
+// subsystem_allocator_rollback_point_get Validation Policy
+//
+// - allocator_およびout_rollback_point_はNULLでないことを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorを使用し、
+//   Subsystem Allocator rootのlocal structural invariantを確認する。
+// - DEBUG_BUILD / TEST_BUILDではaccounting_is_valid()を使用し、
+//   snapshot対象となるlogical accountingが整合していることを確認する。
+// - Linear Allocatorのrollback offset snapshotに関するvalidationは
+//   linear_allocator_rollback_point_get()へ委譲する。
+//
+// - 本APIはallocator stateを変更しないread-only operationであるため、
+//   Postcondition validationは行わない。
+// - RELEASE_BUILDではautomatic shallow / accounting validationを行わない。
+// - rollback pointのlifetimeおよびprovenanceはModule Boundary Contractに従う。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 subsystem_allocator_result_t subsystem_allocator_rollback_point_get(const subsystem_allocator_t* allocator_, subsystem_allocator_rollback_point_t* out_rollback_point_) {
     subsystem_allocator_result_t ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -275,6 +474,7 @@ subsystem_allocator_result_t subsystem_allocator_rollback_point_get(const subsys
 
     linear_allocator_rollback_point_t rollback_point = { 0 };
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback_point_get", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback_point_get", "out_rollback_point_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -290,6 +490,7 @@ subsystem_allocator_result_t subsystem_allocator_rollback_point_get(const subsys
     }
 #endif
 
+    // Prepare.
     ret_linear_allocator = linear_allocator_rollback_point_get(&allocator_->linear_allocator, &rollback_point);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
@@ -297,6 +498,7 @@ subsystem_allocator_result_t subsystem_allocator_rollback_point_get(const subsys
         goto cleanup;
     }
 
+    // Output.
     out_rollback_point_->total_allocated = allocator_->total_allocated;
     for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
         out_rollback_point_->memory_tag_allocated[i] = allocator_->memory_tag_allocated[i];
@@ -309,6 +511,38 @@ cleanup:
     return ret;
 }
 
+// subsystem_allocator_rollback Validation Policy
+//
+// - allocator_およびrollback_point_はNULLでないことを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorを使用し、
+//   Subsystem Allocator rootのlocal structural invariantを確認する。
+// - DEBUG_BUILD / TEST_BUILDではaccounting_is_valid()を使用し、
+//   rollback前のcurrent logical accountingが整合していることを確認する。
+//
+// - rollback_point_に保存されたmemory_tag_allocated[]について、
+//   合計値をsize_tの範囲内で計算可能であることを全BUILDで検証する。
+// - memory_tag_allocated[]の合計値がrollback_point_->total_allocatedと
+//   一致することを全BUILDで検証する。
+// - これらはSubsystem Allocatorが所有するlogical accounting snapshotの
+//   API Contract validationとして行う。
+//
+// - rollback_point_->offsetのalignment、current used rangeとの関係、
+//   その他のLinear Allocator固有semanticはSubsystem Allocatorでは検証せず、
+//   linear_allocator_rollback()へ委譲する。
+// - rollback pointの取得元allocator、generationおよびallocation historyは検証せず、
+//   Module Boundary Contractとしてcallerに要求する。
+//
+// - Linear Allocatorのrollback成功後にlogical accountingをrollback pointのsnapshotへ戻す。
+// - DEBUG_BUILD / TEST_BUILDではaccounting restore完了後のStable boundaryで
+//   shallow validatorおよびaccounting_is_valid()を実行し、
+//   Subsystem Allocator自身のPostconditionを確認する。
+// - Linear Allocator自身のPostcondition validationはLinear Allocatorへ委譲する。
+// - RELEASE_BUILDではautomatic shallow / current accounting validationを行わない。
+//   rollback_point_自身に対するAPI Contract validationは全BUILDで行う。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 subsystem_allocator_result_t subsystem_allocator_rollback(subsystem_allocator_t* allocator_, const subsystem_allocator_rollback_point_t* rollback_point_) {
     subsystem_allocator_result_t ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -317,6 +551,7 @@ subsystem_allocator_result_t subsystem_allocator_rollback(subsystem_allocator_t*
     linear_allocator_rollback_point_t rollback_point = { 0 };
     size_t expected_total_size = 0;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback", "rollback_point_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -345,6 +580,7 @@ subsystem_allocator_result_t subsystem_allocator_rollback(subsystem_allocator_t*
         goto cleanup;
     }
 
+    // Commit.
     rollback_point.offset = rollback_point_->offset;
     ret_linear_allocator = linear_allocator_rollback(&allocator_->linear_allocator, &rollback_point);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
@@ -358,6 +594,7 @@ subsystem_allocator_result_t subsystem_allocator_rollback(subsystem_allocator_t*
         allocator_->memory_tag_allocated[i] = rollback_point_->memory_tag_allocated[i];
     }
 
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
@@ -380,12 +617,17 @@ cleanup:
 // subsystem_allocator_status_get Validation Policy
 //
 // - allocator_およびout_status_はNULLでないことを要求する。
-// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
-//   allocator_がvalidなStable stateであることを確認する。
-// - 本APIはallocator_を変更しないread-only operationであるため、
-//   成功時のPostcondition canonical validationは行わない。
-// - RELEASE_BUILDではautomatic canonical validationを行わず、
-//   Module Internal Contractが成立していることを前提としてstatusを算出する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorを使用し、
+//   Subsystem Allocator rootのlocal structural invariantを確認する。
+// - DEBUG_BUILD / TEST_BUILDではaccounting_is_valid()を使用し、
+//   statusへ出力するlogical accountingが整合していることを確認する。
+// - Linear Allocatorが所有するphysical memory statusのvalidationは
+//   linear_allocator_status_get()へ委譲する。
+//
+// - 本APIはallocator stateを変更しないread-only operationであるため、
+//   Postcondition validationは行わない。
+// - RELEASE_BUILDではautomatic shallow / accounting validationを行わず、
+//   Module Internal Contractが成立していることを前提としてstatusを取得する。
 //
 // AI支援:
 // - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
@@ -400,6 +642,7 @@ subsystem_allocator_result_t subsystem_allocator_status_get(const subsystem_allo
     size_t used_size = 0;
     size_t free_size = 0;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_status_get", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_status_get", "out_status_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -415,6 +658,7 @@ subsystem_allocator_result_t subsystem_allocator_status_get(const subsystem_allo
     }
 #endif
 
+    // Prepare.
     ret_linear_allocator = linear_allocator_status_get(&allocator_->linear_allocator, &linear_allocator_status);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
@@ -426,6 +670,7 @@ subsystem_allocator_result_t subsystem_allocator_status_get(const subsystem_allo
     used_size = linear_allocator_status.used_size;
     free_size = linear_allocator_status.free_size;
 
+    // Output.
     out_status_->free_size = free_size;
     out_status_->memory_pool_size = memory_pool_size;
     out_status_->used_size = used_size;
@@ -440,6 +685,19 @@ cleanup:
     return ret;
 }
 
+// subsystem_allocator_ptr_is_in_use_range Validation Policy
+//
+// - allocator_またはptr_がNULLの場合はfalseを返す。
+// - Subsystem Allocator自身のshallow / canonical validationは行わない。
+// - pointer rangeのsemanticおよびLinear Allocator自身のstate validationはlinear_allocator_ptr_is_in_use_range()へ委譲する。
+// - Subsystem AllocatorではLinear Allocator固有のrange conditionを重複して検証しない。
+//
+// - 本APIはallocator stateを変更しないread-only queryであるため、
+//   Postcondition validationは行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 bool subsystem_allocator_ptr_is_in_use_range(const subsystem_allocator_t* allocator_, const void* ptr_) {
     if(NULL == allocator_ || NULL == ptr_) {
         ERROR_MESSAGE("subsystem_allocator_ptr_is_in_use_range(%s) - Provided allocator_ or ptr_ is not valid.", result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT));
@@ -449,6 +707,18 @@ bool subsystem_allocator_ptr_is_in_use_range(const subsystem_allocator_t* alloca
     return linear_allocator_ptr_is_in_use_range(&allocator_->linear_allocator, ptr_);
 }
 
+// subsystem_allocator_memory_tag_to_str Validation Policy
+//
+// - memory_tag_に対してvalidatorは使用しない。
+// - 定義済みmemory tagは対応する文字列へ変換する。
+// - SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAXおよび定義範囲外の値は
+//   UNDEFINEDを表す文字列へ変換する。
+// - 本APIはstateを参照または変更しないため、
+//   shallow / canonical / Postcondition validationは行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 const char* subsystem_allocator_memory_tag_to_str(subsystem_allocator_memory_tag_t memory_tag_) {
     switch(memory_tag_) {
     case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM:
@@ -466,6 +736,26 @@ const char* subsystem_allocator_memory_tag_to_str(subsystem_allocator_memory_tag
     }
 }
 
+// subsystem_allocator_is_valid Validation Policy
+//
+// - 本APIはSubsystem Allocatorのpublic canonical validatorである。
+// - allocator_ == NULLの場合はfalseを返す。
+// - shallow validatorを最初に実行し、canonical validationを安全に継続できる
+//   Subsystem Allocator rootのlocal structural invariantを確認する。
+// - accounting_is_valid()によってSubsystem Allocatorが所有するlogical accounting invariantを検証する。
+// - linear_allocator_poolとLinear Allocatorが参照するmemory_poolの一致を、
+//   Subsystem Allocatorが所有するownership relationとして検証する。
+// - owned Linear Allocatorに対してlinear_allocator_is_valid()を実行し、
+//   ownership closureをcanonical validationする。
+// - owned Linear Allocatorのcanonical validationは、通常Public APIにおける
+//   Linear固有validationの重複ではなく、Subsystem Allocator全体のcanonical modelを検証する責務として行う。
+//
+// - explicit validatorであるためBUILD_MODEによってvalidation semanticsを変更しない。
+// - allocator stateを変更せず、validation failure時もfalseを返すのみとする。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
     if(NULL == allocator_) {
         return false;
@@ -485,6 +775,9 @@ bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
     return true;
 }
 
+// ============================================================
+// Utilities
+// ============================================================
 static const char* result_to_str(subsystem_allocator_result_t result_) {
     switch(result_) {
     case SUBSYSTEM_ALLOCATOR_SUCCESS:
@@ -550,6 +843,9 @@ static subsystem_allocator_result_t result_convert_general_allocator(general_all
     }
 }
 
+// ============================================================
+// Validators
+// ============================================================
 static bool is_valid_shallow(const subsystem_allocator_t* allocator_) {
     if(NULL == allocator_) {
         return false;

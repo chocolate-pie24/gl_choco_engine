@@ -234,6 +234,7 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
     next_head_addr = (uintptr_t)allocator_->head_ptr + (uintptr_t)block_size;
     allocator_->head_ptr = (void*)next_head_addr;
 
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!linear_allocator_is_valid(allocator_)) {
         ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
@@ -379,6 +380,7 @@ linear_allocator_result_t linear_allocator_rollback(linear_allocator_t* allocato
     // Commit.
     allocator_->head_ptr = (void*)next_end_addr;
 
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!linear_allocator_is_valid(allocator_)) {
         ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
