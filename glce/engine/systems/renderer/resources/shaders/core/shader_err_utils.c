@@ -70,6 +70,8 @@ shader_result_t shader_result_convert_subsystem_allocator(subsystem_allocator_re
         return SHADER_INVALID_ARGUMENT;
     case SUBSYSTEM_ALLOCATOR_OVERFLOW:
         return SHADER_OVERFLOW;
+    case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
+        return SHADER_LIMIT_EXCEEDED;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return SHADER_UNDEFINED_ERROR;
     default:

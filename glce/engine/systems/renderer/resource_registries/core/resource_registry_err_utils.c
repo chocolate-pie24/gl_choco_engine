@@ -70,6 +70,8 @@ resource_registry_result_t resource_registry_result_convert_subsystem_allocator(
         return RESOURCE_REGISTRY_INVALID_ARGUMENT;
     case SUBSYSTEM_ALLOCATOR_OVERFLOW:
         return RESOURCE_REGISTRY_OVERFLOW;
+    case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
+        return RESOURCE_REGISTRY_LIMIT_EXCEEDED;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;
     default:

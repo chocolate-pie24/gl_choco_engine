@@ -30,6 +30,7 @@ static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
 static const char* const s_result_str_no_memory = "NO_MEMORY";
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
 static const char* const s_result_str_overflow = "OVERFLOW";
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
 static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
 static const char* const s_memory_tag_platform = "PLATFORM_SYSTEM";
@@ -44,6 +45,7 @@ static subsystem_allocator_result_t result_convert_general_allocator(general_all
 
 static bool is_valid_shallow(const subsystem_allocator_t* allocator_);
 static bool memory_tag_is_valid(subsystem_allocator_memory_tag_t memory_tag_);
+static bool accounting_is_valid(const subsystem_allocator_t* allocator_);
 
 subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_, subsystem_allocator_t** out_allocator_) {
     subsystem_allocator_result_t ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
@@ -89,6 +91,14 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
         tmp_allocator->memory_tag_allocated[i] = 0;
     }
 
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!subsystem_allocator_is_valid(tmp_allocator)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_create(%s) - Postcondition validation failed for 'tmp_allocator'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
     *out_allocator_ = tmp_allocator;
 
     tmp_allocator = NULL;
@@ -97,12 +107,15 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     ret = SUBSYSTEM_ALLOCATOR_SUCCESS;
 
 cleanup:
-    if(NULL != tmp_memory_pool) {
-        general_allocator_free((void**)&tmp_memory_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+    if(SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED != ret) {
+        if(NULL != tmp_memory_pool) {
+            general_allocator_free((void**)&tmp_memory_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+        }
+        if(NULL != tmp_allocator) {
+            general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+        }
     }
-    if(NULL != tmp_allocator) {
-        general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-    }
+
     return ret;
 }
 
@@ -113,6 +126,13 @@ void subsystem_allocator_destroy(subsystem_allocator_t** allocator_) {
     if(NULL == *allocator_) {
         return;
     }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!subsystem_allocator_is_valid(*allocator_)) {
+        ERROR_MESSAGE("subsystem_allocator_destroy(%s) - Precondition validation failed for 'allocator_'.", result_to_str(SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED));
+        return;
+    }
+#endif
+
     general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
 }
@@ -137,6 +157,28 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
         ERROR_MESSAGE("subsystem_allocator_allocate(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_allocate(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!accounting_is_valid(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_allocate(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+    if((SIZE_MAX - allocation_size_) < allocator_->total_allocated) {
+        ret = SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("subsystem_allocator_allocate(%s) - subsystem allocator limit exceeded.", result_to_str(ret));
+        goto cleanup;
+    }
+    if((SIZE_MAX - allocation_size_) < allocator_->memory_tag_allocated[memory_tag_]) {
+        ret = SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("subsystem_allocator_allocate(%s) - subsystem allocator limit exceeded.", result_to_str(ret));
+        goto cleanup;
+    }
 
     ret_linear_allocator = linear_allocator_allocate(&allocator_->linear_allocator, allocation_size_, (void**)&tmp_ptr);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
@@ -148,6 +190,14 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
 
     allocator_->total_allocated += allocation_size_;
     allocator_->memory_tag_allocated[memory_tag_] += allocation_size_;
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!accounting_is_valid(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_allocate(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     *out_ptr_ = tmp_ptr;
     tmp_ptr = NULL;
@@ -180,7 +230,12 @@ subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* al
 
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_reset", "allocator_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!subsystem_allocator_is_valid(allocator_)) {
+    if(!is_valid_shallow(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_reset(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!accounting_is_valid(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("subsystem_allocator_reset(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
@@ -200,9 +255,9 @@ subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* al
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!subsystem_allocator_is_valid(allocator_)) {
+    if(!accounting_is_valid(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("subsystem_allocator_reset(%s) - " "Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("subsystem_allocator_reset(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -222,6 +277,18 @@ subsystem_allocator_result_t subsystem_allocator_rollback_point_get(const subsys
 
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback_point_get", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback_point_get", "out_rollback_point_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_rollback_point_get(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!accounting_is_valid(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_rollback_point_get(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     ret_linear_allocator = linear_allocator_rollback_point_get(&allocator_->linear_allocator, &rollback_point);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
@@ -248,9 +315,35 @@ subsystem_allocator_result_t subsystem_allocator_rollback(subsystem_allocator_t*
     linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     linear_allocator_rollback_point_t rollback_point = { 0 };
+    size_t expected_total_size = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback", "rollback_point_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_rollback(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!accounting_is_valid(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_rollback(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        if((SIZE_MAX - rollback_point_->memory_tag_allocated[i]) < expected_total_size) {
+            ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
+            ERROR_MESSAGE("subsystem_allocator_rollback(%s) - Provided rollback_point_ is not valid.", result_to_str(ret));
+            goto cleanup;
+        }
+        expected_total_size += rollback_point_->memory_tag_allocated[i];
+    }
+    if(expected_total_size != rollback_point_->total_allocated) {
+        ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("subsystem_allocator_rollback(%s) - Provided rollback_point_ is not valid.", result_to_str(ret));
+        goto cleanup;
+    }
 
     rollback_point.offset = rollback_point_->offset;
     ret_linear_allocator = linear_allocator_rollback(&allocator_->linear_allocator, &rollback_point);
@@ -264,6 +357,19 @@ subsystem_allocator_result_t subsystem_allocator_rollback(subsystem_allocator_t*
     for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
         allocator_->memory_tag_allocated[i] = rollback_point_->memory_tag_allocated[i];
     }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_rollback(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!accounting_is_valid(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_rollback(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     ret = SUBSYSTEM_ALLOCATOR_SUCCESS;
 
@@ -297,7 +403,12 @@ subsystem_allocator_result_t subsystem_allocator_status_get(const subsystem_allo
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_status_get", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_status_get", "out_status_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!subsystem_allocator_is_valid(allocator_)) {
+    if(!is_valid_shallow(allocator_)) {
+        ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("subsystem_allocator_status_get(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!accounting_is_valid(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("subsystem_allocator_status_get(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
@@ -356,31 +467,21 @@ const char* subsystem_allocator_memory_tag_to_str(subsystem_allocator_memory_tag
 }
 
 bool subsystem_allocator_is_valid(const subsystem_allocator_t* allocator_) {
-    size_t total_tag_allocated = 0;
-
     if(NULL == allocator_) {
         return false;
     }
     if(!is_valid_shallow(allocator_)) {
         return false;
     }
-
+    if(!accounting_is_valid(allocator_)) {
+        return false;
+    }
+    if(allocator_->linear_allocator_pool != allocator_->linear_allocator.memory_pool) {
+        return false;
+    }
     if(!linear_allocator_is_valid(&allocator_->linear_allocator)) {
         return false;
     }
-
-    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
-        // total_tag_allocatedに対する加算をを安全に実行できることを確認
-        if(allocator_->memory_tag_allocated[i] > (allocator_->total_allocated - total_tag_allocated)) {
-            return false;
-        }
-        total_tag_allocated += allocator_->memory_tag_allocated[i];
-    }
-
-    if(total_tag_allocated != allocator_->total_allocated) {
-        return false;
-    }
-
     return true;
 }
 
@@ -398,6 +499,8 @@ static const char* result_to_str(subsystem_allocator_result_t result_) {
         return s_result_str_invalid_argument;
     case SUBSYSTEM_ALLOCATOR_OVERFLOW:
         return s_result_str_overflow;
+    case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
+        return s_result_str_limit_exceeded;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return s_result_str_undefined_error;
     default:
@@ -461,6 +564,23 @@ static bool is_valid_shallow(const subsystem_allocator_t* allocator_) {
 
 static bool memory_tag_is_valid(subsystem_allocator_memory_tag_t memory_tag_) {
     if(SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX <= memory_tag_ || 0 > (int)memory_tag_) {
+        return false;
+    }
+    return true;
+}
+
+static bool accounting_is_valid(const subsystem_allocator_t* allocator_) {
+    size_t expected_total_size = 0;
+    if(NULL == allocator_) {
+        return false;
+    }
+    for(size_t i = 0; i != SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
+        if((SIZE_MAX - allocator_->memory_tag_allocated[i]) < expected_total_size) {
+            return false;
+        }
+        expected_total_size += allocator_->memory_tag_allocated[i];
+    }
+    if(allocator_->total_allocated != expected_total_size) {
         return false;
     }
     return true;

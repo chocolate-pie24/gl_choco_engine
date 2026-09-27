@@ -60,6 +60,8 @@ camera_registry_result_t camera_registry_result_convert_subsystem_allocator(subs
         return CAMERA_REGISTRY_INVALID_ARGUMENT;
     case SUBSYSTEM_ALLOCATOR_OVERFLOW:
         return CAMERA_REGISTRY_OVERFLOW;
+    case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
+        return CAMERA_REGISTRY_LIMIT_EXCEEDED;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
         return CAMERA_REGISTRY_UNDEFINED_ERROR;
     default:
