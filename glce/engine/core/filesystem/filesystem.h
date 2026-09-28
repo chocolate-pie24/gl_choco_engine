@@ -5,17 +5,42 @@
  *
  * @file filesystem.h
  * @author chocolate-pie24
- * @brief ファイルシステムモジュールAPIの提供
+ * @brief 基本的なfile I/Oを提供するFilesystem module
  *
- * @details ファイルシステムモジュールは、ファイルI/Oについて最も基本的なAPIを提供する。
- * そのため、1行単位の読み込みや、ファイル全体の読み込みといった処理は提供しない。
- * これらの処理には可変長文字列バッファのリソース管理が必要で、choco_stringモジュールを使用したい。
- * choco_stringモジュールを使用するとなると、containersレイヤーよりも上層にfilesystemを位置づける必要がある。
- * 一方で、ファイルI/Oについての基本的な処理はcoreレイヤーに置きたい。このため、高度な処理と基本的な処理を分け、基本的な処理はcore/filesystemに置くことにする。
- * なお、高度な処理は、io_utils/fs_streamに格納する。
+ * @details
+ * Filesystem moduleは、fileのopen / closeおよびbyte単位のreadなど、
+ * file I/Oの基本的なoperationを提供する。
+ *
+ * 1行単位の読み込みやfile全体の読み込みなど、
+ * 可変長文字列bufferのresource管理を必要とする高水準なfile I/Oは本moduleでは扱わない。
+ * これらの処理はio_utils/fs_streamが担当する。
+ *
+ * filesystem_tはopaque typeとし、1つのopened file resourceとそのopen modeを表す。
+ *
+ * @section filesystem_boundary_contract Module Boundary Contract
+ *
+ * Lifecycle / Ownership:
+ * - filesystem_create()はcomplete constructorである。
+ *   成功時には対象fileのopenを含む初期化をすべて完了し、即座に利用可能なfilesystem_tをcallerへ公開する。
+ * - create途中のpartial stateはcallerへ公開しない。
+ * - filesystem_t自身のstorageはGeneral Allocatorから取得し、
+ *   Filesystem moduleがそのlifetimeを管理する。
+ * - filesystem_tはcreate時にopenしたfile resourceをそのlifetime中所有する。
+ * - filesystem_tのlifetime終了にはfilesystem_destroy()を使用する。
+ * - filesystem_create()を使用する前からfilesystem_destroy()が完了するまで、
+ *   General Allocatorは利用可能でなければならない。
+ *
+ * Validation:
+ * - filesystem_is_valid()はfilesystem_tのcanonical validatorである。
+ * - canonical validityはFilesystem moduleが保証するfilesystem_t自身の
+ *   lifecycleおよびstructural invariantを対象とする。
  *
  * @date 2025-12-23
  *
+ * @par AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
  */
 #ifndef GLCE_ENGINE_CORE_FILESYSTEM_FILESYSTEM_H
 #define GLCE_ENGINE_CORE_FILESYSTEM_FILESYSTEM_H

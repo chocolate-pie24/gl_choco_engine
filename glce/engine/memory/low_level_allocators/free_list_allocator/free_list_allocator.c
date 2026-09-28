@@ -88,6 +88,9 @@
  * - 実装コードはプロジェクト作成者が作成した。
  */
 
+// ============================================================
+// Private Type Definitions
+// ============================================================
 typedef enum {
     FREE_LIST_BLOCK_STATE_FREE = 0,
     FREE_LIST_BLOCK_STATE_ALLOCATED,

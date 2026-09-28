@@ -99,6 +99,9 @@
  * - 実装コードはプロジェクト作成者が作成した。
  */
 
+// ============================================================
+// Private Type Definitions
+// ============================================================
 typedef struct general_allocator {
     // Allocator
     free_list_allocator_t free_list_allocator;
