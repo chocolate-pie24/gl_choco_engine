@@ -72,8 +72,6 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct general_allocator general_allocator_t;
-
 typedef enum {
     GENERAL_ALLOCATOR_SUCCESS = 0,
     GENERAL_ALLOCATOR_DATA_CORRUPTED,

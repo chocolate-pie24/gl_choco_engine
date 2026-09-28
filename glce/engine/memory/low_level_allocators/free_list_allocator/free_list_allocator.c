@@ -88,6 +88,21 @@
  * - 実装コードはプロジェクト作成者が作成した。
  */
 
+typedef enum {
+    FREE_LIST_BLOCK_STATE_FREE = 0,
+    FREE_LIST_BLOCK_STATE_ALLOCATED,
+} free_list_block_state_t;
+
+typedef struct free_list_block_header {
+    struct free_list_block_header* prev;
+    struct free_list_block_header* next;
+
+    size_t allocation_size; // callerが要求した論理allocation size, FREE blockでは0
+    size_t block_size;      // headerを含む、そのblock全体の物理サイズ, FREE / ALLOCATEDの両方で常に有効
+
+    free_list_block_state_t block_state;
+} free_list_block_header_t;
+
 // ============================================================
 // Private Constants
 // ============================================================
@@ -175,12 +190,12 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
 
     // Prepare.
     if(!memory_utility_align_up(sizeof(free_list_block_header_t), alignof(max_align_t), &payload_offset)) {
-        ret = FREE_LIST_ALLOCATOR_OVERFLOW; // このケースでmemory_utility_align_upが失敗しるのはOVERFLOWのみ
+        ret = FREE_LIST_ALLOCATOR_OVERFLOW; // このケースでmemory_utility_align_upが失敗するのはOVERFLOWのみ
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - memory_utility_align_up failed.", result_to_str(ret));
         goto cleanup;
     }
     if((SIZE_MAX - payload_offset) < alignof(max_align_t)) {
-        ret = FREE_LIST_ALLOCATOR_OVERFLOW; // このケースでmemory_utility_align_upが失敗しるのはOVERFLOWのみ
+        ret = FREE_LIST_ALLOCATOR_OVERFLOW; // このケースでmemory_utility_align_upが失敗するのはOVERFLOWのみ
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - minimum_block_size overflow.", result_to_str(ret));
         goto cleanup;
     }

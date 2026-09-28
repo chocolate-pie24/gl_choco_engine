@@ -99,7 +99,7 @@
  * - 実装コードはプロジェクト作成者が作成した。
  */
 
-struct general_allocator {
+typedef struct general_allocator {
     // Allocator
     free_list_allocator_t free_list_allocator;
     void* memory_pool;
@@ -107,7 +107,7 @@ struct general_allocator {
     // memory使用量管理
     size_t total_allocated;                     /**< メモリ総割り当て量 */
     size_t memory_tag_allocated[GENERAL_ALLOCATOR_MEMORY_TAG_MAX];   /**< 各メモリタグごとのメモリ割り当て量 */
-};
+} general_allocator_t;
 
 // ============================================================
 // Private Constants

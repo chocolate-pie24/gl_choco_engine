@@ -41,6 +41,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
+typedef struct free_list_block_header free_list_block_header_t;
+
 typedef enum {
     FREE_LIST_ALLOCATOR_SUCCESS = 0,
     FREE_LIST_ALLOCATOR_DATA_CORRUPTED,
@@ -50,11 +52,6 @@ typedef enum {
     FREE_LIST_ALLOCATOR_OVERFLOW,
     FREE_LIST_ALLOCATOR_UNDEFINED_ERROR,
 } free_list_allocator_result_t;
-
-typedef enum {
-    FREE_LIST_BLOCK_STATE_FREE = 0,
-    FREE_LIST_BLOCK_STATE_ALLOCATED,
-} free_list_block_state_t;
 
 typedef struct free_list_allocator_status {
     size_t memory_pool_size;
@@ -70,16 +67,6 @@ typedef struct free_list_allocator_status {
     size_t max_allocation_size;
 } free_list_allocator_status_t;
 
-typedef struct free_list_block_header {
-    struct free_list_block_header* prev;
-    struct free_list_block_header* next;
-
-    size_t allocation_size; // callerが要求した論理allocation size, FREE blockでは0
-    size_t block_size;      // headerを含む、そのblock全体の物理サイズ, FREE / ALLOCATEDの両方で常に有効
-
-    free_list_block_state_t block_state;
-} free_list_block_header_t;
-
 // general_allocatorでfree_list_allocator_t allocatorとして宣言したい(memory_poolからのみメモリを確保したいため)ため、内部構造は.hに書く(ただしapplicationには公開しない)
 typedef struct {
     void* memory_pool;  // mutable borrowed pointer
@@ -88,7 +75,7 @@ typedef struct {
     size_t minimum_block_size;  // 最小ブロックサイズ(payload_offset + alignof(max_align_t))
     size_t payload_offset;      // header先頭からuser payloadまでのサイズ(sizeof(free_list_block_header_t) + padding)
 
-    free_list_block_header_t* head;
+    struct free_list_block_header* head;
 } free_list_allocator_t;
 
 // free_list_allocatorの生成にmallocを使用したくないためcreateではなくてinitialize

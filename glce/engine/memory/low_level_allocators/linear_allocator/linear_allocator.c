@@ -266,7 +266,7 @@ cleanup:
 linear_allocator_result_t linear_allocator_reset(linear_allocator_t* allocator_) {
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
-    // Preconditions
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_reset", "allocator_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!linear_allocator_is_valid(allocator_)) {
