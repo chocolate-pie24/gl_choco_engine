@@ -1,6 +1,67 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
+/**
+ * @file general_allocator.h
+ * @brief general lifetime向けmemory allocationとmemory tag別accountingを提供するGeneral Allocator
+ *
+ * @details
+ * General Allocatorは、Engine全体で共有するgeneral lifetime向けmemory allocationを提供する。
+ *
+ * General Allocatorはmodule内部に単一instanceを保持するsingletonとして動作し、
+ * backing memory poolのallocation mechanismにはFree List Allocatorを使用する。
+ *
+ * individual allocationのfreeを提供し、allocation時に指定されたmemory tagごとに
+ * callerが要求した論理allocation sizeをaccountingする。
+ *
+ * @section general_allocator_boundary_contract Module Boundary Contract
+ *
+ * - General Allocatorはprocess-wide singletonとして使用する。
+ * - 他のGeneral Allocator APIを使用する前にgeneral_allocator_create()を実行する。
+ * - initializedな状態でgeneral_allocator_create()を再実行してはならない。
+ * - 二重createはGENERAL_ALLOCATOR_BAD_OPERATIONを返し、既存stateを変更しない。
+ * - 利用終了時はgeneral_allocator_destroy()を実行する。
+ *
+ * - backing memory poolはGeneral Allocatorが所有する。
+ * - callerはbacking memory poolを直接取得、変更または解放してはならない。
+ * - backing memory poolのcapacityおよびstorage policyはbuild configurationによって決定する。
+ *
+ * - allocationされるmemoryはGeneral Allocatorが所有するbacking memory pool内から取得する。
+ * - allocationのalignmentはalignof(max_align_t)である。
+ * - allocation_sizeは0より大きくなければならない。
+ * - allocation時には有効なgeneral_allocator_memory_tag_tを指定する。
+ * - allocation成功時、callerが要求したallocation_size byteの領域は0で初期化される。
+ * - allocation成功時に返されるpointerはallocation payloadの先頭を指す。
+ *
+ * - allocationをfreeする場合は、general_allocator_allocate()によって返された
+ *   現在allocation中のpayload先頭pointerを指定する。
+ * - interior pointerまたはすでにfreeされたpointerをfreeしてはならない。
+ * - free時には、そのallocationを取得した際と同じmemory tagを指定する。
+ * - free成功時はcallerが保持するpointerをNULLへ変更する。
+ *
+ * - total_allocatedおよびmemory_tag_allocatedは、
+ *   callerが要求した論理allocation sizeをaccountingする。
+ * - allocated_block_size / free_block_size等のblock情報は、
+ *   Free List Allocatorが管理する物理memory layoutを表し、
+ *   block headerおよびalignment paddingの影響を含み得る。
+ * - total_allocatedとallocated_block_sizeは異なるsemanticを持ち、
+ *   同一値であることを保証しない。
+ *
+ * - general_allocator_ptr_is_allocated()は、
+ *   pointerが現在allocation中のpayload先頭を指す場合にtrueを返す。
+ * - allocationをfreeする場合は、general_allocator_allocate()によって返された現在allocation中のpayload先頭pointerを指定する。
+ *   allocation payloadの途中を指すpointerをfreeしてはならない。
+ * - raw pointerのaddressのみを用いて判定するため、
+ *   free後に同じaddressが別allocationへ再利用された場合のhistorical allocation identityは保証しない。
+ *
+ * - general_allocator_is_valid()は、現在のGeneral Allocatorが
+ *   moduleのcanonical invariantを満たすStable stateであるかを判定する。
+ *
+ * @par AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
 #ifndef GLCE_ENGINE_MEMORY_GENERAL_ALLOCATOR_GENERAL_ALLOCATOR_H
 #define GLCE_ENGINE_MEMORY_GENERAL_ALLOCATOR_GENERAL_ALLOCATOR_H
 

@@ -16,6 +16,89 @@
 
 #include "engine/memory/low_level_allocators/free_list_allocator/free_list_allocator.h"
 
+/*
+ * Module Internal Contract
+ *
+ * Stable state:
+ * - initializedなGeneral Allocatorは、有効なowned backing memory poolとinitializedなFree List Allocatorを保持する。
+ * - memory_pool != NULLである。
+ * - free_list_allocator.memory_pool == memory_poolである。
+ *
+ * Backing memory:
+ * - General Allocatorは自身が使用するbacking memory poolを所有する。
+ * - GLCE_BUILD_MEMORY_POLICY_DESKTOPではbacking memory poolをmalloc()によって取得し、destroy時にfree()によって解放する。
+ * - GLCE_BUILD_MEMORY_POLICY_EMBEDDEDではstatic storageをbacking memory poolとして使用し、
+ *   destroy時にstorage自体の解放は行わない。
+ * - どちらのBuild Policyでもdeinitialize後はmemory_pool == NULLへ戻す。
+ * - backing memory pool上のphysical allocation管理はFree List Allocatorへ委譲する。
+ *
+ * Accounting:
+ * - total_allocatedはcallerが要求した論理allocation sizeの累積値を表す。
+ * - memory_tag_allocated[i]は各memory tagについて、callerが要求した論理allocation sizeの累積値を表す。
+ * - Stable stateでは、sum(memory_tag_allocated[]) == total_allocatedが成立する。
+ * - accounting値にはFree List Allocatorが管理するblock header、
+ *   alignment paddingその他のphysical allocation overheadを含めない。
+ *
+ * State Transition:
+ * - Public APIのentry / exitではStable stateを維持する。
+ * - createではbacking memory pool取得からFree List Allocator initialization、
+ *   accounting initialization完了までpartial initialization stateを許容する。
+ * - allocateではFree List Allocatorのallocation成功からaccounting更新完了まで、
+ *   Free List stateとGeneral Allocator accountingが一時的に異なる時点を許容する。
+ * - freeではFree List Allocatorのfree成功からaccounting更新完了まで、
+ *   同様のtransient stateを許容する。
+ * - destroyではFree List Allocatorを先にdeinitializeし、
+ *   その後backing memory poolとlogical accountingをdeinitializeする。
+ * - Commit完了時にはStable stateへ復帰する。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
+
+/*
+ * Module Validation Policy
+ *
+ * - ValidationはModule Internal Contractを基準として行う。
+ *
+ * - canonical validatorはinitializedなStable stateについて、
+ *   General Allocator自身のlocal invariant、logical accounting invariant、
+ *   backing memory poolとFree List Allocatorのownership relation、
+ *   およびowned Free List Allocatorのcanonical validityを検証する。
+ *
+ * - shallow validatorはGeneral Allocator rootについて、
+ *   operationを開始するために必要なlocal structural invariantのみを検証する。
+ * - 現在のshallow validatorはmemory_poolが存在することを確認する。
+ *
+ * - accounting_is_valid()はGeneral Allocatorが所有するlogical accounting invariantを検証する。
+ * - memory_tag_allocated[]の合計がoverflowせず計算可能であり、その合計がtotal_allocatedと一致することを要求する。
+ * - General Allocatorのlogical accountingとFree List Allocatorが保持する
+ *   live allocation payload総量のcross-layer整合性検証は将来検討する。
+ *
+ * - public APIのPreconditionsでは、General Allocator自身が直接使用または変更するstateについて必要なvalidationを行う。
+ * - Free List Allocator固有のstateおよびsemantic invariantは、
+ *   対応するFree List Allocator public APIへvalidationを委譲し、General Allocator側では重複して検証しない。
+ *
+ * - canonical validator内でfree_list_allocator_is_valid()を実行する。
+ *   これはowned childを含むGeneral Allocator全体のownership closureを
+ *   canonical validationするためであり、通常Public APIのPreconditionでFree List Allocator固有validationを
+ *   重複実行することとは区別する。
+ *
+ * - Postcondition validationでは、
+ *   current operationによってGeneral Allocator自身が変更したstateを検証する。
+ * - Free List Allocator自身のPostcondition validationは
+ *   対応するFree List Allocator APIへ委譲する。
+ *
+ * - DEBUG_BUILD / TEST_BUILD / RELEASE_BUILDごとのvalidation実行条件は、
+ *   各Public APIのValidation Policyで個別に定義する。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
+
 struct general_allocator {
     // Allocator
     free_list_allocator_t free_list_allocator;
@@ -78,6 +161,21 @@ static bool accounting_is_valid(void);
 // Public API
 // ============================================================
 
+// general_allocator_create Validation Policy
+//
+// - create前にはcanonicalなGeneral Allocatorが存在しないため、PreconditionsではGeneral Allocatorのvalidatorを使用しない。
+// - DEBUG_BUILD / TEST_BUILDでは、すべてのinitializationが完了したStable boundaryでcanonical validatorを実行する。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
+//
+// NOTE: 以下は後日doxygenコメントとして正式に記載予定
+// - initializedな状態での二重createはGENERAL_ALLOCATOR_BAD_OPERATIONとし、既存stateを変更せずearly returnする。
+// - backing memory poolの取得とFree List Allocatorのinitializationが完了した後、accountingをzero stateへ初期化する。
+// - recoverable failureではcreate中に取得したbacking memory resourceをrollbackする。
+// - DATA_CORRUPTEDが確定した場合は通常rollbackを行わない。
+// - create途中のrollbackに限り、canonical validationを行わずmemory poolをdeinitializeしてよい。
 general_allocator_result_t general_allocator_create(void) {
     general_allocator_result_t ret = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -122,6 +220,20 @@ cleanup:
     return ret;
 }
 
+// general_allocator_destroy Validation Policy
+//
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
+//   General AllocatorがModule Internal Contractを満たすStable stateであることを検証する。
+// - Free List Allocator固有のdeinitialize validationはfree_list_allocator_deinitialize()へ委譲する。
+// - destroy完了後はinitializedなGeneral Allocatorが存在しないため、Postconditionsでcanonical validatorは使用しない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
+//
+// NOTE: 以下は後日doxygenコメントとして正式に記載予定
+// - Free List Allocatorのdeinitializeに成功した場合のみbacking memory poolをdeinitializeする。
+// - backing memory poolのdeinitialize後にlogical accountingをzero stateへ戻す。
 void general_allocator_destroy(void) {
     free_list_allocator_result_t ret_free_list_allocator = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -143,6 +255,22 @@ void general_allocator_destroy(void) {
     accounting_reset();
 }
 
+// general_allocator_allocate Validation Policy
+//
+// - out_ptr_はNULLでなく、*out_ptr_ == NULLであることを要求する。
+// - allocation_size_は0より大きいことを要求する。
+// - memory_tag_は有効なgeneral_allocator_memory_tag_tであることを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorとaccounting validatorを実行する。
+// - Free List Allocator固有のallocation validationはfree_list_allocator_allocate()へ委譲する。
+// - logical accountingの加算がsize_tの表現可能範囲を超えないことを
+//   Commit前に全BUILDで検証し、超える場合はGENERAL_ALLOCATOR_LIMIT_EXCEEDEDとする。
+// - DEBUG_BUILD / TEST_BUILDではaccounting更新後のStable boundaryで
+//   accounting validatorを実行する。
+// - Postcondition validationでDATA_CORRUPTEDが確定した場合はallocationをrollbackせず、output pointerをcallerへ公開しない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 general_allocator_result_t general_allocator_allocate(size_t allocation_size_, general_allocator_memory_tag_t memory_tag_, void** out_ptr_) {
     general_allocator_result_t ret = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -216,6 +344,25 @@ cleanup:
     return ret;
 }
 
+// general_allocator_free Validation Policy
+//
+// - ptr_および*ptr_はNULLでないことを要求する。
+// - memory_tag_は有効なgeneral_allocator_memory_tag_tであることを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorとaccounting validatorを実行する。
+// - allocation identityおよびallocation sizeの検証はfree_list_allocator_allocation_info_get()へ委譲する。
+// - accounting減算前にtotal_allocatedおよび対象memory tagの値がallocation size以上であることを全BUILDで検証する。
+// - DEBUG_BUILD / TEST_BUILDではaccounting更新後のStable boundaryでaccounting validatorを実行する。
+// - Postcondition validationに成功した場合のみcallerが保持するpointerをNULLへ変更する。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
+//
+// NOTE: 以下は後日doxygenコメントとして正式に記載予定
+// - 指定pointerが現在のlive allocationではない場合はAPI misuseとしてGENERAL_ALLOCATOR_BAD_OPERATION相当のerrorを報告する。
+// - Free List Allocatorからそれ以外のfailureを受けた場合は
+//   General Allocator内部の整合性を信頼できないためDATA_CORRUPTEDとして扱う。
+// - Free List Allocatorによるfree成功後にlogical accountingを更新する。
 void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_tag_) {
     free_list_allocator_result_t ret_free_list_allocator = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -282,6 +429,18 @@ void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_t
     *ptr_ = NULL;
 }
 
+// general_allocator_ptr_is_allocated Validation Policy
+//
+// - ptr_ == NULLの場合はfalseを返す。
+// - General Allocator側ではallocation identityを独自に検証せず、
+//   free_list_allocator_ptr_is_allocated()へqueryを委譲する。
+// - Free List Allocator固有のvalidationおよびallocation-state semanticsは
+//   Free List Allocatorのcontractに従う。
+// - 本APIはstateを変更しないためPostcondition validationを行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 bool general_allocator_ptr_is_allocated(const void* ptr_) {
     if(NULL == ptr_) {
         return false;
@@ -290,6 +449,18 @@ bool general_allocator_ptr_is_allocated(const void* ptr_) {
     return free_list_allocator_ptr_is_allocated(&s_general_allocator.free_list_allocator, ptr_);
 }
 
+// general_allocator_status_get Validation Policy
+//
+// - out_status_はNULLでないことを要求する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorとaccounting validatorを実行する。
+// - Free List Allocatorが所有するphysical memory statusのvalidationと取得はfree_list_allocator_status_get()へ委譲する。
+// - General Allocator自身が所有するlogical accountingは
+//   validation済みstateからstatusへcopyする。
+// - 本APIはallocator stateを変更しないためPostcondition validationを行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 general_allocator_result_t general_allocator_status_get(general_allocator_status_t* out_status_) {
     general_allocator_result_t ret = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -355,6 +526,15 @@ cleanup:
     return ret;
 }
 
+// general_allocator_memory_tag_to_str Validation Policy
+//
+// - allocator stateへ依存しないpure queryとして扱い、allocator validatorは使用しない。
+// - 定義済みmemory tagには対応する文字列を返す。
+// - stateを変更しないためPostcondition validationを行わない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 const char* general_allocator_memory_tag_to_str(general_allocator_memory_tag_t memory_tag_) {
     switch(memory_tag_) {
     case GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM:
@@ -380,6 +560,21 @@ const char* general_allocator_memory_tag_to_str(general_allocator_memory_tag_t m
     }
 }
 
+// general_allocator_is_valid Validation Policy
+//
+// - 本APIはGeneral Allocatorのcanonical validatorである。
+// - shallow invariantを検証する。
+// - logical accounting invariantを検証する。
+// - General Allocatorが保持するmemory_poolとowned Free List Allocatorが保持する
+//   memory_poolが同一であることを検証する。
+// - owned Free List Allocatorについてfree_list_allocator_is_valid()を実行し、
+//   ownership closureを含めてcanonical validationする。
+// - explicit validation APIであるためBUILD modeに関係なくcanonical validationを実行する。
+// - validation中にstateを変更しない。
+//
+// AI支援:
+// - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
+// - 実装コードはプロジェクト作成者が作成した。
 bool general_allocator_is_valid(void) {
     if(!is_valid_shallow()) {
         return false;
@@ -501,7 +696,6 @@ static bool memory_tag_is_valid(general_allocator_memory_tag_t memory_tag_) {
     return true;
 }
 
-// NOTE: General Allocatorのlogical accountingとFree List Allocatorが保持するlive allocation payload総量のcross-layer整合性検証は将来検討する。
 static bool accounting_is_valid(void) {
     size_t expected_total_size = 0;
     for(size_t i = 0; i != GENERAL_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
