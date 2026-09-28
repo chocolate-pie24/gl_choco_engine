@@ -12,10 +12,8 @@
  */
 #include "application/core/application_err_utils.h"
 
-#include "application/core/application_types.h"
-
-#include "engine/core/memory/choco_memory.h"
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/ring_queue.h"
 
@@ -25,82 +23,77 @@
 
 #include "engine/resource/core/resource_types.h"
 
-static const char* const s_rslt_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";      /**< アプリケーション実行結果コード(メモリ破損,未初期化)に対応する文字列 */
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";        /**< アプリケーション実行結果コード(API誤用)に対応する文字列 */
-static const char* const s_rslt_str_overflow = "OVERFLOW";                  /**< アプリケーション実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< アプリケーション実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
-static const char* const s_rslt_str_unsupported_file = "UNSUPPORTED_FILE";  /**< アプリケーション実行結果コード(未対応のファイル形式)に対応する文字列 */
-static const char* const s_rslt_str_file_open_error = "FILE_OPEN_ERROR";    /**< アプリケーション実行結果コード(ファイルオープンエラー)に対応する文字列 */
-static const char* const s_rslt_str_file_read_error = "FILE_READ_ERROR";    /**< アプリケーション実行結果コード(ファイル読み込みエラー)に対応する文字列 */
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
+#include "application/core/application_types.h"
 
-const char* app_rslt_to_str(application_result_t rslt_) {
-    switch(rslt_) {
+static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
+static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
+static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";      /**< アプリケーション実行結果コード(メモリ破損,未初期化)に対応する文字列 */
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";        /**< アプリケーション実行結果コード(API誤用)に対応する文字列 */
+static const char* const s_result_str_overflow = "OVERFLOW";                  /**< アプリケーション実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< アプリケーション実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
+static const char* const s_result_str_unsupported_file = "UNSUPPORTED_FILE";  /**< アプリケーション実行結果コード(未対応のファイル形式)に対応する文字列 */
+static const char* const s_result_str_file_open_error = "FILE_OPEN_ERROR";    /**< アプリケーション実行結果コード(ファイルオープンエラー)に対応する文字列 */
+static const char* const s_result_str_file_read_error = "FILE_READ_ERROR";    /**< アプリケーション実行結果コード(ファイル読み込みエラー)に対応する文字列 */
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
+
+const char* application_result_to_str(application_result_t result_) {
+    switch(result_) {
     case APPLICATION_SUCCESS:
-        return s_rslt_str_success;
+        return s_result_str_success;
     case APPLICATION_NO_MEMORY:
-        return s_rslt_str_no_memory;
+        return s_result_str_no_memory;
     case APPLICATION_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
+        return s_result_str_runtime_error;
     case APPLICATION_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
+        return s_result_str_invalid_argument;
     case APPLICATION_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
+        return s_result_str_data_corrupted;
     case APPLICATION_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
+        return s_result_str_bad_operation;
     case APPLICATION_OVERFLOW:
-        return s_rslt_str_overflow;
+        return s_result_str_overflow;
     case APPLICATION_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
+        return s_result_str_limit_exceeded;
     case APPLICATION_UNSUPPORTED_FILE:
-        return s_rslt_str_unsupported_file;
+        return s_result_str_unsupported_file;
     case APPLICATION_FILE_OPEN_ERROR:
-        return s_rslt_str_file_open_error;
+        return s_result_str_file_open_error;
     case APPLICATION_FILE_READ_ERROR:
-        return s_rslt_str_file_read_error;
+        return s_result_str_file_read_error;
     case APPLICATION_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     default:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     }
 }
 
-application_result_t app_rslt_convert_mem_sys(memory_system_result_t rslt_) {
-    switch(rslt_) {
-    case MEMORY_SYSTEM_SUCCESS:
+application_result_t application_result_convert_subsystem_allocator(subsystem_allocator_result_t result_) {
+    switch(result_) {
+    case SUBSYSTEM_ALLOCATOR_SUCCESS:
         return APPLICATION_SUCCESS;
-    case MEMORY_SYSTEM_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case MEMORY_SYSTEM_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case MEMORY_SYSTEM_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case MEMORY_SYSTEM_BAD_OPERATION:
+    case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
         return APPLICATION_BAD_OPERATION;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-application_result_t app_rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
-    switch(rslt_) {
-    case LINEAR_ALLOC_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case LINEAR_ALLOC_NO_MEMORY:
+    case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
-    case LINEAR_ALLOC_INVALID_ARGUMENT:
+    case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return APPLICATION_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
 
-application_result_t app_rslt_convert_platform_system(platform_system_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_platform_system(platform_system_result_t result_) {
+    switch(result_) {
     case PLATFORM_SYSTEM_SUCCESS:
         return APPLICATION_SUCCESS;
     case PLATFORM_SYSTEM_INVALID_ARGUMENT:
@@ -124,8 +117,8 @@ application_result_t app_rslt_convert_platform_system(platform_system_result_t r
     }
 }
 
-application_result_t app_rslt_convert_ring_queue(ring_queue_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_ring_queue(ring_queue_result_t result_) {
+    switch(result_) {
     case RING_QUEUE_SUCCESS:
         return APPLICATION_SUCCESS;
     case RING_QUEUE_INVALID_ARGUMENT:
@@ -151,8 +144,8 @@ application_result_t app_rslt_convert_ring_queue(ring_queue_result_t rslt_) {
     }
 }
 
-application_result_t app_rslt_convert_renderer_backend(renderer_backend_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_renderer_backend(renderer_backend_result_t result_) {
+    switch(result_) {
     case RENDERER_BACKEND_SUCCESS:
         return APPLICATION_SUCCESS;
     case RENDERER_BACKEND_INVALID_ARGUMENT:
@@ -180,8 +173,8 @@ application_result_t app_rslt_convert_renderer_backend(renderer_backend_result_t
     }
 }
 
-application_result_t app_rslt_convert_resource(resource_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_resource(resource_result_t result_) {
+    switch(result_) {
     case RESOURCE_SUCCESS:
         return APPLICATION_SUCCESS;
     case RESOURCE_NO_MEMORY:
@@ -211,8 +204,8 @@ application_result_t app_rslt_convert_resource(resource_result_t rslt_) {
     }
 }
 
-application_result_t app_rslt_convert_geometry_primitive(geometry_primitive_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_geometry_primitive(geometry_primitive_result_t result_) {
+    switch(result_) {
     case GEOMETRY_PRIMITIVE_SUCCESS:
         return APPLICATION_SUCCESS;
     case GEOMETRY_PRIMITIVE_INVALID_ARGUMENT:
@@ -234,8 +227,8 @@ application_result_t app_rslt_convert_geometry_primitive(geometry_primitive_resu
     }
 }
 
-application_result_t app_rslt_convert_shader(shader_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_shader(shader_result_t result_) {
+    switch(result_) {
     case SHADER_SUCCESS:
         return APPLICATION_SUCCESS;
     case SHADER_INVALID_ARGUMENT:
@@ -263,8 +256,8 @@ application_result_t app_rslt_convert_shader(shader_result_t rslt_) {
     }
 }
 
-application_result_t app_rslt_convert_camera_registry(camera_registry_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_camera_registry(camera_registry_result_t result_) {
+    switch(result_) {
     case CAMERA_REGISTRY_SUCCESS:
         return APPLICATION_SUCCESS;
     case CAMERA_REGISTRY_NO_MEMORY:
@@ -288,8 +281,8 @@ application_result_t app_rslt_convert_camera_registry(camera_registry_result_t r
     }
 }
 
-application_result_t app_rslt_convert_camera(camera_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_camera(camera_result_t result_) {
+    switch(result_) {
     case CAMERA_SUCCESS:
         return APPLICATION_SUCCESS;
     case CAMERA_INVALID_ARGUMENT:
@@ -311,8 +304,8 @@ application_result_t app_rslt_convert_camera(camera_result_t rslt_) {
     }
 }
 
-application_result_t app_rslt_convert_fs_path(fs_path_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_fs_path(fs_path_result_t result_) {
+    switch(result_) {
     case FS_PATH_SUCCESS:
         return APPLICATION_SUCCESS;
     case FS_PATH_INVALID_ARGUMENT:
@@ -336,8 +329,8 @@ application_result_t app_rslt_convert_fs_path(fs_path_result_t rslt_) {
     }
 }
 
-application_result_t app_rslt_convert_render_resource(render_resource_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_render_resource(render_resource_result_t result_) {
+    switch(result_) {
     case RENDER_RESOURCE_SUCCESS:
         return APPLICATION_SUCCESS;
     case RENDER_RESOURCE_INVALID_ARGUMENT:
@@ -361,8 +354,8 @@ application_result_t app_rslt_convert_render_resource(render_resource_result_t r
     }
 }
 
-application_result_t app_rslt_convert_event_system(event_system_result_t rslt_) {
-    switch(rslt_) {
+application_result_t application_result_convert_event_system(event_system_result_t result_) {
+    switch(result_) {
     case EVENT_SYSTEM_SUCCESS:
         return APPLICATION_SUCCESS;
     case EVENT_SYSTEM_INVALID_ARGUMENT:
@@ -380,6 +373,29 @@ application_result_t app_rslt_convert_event_system(event_system_result_t rslt_) 
     case EVENT_SYSTEM_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     case EVENT_SYSTEM_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t application_result_convert_general_allocator(general_allocator_result_t result_) {
+    switch(result_) {
+    case GENERAL_ALLOCATOR_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

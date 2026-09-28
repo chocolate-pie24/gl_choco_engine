@@ -48,9 +48,9 @@ typedef enum {
     CHOCO_STRING_LIMIT_EXCEEDED,    /**< システム使用可能範囲上限超過 */
 } choco_string_result_t;
 
-choco_string_result_t choco_string_default_create(choco_string_t** string_);
+choco_string_result_t choco_string_default_create(choco_string_t** out_string_);
 
-choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_string_t** string_);
+choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_string_t** out_string_);
 
 void choco_string_destroy(choco_string_t** string_);
 

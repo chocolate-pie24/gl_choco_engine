@@ -66,8 +66,8 @@ extern "C" {
  *
  * @param[in] ptr_ NULL判定対象変数
  * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
- * @param[in] rslt_code_ 実行結果コード
- * @param[in] rslt_str_ 実行結果コードの文字列
+ * @param[in] result_code_ 実行結果コード
+ * @param[in] result_str_ 実行結果コードの文字列
  * @param[in] function_name_ このマクロを使用する関数名称
  * @param[in] variable_name_ NULL判定対象変数名
  *
@@ -84,11 +84,11 @@ extern "C" {
  * }
  * @endcode
  */
-#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_) \
+#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, result_code_, result_str_, function_name_, variable_name_) \
     do { \
         if(NULL == ptr_) { \
-            ERROR_MESSAGE("%s(%s) - Argument %s requires a valid pointer.", function_name_, rslt_str_, variable_name_); \
-            return_variable_ = rslt_code_; \
+            ERROR_MESSAGE("%s(%s) - Argument %s requires a valid pointer.", function_name_, result_str_, variable_name_); \
+            return_variable_ = result_code_; \
             goto cleanup;  \
         } \
     } while(0); \
@@ -98,8 +98,8 @@ extern "C" {
  *
  * @param[in] ptr_ NULL判定対象変数
  * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
- * @param[in] rslt_code_ 実行結果コード
- * @param[in] rslt_str_ 実行結果コードの文字列
+ * @param[in] result_code_ 実行結果コード
+ * @param[in] result_str_ 実行結果コードの文字列
  * @param[in] function_name_ このマクロを使用する関数名称
  * @param[in] variable_name_ NULL判定対象変数名
  *
@@ -116,11 +116,11 @@ extern "C" {
  * }
  * @endcode
  */
-#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_) \
+#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, result_code_, result_str_, function_name_, variable_name_) \
     do { \
         if(NULL != ptr_) { \
-            ERROR_MESSAGE("%s(%s) - Argument %s requires a null pointer.", function_name_, rslt_str_, variable_name_); \
-            return_variable_ = rslt_code_; \
+            ERROR_MESSAGE("%s(%s) - Argument %s requires a null pointer.", function_name_, result_str_, variable_name_); \
+            return_variable_ = result_code_; \
             goto cleanup;  \
         } \
     } while(0); \
@@ -132,7 +132,7 @@ extern "C" {
  *
  * @param[in] ptr_ NULL判定対象変数
  * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
- * @param[in] rslt_code_ 実行結果コード
+ * @param[in] result_code_ 実行結果コード
  * @param[in] function_name_ このマクロを使用する関数名称
  * @param[in] variable_name_ NULL判定対象変数名
  *
@@ -149,11 +149,11 @@ extern "C" {
  * }
  * @endcode
  */
-#define IF_ALLOC_FAIL_GOTO_CLEANUP(ptr_, return_variable_, rslt_code_, function_name_, variable_name_) \
+#define IF_ALLOC_FAIL_GOTO_CLEANUP(ptr_, return_variable_, result_code_, function_name_, variable_name_) \
     do { \
         if(NULL == ptr_) { \
             ERROR_MESSAGE("%s(NO_MEMORY) - Failed to allocate %s memory.", function_name_, variable_name_); \
-            return_variable_ = rslt_code_; \
+            return_variable_ = result_code_; \
             goto cleanup;  \
         } \
     } while(0); \
@@ -163,8 +163,8 @@ extern "C" {
  *
  * @param[in] is_valid_ true/false判定変数
  * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
- * @param[in] rslt_code_ 実行結果コード
- * @param[in] rslt_str_ 実行結果コードの文字列
+ * @param[in] result_code_ 実行結果コード
+ * @param[in] result_str_ 実行結果コードの文字列
  * @param[in] function_name_ このマクロを使用する関数名称
  * @param[in] variable_name_ true/false判定対象変数名
  *
@@ -181,11 +181,11 @@ extern "C" {
  * }
  * @endcode
  */
-#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, rslt_code_, rslt_str_, function_name_, variable_name_) \
+#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, result_code_, result_str_, function_name_, variable_name_) \
     do { \
         if(!(is_valid_)) { \
-            ERROR_MESSAGE("%s(%s) - Argument %s is not valid.", function_name_, rslt_str_, variable_name_); \
-            return_variable_ = rslt_code_; \
+            ERROR_MESSAGE("%s(%s) - Argument %s is not valid.", function_name_, result_str_, variable_name_); \
+            return_variable_ = result_code_; \
             goto cleanup;  \
         } \
     } while(0); \

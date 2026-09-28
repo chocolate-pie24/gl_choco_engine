@@ -8,17 +8,17 @@
 extern "C" {
 #endif
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
-const char* platform_system_rslt_to_str(platform_system_result_t rslt_);
+const char* platform_system_result_to_str(platform_system_result_t result_);
 
-platform_system_result_t platform_system_rslt_convert_choco_string(choco_string_result_t rslt_);
+platform_system_result_t platform_system_result_convert_choco_string(choco_string_result_t result_);
 
-platform_system_result_t platform_system_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+platform_system_result_t platform_system_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 
 #ifdef __cplusplus
 }

@@ -16,6 +16,9 @@ typedef struct application_frame_state {
     bool window_resized;
     bool projection_dirty;
     bool view_dirty;
+
+    bool runtime_status_report_requested;
+    bool validation_report_requested;
 } application_frame_state_t;
 
 void application_frame_state_begin_frame(application_frame_state_t* frame_state_);

@@ -37,7 +37,7 @@ typedef struct flight_camera_key_bind {
 
 camera_result_t flight_camera_create(const flight_camera_key_bind_t keybinds_[FLIGHT_CAMERA_COMMAND_MAX], float fovy_, float aspect_, float near_clip_, float far_clip_, flight_camera_t** out_flight_camera_);
 
-void flight_camera_destroy(flight_camera_t** out_flight_camera_);
+void flight_camera_destroy(flight_camera_t** flight_camera_);
 
 camera_result_t flight_camera_command_update(flight_camera_t* flight_camera_, const keyboard_event_t* keyboard_event_);
 

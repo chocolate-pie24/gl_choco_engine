@@ -48,7 +48,7 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     fs_stream_t* fs_stream = NULL;
     choco_string_t* line_string = NULL;
@@ -61,11 +61,11 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
 
     bool complete = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_geom_config_loader_load", "config_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, RESOURCE_INVALID_ARGUMENT, resource_rslt_to_str(RESOURCE_INVALID_ARGUMENT), "ui_geom_config_loader_load", "out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_geom_config_loader_load", "config_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_geom_config_loader_load", "out_config_")
     if('\0' == config_fullpath_[0]) {
         ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Provided config_fullpath_ is not valid.", resource_rslt_to_str(ret));
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Provided config_fullpath_ is not valid.", resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -73,29 +73,29 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
 
     ret_fs_stream = fs_stream_create(&fs_stream, config_fullpath_, FS_OPEN_MODE_READ);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = resource_rslt_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_create, config_path='%s'", resource_rslt_to_str(ret), config_fullpath_);
+        ret = resource_result_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_create, config_path='%s'", resource_result_to_str(ret), config_fullpath_);
         goto cleanup;
     }
 
-    ret_string = choco_string_default_create(&line_string);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = resource_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=choco_string_default_create_failed(line_string), config_path='%s'", resource_rslt_to_str(ret), config_fullpath_);
+    ret_choco_string = choco_string_default_create(&line_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = resource_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=choco_string_default_create_failed(line_string), config_path='%s'", resource_result_to_str(ret), config_fullpath_);
         goto cleanup;
     }
 
-    ret_string = choco_string_default_create(&key_string);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = resource_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=choco_string_default_create_failed(key_string), config_path='%s'", resource_rslt_to_str(ret), config_fullpath_);
+    ret_choco_string = choco_string_default_create(&key_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = resource_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=choco_string_default_create_failed(key_string), config_path='%s'", resource_result_to_str(ret), config_fullpath_);
         goto cleanup;
     }
 
-    ret_string = choco_string_default_create(&value_string);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        ret = resource_rslt_convert_choco_string(ret_string);
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=choco_string_default_create_failed(value_string), config_path='%s'", resource_rslt_to_str(ret), config_fullpath_);
+    ret_choco_string = choco_string_default_create(&value_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = resource_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=choco_string_default_create_failed(value_string), config_path='%s'", resource_result_to_str(ret), config_fullpath_);
         goto cleanup;
     }
 
@@ -106,23 +106,23 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
         } else if(FS_STREAM_SUCCESS == ret_fs_stream) {
             if((SIZE_MAX - 1) < line_count) {
                 ret = RESOURCE_OVERFLOW;
-                ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=line_count_overflow, config_path='%s', line_count=%zu", resource_rslt_to_str(ret), config_fullpath_, line_count);
+                ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=line_count_overflow, config_path='%s', line_count=%zu", resource_result_to_str(ret), config_fullpath_, line_count);
                 goto cleanup;
             }
             line_count++;
 
             ret = line_parse(&tmp_state, line_string, key_string, value_string);
             if(RESOURCE_SUCCESS != ret) {
-                ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=line_parse_failed, config_path='%s', line=%zu, content='%s'", resource_rslt_to_str(ret), config_fullpath_, line_count, choco_string_c_str(line_string));
+                ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=line_parse_failed, config_path='%s', line=%zu, content='%s'", resource_result_to_str(ret), config_fullpath_, line_count, choco_string_c_str(line_string));
                 goto cleanup;
             }
         } else {
             if(FS_STREAM_RUNTIME_ERROR == ret_fs_stream || FS_STREAM_UNDEFINED_ERROR == ret_fs_stream) {
                 ret = RESOURCE_FILE_READ_ERROR; // line_readのRUNTIME_ERROR, UNDEFINED_ERRORはREAD_ERRORに変換する
             } else {
-                ret = resource_rslt_convert_fs_stream(ret_fs_stream);
+                ret = resource_result_convert_fs_stream(ret_fs_stream);
             }
-            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_text_file_line_read_failed, config_path='%s', next_line=%zu", resource_rslt_to_str(ret), config_fullpath_, line_count + 1);
+            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_text_file_line_read_failed, config_path='%s', next_line=%zu", resource_result_to_str(ret), config_fullpath_, line_count + 1);
             goto cleanup;
         }
     }
@@ -130,7 +130,7 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
     if(!tmp_state.icon_height_is_valid || !tmp_state.icon_width_is_valid) {
         ret = RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=required_field_missing, config_path='%s', icon_width_is_valid=%s, icon_height_is_valid=%s, icon_width=%u, icon_height=%u",
-                    resource_rslt_to_str(ret),
+                    resource_result_to_str(ret),
                     config_fullpath_,
                     tmp_state.icon_width_is_valid ? "true" : "false",
                     tmp_state.icon_height_is_valid ? "true" : "false",
@@ -228,7 +228,8 @@ static void config_loader_initialize(ui_geom_config_state_t* out_loader_) {
  */
 static resource_result_t line_parse(ui_geom_config_state_t* out_config_, const choco_string_t* line_, choco_string_t* tmp_key_, choco_string_t* tmp_value_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
-    choco_string_result_t ret_string = CHOCO_STRING_INVALID_ARGUMENT;
+
+    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     int parse_result = 0;
     int width = 0;
@@ -240,14 +241,14 @@ static resource_result_t line_parse(ui_geom_config_state_t* out_config_, const c
         goto cleanup;
     }
 
-    ret_string = choco_string_key_value_key_get(choco_string_c_str(line_), tmp_key_);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        if(CHOCO_STRING_BAD_OPERATION == ret_string) {
+    ret_choco_string = choco_string_key_value_key_get(choco_string_c_str(line_), tmp_key_);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        if(CHOCO_STRING_BAD_OPERATION == ret_choco_string) {
             // コメント行等の場合にはここに来る, 正常として扱う
             ret = RESOURCE_SUCCESS;
             goto cleanup;
         } else {
-            ret = resource_rslt_convert_choco_string(ret_string);
+            ret = resource_result_convert_choco_string(ret_choco_string);
             goto cleanup;
         }
     }
@@ -256,14 +257,14 @@ static resource_result_t line_parse(ui_geom_config_state_t* out_config_, const c
         goto cleanup;
     }
 
-    ret_string = choco_string_key_value_value_get(choco_string_c_str(line_), tmp_value_);
-    if(CHOCO_STRING_SUCCESS != ret_string) {
-        if(CHOCO_STRING_BAD_OPERATION == ret_string) {
+    ret_choco_string = choco_string_key_value_value_get(choco_string_c_str(line_), tmp_value_);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        if(CHOCO_STRING_BAD_OPERATION == ret_choco_string) {
             // 設定値がない場合は異常だが, 今後の機能拡張によって設定値が空を許可するkeyが出た時のために成功にする
             ret = RESOURCE_SUCCESS;
             goto cleanup;
         } else {
-            ret = resource_rslt_convert_choco_string(ret_string);
+            ret = resource_result_convert_choco_string(ret_choco_string);
             goto cleanup;
         }
     }

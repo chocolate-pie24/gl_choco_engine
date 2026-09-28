@@ -21,7 +21,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -54,7 +54,7 @@ typedef enum shader_compile_status {
     SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE,        /**< 入力されたシェーダーハンドルが不正 */
 } shader_compile_status_t;
 
-static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_);
+static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** out_shader_handle_);
 static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_);
 static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_shader_t* shader_handle_);
 static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_);
@@ -103,37 +103,37 @@ const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
 /**
  * @brief OpenGL3.3用シェーダーGPUリソース内部状態管理構造体インスタンスのメモリを確保し、フィールドを0で初期化する
  *
- * @param[out] shader_handle_ GPUリソース内部状態管理構造体インスタンスへのダブルポインタ
+ * @param[out] out_shader_handle_ GPUリソース内部状態管理構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - shader_handle_ == NULL
- * - *shader_handle_ != NULL
+ * - out_shader_handle_ == NULL
+ * - *out_shader_handle_ != NULL
  * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システム使用可能範囲上限超過
  * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** shader_handle_) {
+static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** out_shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
-    renderer_backend_shader_t* tmp = NULL;
+    renderer_backend_shader_t* tmp_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "shader_handle_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "*shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "out_shader_handle_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_create", "*out_shader_handle_")
 
-    ret_memory_system = memory_system_allocate(sizeof(renderer_backend_shader_t), MEMORY_TAG_RENDERER, (void**)&tmp);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("gl33_shader_create(%s) - Failed to allocate memory for shader handle.", renderer_backend_rslt_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_shader);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("gl33_shader_create(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
-    tmp->program_id = 0;
-    tmp->vertex_shader_handle = 0;
-    tmp->fragment_shader_handle = 0;
-    *shader_handle_ = tmp;
+    tmp_shader->program_id = 0;
+    tmp_shader->vertex_shader_handle = 0;
+    tmp_shader->fragment_shader_handle = 0;
+    *out_shader_handle_ = tmp_shader;
 
     ret = RENDERER_BACKEND_SUCCESS;
 
@@ -169,14 +169,13 @@ static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
         mock_glDeleteProgram((*shader_handle_)->program_id);
     }
 
-    memory_system_free(*shader_handle_, sizeof(renderer_backend_shader_t), MEMORY_TAG_RENDERER);
-    *shader_handle_ = NULL;
+    general_allocator_free((void**)shader_handle_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
 static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     GLenum gl33_shader_stage;
     GLint result = GL_FALSE;
@@ -185,27 +184,27 @@ static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage
     GLuint tmp_handle = 0;
     GLuint* handle_addr = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_source_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_compile", "shader_source_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_compile", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_source_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_compile", "shader_source_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_compile", "shader_handle_")
 
     // シェーダーオブジェクトのコンパイル状況チェック
     if(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(shader_stage_, shader_handle_)) {
         ret = RENDERER_BACKEND_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader object is already compiled.", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader object is already compiled.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
     // シェーダープログラムのリンク状況チェック
     if(0 != shader_handle_->program_id) {
         ret = RENDERER_BACKEND_BAD_OPERATION;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader program is already linked.", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Shader program is already linked.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
     // シェーダーオブジェクトハンドルを取得
     ret = gl33_shader_handle_addr_get(shader_handle_, shader_stage_, &handle_addr);
     if(RENDERER_BACKEND_SUCCESS != ret) {
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Unsupported shader type(gl33_shader_handle_addr_get).", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Unsupported shader type(gl33_shader_handle_addr_get).", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
@@ -213,14 +212,14 @@ static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage
     ret = gl33_shader_resolve_target(shader_stage_, &gl33_shader_stage);
     if(RENDERER_BACKEND_SUCCESS != ret) {
         // NOTE: gl33_shader_handle_addr_getで既にエラー処理されているため、ここに来ることはないが将来的な変更のために残しておく
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Unsupported shader type(gl33_shader_resolve_target).", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Unsupported shader type(gl33_shader_resolve_target).", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
     tmp_handle = mock_glCreateShader(gl33_shader_stage);
     if(0 == tmp_handle) {
         ret = RENDERER_BACKEND_SHADER_COMPILE_ERROR;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to create shader object handle.", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to create shader object handle.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
@@ -233,27 +232,26 @@ static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage
     mock_glGetShaderiv(tmp_handle, GL_COMPILE_STATUS, &result);   // コンパイル結果正常でresult = GL_TRUE
     mock_glGetShaderiv(tmp_handle, GL_INFO_LOG_LENGTH, &info_log_length); // コンパイル結果正常でinfo_log_length = 0
     if(0 < info_log_length) {
-        ret_memory_system = memory_system_allocate((size_t)info_log_length, MEMORY_TAG_RENDERER, (void**)&err_mes);
-        if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-            ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
-            ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to allocate memory for shader info log.", renderer_backend_rslt_to_str(ret));
+        ret_general_allocator = general_allocator_allocate((size_t)info_log_length, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&err_mes);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("gl33_shader_compile(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
             goto cleanup;
         }
+
         mock_glGetShaderInfoLog(tmp_handle, info_log_length, NULL, err_mes);
         if(GL_TRUE != result) {
             ret = RENDERER_BACKEND_SHADER_COMPILE_ERROR;
-            ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source: '%s'", renderer_backend_rslt_to_str(ret), err_mes);
-            memory_system_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
-            err_mes = NULL;
+            ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source: '%s'", renderer_backend_result_to_str(ret), err_mes);
+            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
             goto cleanup;
         } else {
             WARN_MESSAGE("gl33_shader_compile - info log: %s", err_mes);
-            memory_system_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
-            err_mes = NULL;
+            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
         }
     } else if(GL_TRUE != result) {
         ret = RENDERER_BACKEND_SHADER_COMPILE_ERROR;
-        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source.", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
     *handle_addr = tmp_handle;
@@ -285,24 +283,24 @@ cleanup:
 static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     GLuint tmp_program_id = 0;
     GLint result = GL_FALSE;
     GLint info_log_length = 0;
     char* err_mes = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_link", "shader_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == shader_handle_->program_id, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "shader_handle_->program_id")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_link", "shader_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 == shader_handle_->program_id, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "shader_handle_->program_id")
     // バーテックスシェーダーとフラグメントシェーダーは必須なので、有効な状態でなければエラー
-    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_STAGE_VERTEX, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "vertex_shader_handle")
-    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_STAGE_FRAGMENT, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "fragment_shader_handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_STAGE_VERTEX, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "vertex_shader_handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_STAGE_FRAGMENT, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "fragment_shader_handle")
 
     // プログラムをリンク
     tmp_program_id = mock_glCreateProgram();
     if(0 == tmp_program_id) {
         ret = RENDERER_BACKEND_SHADER_LINK_ERROR;
-        ERROR_MESSAGE("gl33_shader_link(%s) - Failed to create shader program.", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_link(%s) - Failed to create shader program.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
@@ -315,27 +313,26 @@ static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* sha
     mock_glGetProgramiv(tmp_program_id, GL_LINK_STATUS, &result);
     mock_glGetProgramiv(tmp_program_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(0 < info_log_length) {
-        ret_memory_system = memory_system_allocate((size_t)info_log_length, MEMORY_TAG_RENDERER, (void**)&err_mes);
-        if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-            ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
-            ERROR_MESSAGE("gl33_shader_link(%s) - Failed to allocate memory for program info log.", renderer_backend_rslt_to_str(ret));
+        ret_general_allocator = general_allocator_allocate((size_t)info_log_length, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&err_mes);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("gl33_shader_link(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
             goto cleanup;
         }
+
         mock_glGetProgramInfoLog(tmp_program_id, info_log_length, NULL, err_mes);
         if(GL_TRUE != result) {
             ret = RENDERER_BACKEND_SHADER_LINK_ERROR;
-            ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program: '%s'", renderer_backend_rslt_to_str(ret), err_mes);
-            memory_system_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
-            err_mes = NULL;
+            ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program: '%s'", renderer_backend_result_to_str(ret), err_mes);
+            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
             goto cleanup;
         } else {
             WARN_MESSAGE("gl33_shader_link - info log: %s", err_mes);
-            memory_system_free(err_mes, (size_t)info_log_length, MEMORY_TAG_RENDERER);
-            err_mes = NULL;
+            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
         }
     } else if(GL_TRUE != result) {
         ret = RENDERER_BACKEND_SHADER_LINK_ERROR;
-        ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program.", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
     // use関数呼び出し時に、バリデーション用にprogram_id != 0かつshader_object_handle == 0でDATA_CORRUPTEDにするため、シェーダーオブジェクトのデストロイは行わない(shader_destroy APIでまとめて破棄する)
@@ -365,20 +362,20 @@ cleanup:
 static renderer_backend_result_t gl33_shader_use(const renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_use", "shader_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != shader_handle_->program_id, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_use", "shader_handle_->program_id")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_use", "shader_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != shader_handle_->program_id, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_use", "shader_handle_->program_id")
 
     if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_STAGE_VERTEX, shader_handle_)) {
         // 既にprogram_idが0ではなく、リンクされているのにvertex_shaderがコンパイル済みではないのは異常
         ret = RENDERER_BACKEND_DATA_CORRUPTED;
-        ERROR_MESSAGE("gl33_shader_use(%s) - Vertex shader object is not compiled.", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_use(%s) - Vertex shader object is not compiled.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
     // TODO: 現状の失敗注入では、shader_compile_status_getの連続呼び出しに対して両方とも強制出力をさせることができないため、下のifはテスト不可(失敗注入方式を引数のシェーダー種別に応じて切り替えるように修正する)
     if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_STAGE_FRAGMENT, shader_handle_)) {
         // 既にprogram_idが0ではなく、リンクされているのにfragment_shaderがコンパイル済みではないのは異常
         ret = RENDERER_BACKEND_DATA_CORRUPTED;
-        ERROR_MESSAGE("gl33_shader_use(%s) - Fragment shader object is not compiled.", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_shader_use(%s) - Fragment shader object is not compiled.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
     mock_glUseProgram(shader_handle_->program_id);
@@ -410,14 +407,14 @@ static renderer_backend_result_t gl33_uniform_location_get(const renderer_backen
 
     int32_t tmp_location = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_uniform_location_get", "shader_handle_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_uniform_location_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_location_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_uniform_location_get", "out_location_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_uniform_location_get", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_uniform_location_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_location_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_uniform_location_get", "out_location_")
 
     tmp_location = mock_glGetUniformLocation(shader_handle_->program_id, name_);
     if(-1 == tmp_location) {
         ret = RENDERER_BACKEND_RUNTIME_ERROR;
-        ERROR_MESSAGE("gl33_uniform_location_get(%s) - Failed to get uniform location. name: %s", renderer_backend_rslt_to_str(ret), name_);
+        ERROR_MESSAGE("gl33_uniform_location_get(%s) - Failed to get uniform location. name: %s", renderer_backend_result_to_str(ret), name_);
         goto cleanup;
     }
     *out_location_ = tmp_location;
@@ -444,7 +441,7 @@ cleanup:
 static renderer_backend_result_t gl33_mat4f_uniform_set(int32_t location_, bool should_transpose_, const float* data_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_mat4f_uniform_set", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_mat4f_uniform_set", "data_")
 
     mock_glUniformMatrix4fv(location_, 1, should_transpose_, data_);
 
@@ -471,7 +468,7 @@ static renderer_backend_result_t gl33_vec4u8_uniform_set(int32_t location_, cons
 
     float data_f[4] = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vec4u8_uniform_set", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vec4u8_uniform_set", "data_")
 
     // shader側はvec4なので0...1に正規化
     data_f[0] = (float)(data_[0]) / 255.0f;
@@ -491,8 +488,8 @@ static renderer_backend_result_t gl33_shader_handle_addr_get(renderer_backend_sh
 
     GLuint* tmp_handle = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_handle_addr_get", "shader_handle_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_handle_addr_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_handle_addr_get", "out_handle_addr_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_handle_addr_get", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_handle_addr_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_handle_addr_get", "out_handle_addr_")
 
     switch(shader_stage_) {
     case SHADER_STAGE_VERTEX:
@@ -518,7 +515,7 @@ static renderer_backend_result_t gl33_shader_resolve_target(shader_stage_t shade
 
     GLenum tmp_type = GL_VERTEX_SHADER;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_gl33_type_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_resolve_target", "out_gl33_type_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_gl33_type_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_shader_resolve_target", "out_gl33_type_")
 
     switch(shader_stage_) {
     case SHADER_STAGE_VERTEX:

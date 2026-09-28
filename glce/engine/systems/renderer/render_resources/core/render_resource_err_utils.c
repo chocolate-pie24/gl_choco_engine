@@ -3,7 +3,7 @@
 
 #include "engine/systems/renderer/render_resources/core/render_resource_err_utils.h"
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
 
@@ -12,56 +12,66 @@
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_rslt_str_overflow = "OVERFLOW";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_result_str_success = "SUCCESS";
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_result_str_no_memory = "NO_MEMORY";
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
+static const char* const s_result_str_overflow = "OVERFLOW";
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
-const char* render_resource_rslt_to_str(render_resource_result_t rslt_) {
-    switch(rslt_) {
+const char* render_resource_result_to_str(render_resource_result_t result_) {
+    switch(result_) {
     case RENDER_RESOURCE_SUCCESS:
-        return s_rslt_str_success;
+        return s_result_str_success;
     case RENDER_RESOURCE_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
+        return s_result_str_invalid_argument;
     case RENDER_RESOURCE_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
+        return s_result_str_runtime_error;
     case RENDER_RESOURCE_NO_MEMORY:
-        return s_rslt_str_no_memory;
+        return s_result_str_no_memory;
     case RENDER_RESOURCE_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
+        return s_result_str_limit_exceeded;
     case RENDER_RESOURCE_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
+        return s_result_str_bad_operation;
     case RENDER_RESOURCE_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
+        return s_result_str_data_corrupted;
     case RENDER_RESOURCE_OVERFLOW:
-        return s_rslt_str_overflow;
+        return s_result_str_overflow;
     case RENDER_RESOURCE_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     default:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     }
 }
 
-render_resource_result_t render_resource_rslt_convert_linear_allocator(linear_allocator_result_t rslt_) {
-    switch(rslt_) {
-    case LINEAR_ALLOC_SUCCESS:
+render_resource_result_t render_resource_result_convert_subsystem_allocator(subsystem_allocator_result_t result_) {
+    switch(result_) {
+    case SUBSYSTEM_ALLOCATOR_SUCCESS:
         return RENDER_RESOURCE_SUCCESS;
-    case LINEAR_ALLOC_NO_MEMORY:
+    case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
+        return RENDER_RESOURCE_BAD_OPERATION;
+    case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
+        return RENDER_RESOURCE_DATA_CORRUPTED;
+    case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
         return RENDER_RESOURCE_NO_MEMORY;
-    case LINEAR_ALLOC_INVALID_ARGUMENT:
+    case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return RENDER_RESOURCE_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_OVERFLOW:
+        return RENDER_RESOURCE_OVERFLOW;
+    case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
+        return RENDER_RESOURCE_LIMIT_EXCEEDED;
+    case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
+        return RENDER_RESOURCE_UNDEFINED_ERROR;
     default:
         return RENDER_RESOURCE_UNDEFINED_ERROR;
     }
 }
 
-render_resource_result_t render_resource_rslt_convert_fs_path(fs_path_result_t rslt_) {
-    switch(rslt_) {
+render_resource_result_t render_resource_result_convert_fs_path(fs_path_result_t result_) {
+    switch(result_) {
     case FS_PATH_SUCCESS:
         return RENDER_RESOURCE_SUCCESS;
     case FS_PATH_INVALID_ARGUMENT:
@@ -85,8 +95,8 @@ render_resource_result_t render_resource_rslt_convert_fs_path(fs_path_result_t r
     }
 }
 
-render_resource_result_t render_resource_rslt_convert_shader(shader_result_t rslt_) {
-    switch(rslt_) {
+render_resource_result_t render_resource_result_convert_shader(shader_result_t result_) {
+    switch(result_) {
     case SHADER_SUCCESS:
         return RENDER_RESOURCE_SUCCESS;
     case SHADER_INVALID_ARGUMENT:
@@ -114,8 +124,8 @@ render_resource_result_t render_resource_rslt_convert_shader(shader_result_t rsl
     }
 }
 
-render_resource_result_t render_resource_rslt_convert_resource_registry(resource_registry_result_t rslt_) {
-    switch(rslt_) {
+render_resource_result_t render_resource_result_convert_resource_registry(resource_registry_result_t result_) {
+    switch(result_) {
     case RESOURCE_REGISTRY_SUCCESS:
         return RENDER_RESOURCE_SUCCESS;
     case RESOURCE_REGISTRY_NO_MEMORY:
@@ -139,8 +149,8 @@ render_resource_result_t render_resource_rslt_convert_resource_registry(resource
     }
 }
 
-render_resource_result_t render_resource_rslt_convert_resource_pipeline(resource_pipeline_result_t rslt_) {
-    switch(rslt_) {
+render_resource_result_t render_resource_result_convert_resource_pipeline(resource_pipeline_result_t result_) {
+    switch(result_) {
     case RESOURCE_PIPELINE_SUCCESS:
         return RENDER_RESOURCE_SUCCESS;
     case RESOURCE_PIPELINE_NO_MEMORY:
@@ -170,8 +180,8 @@ render_resource_result_t render_resource_rslt_convert_resource_pipeline(resource
     }
 }
 
-render_resource_result_t render_resource_rslt_convert_resource(resource_result_t rslt_) {
-    switch(rslt_) {
+render_resource_result_t render_resource_result_convert_resource(resource_result_t result_) {
+    switch(result_) {
     case RESOURCE_SUCCESS:
         return RENDER_RESOURCE_SUCCESS;
     case RESOURCE_NO_MEMORY:
@@ -201,8 +211,8 @@ render_resource_result_t render_resource_rslt_convert_resource(resource_result_t
     }
 }
 
-render_resource_result_t render_resource_rslt_convert_texture_gpu_resource(texture_gpu_resource_result_t rslt_) {
-    switch(rslt_) {
+render_resource_result_t render_resource_result_convert_texture_gpu_resource(texture_gpu_resource_result_t result_) {
+    switch(result_) {
     case TEXTURE_GPU_RESOURCE_SUCCESS:
         return RENDER_RESOURCE_SUCCESS;
     case TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT:

@@ -8,17 +8,17 @@
 extern "C" {
 #endif
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 
-const char* event_system_rslt_to_str(event_system_result_t rslt_);
+const char* event_system_result_to_str(event_system_result_t result_);
 
-event_system_result_t event_system_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+event_system_result_t event_system_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 
-event_system_result_t event_system_rslt_convert_platform_system(platform_system_result_t rslt_);
+event_system_result_t event_system_result_convert_platform_system(platform_system_result_t result_);
 
 #ifdef __cplusplus
 }

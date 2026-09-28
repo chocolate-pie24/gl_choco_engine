@@ -38,18 +38,18 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * - 構造体インスタンスのメモリ確保に成功した場合、VAOのGPU側リソースも確保される
  *
  * @param[in] backend_context_ VAOメモリ確保関数保有構造体インスタンスへのポインタ
- * @param[out] vao_ メモリ確保対象VAO構造体インスタンスへのダブルポインタ
+ * @param[out] out_vao_ メモリ確保対象VAO構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
  * - backend_context_ == NULL
- * - vao_ == NULL
- * - *vao_ != NULL
+ * - out_vao_ == NULL
+ * - *out_vao_ != NULL
  * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_backend_result_t renderer_backend_vao_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vao_);
+renderer_backend_result_t renderer_backend_vao_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** out_vao_);
 
 /**
  * @brief VAO内部状態管理構造体インスタンスを破棄する

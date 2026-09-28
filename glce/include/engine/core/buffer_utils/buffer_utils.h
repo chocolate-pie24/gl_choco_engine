@@ -26,73 +26,73 @@ extern "C" {
  * @brief バッファからint16_tデータを取り出す
  *
  * @warning リトルエンディアンCPU専用
- * @note buff_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
+ * @note buffer_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
  *
- * @param buff_ 取り出し元のバッファ
+ * @param buffer_ 取り出し元のバッファ
  *
  * @return 取り出したデータ
  */
-int16_t buffer_utils_le_int16_t_get(const char* buff_);
+int16_t buffer_utils_le_int16_t_get(const char* buffer_);
 
 /**
  * @brief バッファからint32_tデータを取り出す
  *
  * @warning リトルエンディアンCPU専用
- * @note buff_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
+ * @note buffer_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
  *
- * @param buff_ 取り出し元のバッファ
+ * @param buffer_ 取り出し元のバッファ
  *
  * @return 取り出したデータ
  */
-int32_t buffer_utils_le_int32_t_get(const char* buff_);
+int32_t buffer_utils_le_int32_t_get(const char* buffer_);
 
 /**
  * @brief バッファからint64_tデータを取り出す
  *
  * @warning リトルエンディアンCPU専用
- * @note buff_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
+ * @note buffer_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
  *
- * @param buff_ 取り出し元のバッファ
+ * @param buffer_ 取り出し元のバッファ
  *
  * @return 取り出したデータ
  */
-int64_t buffer_utils_le_int64_t_get(const char* buff_);
+int64_t buffer_utils_le_int64_t_get(const char* buffer_);
 
 /**
  * @brief バッファからuint16_tデータを取り出す
  *
  * @warning リトルエンディアンCPU専用
- * @note buff_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
+ * @note buffer_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
  *
- * @param buff_ 取り出し元のバッファ
+ * @param buffer_ 取り出し元のバッファ
  *
  * @return 取り出したデータ
  */
-uint16_t buffer_utils_le_uint16_t_get(const char* buff_);
+uint16_t buffer_utils_le_uint16_t_get(const char* buffer_);
 
 /**
  * @brief バッファからuint32_tデータを取り出す
  *
  * @warning リトルエンディアンCPU専用
- * @note buff_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
+ * @note buffer_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
  *
- * @param buff_ 取り出し元のバッファ
+ * @param buffer_ 取り出し元のバッファ
  *
  * @return 取り出したデータ
  */
-uint32_t buffer_utils_le_uint32_t_get(const char* buff_);
+uint32_t buffer_utils_le_uint32_t_get(const char* buffer_);
 
 /**
  * @brief バッファからuint64_tデータを取り出す
  *
  * @warning リトルエンディアンCPU専用
- * @note buff_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
+ * @note buffer_ == NULLの場合はassertによって停止する(TEST_BUILD / DEBUG_BUILD時のみ)
  *
- * @param buff_ 取り出し元のバッファ
+ * @param buffer_ 取り出し元のバッファ
  *
  * @return 取り出したデータ
  */
-uint64_t buffer_utils_le_uint64_t_get(const char* buff_);
+uint64_t buffer_utils_le_uint64_t_get(const char* buffer_);
 
 #ifdef __cplusplus
 }

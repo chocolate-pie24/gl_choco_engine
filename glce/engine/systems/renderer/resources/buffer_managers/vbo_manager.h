@@ -249,8 +249,7 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
  * または下位モジュールの現在の状態では生成処理を実行できない。
  *
  * @retval BUFFER_MANAGER_LIMIT_EXCEEDED
- * Memory System、Range Allocator、またはRenderer Backendの
- * 管理上限に到達した。
+ * Range Allocator、またはRenderer Backendの管理上限に到達した。
  *
  * @retval BUFFER_MANAGER_NO_MEMORY
  * VBO Manager、Range Allocator、Renderer Backend VBO、または

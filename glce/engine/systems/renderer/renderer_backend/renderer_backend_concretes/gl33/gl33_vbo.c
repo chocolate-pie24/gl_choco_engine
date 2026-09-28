@@ -19,7 +19,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -35,7 +35,7 @@ struct renderer_backend_vbo {
     GLuint vbo_handle;  /**< VBO */
 };
 
-static renderer_backend_result_t gl33_vbo_create(renderer_backend_vbo_t** vbo_);
+static renderer_backend_result_t gl33_vbo_create(renderer_backend_vbo_t** out_vbo_);
 static void gl33_vbo_destroy(renderer_backend_vbo_t** vbo_);
 static renderer_backend_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vbo_);
 static renderer_backend_result_t gl33_vbo_unbind(void);
@@ -65,37 +65,37 @@ const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
 /**
  * @brief VBO構造体インスタンスのメモリを確保し、VBOハンドルを生成する
  *
- * @param[out] vbo_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
+ * @param[out] out_vbo_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - vbo_がNULL
- * - *vbo_が非NULL
+ * - out_vbo_がNULL
+ * - *out_vbo_が非NULL
  * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_BACKEND_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
  * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
  * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-static renderer_backend_result_t gl33_vbo_create(renderer_backend_vbo_t** vbo_) {
+static renderer_backend_result_t gl33_vbo_create(renderer_backend_vbo_t** out_vbo_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
-    renderer_backend_vbo_t* tmp = NULL;
+    renderer_backend_vbo_t* tmp_vbo = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_create", "vbo_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_create", "vbo_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_create", "out_vbo_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_create", "*out_vbo_")
 
-    ret_memory_system = memory_system_allocate(sizeof(renderer_backend_vbo_t), MEMORY_TAG_RENDERER, (void**)&tmp);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("gl33_vbo_create(%s) - gl33_vbo_create failed.", renderer_backend_rslt_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_vbo_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vbo);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("gl33_vbo_create(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
-    mock_glGenBuffers(1, &tmp->vbo_handle);
+    mock_glGenBuffers(1, &tmp_vbo->vbo_handle);
 
-    *vbo_ = tmp;
+    *out_vbo_ = tmp_vbo;
 
     ret = RENDERER_BACKEND_SUCCESS;
 
@@ -117,7 +117,7 @@ static void gl33_vbo_destroy(renderer_backend_vbo_t** vbo_) {
     }
     mock_glDeleteBuffers(1, &(*vbo_)->vbo_handle);
 
-    memory_system_free(*vbo_, sizeof(renderer_backend_vbo_t), MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)vbo_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 
     *vbo_ = NULL;
 
@@ -138,8 +138,8 @@ cleanup:
 static renderer_backend_result_t gl33_vbo_bind(const renderer_backend_vbo_t* vbo_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_bind", "vbo_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vbo_->vbo_handle, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_rslt_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_vbo_bind", "vbo_->vbo_handle")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_bind", "vbo_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != vbo_->vbo_handle, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_vbo_bind", "vbo_->vbo_handle")
 
     mock_glBindBuffer(GL_ARRAY_BUFFER, vbo_->vbo_handle);
 
@@ -181,7 +181,7 @@ static renderer_backend_result_t gl33_vbo_unbind(void) {
 static renderer_backend_result_t gl33_vbo_vertex_load(size_t load_size_, const void* load_data_, buffer_usage_t usage_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != load_size_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_size_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != load_size_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_vertex_load", "load_size_")
 
     switch(usage_) {
     case BUFFER_USAGE_STATIC:
@@ -191,7 +191,7 @@ static renderer_backend_result_t gl33_vbo_vertex_load(size_t load_size_, const v
         mock_glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)load_size_, load_data_, GL_DYNAMIC_DRAW);
         break;
     default:
-        ERROR_MESSAGE("gl33_vbo_vertex_load(%s) - Provided usage_ is not valid.", renderer_backend_rslt_to_str(RENDERER_BACKEND_RUNTIME_ERROR));
+        ERROR_MESSAGE("gl33_vbo_vertex_load(%s) - Provided usage_ is not valid.", renderer_backend_result_to_str(RENDERER_BACKEND_RUNTIME_ERROR));
         ret = RENDERER_BACKEND_RUNTIME_ERROR;
         goto cleanup;
     }
@@ -219,8 +219,8 @@ cleanup:
 static renderer_backend_result_t gl33_vbo_vertex_subload(size_t offset_, size_t size_, const void* load_data_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_vertex_subload", "load_data_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_vertex_subload", "size_")
+    IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_vertex_subload", "load_data_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vbo_vertex_subload", "size_")
 
     mock_glBufferSubData(GL_ARRAY_BUFFER, (GLintptr)offset_, (GLsizeiptr)size_, load_data_);
 

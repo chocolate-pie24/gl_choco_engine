@@ -29,7 +29,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-typedef renderer_backend_result_t (*pfn_vbo_create)(renderer_backend_vbo_t** vbo_); /**< renderer_vbo_vtableが保持するvbo_createの前方宣言 */
+typedef renderer_backend_result_t (*pfn_vbo_create)(renderer_backend_vbo_t** out_vbo_); /**< renderer_vbo_vtableが保持するvbo_createの前方宣言 */
 typedef void (*pfn_vbo_destroy)(renderer_backend_vbo_t** vbo_); /**< renderer_vbo_vtableが保持するvbo_destroyの前方宣言 */
 typedef renderer_backend_result_t (*pfn_vbo_bind)(const renderer_backend_vbo_t* vbo_);   /**< renderer_vbo_vtableが保持するvbo_bindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_vbo_unbind)(void);    /**< renderer_vbo_vtableが保持するvbo_unbindの前方宣言 */
@@ -44,11 +44,11 @@ typedef struct renderer_vbo_vtable {
     /**
      * @brief VBO構造体インスタンスのメモリを確保し、VBOハンドルを生成する
      *
-     * @param[out] vbo_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
+     * @param[out] out_vbo_ renderer_backend_vbo_t構造体インスタンスへのダブルポインタ
      *
      * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
-     * - vbo_がNULL
-     * - *vbo_が非NULL
+     * - out_vbo_がNULL
+     * - *out_vbo_が非NULL
      * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
      * @retval RENDERER_BACKEND_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
      * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過

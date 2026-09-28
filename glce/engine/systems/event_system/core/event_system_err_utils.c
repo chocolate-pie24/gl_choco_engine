@@ -3,60 +3,70 @@
 
 #include "engine/systems/event_system/core/event_system_err_utils.h"
 
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 
-static const char* const s_rslt_str_success = "SUCCESS";
-static const char* const s_rslt_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_rslt_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_rslt_str_no_memory = "NO_MEMORY";
-static const char* const s_rslt_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_rslt_str_bad_operation = "BAD_OPERATION";
-static const char* const s_rslt_str_overflow = "OVERFLOW";
-static const char* const s_rslt_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_rslt_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_result_str_success = "SUCCESS";
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
+static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
+static const char* const s_result_str_no_memory = "NO_MEMORY";
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";
+static const char* const s_result_str_overflow = "OVERFLOW";
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
-const char* event_system_rslt_to_str(event_system_result_t rslt_) {
-    switch(rslt_) {
+const char* event_system_result_to_str(event_system_result_t result_) {
+    switch(result_) {
     case EVENT_SYSTEM_SUCCESS:
-        return s_rslt_str_success;
+        return s_result_str_success;
     case EVENT_SYSTEM_INVALID_ARGUMENT:
-        return s_rslt_str_invalid_argument;
+        return s_result_str_invalid_argument;
     case EVENT_SYSTEM_RUNTIME_ERROR:
-        return s_rslt_str_runtime_error;
+        return s_result_str_runtime_error;
     case EVENT_SYSTEM_NO_MEMORY:
-        return s_rslt_str_no_memory;
+        return s_result_str_no_memory;
     case EVENT_SYSTEM_DATA_CORRUPTED:
-        return s_rslt_str_data_corrupted;
+        return s_result_str_data_corrupted;
     case EVENT_SYSTEM_BAD_OPERATION:
-        return s_rslt_str_bad_operation;
+        return s_result_str_bad_operation;
     case EVENT_SYSTEM_OVERFLOW:
-        return s_rslt_str_overflow;
+        return s_result_str_overflow;
     case EVENT_SYSTEM_LIMIT_EXCEEDED:
-        return s_rslt_str_limit_exceeded;
+        return s_result_str_limit_exceeded;
     case EVENT_SYSTEM_UNDEFINED_ERROR:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     default:
-        return s_rslt_str_undefined_error;
+        return s_result_str_undefined_error;
     }
 }
 
-event_system_result_t event_system_rslt_convert_linear_alloc(linear_allocator_result_t rslt_) {
-    switch(rslt_) {
-    case LINEAR_ALLOC_SUCCESS:
+event_system_result_t event_system_result_convert_subsystem_allocator(subsystem_allocator_result_t result_) {
+    switch(result_) {
+    case SUBSYSTEM_ALLOCATOR_SUCCESS:
         return EVENT_SYSTEM_SUCCESS;
-    case LINEAR_ALLOC_NO_MEMORY:
+    case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
+        return EVENT_SYSTEM_BAD_OPERATION;
+    case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
+        return EVENT_SYSTEM_DATA_CORRUPTED;
+    case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
         return EVENT_SYSTEM_NO_MEMORY;
-    case LINEAR_ALLOC_INVALID_ARGUMENT:
+    case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
         return EVENT_SYSTEM_INVALID_ARGUMENT;
+    case SUBSYSTEM_ALLOCATOR_OVERFLOW:
+        return EVENT_SYSTEM_OVERFLOW;
+    case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
+        return EVENT_SYSTEM_LIMIT_EXCEEDED;
+    case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
+        return EVENT_SYSTEM_UNDEFINED_ERROR;
     default:
         return EVENT_SYSTEM_UNDEFINED_ERROR;
     }
 }
 
-event_system_result_t event_system_rslt_convert_platform_system(platform_system_result_t rslt_) {
-    switch(rslt_) {
+event_system_result_t event_system_result_convert_platform_system(platform_system_result_t result_) {
+    switch(result_) {
     case PLATFORM_SYSTEM_SUCCESS:
         return EVENT_SYSTEM_SUCCESS;
     case PLATFORM_SYSTEM_INVALID_ARGUMENT:

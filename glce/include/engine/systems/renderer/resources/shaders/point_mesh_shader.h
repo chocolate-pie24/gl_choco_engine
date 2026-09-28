@@ -30,23 +30,23 @@ typedef struct mat4x4f mat4x4f_t;
 typedef struct point_vertex point_vertex_t;
 typedef struct point_mesh_shader_config point_mesh_shader_config_t;
 
-shader_result_t point_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const point_mesh_shader_config_t* config_, point_mesh_shader_t** out_point_mesh_shader_);
+shader_result_t point_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const point_mesh_shader_config_t* config_, point_mesh_shader_t** out_shader_);
 
-void point_mesh_shader_destroy(point_mesh_shader_t** point_mesh_shader_);
+void point_mesh_shader_destroy(point_mesh_shader_t** shader_);
 
-shader_result_t point_mesh_shader_vbo_write(point_mesh_shader_t* point_mesh_shader_, size_t vertex_count_, const point_vertex_t* vertices_, vbo_range_t* out_buffer_range_);
+shader_result_t point_mesh_shader_vbo_write(point_mesh_shader_t* shader_, size_t vertex_count_, const point_vertex_t* vertices_, vbo_range_t* out_buffer_range_);
 
-shader_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* point_mesh_shader_, const vbo_range_t* buffer_range_);
+shader_result_t point_mesh_shader_vbo_free(point_mesh_shader_t* shader_, const vbo_range_t* buffer_range_);
 
-shader_result_t point_mesh_shader_vao_bind(const point_mesh_shader_t* point_mesh_shader_);
+shader_result_t point_mesh_shader_vao_bind(const point_mesh_shader_t* shader_);
 
-shader_result_t point_mesh_shader_use(const point_mesh_shader_t* point_mesh_shader_);
+shader_result_t point_mesh_shader_use(const point_mesh_shader_t* shader_);
 
-shader_result_t point_mesh_shader_model_matrix_set(const point_mesh_shader_t* point_mesh_shader_, const mat4x4f_t* model_matrix_, bool should_transpose_);
+shader_result_t point_mesh_shader_model_matrix_set(const point_mesh_shader_t* shader_, const mat4x4f_t* model_matrix_, bool should_transpose_);
 
-shader_result_t point_mesh_shader_view_matrix_set(const point_mesh_shader_t* point_mesh_shader_, const mat4x4f_t* view_matrix_, bool should_transpose_);
+shader_result_t point_mesh_shader_view_matrix_set(const point_mesh_shader_t* shader_, const mat4x4f_t* view_matrix_, bool should_transpose_);
 
-shader_result_t point_mesh_shader_projection_matrix_set(const point_mesh_shader_t* point_mesh_shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
+shader_result_t point_mesh_shader_projection_matrix_set(const point_mesh_shader_t* shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
 
 #ifdef __cplusplus
 }

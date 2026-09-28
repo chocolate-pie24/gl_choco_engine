@@ -30,17 +30,17 @@ typedef enum {
 typedef struct fs_stream fs_stream_t;
 typedef struct choco_string choco_string_t;
 
-fs_stream_result_t fs_stream_create(fs_stream_t** out_fs_stream_, const char* fullpath_, fs_open_mode_t mode_);
+fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullpath_, fs_open_mode_t mode_);
 
-void fs_stream_destroy(fs_stream_t** fs_stream_, bool* out_close_succeeded_);
+void fs_stream_destroy(fs_stream_t** stream_, bool* out_close_succeeded_);
 
-fs_stream_result_t fs_stream_byte_read(fs_stream_t* fs_stream_, size_t read_bytes_, size_t* result_n_, char* buffer_);
+fs_stream_result_t fs_stream_byte_read(fs_stream_t* stream_, size_t read_bytes_, size_t* out_read_bytes_, char* out_buffer_);
 
-fs_stream_result_t fs_stream_text_file_read(fs_stream_t* fs_stream_, choco_string_t* out_string_);
+fs_stream_result_t fs_stream_text_file_read(fs_stream_t* stream_, choco_string_t* out_string_);
 
-fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* fs_stream_, choco_string_t* out_string_);
+fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* stream_, choco_string_t* out_string_);
 
-bool fs_stream_is_valid(const fs_stream_t* fs_stream_);
+bool fs_stream_is_valid(const fs_stream_t* stream_);
 
 #ifdef __cplusplus
 }

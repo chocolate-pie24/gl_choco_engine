@@ -21,7 +21,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/core/memory/choco_memory.h"
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -43,7 +43,7 @@ struct renderer_backend_texture {
     texture_wrap_config_t wrap_config_t_axis;       /**< テクスチャがラップする箇所のピクセル設定(t軸) */
 };
 
-static renderer_backend_result_t gl33_texture_create(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_);
+static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_);
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
 static renderer_backend_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_);
 static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
@@ -81,65 +81,65 @@ const renderer_texture_vtable_t* gl33_texture_vtable_get(void) {
 /**
  * @brief テクスチャGPU側リソース構造体インスタンスのメモリを確保し、OpenGLテクスチャ設定を行い初期化する
  *
- * @param[in] unit_num_ シェーダーが参照するテクスチャ用スロット番号
+ * @param[in] texture_unit_index_ シェーダーが参照するテクスチャ用スロット番号
  * @param[in] min_filter_config_ テクスチャ縮小表示の際の設定値
  * @param[in] mag_filter_config_ テクスチャ拡大表示の際の設定値
  * @param[in] wrap_config_s_axis_ テクスチャがラップする部分の表示設定値(s軸)
  * @param[in] wrap_config_t_axis_ テクスチャがラップする部分の表示設定値(t軸)
- * @param[out] texture_handle_ リソース確保、初期化対象テクスチャGPUリソース構造体インスタンスへのダブルポインタ
+ * @param[out] out_texture_handle_ リソース確保、初期化対象テクスチャGPUリソース構造体インスタンスへのダブルポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - texture_handle_ == NULL
- * - *texture_handle_ != NULL
+ * - out_texture_handle_ == NULL
+ * - *out_texture_handle_ != NULL
  * - min_filter_config_が規定値外
  * - mag_filter_config_が規定値外
  * - wrap_config_s_axis_が規定値外
  * - wrap_config_t_axis_が規定値外
- * - unit_num_ < 0
+ * - texture_unit_index_ < 0
  * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
  * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
  * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-static renderer_backend_result_t gl33_texture_create(int32_t unit_num_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** texture_handle_) {
+static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    memory_system_result_t ret_memory_system = MEMORY_SYSTEM_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
-    renderer_backend_texture_t* tmp = NULL;
+    renderer_backend_texture_t* tmp_texture = NULL;
     GLint min_filter = GL_NEAREST;
     GLint mag_filter = GL_NEAREST;
     GLint wrap_config_s_axis = GL_REPEAT;
     GLint wrap_config_t_axis = GL_REPEAT;
     GLint current_unit = GL_TEXTURE0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "texture_handle_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "*texture_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolve_min_filter_config(min_filter_config_, &min_filter), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "min_filter_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolve_mag_filter_config(mag_filter_config_, &mag_filter), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "mag_filter_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_s_axis_, &wrap_config_s_axis), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_s_axis_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_t_axis_, &wrap_config_t_axis), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_t_axis_")
-    IF_ARG_FALSE_GOTO_CLEANUP(unit_num_ >= 0, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "unit_num_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "out_texture_handle_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "*out_texture_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(resolve_min_filter_config(min_filter_config_, &min_filter), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "min_filter_config_")
+    IF_ARG_FALSE_GOTO_CLEANUP(resolve_mag_filter_config(mag_filter_config_, &mag_filter), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "mag_filter_config_")
+    IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_s_axis_, &wrap_config_s_axis), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_s_axis_")
+    IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_t_axis_, &wrap_config_t_axis), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_t_axis_")
+    IF_ARG_FALSE_GOTO_CLEANUP(texture_unit_index_ >= 0, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "texture_unit_index_")
 
-    ret_memory_system = memory_system_allocate(sizeof(renderer_backend_texture_t), MEMORY_TAG_RENDERER, (void**)&tmp);
-    if(MEMORY_SYSTEM_SUCCESS != ret_memory_system) {
-        ret = renderer_backend_rslt_convert_choco_memory(ret_memory_system);
-        ERROR_MESSAGE("gl33_texture_create(%s) - Failed to allocate memory for texture handle.", renderer_backend_rslt_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_texture_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_texture);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("gl33_texture_create(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
-    tmp->handle = 0;
-    tmp->unit_number = unit_num_;
-    tmp->min_filter_config = min_filter_config_;
-    tmp->mag_filter_config = mag_filter_config_;
-    tmp->wrap_config_s_axis = wrap_config_s_axis_;
-    tmp->wrap_config_t_axis = wrap_config_t_axis_;
+    tmp_texture->handle = 0;
+    tmp_texture->unit_number = texture_unit_index_;
+    tmp_texture->min_filter_config = min_filter_config_;
+    tmp_texture->mag_filter_config = mag_filter_config_;
+    tmp_texture->wrap_config_s_axis = wrap_config_s_axis_;
+    tmp_texture->wrap_config_t_axis = wrap_config_t_axis_;
 
     mock_glGetIntegerv(GL_ACTIVE_TEXTURE, &current_unit);
 
-    mock_glGenTextures(1, &tmp->handle);
-    mock_glActiveTexture(GL_TEXTURE0 + (GLenum)unit_num_);
+    mock_glGenTextures(1, &tmp_texture->handle);
+    mock_glActiveTexture(GL_TEXTURE0 + (GLenum)texture_unit_index_);
 
-    mock_glBindTexture(GL_TEXTURE_2D, tmp->handle);
+    mock_glBindTexture(GL_TEXTURE_2D, tmp_texture->handle);
 
     mock_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
     mock_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
@@ -151,7 +151,7 @@ static renderer_backend_result_t gl33_texture_create(int32_t unit_num_, texture_
 
     mock_glActiveTexture((GLenum)current_unit);
 
-    *texture_handle_ = tmp;
+    *out_texture_handle_ = tmp_texture;
 
     ret = RENDERER_BACKEND_SUCCESS;
 
@@ -176,7 +176,7 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
     }
     mock_glDeleteTextures(1, &(*texture_handle_)->handle);
 
-    memory_system_free((void*)*texture_handle_, sizeof(renderer_backend_texture_t), MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)texture_handle_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 
     *texture_handle_ = NULL;
 }
@@ -195,9 +195,9 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
 static renderer_backend_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_bind", "texture_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_handle_->handle, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_rslt_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_bind", "texture_handle_->handle")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 <= texture_handle_->unit_number, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_rslt_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_bind", "texture_handle_->unit_number")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_bind", "texture_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_handle_->handle, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_result_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_bind", "texture_handle_->handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 <= texture_handle_->unit_number, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_result_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_bind", "texture_handle_->unit_number")
 
     mock_glActiveTexture(GL_TEXTURE0 + texture_handle_->unit_number);
     mock_glBindTexture(GL_TEXTURE_2D, texture_handle_->handle);
@@ -222,9 +222,9 @@ cleanup:
 static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_unbind", "texture_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_handle_->handle, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_rslt_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_unbind", "texture_handle_->handle")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 <= texture_handle_->unit_number, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_rslt_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_unbind", "texture_handle_->unit_number")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_unbind", "texture_handle_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_handle_->handle, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_result_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_unbind", "texture_handle_->handle")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 <= texture_handle_->unit_number, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_result_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_unbind", "texture_handle_->unit_number")
 
     mock_glActiveTexture(GL_TEXTURE0 + texture_handle_->unit_number);
     mock_glBindTexture(GL_TEXTURE_2D, 0);
@@ -253,9 +253,9 @@ cleanup:
 static renderer_backend_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "pixels_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != width_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "width_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != height_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_rslt_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "height_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "pixels_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != width_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "width_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 != height_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "height_")
 
     if(3 == channel_count_) {
         mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
@@ -265,7 +265,7 @@ static renderer_backend_result_t gl33_texture_pixel_upload(uint32_t width_, uint
         mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width_, (GLsizei)height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
     } else {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_pixel_upload(%s) - Provided channel count is not valid.", renderer_backend_rslt_to_str(ret));
+        ERROR_MESSAGE("gl33_texture_pixel_upload(%s) - Provided channel count is not valid.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 

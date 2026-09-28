@@ -42,7 +42,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(line
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-    resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
     uint16_t tmp_geometry_id = 0;
@@ -52,17 +52,17 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(line
     bool vbo_written = false;
 
     // Preconditions
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "geometry_registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "out_geometry_id_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "geometry_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "vertices_")
 
     // Geometry CPUリソース生成
     ret_resource = line_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count_);
+        ret = resource_pipeline_result_convert_resource(ret_resource);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
         goto cleanup;
     }
 
@@ -70,17 +70,17 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(line
     // line_mesh_geometry_create_from_vertices()が成功しているのでオーバーフローチェックは不要
     ret_shader = line_mesh_shader_vbo_write(shader_, vertex_count_, vertices_, &tmp_buffer_range);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = resource_pipeline_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count_);
+        ret = resource_pipeline_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
         goto cleanup;
     }
     vbo_written = true;
 
     // Geometry Registryへ登録
-    ret_registry = line_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
-    if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
-        ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count_);
+    ret_resource_registry = line_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+    if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+        ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
         goto cleanup;
     }
 
@@ -95,7 +95,7 @@ cleanup:
             // NOTE: line_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
             // line_mesh_geometry_pipeline_import_from_vertices失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
             ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - line mesh geometry import failed.", resource_pipeline_rslt_to_str(ret));
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - line mesh geometry import failed.", resource_pipeline_result_to_str(ret));
         }
     }
     line_mesh_geometry_destroy(&geometry);
@@ -106,7 +106,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(line_mes
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-    resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
     size_t vertex_count = 0;
@@ -119,45 +119,45 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(line_mes
     bool vbo_written = false;
 
     // Preconditions
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "geometry_registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "out_geometry_id_")
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "geometry_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "aabb_")
 
     // Geometry CPUリソース生成
     ret_resource = line_mesh_geometry_create_from_aabbs(1, aabb_, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s'", resource_pipeline_rslt_to_str(ret), resource_name_);
+        ret = resource_pipeline_result_convert_resource(ret_resource);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
         goto cleanup;
     }
 
     ret_resource = line_mesh_geometry_vertex_count_get(geometry, &vertex_count);
     if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertex_count_get_failed, geometry_name='%s'", resource_pipeline_rslt_to_str(ret), resource_name_);
+        ret = resource_pipeline_result_convert_resource(ret_resource);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertex_count_get_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
         goto cleanup;
     }
     ret_resource = line_mesh_geometry_vertices_get(geometry, &vertices);
     if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_rslt_convert_resource(ret_resource);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertices_get_failed, geometry_name='%s'", resource_pipeline_rslt_to_str(ret), resource_name_);
+        ret = resource_pipeline_result_convert_resource(ret_resource);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertices_get_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
         goto cleanup;
     }
 
     ret_shader = line_mesh_shader_vbo_write(shader_, vertex_count, vertices, &tmp_buffer_range);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = resource_pipeline_rslt_convert_shader(ret_shader);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count);
+        ret = resource_pipeline_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
         goto cleanup;
     }
     vbo_written = true;
 
-    ret_registry = line_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
-    if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
-        ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_rslt_to_str(ret), resource_name_, vertex_count);
+    ret_resource_registry = line_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+    if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+        ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
         goto cleanup;
     }
 
@@ -172,7 +172,7 @@ cleanup:
             // NOTE: line_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
             // line_mesh_geometry_pipeline_import_from_aabb失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
             ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - line mesh geometry import failed.", resource_pipeline_rslt_to_str(ret));
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - line mesh geometry import failed.", resource_pipeline_result_to_str(ret));
         }
     }
     line_mesh_geometry_destroy(&geometry);
@@ -182,15 +182,15 @@ cleanup:
 resource_pipeline_result_t line_mesh_geometry_pipeline_release(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, uint16_t geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    resource_registry_result_t ret_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+    resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_release", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_rslt_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_release", "geometry_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_release", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_release", "geometry_registry_")
 
-    ret_registry = line_mesh_geometry_registry_unregister(geometry_registry_, shader_, geometry_id_);
-    if(RESOURCE_REGISTRY_SUCCESS != ret_registry) {
-        ret = resource_pipeline_rslt_convert_resource_registry(ret_registry);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_rslt_to_str(ret));
+    ret_resource_registry = line_mesh_geometry_registry_unregister(geometry_registry_, shader_, geometry_id_);
+    if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+        ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_release(%s) - line_mesh_geometry_pipeline_release failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
 

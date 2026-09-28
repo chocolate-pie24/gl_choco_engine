@@ -51,7 +51,7 @@
  * Memory Policy
  * =========================================================================
  *
- * Memory Systemのbacking storage policyを指定する。
+ * General Allocatorのbacking storage policyを指定する。
  *
  * Available values:
  *
@@ -61,7 +61,7 @@
  *
  *   GLCE_BUILD_MEMORY_POLICY_EMBEDDED
  *       compile-time固定容量のstatic backing storageを使用する。
- *       Memory System自身はmalloc/freeを使用しない。
+ *       General Allocator自身はmalloc/freeを使用しない。
  *
  * 必ず1つだけ定義する。
  */
@@ -72,7 +72,7 @@
  * Memory Pool Size
  * =========================================================================
  *
- * Memory Systemが管理するCPU-side memory poolの総容量。
+ * General Allocatorが管理するCPU-side memory poolの総容量。
  *
  * Unit:
  *   bytes

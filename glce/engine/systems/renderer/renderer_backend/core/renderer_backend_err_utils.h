@@ -8,16 +8,16 @@
 extern "C" {
 #endif
 
-#include "engine/core/memory/choco_memory.h"
-#include "engine/core/memory/linear_allocator.h"
+#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-const char* renderer_backend_rslt_to_str(renderer_backend_result_t rslt_);
+const char* renderer_backend_result_to_str(renderer_backend_result_t result_);
 
-renderer_backend_result_t renderer_backend_rslt_convert_choco_memory(memory_system_result_t rslt_);
+renderer_backend_result_t renderer_backend_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 
-renderer_backend_result_t renderer_backend_rslt_convert_linear_alloc(linear_allocator_result_t rslt_);
+renderer_backend_result_t renderer_backend_result_convert_general_allocator(general_allocator_result_t result_);
 
 #ifdef __cplusplus
 }
