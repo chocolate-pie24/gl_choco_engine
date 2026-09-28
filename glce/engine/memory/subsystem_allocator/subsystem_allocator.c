@@ -188,7 +188,7 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_create", "out_allocator_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_create", "*out_allocator_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, SUBSYSTEM_ALLOCATOR_BAD_OPERATION, result_to_str(SUBSYSTEM_ALLOCATOR_BAD_OPERATION), "subsystem_allocator_create", "*out_allocator_")
     if(0 == memory_pool_size_) {
         ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("subsystem_allocator_create(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
@@ -317,7 +317,7 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "*out_ptr_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, SUBSYSTEM_ALLOCATOR_BAD_OPERATION, result_to_str(SUBSYSTEM_ALLOCATOR_BAD_OPERATION), "subsystem_allocator_allocate", "*out_ptr_")
     if(!memory_tag_is_valid(memory_tag_)) {
         ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("subsystem_allocator_allocate(%s) - Provided memory_tag_ is not valid.", result_to_str(ret));
