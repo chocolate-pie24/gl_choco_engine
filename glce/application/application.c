@@ -291,10 +291,11 @@ void application_destroy(void) {
         fs_path_destroy(&s_application_state->executable_directory);
     }
 
+    application_diagnostics_status_report(s_application_state->subsystem_allocator);
+
     subsystem_allocator_destroy(&s_application_state->subsystem_allocator);
     general_allocator_free((void**)&s_application_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     INFO_MESSAGE("Freed all memory.");
-    // memory_system_report();
     // end cleanup all systems.
 
     INFO_MESSAGE("Application destroyed successfully.");
