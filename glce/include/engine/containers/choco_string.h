@@ -1,20 +1,35 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-/** @ingroup containers
+/**
+ * @ingroup containers
  *
  * @file choco_string.h
  * @author chocolate-pie24
- * @brief 文字列を格納するコンテナモジュールAPIの定義
+ * @brief 文字列を所有するコンテナと、その基本操作を提供する
  *
- * @details 文字列比較や文字列連結等の文字列処理機能も提供する
+ * @details
+ * Choco String moduleは、動的に確保された文字列storageを所有する
+ * `choco_string_t`と、文字列の生成、複製、連結、参照等に関する機能を提供する。
  *
- * @note
- * choco_string_t構造体は、内部データを隠蔽している。
- * このため、choco_string_t型で変数を宣言することはできない。
- * 使用の際は、choco_string_t*型で宣言すること
+ * `choco_string_t`は内部表現を公開しないopaque objectであり、
+ * callerは`choco_string_t*`を通してmodule APIを利用する。
  *
- * @date 2025-09-26
+ * @section choco_string_boundary_contract Module Boundary Contract
+ *
+ * - `choco_string_t`はopaque typeとして公開し、内部表現をmodule外部へ公開しない。
+ * - Choco String moduleは、`choco_string_t` object自身のstorageおよび
+ *   objectが所有する文字列storageのallocation / releaseを管理する。
+ * - callerは`choco_string_t` object自身のstorageまたはobjectが所有する
+ *   文字列storageを直接解放しない。
+ * - module APIへ渡す`choco_string_t*`は、Choco String moduleによって生成され、lifetime中にあるobjectを参照するものとする。
+ * - `choco_string_t`が表す文字列の長さには終端NULを含めない。
+ * - `choco_string_t`が表す文字列は、文字列長に対応する位置に終端NULを持ち、それより前の文字列領域にはNULを含まない。
+ * - sourceとして受け取るC stringはborrowとして扱い、
+ *   Choco String moduleはそのstorageのownershipを取得しない。
+ * - sourceとして受け取るC stringへのpointerはobject内部へ保持せず、
+ *   必要な文字列dataはChoco String moduleが所有するstorageへcopyする。
+ * - sourceとして受け取るC stringは、終端NULを持つ有効なC stringとして扱う。
  *
  */
 #ifndef GLCE_ENGINE_CONTAINERS_CHOCO_STRING_H
