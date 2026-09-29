@@ -24,7 +24,6 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
-#include "engine/core/geometry_primitive/geometry_primitive_err_utils.h"
 
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"

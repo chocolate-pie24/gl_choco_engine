@@ -14,7 +14,7 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/core/geometry_primitive/geometry_primitive_types.h"
+#include "engine/core/geometry_primitive/aabb_3d.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -120,23 +120,13 @@ resource_result_t resource_result_convert_choco_string(choco_string_result_t res
     }
 }
 
-resource_result_t resource_result_convert_geometry_primitive(geometry_primitive_result_t result_) {
+resource_result_t resource_result_convert_aabb_3d(aabb_3d_result_t result_) {
     switch(result_) {
-    case GEOMETRY_PRIMITIVE_SUCCESS:
+    case AABB_3D_SUCCESS:
         return RESOURCE_SUCCESS;
-    case GEOMETRY_PRIMITIVE_INVALID_ARGUMENT:
+    case AABB_3D_INVALID_ARGUMENT:
         return RESOURCE_INVALID_ARGUMENT;
-    case GEOMETRY_PRIMITIVE_RUNTIME_ERROR:
-        return RESOURCE_RUNTIME_ERROR;
-    case GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED:
-        return RESOURCE_LIMIT_EXCEEDED;
-    case GEOMETRY_PRIMITIVE_BAD_OPERATION:
-        return RESOURCE_BAD_OPERATION;
-    case GEOMETRY_PRIMITIVE_NO_MEMORY:
-        return RESOURCE_NO_MEMORY;
-    case GEOMETRY_PRIMITIVE_DATA_CORRUPTED:
-        return RESOURCE_DATA_CORRUPTED;
-    case GEOMETRY_PRIMITIVE_UNDEFINED_ERROR:
+    case AABB_3D_UNDEFINED_ERROR:
         return RESOURCE_UNDEFINED_ERROR;
     default:
         return RESOURCE_UNDEFINED_ERROR;

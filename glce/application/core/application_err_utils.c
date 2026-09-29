@@ -204,29 +204,6 @@ application_result_t application_result_convert_resource(resource_result_t resul
     }
 }
 
-application_result_t application_result_convert_geometry_primitive(geometry_primitive_result_t result_) {
-    switch(result_) {
-    case GEOMETRY_PRIMITIVE_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case GEOMETRY_PRIMITIVE_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case GEOMETRY_PRIMITIVE_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case GEOMETRY_PRIMITIVE_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case GEOMETRY_PRIMITIVE_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case GEOMETRY_PRIMITIVE_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case GEOMETRY_PRIMITIVE_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
 application_result_t application_result_convert_shader(shader_result_t result_) {
     switch(result_) {
     case SHADER_SUCCESS:

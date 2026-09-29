@@ -19,7 +19,7 @@ extern "C" {
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/core/geometry_primitive/geometry_primitive_types.h"
+#include "engine/core/geometry_primitive/aabb_3d.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -68,23 +68,7 @@ resource_result_t resource_result_convert_fs_stream(fs_stream_result_t result_);
  */
 resource_result_t resource_result_convert_choco_string(choco_string_result_t result_);
 
-/**
- * @brief geometry_primitive保有モジュールの実行結果コードをResourceレイヤー実行結果コードに変換する
- *
- * @param[in] result_ geometry_primitive保有モジュール実行結果コード
- *
- * @retval RESOURCE_SUCCESS geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_SUCCESS:
- * @retval RESOURCE_INVALID_ARGUMENT geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_INVALID_ARGUMENT:
- * @retval RESOURCE_RUNTIME_ERROR geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_RUNTIME_ERROR:
- * @retval RESOURCE_LIMIT_EXCEEDED geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_LIMIT_EXCEEDED:
- * @retval RESOURCE_BAD_OPERATION geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_BAD_OPERATION:
- * @retval RESOURCE_NO_MEMORY geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_NO_MEMORY:
- * @retval RESOURCE_DATA_CORRUPTED geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_DATA_CORRUPTED:
- * @retval RESOURCE_UNDEFINED_ERROR 以下のいずれか
- * - geometry_primitive実行結果コード:GEOMETRY_PRIMITIVE_UNDEFINED_ERROR
- * - 未定義のgeometry_primitive実行結果コード
- */
-resource_result_t resource_result_convert_geometry_primitive(geometry_primitive_result_t result_);
+resource_result_t resource_result_convert_aabb_3d(aabb_3d_result_t result_);
 
 resource_result_t resource_result_convert_general_allocator(general_allocator_result_t result_);
 

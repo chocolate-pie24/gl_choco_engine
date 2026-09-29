@@ -23,7 +23,7 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
-#include "engine/core/geometry_primitive/geometry_primitive_err_utils.h"
+#include "engine/core/geometry_primitive/aabb_3d.h"
 
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
@@ -260,7 +260,7 @@ static resource_result_t initialize_from_aabbs(line_mesh_geometry_t* geometry_, 
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
-    geometry_primitive_result_t ret_geometry_primitive = GEOMETRY_PRIMITIVE_INVALID_ARGUMENT;
+    aabb_3d_result_t ret_aabb_3d = AABB_3D_INVALID_ARGUMENT;
 
     line_vertex_t* tmp_vertices = NULL;
     size_t vertex_count = 0;
@@ -289,10 +289,10 @@ static resource_result_t initialize_from_aabbs(line_mesh_geometry_t* geometry_, 
 
     for(size_t i = 0, ii = 0; i != aabb_count_; ++i, ii += 24) {
         vec3f_t aabb_vertices[8] = { 0 };
-        ret_geometry_primitive = aabb_3d_vertices_get(&aabbs_[i], aabb_vertices);
-        if(GEOMETRY_PRIMITIVE_SUCCESS != ret_geometry_primitive) {
-            ret = resource_result_convert_geometry_primitive(ret_geometry_primitive);
-            ERROR_MESSAGE("initialize_from_aabbs(%s) - Failed to get AABB vertices from aabbs_[%zu]. aabb_3d_vertices_get() returned %s.", resource_result_to_str(ret), i, geometry_primitive_result_to_str(ret_geometry_primitive));
+        ret_aabb_3d = aabb_3d_vertices_get(&aabbs_[i], aabb_vertices);
+        if(AABB_3D_SUCCESS != ret_aabb_3d) {
+            ret = resource_result_convert_aabb_3d(ret_aabb_3d);
+            ERROR_MESSAGE("initialize_from_aabbs(%s) - Failed to get AABB vertices from aabbs_[%zu].", resource_result_to_str(ret), i);
             goto cleanup;
         }
 
