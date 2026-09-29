@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
+#include "engine/containers/choco_string.h"
+
+#include <string.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h> // for SIZE_MAX
+
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
+
+#include "engine/memory/general_allocator/general_allocator.h"
+
 /*
  * Module Internal Contract
  *
@@ -55,17 +67,6 @@
  *   プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#include "engine/containers/choco_string.h"
-
-#include <string.h>
-#include <stddef.h>
-#include <stdbool.h>
-#include <stdint.h> // for SIZE_MAX
-
-#include "engine/base/choco_macros.h"
-#include "engine/base/choco_message.h"
-
-#include "engine/memory/general_allocator/general_allocator.h"
 
 // ============================================================
 // Private Type Definitions

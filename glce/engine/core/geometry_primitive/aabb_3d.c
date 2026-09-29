@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
+#include "engine/core/geometry_primitive/aabb_3d.h"
+
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "engine/base/choco_math/math_types.h"
+#include "engine/base/choco_math/choco_math.h"
+#include "engine/base/choco_message.h"
+#include "engine/base/choco_macros.h"
+
+#include "engine/core/geometry_primitive/vertex.h"
+
 /*
  * Module Internal Contract
  *
@@ -43,18 +56,6 @@
  *   プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#include "engine/core/geometry_primitive/aabb_3d.h"
-
-#include <stddef.h>
-#include <stdbool.h>
-#include <stdint.h>
-
-#include "engine/base/choco_math/math_types.h"
-#include "engine/base/choco_math/choco_math.h"
-#include "engine/base/choco_message.h"
-#include "engine/base/choco_macros.h"
-
-#include "engine/core/geometry_primitive/vertex.h"
 
 // ============================================================
 // Private Constants
