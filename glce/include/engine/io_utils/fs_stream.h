@@ -4,6 +4,53 @@
 #ifndef GLCE_ENGINE_IO_UTILS_FS_STREAM_H
 #define GLCE_ENGINE_IO_UTILS_FS_STREAM_H
 
+/**
+ * @file fs_stream.h
+ * @author chocolate-pie24
+ * @brief filesystem上のfile streamを扱うopaque objectとread operationを提供する
+ *
+ * @details
+ * FS Stream moduleは、open済みfile streamを表す`fs_stream_t`と、
+ * byte単位およびtext単位のread operation、
+ * file streamのlifetime管理に関する機能を提供する。
+ *
+ * `fs_stream_t`は内部表現を公開しないopaque objectであり、
+ * create成功後はopen済みかつ利用可能なfile sessionとして扱う。
+ *
+ * @section fs_stream_boundary_contract Module Boundary Contract
+ *
+ * - `fs_stream_t`はopaque typeとして公開し、内部表現をmodule外部へ公開しない。
+ * - FS Stream moduleは`fs_stream_t` object自身と、
+ *   そのfile sessionを構成するinternal resourceのownershipおよびlifetimeを管理する。
+ * - callerはFS Stream moduleが所有するinternal resourceを直接変更または解放しない。
+ * - module APIへ渡す`fs_stream_t*`は、FS Stream moduleによって生成され、
+ *   lifetime中にあるobjectを参照するものとする。
+ *
+ * - `fs_stream_create()`成功時に公開される`fs_stream_t`は、
+ *   指定されたfileを指定open modeでopen済みの利用可能なsessionを表す。
+ * - publicなclosed stateやpartial initialization stateは持たない。
+ * - create失敗時には`fs_stream_t`のownershipをcallerへ移転しない。
+ *
+ * - full pathは空文字列ではなく、'/'から始まるabsolute pathでなければならない。
+ * - open modeには有効な`fs_open_mode_t`を指定する。
+ *
+ * - read operationを行う場合、streamはread可能なopen modeで作成されていなければならない。
+ * - byte readでは0より大きいread sizeを指定する。
+ * - byte read用bufferは、指定したread size以上を書き込み可能なstorageを
+ *   callerが用意し、そのownershipを保持する。
+ *
+ * - text read APIへ渡す`choco_string_t`はcallerがownershipを保持し、
+ *   FS Stream moduleはそのobjectのownershipを取得しない。
+ * - text read APIは読み取った内容をcaller-providedな`choco_string_t`へ格納する。
+ *
+ * - EOFはfile read operationの正常な終端状態として`FS_STREAM_EOF`で通知する。
+ * - partial readが発生した場合、read可能なdataが1byte以上存在すれば読み取ったbyte数とともに成功として扱う。
+ *
+ * @par AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif

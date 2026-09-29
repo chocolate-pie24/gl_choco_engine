@@ -507,6 +507,8 @@ const char* fs_path_fullpath_get(const fs_path_t* path_) {
 // - fullpath == NULLの場合はfalseを返す。
 // - owned fullpathをdereferenceする前に、general_allocator_ptr_is_allocated()で
 //   fullpathがGeneral Allocator上のcurrent allocationであることを確認する。
+// - owned fullpathのactual allocation sizeとcapacityの整合性検証については、
+//   allocation metadataの利用方法と合わせて将来検討する。
 // - allocation validity確認後、choco_string_is_valid()を実行し、
 //   owned choco_string_tのcanonical validityを確認する。
 // - Choco Stringのcanonical validation成功後、FS Path固有のsemantic invariantとして
