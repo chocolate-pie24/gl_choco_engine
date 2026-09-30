@@ -27,13 +27,7 @@ resource_result_t geometry_conversion_lit_mesh_geometry_to_aabb_3d(const lit_mes
     IF_ARG_NULL_GOTO_CLEANUP(src_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "geometry_conversion_lit_mesh_geometry_to_aabb_3d", "src_geometry_")
     IF_ARG_NULL_GOTO_CLEANUP(dst_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "geometry_conversion_lit_mesh_geometry_to_aabb_3d", "dst_geometry_")
 
-    ret = lit_mesh_geometry_vertex_count_get(src_geometry_, &vertex_count);
-    if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("geometry_conversion_lit_mesh_geometry_to_aabb_3d(%s) - lit_mesh_geometry_vertex_count_get failed.", resource_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = lit_mesh_geometry_vertices_get(src_geometry_, &tmp_vertices);
+    ret = lit_mesh_geometry_vertices_get(src_geometry_, &tmp_vertices, &vertex_count);
     if(RESOURCE_SUCCESS != ret) {
         ERROR_MESSAGE("geometry_conversion_lit_mesh_geometry_to_aabb_3d(%s) - lit_mesh_geometry_vertices_get failed.", resource_result_to_str(ret));
         goto cleanup;
