@@ -133,13 +133,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(line_mes
         goto cleanup;
     }
 
-    ret_resource = line_mesh_geometry_vertex_count_get(geometry, &vertex_count);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertex_count_get_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
-        goto cleanup;
-    }
-    ret_resource = line_mesh_geometry_vertices_get(geometry, &vertices);
+    ret_resource = line_mesh_geometry_vertices_get(geometry, &vertices, &vertex_count);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_result_convert_resource(ret_resource);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertices_get_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
