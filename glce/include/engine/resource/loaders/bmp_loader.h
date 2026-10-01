@@ -28,7 +28,7 @@ extern "C" {
 
 #include "engine/resource/core/resource_types.h"
 
-resource_result_t bmp_loader_load(const char* fullpath_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_, size_t* out_pixel_data_size_, uint8_t** out_pixels_);
+resource_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_);
 
 #ifdef __cplusplus
 }

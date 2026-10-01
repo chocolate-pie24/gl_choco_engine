@@ -50,7 +50,6 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(lit_mesh_
     point_normal_vertex_t* vertices = NULL;
     size_t vertex_count = 0;
     size_t vertex_offset = 0;
-    size_t vertex_array_size = 0;
     uint16_t tmp_geometry_id = 0;
     vbo_range_t tmp_buffer_range = { 0 };
     bool vbo_written = false;
@@ -69,13 +68,6 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(lit_mesh_
         ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=stl_load_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
         goto cleanup;
     }
-
-    if((SIZE_MAX / vertex_count) < sizeof(point_normal_vertex_t)) {
-        ret = RESOURCE_PIPELINE_OVERFLOW;
-        ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - lit_mesh_geometry_pipeline_import_from_file failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-    vertex_array_size = sizeof(point_normal_vertex_t) * vertex_count;
 
     ret_resource = lit_mesh_geometry_create_from_vertices(vertex_count, vertices, &geometry);
     if(RESOURCE_SUCCESS != ret_resource) {

@@ -17,6 +17,10 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+
 /**
  * @brief Resourceレイヤー実行結果コード定義
  *
@@ -35,6 +39,15 @@ typedef enum {
     RESOURCE_UNSUPPORTED_FILE,   /**< 未対応ファイル形式 */
     RESOURCE_UNDEFINED_ERROR,    /**< 未定義エラー */
 } resource_result_t;
+
+typedef struct texture_resource_info {
+    size_t pixel_data_size;
+    uint16_t width;
+    uint16_t height;
+    uint8_t channel_count;
+} texture_resource_info_t;
+
+bool texture_resource_info_is_valid(const texture_resource_info_t* resource_info_);
 
 #ifdef __cplusplus
 }

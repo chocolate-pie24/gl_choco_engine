@@ -134,10 +134,7 @@
  *
  */
 struct texture_cpu_resource {
-    size_t pixel_data_size;
-    uint16_t width;         /**< テクスチャ幅 */
-    uint16_t height;        /**< テクスチャ高さ(左上原点の画像を基準にする) */
-    uint8_t channel_count;  /**< チャンネルカウント(RGB or RGBAのみサポート) */
+    texture_resource_info_t resource_info;
     uint8_t* pixels;        /**< テクスチャピクセルデータ */
 };
 
@@ -207,7 +204,7 @@ static bool is_valid_shallow(const texture_cpu_resource_t* texture_resource_);
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_, uint8_t channel_count_, size_t pixel_data_size_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_) {
+resource_result_t texture_cpu_resource_create(const texture_resource_info_t* resource_info_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -215,34 +212,15 @@ resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_,
     texture_cpu_resource_t* tmp_cpu_resource = NULL;
 
     size_t expected_pixel_data_size = 0;
-    const size_t width_size_t = (size_t)width_;
-    const size_t height_size_t = (size_t)height_;
-    const size_t channel_count_size_t = (size_t)channel_count_;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_create", "out_texture_resource_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "texture_cpu_resource_create", "*out_texture_resource_")
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_create", "pixels_")
     IF_ARG_NULL_GOTO_CLEANUP(*pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_create", "*pixels_")
-    if(0 == width_ || 0 == height_ || (3 != channel_count_ && 4 != channel_count_)) {
+    if(!texture_resource_info_is_valid(resource_info_)) {
         ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Provided width_, height_ or channel_count_ is not valid.", resource_result_to_str(ret));
-        goto cleanup;
-    }
-    if((SIZE_MAX / width_size_t) < height_size_t) {
-        ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Pixel data size overflow.", resource_result_to_str(ret));
-        goto cleanup;
-    }
-    if((SIZE_MAX / channel_count_size_t) < (width_size_t * height_size_t)) {
-        ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Pixel data size overflow.", resource_result_to_str(ret));
-        goto cleanup;
-    }
-    expected_pixel_data_size = width_size_t * height_size_t * channel_count_size_t;
-    if(expected_pixel_data_size != pixel_data_size_) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Provided pixel_data_size_ is not valid.", resource_result_to_str(ret));
+        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Provided resource_info is not valid.", resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -254,11 +232,8 @@ resource_result_t texture_cpu_resource_create(uint16_t width_, uint16_t height_,
         goto cleanup;
     }
 
-    tmp_cpu_resource->channel_count = channel_count_;
-    tmp_cpu_resource->height = height_;
-    tmp_cpu_resource->width = width_;
+    tmp_cpu_resource->resource_info = *resource_info_;
     tmp_cpu_resource->pixels = *pixels_;
-    tmp_cpu_resource->pixel_data_size = pixel_data_size_;
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -408,14 +383,12 @@ cleanup:
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t texture_cpu_resource_pixel_size_get(const texture_cpu_resource_t* texture_resource_, uint16_t* out_width_, uint16_t* out_height_, uint8_t* out_channel_count_) {
+resource_result_t texture_cpu_resource_resource_info_get(const texture_cpu_resource_t* texture_resource_, texture_resource_info_t* out_resource_info_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "texture_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_width_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "out_width_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_height_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "out_height_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_channel_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "out_channel_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "out_resource_info_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(texture_resource_)) {
         ret = RESOURCE_DATA_CORRUPTED;
@@ -425,9 +398,7 @@ resource_result_t texture_cpu_resource_pixel_size_get(const texture_cpu_resource
 #endif
 
     // Output.
-    *out_width_ = texture_resource_->width;
-    *out_height_ = texture_resource_->height;
-    *out_channel_count_ = texture_resource_->channel_count;
+    *out_resource_info_ = texture_resource_->resource_info;
 
     ret = RESOURCE_SUCCESS;
 
@@ -493,29 +464,10 @@ bool texture_cpu_resource_is_valid(const texture_cpu_resource_t* texture_resourc
 // Validators
 // ============================================================
 static bool is_valid_shallow(const texture_cpu_resource_t* texture_resource_) {
-    size_t expected_pixel_data_size = 0;
-    size_t tmp_height = 0;
-    size_t tmp_width = 0;
-    size_t tmp_channel_count = 0;
-
     if(NULL == texture_resource_) {
         return false;
     }
-    if(0 == texture_resource_->height || 0 == texture_resource_->width || (3 != texture_resource_->channel_count && 4 != texture_resource_->channel_count)) {
-        return false;
-    }
-
-    tmp_height = texture_resource_->height;
-    tmp_width = texture_resource_->width;
-    tmp_channel_count = texture_resource_->channel_count;
-    if((SIZE_MAX / tmp_height) < tmp_width) {
-        return false;
-    }
-    if((SIZE_MAX / tmp_channel_count) < (tmp_width * tmp_height)) {
-        return false;
-    }
-    expected_pixel_data_size = tmp_width * tmp_height * tmp_channel_count;
-    if(expected_pixel_data_size != texture_resource_->pixel_data_size) {
+    if(!texture_resource_info_is_valid(&texture_resource_->resource_info)) {
         return false;
     }
     return true;
