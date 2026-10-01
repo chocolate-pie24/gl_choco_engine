@@ -11,7 +11,7 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/resource/texture/texture_cpu_resource.h"
+#include "engine/resource/core/resource_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_texture.h"

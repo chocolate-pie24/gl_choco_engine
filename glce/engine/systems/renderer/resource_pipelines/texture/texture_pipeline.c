@@ -218,11 +218,7 @@ static resource_pipeline_result_t bmp_load(const char* fullpath_, texture_resour
         goto cleanup;
     }
 
-    out_resource_info_->channel_count = tmp_resource_info.channel_count;
-    out_resource_info_->height = tmp_resource_info.height;
-    out_resource_info_->pixel_data_size = tmp_resource_info.pixel_data_size;
-    out_resource_info_->width = tmp_resource_info.width;
-
+    *out_resource_info_ = tmp_resource_info;
     *out_pixels_ = tmp_pixels;
 
     ret = RESOURCE_PIPELINE_SUCCESS;

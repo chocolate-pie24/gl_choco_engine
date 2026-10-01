@@ -136,7 +136,7 @@ static resource_result_t file_header_parse(const char header_[54], file_header_t
 static resource_result_t info_header_parse(const char header_[54], info_header_t* info_header_);
 
 // Pixel normalization helpers
-static resource_result_t pixel_normalize(const pixel_layout_t* pixel_layout_, uint8_t* pixels_, uint8_t** out_pixels_, size_t* out_new_size_);
+static resource_result_t pixel_normalize(const pixel_layout_t* pixel_layout_, const uint8_t* pixels_, uint8_t** out_pixels_, size_t* out_new_size_);
 static resource_result_t pixel_bgr_to_rgb(const pixel_layout_t* pixel_layout_, uint8_t* pixels_);
 static resource_result_t pixel_flip(const pixel_layout_t* pixel_layout_, uint8_t* pixels_);
 static resource_result_t padding_remove(const pixel_layout_t* pixel_layout_, const uint8_t* src_pixels_, uint8_t** out_pixels_, size_t* out_new_size_);
@@ -147,7 +147,7 @@ static void file_header_copy(const file_header_t* src_, file_header_t* dst_);
 static void info_header_copy(const info_header_t* src_, info_header_t* dst_);
 
 // Validators
-static bool header_is_valid(const file_header_t* file_header_, const info_header_t* info_header_);
+static bmp_invalid_reason_t header_is_valid(const file_header_t* file_header_, const info_header_t* info_header_);
 static bool pixel_layout_is_valid(const pixel_layout_t* pixel_layout_);
 static bmp_invalid_reason_t is_bmp_supported(const file_header_t* file_header_, const info_header_t* info_header_);
 static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_);
@@ -155,22 +155,12 @@ static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_);
 resource_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
-    bmp_invalid_reason_t valid_bmp = BMP_FILE_UNDEFINED;
-
     file_header_t tmp_file_header = { 0 };
     info_header_t tmp_info_header = { 0 };
     uint8_t* tmp_pixels = NULL;
     uint8_t* pixel_normalized = NULL;
-    uint8_t* formatted_pixels = NULL;
-    size_t formatted_size = 0;
-    size_t bit_count = 0;
-    size_t stride = 0;
-    size_t padding = 0;
     size_t new_pixel_size = 0;
-
-    size_t tmp_width = 0;
-    size_t tmp_height = 0;
-    uint8_t tmp_channel_count = 0;
+    bmp_invalid_reason_t reason = BMP_FILE_UNDEFINED;
 
     pixel_layout_t pixel_layout = { 0 };
 
@@ -192,9 +182,10 @@ resource_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t
         ERROR_MESSAGE("bmp_loader_load(%s) - Failed to load BMP header.", resource_result_to_str(ret));
         goto cleanup;
     }
-    if(!header_is_valid(&tmp_file_header, &tmp_info_header)) {
+    reason = header_is_valid(&tmp_file_header, &tmp_info_header);
+    if(BMP_FILE_VALID != reason) {
         ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("bmp_loader_load(%s) - Invalid file header.", resource_result_to_str(ret));
+        ERROR_MESSAGE("bmp_loader_load(%s) - Invalid file header. reason = %s", resource_result_to_str(ret), invalid_reason_to_str(reason));
         goto cleanup;
     }
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -230,22 +221,23 @@ resource_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t
         goto cleanup;
     }
 
-    *out_pixels_ = tmp_pixels;
+    *out_pixels_ = pixel_normalized;
     out_resource_info_->channel_count = pixel_layout.channel_count;
-    out_resource_info_->height = pixel_layout.height;
+    out_resource_info_->height = (uint16_t)pixel_layout.height;
     out_resource_info_->pixel_data_size = new_pixel_size;
-    out_resource_info_->width = pixel_layout.width;
-    tmp_pixels = NULL;
+    out_resource_info_->width = (uint16_t)pixel_layout.width;
+    pixel_normalized = NULL;
 
     ret = RESOURCE_SUCCESS;
 
 cleanup:
-    if(NULL != formatted_pixels && 0 != formatted_size) {
-        general_allocator_free((void**)&formatted_pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
-    }
-    if(NULL != tmp_pixels) {
+    if(RESOURCE_DATA_CORRUPTED != ret) {
+        if(NULL != pixel_normalized) {
+            general_allocator_free((void**)&pixel_normalized, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
+        }
         general_allocator_free((void**)&tmp_pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
     }
+
     return ret;
 }
 
@@ -327,7 +319,6 @@ static resource_result_t pixel_load(const char* fullpath_, const pixel_layout_t*
     uint8_t* tmp_buffer = NULL;
     uint8_t* tmp_pixels = NULL;
     size_t read_size_all = 0;
-    size_t pixel_buffer_size = 0;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "pixel_load", "fullpath_")
@@ -356,7 +347,7 @@ static resource_result_t pixel_load(const char* fullpath_, const pixel_layout_t*
         ERROR_MESSAGE("pixel_load(%s) - Failed to read BMP file(%s).", resource_result_to_str(ret), fullpath_);
         goto cleanup;
     } else if(pixel_layout_->file_size != read_size_all) {
-        ret = RESOURCE_DATA_CORRUPTED;
+        ret = RESOURCE_UNSUPPORTED_FILE;
         ERROR_MESSAGE("pixel_load(%s) - Invalid file size.", resource_result_to_str(ret));
         goto cleanup;
     }
@@ -368,7 +359,7 @@ static resource_result_t pixel_load(const char* fullpath_, const pixel_layout_t*
         goto cleanup;
     }
 
-    for(size_t i = 0; i != pixel_buffer_size; ++i) {
+    for(size_t i = 0; i != pixel_layout_->pixel_size; ++i) {
         tmp_pixels[i] = tmp_buffer[i + pixel_layout_->pixel_offset];
     }
 
@@ -480,7 +471,7 @@ cleanup:
 // ============================================================
 // Pixel normalization helpers
 // ============================================================
-static resource_result_t pixel_normalize(const pixel_layout_t* pixel_layout_, uint8_t* pixels_, uint8_t** out_pixels_, size_t* out_new_size_) {
+static resource_result_t pixel_normalize(const pixel_layout_t* pixel_layout_, const uint8_t* pixels_, uint8_t** out_pixels_, size_t* out_new_size_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     size_t new_pixel_size = 0;
@@ -518,10 +509,17 @@ static resource_result_t pixel_normalize(const pixel_layout_t* pixel_layout_, ui
 
     // Output.
     *out_pixels_ = new_pixels;
+    *out_new_size_ = new_pixel_size;
+    new_pixels = NULL;
 
     ret = RESOURCE_SUCCESS;
 
 cleanup:
+    if(RESOURCE_DATA_CORRUPTED != ret) {
+        if(NULL != new_pixels) {
+            general_allocator_free((void**)&new_pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
+        }
+    }
     return ret;
 }
 
@@ -843,7 +841,7 @@ static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_) {
     }
 }
 
-static bool header_is_valid(const file_header_t* file_header_, const info_header_t* info_header_) {
+static bmp_invalid_reason_t header_is_valid(const file_header_t* file_header_, const info_header_t* info_header_) {
     if(NULL == file_header_ || NULL == info_header_) {
         DEBUG_MESSAGE("BMP header validation failed: file_header or info_header is NULL. file_header=%p, info_header=%p", file_header_, info_header_);
         return BMP_FILE_UNDEFINED;

@@ -211,8 +211,6 @@ resource_result_t texture_cpu_resource_create(const texture_resource_info_t* res
 
     texture_cpu_resource_t* tmp_cpu_resource = NULL;
 
-    size_t expected_pixel_data_size = 0;
-
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_create", "out_texture_resource_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "texture_cpu_resource_create", "*out_texture_resource_")
@@ -392,7 +390,7 @@ resource_result_t texture_cpu_resource_resource_info_get(const texture_cpu_resou
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(texture_resource_)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_cpu_resource_pixel_size_get(%s) - Precondition validation failed for 'texture_resource_'.", resource_result_to_str(ret));
+        ERROR_MESSAGE("texture_cpu_resource_resource_info_get(%s) - Precondition validation failed for 'texture_resource_'.", resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
