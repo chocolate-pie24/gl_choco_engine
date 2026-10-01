@@ -4,17 +4,31 @@
 #include <stddef.h>
 
 bool texture_resource_info_is_valid(const texture_resource_info_t* resource_info_) {
+    size_t pixel_count = 0;
+    size_t expected_pixel_data_size = 0;
+
     if(NULL == resource_info_) {
         return false;
     }
-    if(0 == resource_info_->pixel_data_size) {
-        return false;
-    }
-    if(0 == resource_info_->height || 0 == resource_info_->width) {
+    if(0 == resource_info_->width || 0 == resource_info_->height) {
         return false;
     }
     if(3 != resource_info_->channel_count && 4 != resource_info_->channel_count) {
         return false;
     }
+
+    // width, height, channel_countからpixel data sizeを再計算
+    if((SIZE_MAX / resource_info_->height) < resource_info_->width) {
+        return false;
+    }
+    pixel_count = (size_t)resource_info_->width * (size_t)resource_info_->height;
+    if((SIZE_MAX / resource_info_->channel_count) < pixel_count) {
+        return false;
+    }
+    expected_pixel_data_size = pixel_count * resource_info_->channel_count;
+    if(expected_pixel_data_size != resource_info_->pixel_data_size) {
+        return false;
+    }
+
     return true;
 }

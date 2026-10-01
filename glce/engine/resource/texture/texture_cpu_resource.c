@@ -66,12 +66,13 @@
  *
  * - ValidationはModule Internal Contractで定義したcanonical stateを基準として行う。
  *
- * - private shallow validatorは、texture_cpu_resource_t自身が保持するscalar fieldと、
- *   scalar field間のlocal structural relationを検証する。
- * - shallow validatorはwidthおよびheightが0より大きいこと、
- *   channel_countが3または4であることを確認する。
- * - width * height * channel_countの計算がsize_tで表現可能であることを確認し、
- *   算出したexpected pixel data sizeとpixel_data_sizeが一致することを確認する。
+ * - private shallow validatorは、texture_cpu_resource_t自身が保持する
+ *   resource_infoのsemantic validityを検証する。
+ * - resource_infoを構成するwidth、height、channel_count、pixel_data_sizeおよび
+ *   それらのfield間relationのvalidationは、
+ *   semantic ownerであるtexture_resource_info_is_valid()へ委譲する。
+ * - Texture CPU Resource moduleではresource_info固有のsemantic conditionを
+ *   重複して実装しない。
  * - shallow validationではpixelsのpointer existence、
  *   pixelsが指すallocationのvalidity、およびpixel dataの内容を検証しない。
  *
@@ -88,7 +89,7 @@
  *
  * - canonical validatorは、引数として渡されたtexture_cpu_resource_t自身の
  *   allocation validityを検証しない。
- *   texture_cpu_resource_tをowned pointerとして保持するownerが存在する場合、
+ * - texture_cpu_resource_tをowned pointerとして保持するownerが存在する場合、
  *   そのstorage validityはowner側のownership closureとして扱う。
  *
  * - 現在のcanonical validatorはpixelsがGeneral Allocator上の
@@ -96,7 +97,8 @@
  * - pixel storageがGENERAL_ALLOCATOR_MEMORY_TAG_TEXTUREで取得されたことは、
  *   現在のGeneral Allocator APIではpointerから再確認できないため、
  *   module boundary contractとして信頼する。
- * - pixelsのactual allocation sizeとpixel_data_sizeの整合性も現在検証しない。
+ * - pixelsのactual allocation sizeとresource_info.pixel_data_sizeの整合性も
+ *   現在検証しない。
  * - 将来的にownership transferおよびallocation provenanceを
  *   より明示的かつ検証可能にする必要が生じた場合は、
  *   pointer、allocation size、memory tag等のmetadataを保持する
@@ -159,10 +161,11 @@ static bool is_valid_shallow(const texture_cpu_resource_t* texture_resource_);
 // - *out_texture_resource_ != NULLは既存pointerを上書きするAPI misuseであるため、
 //   BAD_OPERATIONとして扱う。
 //
-// - width_およびheight_は0より大きいことを要求する。
-// - channel_count_はRGBを表す3、またはRGBAを表す4であることを要求する。
-// - width_ * height_ * channel_count_の計算がsize_tの表現可能範囲内であることを検証する。
-// - 算出したexpected pixel data sizeとpixel_data_size_が一致することを要求する。
+// - resource_info_のsemantic validityは、semantic ownerである
+//   texture_resource_info_is_valid()へ委譲する。
+// - Texture CPU Resource moduleではresource_info_を構成する各fieldおよび
+//   field間relationのvalidationを重複して実装しない。
+// - resource_info_がvalidでない場合はRESOURCE_INVALID_ARGUMENTとして扱う。
 //
 // - *pixels_が指すpixel storageは、Loader等のupstream trust boundaryで
 //   trusted internal representationとして受理済みであることを前提とする。
@@ -181,8 +184,10 @@ static bool is_valid_shallow(const texture_cpu_resource_t* texture_resource_);
 // - 下位moduleからDATA_CORRUPTEDを受け取った場合は、
 //   fail-stop ruleに従ってsuspectなownership graphを辿る通常cleanupを行わない。
 //
-// - Prepare中にtmp_cpu_resource->pixelsへ*pixels_を格納しても、
-//   この時点ではpixel storageのownershipはcallerに残る。
+// - Prepare中にtmp_cpu_resourceへresource_info_および*pixels_を格納して
+//   completed candidate representationを構築する。
+// - tmp_cpu_resource->pixelsへ*pixels_を格納した時点では、
+//   pixel storageのownershipはcallerに残る。
 // - pixel storageのownership transferはOutput commit時にのみ成立する。
 // - create成功時は完成済みtexture_cpu_resource_tを*out_texture_resource_へ公開した後、
 //   *pixels_をNULLへ変更し、pixel storageのownershipをTexture CPU Resource moduleへ移転する。
@@ -190,14 +195,14 @@ static bool is_valid_shallow(const texture_cpu_resource_t* texture_resource_);
 // - create失敗時の通常cleanupでは、Texture CPU Resource moduleがまだownershipを
 //   commitしていないpixel storageをfreeしない。
 //
-// - DEBUG_BUILD / TEST_BUILDではtemporary resourceのconstruction完了後、
+// - DEBUG_BUILD / TEST_BUILDではcandidate representationのconstruction完了後、
 //   callerへ公開する前のStable boundaryでtexture_cpu_resource_is_valid()を実行し、
 //   canonical Postcondition validationを行う。
 // - このPostcondition validationはupstream pixel dataをtrust boundaryとして
-//   再認証するためのものではなく、construction後のtexture_cpu_resource_tが
+//   再認証するためのものではなく、commit対象となるcandidate representationが
 //   Module Internal Contractを満たすことをdiagnosticとして確認するために行う。
 // - canonical Postcondition validationに成功した場合のみ、
-//   texture_cpu_resource_tおよびpixel storageのownership transitionをcommitする。
+//   texture_cpu_resource_tの公開およびpixel storageのownership transitionをcommitする。
 // - RELEASE_BUILDではautomatic canonical Postcondition validationを行わない。
 //
 // AI支援:
@@ -354,26 +359,26 @@ cleanup:
     return ret;
 }
 
-// texture_cpu_resource_pixel_size_get Validation Policy
+// texture_cpu_resource_resource_info_get Validation Policy
 //
-// - texture_resource_、out_width_、out_height_およびout_channel_count_の
-//   pointer existenceはpublic API contractとして
-//   RELEASE_BUILDを含む全BUILDで検証する。
+// - texture_resource_およびout_resource_info_のpointer existenceは
+//   public API contractとしてRELEASE_BUILDを含む全BUILDで検証する。
 //
 // - 本operationがconsumeするのはtexture_resource_自身が保持する
-//   width、height、channel_countおよびそれらに関係するlocal structural stateであり、
+//   resource_infoのlocal semantic stateであり、
 //   owned pixel storageのallocation validityやpixel dataの内容には依存しない。
 //
-// - DEBUG_BUILD / TEST_BUILDではoutput公開前にprivate shallow validatorを実行し、
-//   width、height、channel_count、pixel_data_size間の
-//   local structural invariantをPreconditionとして検証する。
+// - DEBUG_BUILD / TEST_BUILDではoutput公開前にprivate shallow validatorを実行する。
+// - shallow validatorはembedded resource_infoのsemantic validityを
+//   texture_resource_info_is_valid()へ委譲して確認する。
 // - shallow validationに失敗した場合はRESOURCE_DATA_CORRUPTEDを返し、
-//   metadataをcallerへ公開しない。
+//   resource_infoをcallerへ公開しない。
 // - 本operationではowned pixel storageをdereferenceせず、
 //   ownership closureをconsumeしないためcanonical validationは行わない。
 // - RELEASE_BUILDではautomatic shallow validationを行わず、
-//   Module Internal Contractが成立していることを前提としてmetadataを公開する。
+//   Module Internal Contractが成立していることを前提としてresource_infoを公開する。
 //
+// - outputにはtexture_resource_が保持するresource_infoのvalue copyを返す。
 // - 本operationはtexture_cpu_resource_tおよびowned pixel storageを変更せず、
 //   ownership relationも変更しないため、Postcondition validationは行わない。
 //
@@ -385,8 +390,8 @@ resource_result_t texture_cpu_resource_resource_info_get(const texture_cpu_resou
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "texture_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixel_size_get", "out_resource_info_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_resource_info_get", "texture_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_resource_info_get", "out_resource_info_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(texture_resource_)) {
         ret = RESOURCE_DATA_CORRUPTED;
@@ -411,8 +416,11 @@ cleanup:
 // - explicit validatorであるため、BUILD_MODEによってvalidation semanticsを変更しない。
 //
 // - 最初にprivate shallow validatorを実行し、
-//   width、height、channel_count、pixel_data_size間の
-//   local structural invariantを検証する。
+//   embedded resource_infoのsemantic validityを確認する。
+// - resource_infoを構成する各fieldおよびfield間relationのvalidationは
+//   texture_resource_info_is_valid()へ委譲し、
+//   Texture CPU Resource moduleでは重複して実装しない。
+//
 // - shallow validation成功後、pixels != NULLであることを確認する。
 // - owned pixel storageのownership closureとして、
 //   general_allocator_ptr_is_allocated()によってpixelsがGeneral Allocator上の
@@ -421,7 +429,8 @@ cleanup:
 // - pixel storageがGENERAL_ALLOCATOR_MEMORY_TAG_TEXTUREで取得されたことは、
 //   現在のGeneral Allocator APIではpointerから再確認できないため、
 //   Module Boundary Contractとして信頼する。
-// - pixelsのactual allocation sizeとpixel_data_sizeのrelationも現在検証しない。
+// - pixelsのactual allocation sizeとresource_info.pixel_data_sizeのrelationも
+//   現在検証しない。
 // - 将来的にallocation provenanceおよびownership transferを
 //   より厳密に検証する必要が生じた場合は、
 //   allocation metadataを保持するownership descriptor等の仕組みを検討する。
@@ -431,7 +440,7 @@ cleanup:
 //   canonical validatorではpixel dataを全走査しない。
 //
 // - texture_resource_自身のallocation validityは本validatorでは検証しない。
-//   texture_resource_をowned pointerとして保持するownerが存在する場合、
+// - texture_resource_をowned pointerとして保持するownerが存在する場合、
 //   そのstorage validityはowner側のownership closureとして扱う。
 //
 // - validatorは対象stateを変更せず、resource allocation、repair、log出力等の
