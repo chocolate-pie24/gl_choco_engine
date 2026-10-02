@@ -28,11 +28,9 @@
  * Module Internal Contract
  *
  * Canonical state:
- * - widthは0より大きい。
- * - heightは0より大きい。
- * - channel_countはRGBを表す3、またはRGBAを表す4である。
- * - width * height * channel_countはsize_tで表現可能である。
- * - pixel_data_sizeはwidth * height * channel_countと一致する。
+ * - texture_cpu_resource_tが保持するresource_infoは、
+ *   texture_resource_info_is_valid()が定義する
+ *   GLCE内部texture resource metadataとしてのsemantic validityを満たす。
  * - pixelsはNULLではない。
  * - pixelsはGeneral Allocator上のlive allocationを参照する。
  *
@@ -49,11 +47,17 @@
  * - Texture CPU Resource moduleはtexture_cpu_resource_t objectのlifetimeとともに
  *   owned pixel storageのlifetimeを管理する。
  *
+ * - resource_infoを構成する各fieldおよびfield間relationのsemantic ownershipは
+ *   Resource Coreのtexture_resource_info_tに属する。
+ * - Texture CPU Resource moduleはそれらのsemanticを独自に再定義せず、
+ *   texture_resource_info_is_valid()へvalidationを委譲する。
+ *
  * - pixel elementの内容そのものについては、
  *   Loader等のupstream trust boundaryでtrusted internal representationとして
  *   受理済みであることを前提とする。
  * - Texture CPU Resource module固有のcanonical stateは、
- *   image metadata、pixel data size relation、およびpixel storageのownership relationである。
+ *   validなresource_infoとowned pixel storageの存在、および
+ *   pixel storageとのownership relationによって構成される。
  *
  * AI支援:
  * - 本セクションはChatGPTを用いて草案を作成し、
@@ -156,54 +160,43 @@ static bool is_valid_shallow(const texture_cpu_resource_t* texture_resource_);
 //   PreconditionsではTexture CPU Resource validatorを使用しない。
 //
 // - out_texture_resource_、pixels_および*pixels_のpointer existenceは、
-//   public output contractおよびownership move operationに必要なchecked preconditionとして
+//   public API contractおよびownership moveに必要なchecked preconditionとして
 //   RELEASE_BUILDを含む全BUILDで検証する。
 // - *out_texture_resource_ != NULLは既存pointerを上書きするAPI misuseであるため、
 //   BAD_OPERATIONとして扱う。
 //
-// - resource_info_のsemantic validityは、semantic ownerである
+// - resource_info_はvalidであることを要求する。
+// - resource_info_のsemantic validityはsemantic ownerである
 //   texture_resource_info_is_valid()へ委譲する。
 // - Texture CPU Resource moduleではresource_info_を構成する各fieldおよび
 //   field間relationのvalidationを重複して実装しない。
 // - resource_info_がvalidでない場合はRESOURCE_INVALID_ARGUMENTとして扱う。
 //
-// - *pixels_が指すpixel storageは、Loader等のupstream trust boundaryで
-//   trusted internal representationとして受理済みであることを前提とする。
-// - pixel elementの内容そのものについて、Texture CPU Resource moduleでは
-//   semantic validationを重複して行わない。
+// - *pixels_が指すpixel storageはModule Boundary Contractを満たす
+//   trusted internal representationであることをcaller contractとして要求する。
+// - pixel elementの内容そのものについてsemantic validationを行わない。
+// - pixel storageのallocation provenanceはcaller contractとして信頼し、
+//   createのPreconditionsでは再検証しない。
 //
-// - move対象のpixel storageはGeneral Allocatorから
-//   GENERAL_ALLOCATOR_MEMORY_TAG_TEXTUREで取得されたlive allocationであることを
-//   Module Boundary Contractとして要求する。
-// - 現在のGeneral Allocator APIではmemory tagをpointerから完全に再確認できないため、
-//   createのPreconditionsではgeneral_allocator_ptr_is_allocated()による
-//   allocation provenanceの部分的な再検証も行わず、caller contractとして信頼する。
+// - Prepareではtexture_cpu_resource_t storageをGeneral Allocatorから確保し、
+//   resource_info_および*pixels_を使用してcandidate representationを構築する。
+// - candidate construction中はpixel storageのownershipをcallerに残す。
 //
-// - texture_cpu_resource_t storageのallocationはGeneral Allocatorへ委譲する。
-// - General Allocatorから返されたresultはResource resultへ変換して伝播する。
-// - 下位moduleからDATA_CORRUPTEDを受け取った場合は、
-//   fail-stop ruleに従ってsuspectなownership graphを辿る通常cleanupを行わない。
+// - DEBUG_BUILD / TEST_BUILDではcandidate construction完了後、
+//   public stateへcommitする前にtexture_cpu_resource_is_valid()を実行し、
+//   canonical Commit eligibility validationを行う。
+// - Commit eligibility validationはcandidate representationが
+//   Module Internal Contractを満たすことをdiagnosticとして確認するものであり、
+//   upstream dataのsemanticを再認証するものではない。
+// - RELEASE_BUILDではautomatic Commit eligibility validationを行わない。
 //
-// - Prepare中にtmp_cpu_resourceへresource_info_および*pixels_を格納して
-//   completed candidate representationを構築する。
-// - tmp_cpu_resource->pixelsへ*pixels_を格納した時点では、
-//   pixel storageのownershipはcallerに残る。
-// - pixel storageのownership transferはOutput commit時にのみ成立する。
-// - create成功時は完成済みtexture_cpu_resource_tを*out_texture_resource_へ公開した後、
-//   *pixels_をNULLへ変更し、pixel storageのownershipをTexture CPU Resource moduleへ移転する。
-// - create失敗時は*pixels_を変更せず、pixel storageのownershipはcallerに残る。
-// - create失敗時の通常cleanupでは、Texture CPU Resource moduleがまだownershipを
-//   commitしていないpixel storageをfreeしない。
+// - Commit成功時にtexture_cpu_resource_tをcallerへ公開し、
+//   pixel storageのownershipをTexture CPU Resource moduleへmoveする。
+// - create失敗時にはpixel storageのownershipを取得せず、callerに残す。
 //
-// - DEBUG_BUILD / TEST_BUILDではcandidate representationのconstruction完了後、
-//   callerへ公開する前のStable boundaryでtexture_cpu_resource_is_valid()を実行し、
-//   canonical Postcondition validationを行う。
-// - このPostcondition validationはupstream pixel dataをtrust boundaryとして
-//   再認証するためのものではなく、commit対象となるcandidate representationが
-//   Module Internal Contractを満たすことをdiagnosticとして確認するために行う。
-// - canonical Postcondition validationに成功した場合のみ、
-//   texture_cpu_resource_tの公開およびpixel storageのownership transitionをcommitする。
-// - RELEASE_BUILDではautomatic canonical Postcondition validationを行わない。
+// - 下位moduleからDATA_CORRUPTEDを受け取った場合、または
+//   Commit eligibility validationによってDATA_CORRUPTEDが確定した場合は、
+//   fail-stop ruleに従いsuspectなownership graphを辿る通常cleanupを行わない。
 //
 // AI支援:
 // - 本セクションはChatGPTを用いて草案を作成し、
@@ -238,16 +231,16 @@ resource_result_t texture_cpu_resource_create(const texture_resource_info_t* res
     tmp_cpu_resource->resource_info = *resource_info_;
     tmp_cpu_resource->pixels = *pixels_;
 
-    // Postconditions.
+    // Commit eligibility.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_cpu_resource_is_valid(tmp_cpu_resource)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Postcondition validation failed for 'tmp_cpu_resource'.", resource_result_to_str(ret));
+        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Commit eligibility validation failed for 'tmp_cpu_resource'.", resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    // Output.
+    // Commit.
     *out_texture_resource_ = tmp_cpu_resource;
     tmp_cpu_resource = NULL;
     *pixels_ = NULL;

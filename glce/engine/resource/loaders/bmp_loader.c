@@ -37,6 +37,135 @@
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
 
+/*
+ * Module Internal Contract
+ *
+ * Trust Boundary:
+ * - BMP Loader moduleはexternal BMP fileを読み込み、
+ *   GLCE内部で利用可能なtexture pixel representationへ変換するresource trust boundaryである。
+ * - fileから読み込んだraw byteおよびparse直後のheader情報はuntrusted external dataとして扱う。
+ * - external BMP representationからGLCE内部representationへの昇格は、
+ *   本module内で必要なformat validation、checked transformation、
+ *   pixel normalizationがすべて成功した場合にのみ成立する。
+ *
+ * Header Representation:
+ * - file_header_tおよびinfo_header_tはBMP file headerからparseしたprivate representationである。
+ * - parse成功だけではheaderのsemantic validityは成立しない。
+ * - header_is_valid()成功後は、本moduleが受理するBMP header representationとして
+ *   必要なsemantic conditionが成立しているものとして扱う。
+ * - header validation成功時点ではheader representationのみがtrustedとなり、
+ *   pixel data領域の存在および内容までは確定しない。
+ *
+ * Pixel Layout Representation:
+ * - pixel_layout_tはvalidated BMP headerから導出されるprivate processing contextである。
+ * - pixel_layout_tは独立したexternal representationまたはpublic domain objectではなく、
+ *   pixel loadおよびpixel normalizationを安全に実行するためのderived informationを保持する。
+ * - pixel_layout_initialize_from_header()はchecked transformationとして、
+ *   row stride、raw pixel data size、pixel buffer size、pixel offset、
+ *   image dimensions、bit count、vertical flip requirementを導出する。
+ * - pixel_layout_initialize_from_header()成功後のpixel_layout_tはvalid-by-constructionとして扱う。
+ * - private helper間では、initializer成功によって成立済みの
+ *   pixel_layout_t内部relationを信頼し、同一semanticを重複して再検証しない。
+ *
+ * Pixel Representation:
+ * - BMP fileから読み込んだpixel bufferは、pixel_layout_tが示す
+ *   BMP file representationとして扱う。
+ * - normalization成功後のpixel dataはBMP row paddingを含まず、
+ *   GLCEで使用するRGBまたはRGBA channel orderへ変換済みである。
+ * - BMPがbottom-up representationである場合はvertical flipを行い、
+ *   GLCE内部で使用するorientationへ正規化する。
+ * - normalization済みpixel dataのchannel countは3または4である。
+ *
+ * Resource Metadata:
+ * - normalization完了後、pixel layoutおよびnormalized pixel data sizeから
+ *   texture_resource_info_tを構築する。
+ * - texture_resource_info_tを構成する各fieldおよびfield間relationの
+ *   semantic ownershipはResource Coreに属する。
+ * - BMP Loader moduleはtexture resource metadata固有のsemanticを独自に再定義せず、
+ *   validityの確認をtexture_resource_info_is_valid()へ委譲する。
+ *
+ * Ownership:
+ * - pixel loadおよびnormalizationで生成するtemporary pixel storageは
+ *   General AllocatorからGENERAL_ALLOCATOR_MEMORY_TAG_TEXTUREで確保する。
+ * - module内部ではpublic outputへcommitするまでtemporary resourceとして管理する。
+ * - public commit完了後のoutput pixel storageはBMP Loader moduleのinternal ownershipから外れる。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
+
+/*
+ * Module Validation Policy
+ *
+ * General:
+ * - BMP Loader moduleはexternal resource trust boundaryであるため、
+ *   external BMP dataから安全なGLCE内部representationを構築するために必要なvalidationを
+ *   RELEASE_BUILDを含む通常実行経路で行う。
+ *
+ * Header Validation:
+ * - header_load()はBMP header byte列を読み込み、private header representationへparseする。
+ * - parse処理自身はbyte representationからfield値への変換を担当し、
+ *   header semanticのvalidityは確定しない。
+ * - header_is_valid()はparse済みfile_header_tおよびinfo_header_tについて、
+ *   本moduleが受理するBMP header representationとしてのsemantic validityを確認する。
+ * - header_is_valid()成功後はheader representationをtrustedとして扱い、
+ *   downstream private helperで同じheader semanticを重複して再検証しない。
+ *
+ * Derived Layout Validation:
+ * - pixel_layout_initialize_from_header()はvalidated headerを入力とする
+ *   checked transformationである。
+ * - width、height、bit countからrow layoutおよびpixel buffer sizeを導出する際に、
+ *   size_t arithmeticで必要となるoverflow checkを行う。
+ * - calculated pixel buffer rangeがBMP headerで宣言されたfile range内に収まることを確認する。
+ * - transformationに成功したpixel_layout_tはvalid-by-constructionとして扱い、
+ *   standalone canonical validatorは設けない。
+ *
+ * Operation-specific Validation:
+ * - private pixel processing helperは、pixel_layout_tの成立済みinternal relationを
+ *   一律に再検証しない。
+ * - 各helperは自身のoperationが直接consumeするsemantic preconditionのみを検証する。
+ * - 例としてpixel_bgr_to_rgb()は、自身が処理可能なpixel formatである
+ *   24bit RGBまたは32bit RGBA representationであることを確認する。
+ * - padding removalやvertical flipに必要なstride、raw_data_size、height等のrelationは、
+ *   pixel_layout_initialize_from_header()成功によって成立済みのinternal contractとして扱う。
+ *
+ * Final Resource Validation:
+ * - pixel normalization完了後、texture_resource_info_tをcandidate metadataとして構築する。
+ * - texture_resource_info_t固有のsemantic validityは、
+ *   semantic ownerであるtexture_resource_info_is_valid()へ委譲する。
+ * - BMP Loader moduleではwidth、height、channel_count、pixel_data_size等の
+ *   metadata semanticを重複して実装しない。
+ *
+ * Commit Eligibility:
+ * - DEBUG_BUILD / TEST_BUILDではpublic outputへcommitする前のstable boundaryで
+ *   texture_resource_info_is_valid()を実行し、
+ *   candidate metadataにCommit eligibility validationを行う。
+ * - Commit eligibility validationはexternal BMP dataを再度trust boundaryとして
+ *   認証するためのものではなく、
+ *   本moduleの変換処理によって構築されたcandidate representationが
+ *   Resource Coreのsemantic contractを満たすことをdiagnosticとして確認するために行う。
+ * - RELEASE_BUILDではautomatic Commit eligibility validationを行わない。
+ *
+ * Corruption Handling:
+ * - external BMPのformat不整合や未対応representationは
+ *   internal DATA_CORRUPTEDとは区別して扱う。
+ * - DATA_CORRUPTEDが確定した場合はfail-stop ruleに従い、
+ *   suspectなownership graphを辿る通常cleanupまたはresource releaseを行わない。
+ *
+ * Private Helper Validation:
+ * - private helperでもpointer existenceなど、
+ *   helper自身が安全にoperationを開始するために必要なlocal preconditionは検証する。
+ * - 一方で、validated headerやvalid-by-constructionなpixel_layout_tについて、
+ *   upstreamで成立済みのsemantic conditionを防御的に重複検証しない。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
+
 // ============================================================
 // Private Type Definitions
 // ============================================================
@@ -223,15 +352,16 @@ resource_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t
     // pixel_normalizeが成功したため、以降はGLCE内部で利用可能なbmpであることが確定
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    // Postconditions.
+    // Commit eligibility.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_resource_info_is_valid(&tmp_resource_info)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("bmp_loader_load(%s) - Postcondition validation failed for 'tmp_resource_info'.", resource_result_to_str(ret));
+        ERROR_MESSAGE("bmp_loader_load(%s) - Commit eligibility validation failed for 'tmp_resource_info'.", resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
+    // Commit.
     *out_pixels_ = pixel_normalized;
     *out_resource_info_ = tmp_resource_info;
     pixel_normalized = NULL;
@@ -694,11 +824,6 @@ static resource_result_t pixel_layout_initialize_from_header(const file_header_t
     stride = ((bit_count * width + 31) / 32) * 4;
 
     // raw_data_size計算
-    if(((SIZE_MAX / 8 - 7)) * width < bit_count) {
-        ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("pixel_layout_initialize_from_header(%s) - overflow.", resource_result_to_str(ret));
-        goto cleanup;
-    }
     raw_data_size = (width * bit_count + 7) / 8;
 
     if((SIZE_MAX / height) < stride) {

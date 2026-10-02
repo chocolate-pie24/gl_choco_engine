@@ -7,66 +7,50 @@
  * @brief texture描画に使用するCPU側pixel resourceを扱うopaque objectと操作を提供する
  *
  * @details
- * Texture CPU Resource moduleは、texture imageを構成するCPU側pixel dataと、
- * image width、height、channel count等のmetadataを保持する
- * `texture_cpu_resource_t`と、そのlifetime管理およびresource参照機能を提供する。
+ * Texture CPU Resource moduleは、texture imageを構成するCPU側pixel dataと
+ * image metadataを保持する`texture_cpu_resource_t`のlifetimeおよび
+ * ownershipを管理する。
  *
  * `texture_cpu_resource_t`は内部表現を公開しないopaque objectであり、
  * create成功後はtexture処理に使用可能な完成済みCPU resourceとして扱う。
- *
- * 本moduleはLoader等によって生成済みのtrusted pixel dataを受け取り、
- * pixel storageのownershipをmoveによって取得する。
  *
  * @section texture_cpu_resource_boundary_contract Module Boundary Contract
  *
  * - `texture_cpu_resource_t`はopaque typeとして公開し、
  *   内部表現をmodule外部へ公開しない。
+ * - publicなpartial initialization stateは持たず、
+ *   moduleから公開される`texture_cpu_resource_t`は完成済みresourceである。
+ *
  * - Texture CPU Resource moduleは`texture_cpu_resource_t` object自身と、
  *   そのresourceが保持するCPU側pixel storageのownershipおよびlifetimeを管理する。
  * - callerはTexture CPU Resource moduleが所有するinternal resourceを
  *   直接変更または解放しない。
- * - module APIへ渡す`texture_cpu_resource_t*`は、
- *   Texture CPU Resource moduleによって生成され、
- *   lifetime中にあるobjectを参照するものとする。
  *
- * - create成功時に公開される`texture_cpu_resource_t`は、
- *   texture CPU resourceとして通常利用可能な完成済みresourceを表す。
- * - publicなpartial initialization stateは持たない。
+ * - `texture_cpu_resource_t`が保持するresource_infoはvalidである。
+ * - resource_infoのvalidityはResource Coreの
+ *   `texture_resource_info_is_valid()`によって定義する。
+ * - `texture_resource_info_t`を構成する各fieldおよびfield間relationの
+ *   semantic ownershipはResource Coreに属する。
+ * - Texture CPU Resource moduleはresource_info固有のsemanticを
+ *   独自に再定義しない。
  *
- * - createへ渡されるpixel dataは、Loader等のupstream trust boundaryで
- *   GLCE内部representationとして受理するために必要なvalidationが
- *   完了していることを前提とする。
+ * - Texture CPU Resource moduleが保持するpixel dataは、
+ *   Loader等のupstream trust boundaryでGLCE内部representationとして
+ *   受理済みのtrusted dataとして扱う。
  * - Texture CPU Resource moduleはexternal dataをtrusted internal representationへ
  *   昇格させるtrust boundaryとしては扱わない。
  * - pixel elementの内容そのものについて、
- *   upstreamで成立済みのsemantic contractを再認証する目的のvalidationは行わない。
+ *   upstreamで成立済みのsemantic contractを再認証しない。
  *
- * - createへ渡される`pixels_`はownership move対象である。
- * - create開始時点では`*pixels_`が指すpixel storageのownershipはcallerに残る。
- * - create成功時にのみpixel storageのownershipを
- *   Texture CPU Resource moduleへ移転し、`*pixels_`をNULLへ変更する。
- * - create失敗時にはpixel storageのownershipを取得せず、
- *   `*pixels_`およびそのstorageのownershipはcallerに残る。
- *
- * - move対象となるpixel storageはGeneral Allocatorから
- *   `GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE`で取得されたlive allocationであることをcaller contractとする。
- * - 現在のGeneral Allocator APIでは、pointerからallocation時のmemory tagを
- *   完全に再確認する仕組みを提供していないため、Texture CPU Resource moduleはこのallocation provenanceを外部契約として信頼する。
- * - 将来的にownership transferをより明示的かつ検証可能にする必要が生じた場合は、
- *   pointer、allocation size、memory tag等のallocation metadataを保持する
- *   ownership descriptor等を用いた仕組みの導入を検討する。
- *
- * - image widthおよびheightは0より大きいものとする。
- * - channel countはRGBを表す3、またはRGBAを表す4のみを使用する。
- * - pixel data sizeは
- *   `width * height * channel_count`
- *   と一致するものとする。
+ * - owned pixel storageはGeneral Allocatorから
+ *   `GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE`で取得されたlive allocationであることを
+ *   module boundary contractとする。
+ * - 現在のGeneral Allocator APIではpointerからallocation時のmemory tagを
+ *   完全に再確認できないため、このallocation provenanceは外部契約として信頼する。
  *
  * - moduleから公開されるCPU側pixel dataへの参照はborrowed viewとして扱う。
- * - borrowed pixel dataのownershipはTexture CPU Resource moduleに残り、
- *   callerはそのstorageを変更または解放しない。
- * - borrowed viewは、そのownerである`texture_cpu_resource_t`の
- *   lifetime終了後には使用しない。
+ * - borrowed pixel dataのownershipはTexture CPU Resource moduleに残る。
+ * - borrowed viewはownerである`texture_cpu_resource_t`のlifetimeを超えて使用しない。
  *
  * @par AI支援:
  * - 本セクションはChatGPTを用いて草案を作成し、

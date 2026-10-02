@@ -14,13 +14,13 @@ bool texture_resource_info_is_valid(const texture_resource_info_t* resource_info
     if(NULL == resource_info_) {
         return false;
     }
+    if(0 >= resource_info_->width || 0 >= resource_info_->height) {
+        return false;
+    }
 
     width = (size_t)resource_info_->width;
     height = (size_t)resource_info_->height;
-    channel_count = resource_info_->channel_count;
-    if(0 >= width || 0 >= height) {
-        return false;
-    }
+    channel_count = (size_t)resource_info_->channel_count;
     if(3 != resource_info_->channel_count && 4 != resource_info_->channel_count) {
         return false;
     }
