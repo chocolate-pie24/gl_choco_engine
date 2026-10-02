@@ -232,8 +232,8 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
-    const uint16_t tmp_width = 32;
-    const uint16_t tmp_height = 32;
+    const int32_t tmp_width = 32;
+    const int32_t tmp_height = 32;
     const uint8_t tmp_channel_count = 3;
     const size_t pixel_size = (size_t)tmp_width * (size_t)tmp_height * (size_t)tmp_channel_count;
     uint8_t* tmp_pixels = NULL;

@@ -82,7 +82,7 @@ renderer_backend_result_t renderer_backend_texture_unbind(const renderer_backend
  * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_->texture_vtableがNULLで未初期化
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-renderer_backend_result_t renderer_backend_texture_pixel_upload(const renderer_backend_context_t* backend_context_, uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
+renderer_backend_result_t renderer_backend_texture_pixel_upload(const renderer_backend_context_t* backend_context_, int32_t width_, int32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
 
 bool renderer_backend_texture_is_valid(const renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
 

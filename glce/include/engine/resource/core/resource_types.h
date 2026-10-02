@@ -42,8 +42,8 @@ typedef enum {
 
 typedef struct texture_resource_info {
     size_t pixel_data_size;
-    uint16_t width;
-    uint16_t height;
+    int32_t width;
+    int32_t height;
     uint8_t channel_count;
 } texture_resource_info_t;
 
