@@ -42,19 +42,23 @@
  *
  * Trust Boundary:
  * - BMP Loader moduleはexternal BMP fileを読み込み、
- *   GLCE内部で利用可能なtexture pixel representationへ変換するresource trust boundaryである。
- * - fileから読み込んだraw byteおよびparse直後のheader情報はuntrusted external dataとして扱う。
- * - external BMP representationからGLCE内部representationへの昇格は、
- *   本module内で必要なformat validation、checked transformation、
- *   pixel normalizationがすべて成功した場合にのみ成立する。
+ *   GLCE内部で利用可能なtexture pixel representationへ変換するExternal Trust Boundaryである。
+ * - fileから読み込んだraw byte、parse後のheader、
+ *   derived layout、normalized pixel data、resource metadata candidateは、
+ *   public outputへcommitされるまでは本module内部のuntrusted candidateとして扱う。
+ * - external BMP representationからGLCE内部trusted representationへのtrust promotionは、
+ *   load operationに必要なformat validation、checked transformation、
+ *   pixel normalizationおよび必要なvalidationが完了し、
+ *   public outputへのcommitが成功した時点で成立する。
  *
  * Header Representation:
  * - file_header_tおよびinfo_header_tはBMP file headerからparseしたprivate representationである。
  * - parse成功だけではheaderのsemantic validityは成立しない。
- * - header_is_valid()成功後は、本moduleが受理するBMP header representationとして
- *   必要なsemantic conditionが成立しているものとして扱う。
- * - header validation成功時点ではheader representationのみがtrustedとなり、
- *   pixel data領域の存在および内容までは確定しない。
+ * - header_is_valid()成功後は、本moduleが後続処理で要求する
+ *   BMP header semantic conditionが成立済みとして扱う。
+ * - これはprivate processing contractの成立を意味するものであり、
+ *   external BMP representation全体のtrust promotionを意味しない。
+ * - header validation成功後も、public commitまではLoader内部のcandidate representationとして扱う。
  *
  * Pixel Layout Representation:
  * - pixel_layout_tはvalidated BMP headerから導出されるprivate processing contextである。
@@ -100,65 +104,131 @@
  * Module Validation Policy
  *
  * General:
- * - BMP Loader moduleはexternal resource trust boundaryであるため、
- *   external BMP dataから安全なGLCE内部representationを構築するために必要なvalidationを
+ * - BMP Loader moduleはExternal Trust Boundaryであるため、
+ *   external BMP dataをGLCE内部representationとして受理するために必要なvalidationを
  *   RELEASE_BUILDを含む通常実行経路で行う。
+ * - Loader内部でformat validation、checked transformation、
+ *   pixel normalization等が段階的に成功しても、
+ *   candidate representationはpublic outputへcommitされるまではuntrustedとして扱う。
+ * - external BMP representationからGLCE内部trusted representationへのtrust promotionは、
+ *   load operationが正常にcommitされ、public outputが公開された時点で成立する。
+ * - malformed BMP、unsupported representation、external I/O failureは、
+ *   established internal stateのcorruptionとは区別する。
  *
  * Header Validation:
- * - header_load()はBMP header byte列を読み込み、private header representationへparseする。
- * - parse処理自身はbyte representationからfield値への変換を担当し、
- *   header semanticのvalidityは確定しない。
- * - header_is_valid()はparse済みfile_header_tおよびinfo_header_tについて、
- *   本moduleが受理するBMP header representationとしてのsemantic validityを確認する。
- * - header_is_valid()成功後はheader representationをtrustedとして扱い、
- *   downstream private helperで同じheader semanticを重複して再検証しない。
+ * - header_load()はBMP header byte列を読み込み、
+ *   file_header_tおよびinfo_header_tへparseする。
+ * - parse処理自身はbyte representationからfield valueへの変換を担当し、
+ *   BMP header semanticのvalidityは確定しない。
+ *
+ * header_is_valid():
+ * - parse済みfile_header_tおよびinfo_header_tについて、
+ *   本moduleの後続処理が受理可能なBMP header representationであることを検証する。
+ * - 次を確認する。
+ *   - bf_type == 0x4D42であること。
+ *   - bf_reserved1 == 0であること。
+ *   - bf_reserved2 == 0であること。
+ *   - bf_sizeがBMP header sizeより大きいこと。
+ *   - bf_off_bitsがBMP header size以上であること。
+ *   - bf_off_bits < bf_sizeであること。
+ *   - bi_size == 40であり、BITMAPINFOHEADERであること。
+ *   - bi_planes == 1であること。
+ *   - bi_compression == 0であり、非圧縮BMPであること。
+ *   - bi_height != 0であること。
+ *   - bi_width > 0であること。
+ *   - bi_bit_countがBMP headerとして認識する
+ *     1 / 4 / 8 / 16 / 24 / 32のいずれかであること。
+ * - header_is_valid()成功後は、
+ *   downstream processingに必要なBMP header semanticが成立済みとして扱う。
+ * - downstream private helperでは同じheader semanticを重複して再検証しない。
+ * - header validation成功はLoader全体のtrust promotionを意味しない。
+ * - pixel buffer range、size arithmetic、pixel dataの存在、
+ *   GLCE内部pixel formatへの変換可能性はheader_is_valid()単独では確定しない。
  *
  * Derived Layout Validation:
  * - pixel_layout_initialize_from_header()はvalidated headerを入力とする
  *   checked transformationである。
- * - width、height、bit countからrow layoutおよびpixel buffer sizeを導出する際に、
- *   size_t arithmeticで必要となるoverflow checkを行う。
- * - calculated pixel buffer rangeがBMP headerで宣言されたfile range内に収まることを確認する。
- * - transformationに成功したpixel_layout_tはvalid-by-constructionとして扱い、
+ * - width、height、bit countからrow stride、raw pixel data size、
+ *   pixel buffer size、pixel offsetおよびorientation informationを導出する。
+ * - size_t arithmeticを行う際には、operationに必要なoverflow checkを行う。
+ * - calculated pixel buffer rangeがBMP headerで宣言されたfile range内に
+ *   収まることを確認する。
+ * - transformationに成功したpixel_layout_tはvalid-by-constructionとして扱う。
+ * - pixel_layout_tはprivate derived processing contextであり、
  *   standalone canonical validatorは設けない。
+ * - private helper間ではinitializer成功によって成立済みの
+ *   pixel_layout_t内部relationを信頼し、同一semanticを重複して再検証しない。
  *
  * Operation-specific Validation:
- * - private pixel processing helperは、pixel_layout_tの成立済みinternal relationを
- *   一律に再検証しない。
+ * - private pixel processing helperは、
+ *   pixel_layout_tの成立済みinternal relationを一律に再検証しない。
  * - 各helperは自身のoperationが直接consumeするsemantic preconditionのみを検証する。
- * - 例としてpixel_bgr_to_rgb()は、自身が処理可能なpixel formatである
- *   24bit RGBまたは32bit RGBA representationであることを確認する。
+ * - pixel_bgr_to_rgb()は、自身が処理可能なpixel representationとして
+ *   bit_countが24または32であることを確認する。
+ * - したがってheader_is_valid()が1 / 4 / 8 / 16bit representationを
+ *   BMP headerとして認識していても、
+ *   GLCE内部pixel representationへnormalizeできないformatは
+ *   downstream operationでRESOURCE_UNSUPPORTED_FILEとしてrejectする。
  * - padding removalやvertical flipに必要なstride、raw_data_size、height等のrelationは、
- *   pixel_layout_initialize_from_header()成功によって成立済みのinternal contractとして扱う。
+ *   pixel_layout_initialize_from_header()成功によって成立済みの
+ *   internal contractとして扱う。
+ *
+ * External File Consistency:
+ * - BMP headerが宣言するfile size、pixel offsetおよびderived pixel buffer rangeについて、
+ *   actual file readと整合することを通常実行経路で確認する。
+ * - required byte countを取得できない場合や、
+ *   declared representationとactual file contentが整合しない場合は、
+ *   malformed / unsupported external representationとして扱う。
+ * - external fileのformat不整合をRESOURCE_DATA_CORRUPTEDへ分類しない。
+ *
+ * Pixel Normalization:
+ * - external BMP pixel representationはpublic commitまでuntrusted candidateとして扱う。
+ * - pixel normalizationでは、必要に応じてrow padding removal、
+ *   BGR / BGRAからRGB / RGBAへのchannel normalization、
+ *   vertical orientation normalizationを行う。
+ * - normalization helperは、自身が直接consumeするformat semanticを検証する。
+ * - normalization成功はそのprocessing stepのcontract成立を意味するが、
+ *   Loader全体のtrust promotionはまだ成立しない。
  *
  * Final Resource Validation:
- * - pixel normalization完了後、texture_resource_info_tをcandidate metadataとして構築する。
- * - texture_resource_info_t固有のsemantic validityは、
- *   semantic ownerであるtexture_resource_info_is_valid()へ委譲する。
+ * - pixel normalization完了後、
+ *   pixel layoutおよびnormalized pixel data sizeから
+ *   texture_resource_info_t candidateを構築する。
+ * - texture_resource_info_t固有のsemantic ownershipはResource Coreに属する。
  * - BMP Loader moduleではwidth、height、channel_count、pixel_data_size等の
- *   metadata semanticを重複して実装しない。
+ *   metadata semanticを独自に再定義せず、
+ *   validityの確認をtexture_resource_info_is_valid()へ委譲する。
  *
  * Commit Eligibility:
- * - DEBUG_BUILD / TEST_BUILDではpublic outputへcommitする前のstable boundaryで
+ * - DEBUG_BUILD / TEST_BUILDではpublic outputへcommitする前に
  *   texture_resource_info_is_valid()を実行し、
- *   candidate metadataにCommit eligibility validationを行う。
- * - Commit eligibility validationはexternal BMP dataを再度trust boundaryとして
- *   認証するためのものではなく、
- *   本moduleの変換処理によって構築されたcandidate representationが
- *   Resource Coreのsemantic contractを満たすことをdiagnosticとして確認するために行う。
+ *   candidate metadataのCommit eligibilityをdiagnosticとして確認する。
+ * - このvalidationはResource Coreが所有するmetadata semanticについて、
+ *   Loaderが構築したcandidateがpublic commit可能であることを確認する。
+ * - validation failure時はcandidateをpublic outputへ公開せず、
+ *   RESOURCE_UNSUPPORTED_FILEとしてrejectする。
  * - RELEASE_BUILDではautomatic Commit eligibility validationを行わない。
+ * - build modeにかかわらず、
+ *   Loader内部のcandidate representationはpublic outputへのcommitまで
+ *   untrustedとして扱う。
+ * - load operationが正常にcommitされ、
+ *   resource metadataおよびnormalized pixel storageがpublic outputへ公開された時点で、
+ *   GLCE内部trusted representationへのtrust promotionが成立する。
  *
  * Corruption Handling:
- * - external BMPのformat不整合や未対応representationは
- *   internal DATA_CORRUPTEDとは区別して扱う。
- * - DATA_CORRUPTEDが確定した場合はfail-stop ruleに従い、
+ * - external BMPのmalformed format、unsupported representation、
+ *   candidate validation failureはinternal DATA_CORRUPTEDとは区別する。
+ * - lower moduleからRESOURCE_DATA_CORRUPTEDへ変換されるfailureを受け取った場合は、
+ *   provenanceを推測して別resultへ再分類しない。
+ * - RESOURCE_DATA_CORRUPTEDが確定した場合はfail-stop ruleに従い、
  *   suspectなownership graphを辿る通常cleanupまたはresource releaseを行わない。
  *
  * Private Helper Validation:
  * - private helperでもpointer existenceなど、
  *   helper自身が安全にoperationを開始するために必要なlocal preconditionは検証する。
  * - 一方で、validated headerやvalid-by-constructionなpixel_layout_tについて、
- *   upstreamで成立済みのsemantic conditionを防御的に重複検証しない。
+ *   upstream checked operationで成立済みのsemantic conditionを
+ *   防御的に重複検証しない。
  *
  * AI支援:
  * - 本セクションはChatGPTを用いて草案を作成し、
