@@ -21,9 +21,199 @@
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/core/resource_err_utils.h"
 
-// NOTE:
-// - TODO: binary_loadの追加(別モジュール)
-// - TODO: stl_loaderモジュールを追加し、format_detectの追加(ascii, binary判定+stl_ascii_loader, stl_binary_loader)
+/*
+ * Module Internal Contract
+ *
+ * Processing Model:
+ * - STL ASCII Loader moduleはexternal ASCII STL fileを2段階で処理する。
+ * - preload phaseではfile全体を走査し、facet normal数とvertex数を取得する。
+ * - main load phaseではfacet単位のdata blockを順次読み込み、
+ *   parseおよびGLCE vertex representationへのnormalizationを行う。
+ * - preloadで得たcountを基準としてoutput vertex storageを事前確保する。
+ * - main load完了後、完成したvertex arrayをvalidationし、
+ *   validation成功後にのみpublic outputへcommitする。
+ *
+ * - preload phaseとmain load phaseは同一fileを別々にopenして読み込む。
+ * - preload完了後にfile内容が変化する等により、
+ *   preload時とmain load時のtriangle countが一致しない場合は、
+ *   load operation中のruntime consistency failureとして扱う。
+ *
+ * Triangle Count / Vertex Count:
+ * - 1 triangleは必ず3 vertexへ変換する。
+ * - validなload candidateではtriangle_count * 3 == vertex_countが成立する。
+ * - output geometryは1つ以上のvertexを持つ。
+ * - vertex storageを確保する前に、
+ *   triangle_count * 3およびvertex_count * sizeof(point_normal_vertex_t)が
+ *   size_tで安全に表現可能であることを確認する。
+ *
+ * triangle_data_block_t:
+ * - triangle_data_block_tは1つのASCII STL facetを構成するline群を保持する
+ *   private processing contextである。
+ * - triangle_data_block_initialize()成功後は、
+ *   facet_normal_line、outer_loop_line、3つのvertex_line、
+ *   endloop_line、endfacet_lineの全てが有効なchoco_string_tを参照する。
+ * - triangle_data_block_tはこれら7つのchoco_string_tをtemporary ownershipし、
+ *   triangle_data_block_deinitialize()でreleaseする。
+ * - initialize成功後からdeinitializeまで、
+ *   private helperはこれらのchoco_string_tが有効であるというinternal contractを信頼する。
+ * - main loadでは1つのtriangle_data_block_tを複数facetの読み込みに再利用する。
+ *
+ * - triangle_data_block_tはexternal fileから読み込んだtext representationを保持するため、
+ *   line load直後の内容はtrusted internal geometry dataではない。
+ * - triangle_data_block_is_valid()によって本moduleが要求するfacet block structureを確認した後、
+ *   triangle_data_block_parse()によってnumeric representationへ変換する。
+ *
+ * triangle_data_t:
+ * - triangle_data_tは1つのfacetからparseした3つのvertex positionと
+ *   facet normalを保持するprivate transient representationである。
+ * - triangle_data_block_parse()成功はtextからfloat valueへのparse成功を意味するが、
+ *   geometry valueとしての全semantic validityが成立したことまでは意味しない。
+ * - triangle_data_tは独立したpublic lifecycleまたはpersistent ownershipを持たず、
+ *   standalone canonical validatorは設けない。
+ * - downstream helperは、自身がconsumeするsemanticを必要な位置で検証する。
+ *
+ * Vertex Normalization:
+ * - triangle_normalize()はtriangle_data_tを
+ *   3つのpoint_normal_vertex_tへ変換する。
+ * - facet normalはfiniteであり、各componentが[-1.0, 1.0]の範囲にあることを要求する。
+ * - accepted facet normalはpoint_normal_vertex_tで使用するint8 normal representationへ変換し、
+ *   同一triangleを構成する3頂点へ設定する。
+ * - vertex positionはparseされたvec3f_tからpoint_normal_vertex_tへcopyする。
+ * - output candidate全体のvertex semantic validityは、
+ *   final load result validationで確認する。
+ *
+ * Ownership:
+ * - output vertex storageはGeneral Allocatorから
+ *   GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRYで確保する。
+ * - allocation後からpublic outputへcommitするまでは、
+ *   STL ASCII Loader moduleがtemporary ownershipを持つ。
+ * - commit成功時にvertex storageのownershipをcallerへ移転する。
+ * - fs_stream_t、triangle_data_block_tおよびその他のparse contextは
+ *   load operation中だけ存在するtemporary resourceである。
+ *
+ * - 本moduleはpersistent module stateを持たない。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
+
+/*
+ * Module Validation Policy
+ *
+ * General:
+ * - STL ASCII Loader moduleはexternal resource trust boundaryであるため、
+ *   external ASCII STL dataをGLCE内部geometry representationとして受理するために
+ *   必要なvalidationはRELEASE_BUILDを含む通常実行経路で行う。
+ * - external file由来のmalformed representationまたはunsupported valueは、
+ *   established internal stateのcorruptionとは区別する。
+ * - private processing contextは独立したpublic stable objectではないため、
+ *   private typeが存在することだけを理由としてcanonical validatorを追加しない。
+ *
+ * Preload Validation:
+ * - vertex_count_preload()はexternal fileを走査し、
+ *   "facet normal" occurrenceをtriangle count、
+ *   "vertex" occurrenceをvertex countとして取得する。
+ * - count increment時にはsize_t overflowを検出する。
+ * - preloadで得られたcountはそのままtrusted relationとはせず、
+ *   count_is_valid()によってallocation前にrelationを確認する。
+ *
+ * count_is_valid():
+ * - preloadで取得したtriangle countとvertex countの組み合わせを検証する。
+ * - 次を確認する。
+ *   - triangle_count * 3がsize_tでoverflowしないこと。
+ *   - vertex_countが0ではないこと。
+ *   - triangle_count * 3 == vertex_countであること。
+ *   - vertex_count * sizeof(point_normal_vertex_t)がsize_tでoverflowしないこと。
+ * - file grammar、facet block structure、vertex valueのsemantic validityは検証しない。
+ * - validation failureはunsupported external representationとして扱う。
+ *
+ * triangle_data_block_is_valid():
+ * - external fileから読み込んだ1 facet分のline blockについて、
+ *   本moduleのparserが受理するstructural representationであることを検証する。
+ * - 次を確認する。
+ *   - data_block_がNULLではないこと。
+ *   - facet normal lineが要求される"facet normal" representationを持つこと。
+ *   - outer loop lineが要求される"outer loop" representationと一致すること。
+ *   - 3つのvertex lineが要求される"vertex" representationを持つこと。
+ *   - endloop lineが要求される"endloop" representationと一致すること。
+ *   - endfacet lineが要求される"endfacet" representationと一致すること。
+ * - triangle_data_block_initialize()成功によって、
+ *   各choco_string_tが有効であることは成立済みinternal contractとして扱い、
+ *   本validatorでは各string objectのcanonical validationを重複して行わない。
+ * - numeric tokenのparse可否、float valueのfinite性、
+ *   normal range等のvalue semanticは本validatorでは検証しない。
+ *
+ * Parsing Validation:
+ * - triangle_data_block_parse()はvalidated block structureを入力とし、
+ *   facet normalおよび3 vertex positionをfloat valueへparseする。
+ * - 各lineから要求数のfloat componentを取得できない場合は、
+ *   malformed external representationとしてrejectする。
+ * - parse成功だけではtriangle_data_t全体をtrusted geometry representationとはみなさない。
+ *
+ * Operation-specific Value Validation:
+ * - triangle_normalize()は自身が直接consumeするfacet normal semanticを検証する。
+ * - facet normalについて次を確認する。
+ *   - vec3f_tとしてfiniteであること。
+ *   - x / y / z各componentが[-1.0, 1.0]の範囲にあること。
+ * - accepted normalのみをint8 normal representationへ変換する。
+ * - vertex positionのcanonical validityはtriangle_normalize()では重複検証せず、
+ *   final candidate validationへ委譲する。
+ *
+ * load_result_is_valid():
+ * - public outputへcommitする直前のcompleted vertex arrayについて、
+ *   GLCE内部geometry representationとして受理可能であることを検証する。
+ * - 次を確認する。
+ *   - vertices_がNULLではないこと。
+ *   - vertex_count_が0ではないこと。
+ *   - 全point_normal_vertex_tについて
+ *     semantic ownerであるpoint_normal_vertex_is_valid()がtrueを返すこと。
+ * - point_normal_vertex_t固有のsemantic conditionをSTL Loader側で重複定義しない。
+ * - facet normalについてはtriangle_normalize()で成立済みのconditionを信頼する。
+ *
+ * Final Trust Promotion / Commit Eligibility:
+ * - load_result_is_valid()はpublic outputへのCommit eligibilityとして実行する。
+ * - 本validationはexternal STL representationをGLCE internal representationへ
+ *   trust promotionするために必要なvalidationであるため、
+ *   RELEASE_BUILDを含めて実行する。
+ * - validation成功後にのみvertex countとvertex storageをcallerへ公開する。
+ * - validation failure時にはcandidateを公開せずRESOURCE_UNSUPPORTED_FILEとしてrejectする。
+ *
+ * Two-pass Consistency:
+ * - preload phaseで取得したtriangle countと、
+ *   main load phaseで実際に処理したtriangle countが一致することを要求する。
+ * - main load中にpreload countを超えた場合、
+ *   またはmain load完了時にcountが一致しない場合は、
+ *   preload後のfile content変化等を含むruntime consistency failureとして
+ *   RESOURCE_RUNTIME_ERRORを返す。
+ *
+ * Lower Module Failure:
+ * - fs_stream、choco_string、General Allocator等のlower module failureは、
+ *   resource result conversion policyに従って伝播する。
+ * - external fileのpremature EOF、parse failure、format不整合等、
+ *   source representation自体が受理不能である場合はRESOURCE_UNSUPPORTED_FILEとして扱う。
+ * - arithmetic overflowが検出された場合はRESOURCE_OVERFLOWとして扱う。
+ *
+ * Corruption Handling:
+ * - external STL fileのmalformed / unsupported representationを
+ *   RESOURCE_DATA_CORRUPTEDへ分類しない。
+ * - lower moduleからRESOURCE_DATA_CORRUPTEDへ変換されるfailureを受け取った場合は、
+ *   provenanceを推測して別resultへ再分類しない。
+ * - RESOURCE_DATA_CORRUPTEDが確定した場合はfail-stop ruleに従い、
+ *   suspectなownership graphを辿る通常cleanupまたはresource releaseを行わない。
+ *
+ * Private Helper Validation:
+ * - private helperでもpointer existenceなど、
+ *   helper自身が安全にoperationを開始するために必要なlocal preconditionは検証する。
+ * - 一方で、upstream checked operationによって成立済みのinternal contractは信頼し、
+ *   同一semanticを防御的に重複検証しない。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
 
 // ============================================================
 // Private Type Definitions
@@ -142,6 +332,7 @@ resource_result_t stl_ascii_loader_load(const char* fullpath_, size_t* out_verte
         }
         if(triangle_count >= tmp_triangle_count) {
             ret = RESOURCE_RUNTIME_ERROR;
+            ERROR_MESSAGE("stl_ascii_loader_load(%s) - Triangle count mismatch.", resource_result_to_str(ret));
             goto cleanup;
         }
         if(!triangle_data_block_is_valid(&data_block)) {
@@ -160,7 +351,7 @@ resource_result_t stl_ascii_loader_load(const char* fullpath_, size_t* out_verte
         // データ形式をpoint_normal_vertex_t形式に合わせる(値の整合性チェックはCommit eligibility.で行う)
         ret = triangle_normalize(&tmp_triangle_data, &tmp_vertices[triangle_count * 3]);
         if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("stl_ascii_loader_load(%s) - stl_ascii_loader_load failed.", resource_result_to_str(ret));
+            ERROR_MESSAGE("stl_ascii_loader_load(%s) - triangle_normalize failed.", resource_result_to_str(ret));
             goto cleanup;
         }
 
@@ -168,6 +359,7 @@ resource_result_t stl_ascii_loader_load(const char* fullpath_, size_t* out_verte
     }
     if(triangle_count != tmp_triangle_count) {
         ret = RESOURCE_RUNTIME_ERROR;
+        ERROR_MESSAGE("stl_ascii_loader_load(%s) - Triangle count mismatch.", resource_result_to_str(ret));
         goto cleanup;
     }
     fs_stream_destroy(&fs_stream, NULL);
@@ -269,7 +461,7 @@ static resource_result_t vertex_count_preload(const char* fullpath_, size_t* out
         }
     }
 
-    // Commit.
+    // Output.
     *out_triangle_count_ = normal_count;
     *out_vertex_count_ = vertex_count;
 
@@ -304,7 +496,6 @@ static resource_result_t triangle_data_block_load_next(fs_stream_t* fs_stream_, 
     IF_ARG_NULL_GOTO_CLEANUP(out_data_block_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "triangle_data_block_load_next", "out_data_block_")
     IF_ARG_NULL_GOTO_CLEANUP(out_loaded_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "triangle_data_block_load_next", "out_loaded_")
 
-    // Commit.
     // find "facet normal"
     while(true) {
         ret_fs_stream = fs_stream_text_file_line_read(fs_stream_, out_data_block_->facet_normal_line);
@@ -323,6 +514,7 @@ static resource_result_t triangle_data_block_load_next(fs_stream_t* fs_stream_, 
     }
 
     if(found_block) {
+        // ブロックの残り6行読み込み
         // load outer loop
         ret_fs_stream = fs_stream_text_file_line_read(fs_stream_, out_data_block_->outer_loop_line);
         if(FS_STREAM_EOF == ret_fs_stream) {
@@ -419,7 +611,7 @@ static resource_result_t triangle_data_block_initialize(triangle_data_block_t* o
     choco_string_t* endfacet_line = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_data_block_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "triangle_data_block_create", "out_data_block_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_data_block_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "triangle_data_block_initialize", "out_data_block_")
 
     // Prepare.
     ret_choco_string = choco_string_default_create(&facet_normal_line);
@@ -563,7 +755,7 @@ static resource_result_t triangle_data_block_parse(const triangle_data_block_t* 
         goto cleanup;
     }
 
-    // Commit.
+    // Output.
     out_triangle_data_->normal = tmp_normal;
     out_triangle_data_->vertices[0] = tmp_vertex1;
     out_triangle_data_->vertices[1] = tmp_vertex2;
@@ -594,7 +786,7 @@ static resource_result_t triangle_normalize(const triangle_data_t* triangle_data
         }
     }
 
-    // Commit.
+    // Output.
     for(size_t i = 0; i != 3; ++i) {
         out_vertex_[i].normal = vec4i8_initialize((int8_t)(127.5f * triangle_data_->normal.elem[0]), (int8_t)(127.5f * triangle_data_->normal.elem[1]), (int8_t)(127.5f * triangle_data_->normal.elem[2]), 0);
         out_vertex_[i].position = triangle_data_->vertices[i];
@@ -655,7 +847,7 @@ static bool load_result_is_valid(const point_normal_vertex_t* vertices_, size_t 
         return false;
     }
     for(size_t i = 0; i != vertex_count_; ++i) {
-        if(!vec3f_is_finite(vertices_[i].position)) {
+        if(!point_normal_vertex_is_valid(&vertices_[i])) {
             return false;
         }
     }
