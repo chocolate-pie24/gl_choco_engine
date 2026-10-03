@@ -28,7 +28,7 @@
 #include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/resource/core/resource_types.h"
-#include "engine/resource/loaders/stl_loader.h"
+#include "engine/resource/loaders/stl_ascii_loader.h"
 #include "engine/resource/geometry/lit_mesh_geometry.h"
 
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
@@ -62,7 +62,7 @@ resource_pipeline_result_t lit_mesh_geometry_pipeline_import_from_file(lit_mesh_
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "lit_mesh_geometry_pipeline_import_from_file", "resource_fullpath_")
 
-    ret_resource = stl_loader_load(resource_fullpath_, &vertex_count, &vertices);
+    ret_resource = stl_ascii_loader_load(resource_fullpath_, &vertex_count, &vertices);
     if(RESOURCE_SUCCESS != ret_resource) {
         ret = resource_pipeline_result_convert_resource(ret_resource);
         ERROR_MESSAGE("lit_mesh_geometry_pipeline_import_from_file(%s) - Failed to import lit mesh geometry. reason=stl_load_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);

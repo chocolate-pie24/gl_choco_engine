@@ -280,6 +280,9 @@ static void info_header_copy(const info_header_t* src_, info_header_t* dst_);
 static bmp_invalid_reason_t header_is_valid(const file_header_t* file_header_, const info_header_t* info_header_);
 static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_);
 
+// ============================================================
+// Public API
+// ============================================================
 resource_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
@@ -355,7 +358,7 @@ resource_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t
     // Commit eligibility.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_resource_info_is_valid(&tmp_resource_info)) {
-        ret = RESOURCE_DATA_CORRUPTED;
+        ret = RESOURCE_UNSUPPORTED_FILE;
         ERROR_MESSAGE("bmp_loader_load(%s) - Commit eligibility validation failed for 'tmp_resource_info'.", resource_result_to_str(ret));
         goto cleanup;
     }
