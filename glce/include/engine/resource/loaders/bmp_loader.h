@@ -13,7 +13,7 @@
  * @section bmp_loader_boundary_contract Module Boundary Contract
  *
  * - BMP Loader moduleはexternal BMP resourceとGLCE内部representationの間にある
- *   resource trust boundaryとして動作する。
+ *   External trust boundaryとして動作する。
  * - load成功時に公開されるresource metadataおよびpixel dataは、
  *   GLCE内部で使用可能なtrusted representationとして扱う。
  *
