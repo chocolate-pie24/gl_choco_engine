@@ -8,6 +8,7 @@
   - [Contributing](#contributing)
   - [Directory Layout](#directory-layout)
   - [Documentation](#documentation)
+    - [AI Context Generation](#ai-context-generation)
     - [Planned project-wide policies](#planned-project-wide-policies)
   - [Setup](#setup)
     - [macOS](#macos)
@@ -98,6 +99,7 @@ The main repository layout is:
 │   ├── scripts/
 │   ├── test/
 │   └── build.sh
+├── generate_ai_context.sh
 ├── LICENSE
 └── README.md
 ```
@@ -146,6 +148,30 @@ The design documents are currently written primarily in Japanese. Because they a
 
 - [Coding Style](docs/design/coding_style.md)
   Project-wide naming, API semantics, module structure, and coding conventions.
+
+### AI Context Generation
+
+GLCE provides generate_ai_context.sh to make the source code and design documentation easy to provide to AI tools for code review, design discussion, investigation, and refactoring.
+
+Run the script from the repository root:
+
+```bash
+./generate_ai_context.sh
+```
+
+The script generates two files in the repository root:
+
+glce_source_context.txt
+Contains the repository tree and the contents of all .c and .h files under glce/.
+
+glce_design_context.txt
+Contains the contents of all Markdown documents under docs/design/, concatenated into a single file.
+
+Each generated file includes an explanation of its contents and file boundaries so that it can be provided directly to an AI tool.
+
+For project-wide code review, the two files can be provided together so that the implementation can be reviewed against GLCE-specific design policies and design decisions.
+
+The generated context files are not sources of truth and are not tracked by Git. The original source files and documents in the repository remain authoritative.
 
 ### Planned project-wide policies
 
