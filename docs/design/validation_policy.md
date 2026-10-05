@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-03
+最終更新: 2026-10-05
 
 ## 1. 文書の位置づけ
 
@@ -327,7 +327,7 @@ Module B
 INVALID_ARGUMENT
 ```
 
-この場合、Aのimplementation bugがその場で`DATA_CORRUPTED`として分類されない可能性は許容する。Aがestablished stateを破壊している場合はA自身のcanonical validation、Commit eligibility、Postcondition validationまたは明示的diagnostic validationがcorruption detection pointとなり得る。Aが一時的temporary valueを誤生成しただけでestablished stateを破壊していない場合、通常operation failureとして局所化されることを許容する。
+この場合、Aのimplementation bugがその場で`DATA_CORRUPTED`として分類されない可能性は許容する。Aがestablished stateを破壊している場合はA自身のcanonical validation、Result validation、Postcondition validationまたは明示的diagnostic validationがcorruption detection pointとなり得る。Aが一時的temporary valueを誤生成しただけでestablished stateを破壊していない場合、通常operation failureとして局所化されることを許容する。
 
 この方針は、result propagationを単純に保ち、caller contextやprovenanceに基づく複雑な再分類を避けるためのものである。
 
@@ -548,45 +548,44 @@ trusted／hard precondition違反はrecoverable failure contractの対象外で�
 
 `DATA_CORRUPTED`はこのrecoverable failure規則の例外である。
 
-### 5.3 Stable boundary
+### 5.3 Stable boundary / Postcondition validation
 
 automatic Postcondition validationを行う場合は、operationのsemantic effectがCommitされ、対象objectのstate、ownership、lifecycle等が最終的に確定したstable boundaryで行う。
 
-「return直前」を機械的な規則とはしない。temporary object、replacement object、ownership move、public publication等を伴う場合は、どのstate transitionをCommitとするかを先に明確化し、そのCommit完了後にPostcondition validationのboundaryを決定する。
+「return直前」を機械的な規則とはしない。replacement object、ownership move、registration、public lifetimeへのpublication等を伴う場合は、どのstate transitionをCommitとするかを先に明確化し、そのCommit完了後にPostcondition validationのboundaryを決定する。
 
-Commit前に完成済みcandidate representationを検査し、public publication、ownership transitionまたはその他のsemantic transitionを実行してよいか確認するvalidationはPostconditionではなくCommit eligibilityとして扱う。詳細はSection 5.4に従う。
+Postcondition validationは、Commitによって成立したstable stateがoperation contractを満たしていることを確認するために使用する。Prepareで構築したresult candidateをcallerへOutputする前に検査する処理とは区別し、後者はSection 5.4のResult validationとして扱う。
 
 一般原則:
 
-- temporaryを生成してpublic lifetimeへ公開するoperationでは、temporary完成後かつpublic Commit前のcandidate validationはCommit eligibilityである。Postcondition validationを行う場合は、publicationやownership transitionを含むCommit完了後に行う。
 - 既存objectを変更するoperationでは、automatic Postcondition validationを行う場合、対象への最後のmutationまたはrollback完了後がstable boundaryとなる。
 - ownership relationまたはlifecycleを変更するoperationでは、そのoperationのcontractを構成するstate transitionがすべてCommitされた時点をstable boundaryとする。
 - getter／read-only operationでは、通常stable-exit canonical validationを行わない。
 - external opaque resourceのstateだけが変化し、GLCE-owned canonical stateが変更されないoperationでは、external resourceのstate changeだけを理由としてGLCE objectのcanonical Postcondition validationを機械的に行わない。
 - destroy／deinitializeでは、logical lifetime終了後のcanonical validationを要求しない。
 
-value construction／conversionでcanonical-validなresultをcontractとして保証していても、そのことだけを理由としてautomatic canonical validationを要求しない。pure Outputだけを行いsemantic Commitを持たないoperationにはCommit eligibilityは存在しない。
+### 5.4 Result validation
 
-### 5.4 Commit eligibility
+Prepare等でresult candidateを構築し、そのcandidateをcallerへOutputするoperationでは、必要に応じてOutput前にResult validationを行ってよい。
 
-operationがmutation、ownership／lifecycle transition、registration、public lifetimeへのpublication、external side effect等のsemantic Commitを行う場合、必要に応じてCommit直前にCommit eligibility validationを設けてよい。
+Result validationは、構築済みresult candidateが、そのAPIが正常終了時にcallerへ保証するoutput contractを満たしていることを確認するために使用する。
 
-Commit eligibilityは、Commit対象がそのsemantic transitionを安全かつcontractどおりに成立させられることを確認するために使用する。対象は複数値の組み合わせに限定しない。代表例は次のとおりである。
+代表例:
 
-- 個別にvalidityが確立された複数の値、state、resourceまたはderived valueの組み合わせ整合性を確認する。
-- Prepareで完成したcandidate representationが、public lifetimeへ昇格またはownership transferされる前に、その型のcanonical contractを満たしていることをDEBUG／TESTのdiagnosticとして確認する。
-- Commit helperが失敗しないために必要なrelationやcapacity等を、Commit開始前に確認する。
+- parser / converter / value constructorがtemporary resultを構築し、public validatorまたはcanonical validatorでresult representationを確認してからoutput slotへcopyする。
+- 複数のderived valueから構築したresultについて、field間relationやrepresentation invariantがoutput contractを満たすことを確認する。
+- external / caller-controlled representationから内部candidateを構築する処理で、trust promotionまたはOutput前にrequired validityを確認する。
 
-completed candidateに対するcanonical validationをCommit前に行う場合、それはCommit後のstable stateを検査するPostconditionではなくCommit eligibilityである。
+Result validationは、Preconditionsやupstream trust boundaryですでに成立しているconditionを機械的に再検査するための仕組みとはしない。また、documented preconditionとimplementation contractからvalid resultが直接導出され、再確認の診断価値がない場合は機械的に追加しない。
 
-Commit eligibilityは、Preconditionsやupstream trust boundaryですでに成立しているconditionを機械的に再検査するための仕組みとはしない。また、semantic Commitを持たないpure Output operationへ機械的に設けない。
+Commitを伴うoperationで、capacity、target existence、resource availability、複数state間relation等について「semantic transitionを開始してよいか」をCommit前に確認する処理はResult validationではなくPreflightとして扱う。
 
-Commit eligibility failureのresult classificationはcandidateのtrust stateによって区別する。
+Result validation failureのresult classificationはcandidateのtrust stateと、そのvalidationが何を検査していたかによって区別する。
 
 - external / caller-controlled representationをtrusted internal representationへ昇格させる前のcandidateがrequired validityを満たさない場合は、trust promotionを拒否するrecoverable failureとして扱う。file loaderであれば`UNSUPPORTED_FILE`等を使用し、candidateがinvalidであることだけを理由として`DATA_CORRUPTED`へ分類しない。
-- 一方、validated / trusted inputと成立済みinternal contractを前提としてmodule自身が構築したinternal candidateが、public Commit直前のdiagnostic canonical validationに失敗した場合は、module implementationまたはinternal invariantの破損を示す可能性があるため`DATA_CORRUPTED`候補となる。
+- validated / trusted inputと成立済みinternal contractを前提としてmodule自身が構築したresult candidateがdiagnostic validationに失敗し、そのfailureがmodule implementationまたはinternal invariantの破損を示す場合は`DATA_CORRUPTED`候補となる。
 
-Commit eligibilityを設けるか、どのvalidation depthを使用するか、どのhelperへ分離するかはmodule／operationごとに決定する。
+Result validationを設けるか、どのvalidation depthを使用するか、どのvalidator / helperへ委譲するかはmodule／operationごとに決定する。
 
 ---
 
@@ -666,9 +665,10 @@ TEST_BUILDであることだけを理由に、DEBUG_BUILDより機械的に深�
 
 以下は典型的な傾向であり、project-wideの固定tableではない。最終判断はSection 6.1に従う。
 
-- stateful objectのcreate／initializeでprivate candidateを完成させてからpublic lifetimeへCommitする場合、DEBUG／TESTでcandidateへcanonical Commit eligibility validationを行う価値が高いことがある。
+- stateful objectのcreate／initializeでCommit前にcapacity、resource availability、target relation等の実行可能性を確認する必要がある場合は、Preflightで検査する。
+- stateful objectのcreate／initializeでprivate result candidateを完成させ、そのcandidate自体のcontractをOutputまたはCommit前に確認する価値がある場合は、DEBUG／TESTでResult validationを行ってよい。
 - create／initializeがcaller-provided object等へ直接Commitした後、そのstable stateを検査する場合はPostcondition validationとして扱う。
-- value construction／conversionでは、documented preconditionからvalid resultを生成できることが実装contractとして明確なら、そのoutput guaranteeを再確認するためだけのautomatic canonical validationを省略してよい。pure Outputだけを行うoperationにはCommit eligibilityを機械的に追加しない。
+- value construction／conversionでは、documented preconditionからvalid resultを生成できることが実装contractとして明確なら、そのoutput guaranteeを再確認するためだけのautomatic Result validationを省略してよい。
 - getter／read-only operationでも、対象semanticを実際にconsumeする場合はcanonical validationが適切なことがある。
 - mutatorでも、既存semanticを読まず既知stateへ全面上書きする場合はprecondition object validationが不要なことがある。
 - destroy／deinitializeでowned resourceをtraverseする場合、suspect objectを辿る前のcanonical validationが有用なことがある。
@@ -735,7 +735,7 @@ validator failureのresult classificationは、`is_valid() == false`という事
 - caller-controlled inputをchecked preconditionとして検査し、required validityを満たさない場合は、通常`INVALID_ARGUMENT`、`BAD_OPERATION`その他のrecoverable resultへ分類する。
 - External Trust Boundaryでtrust promotion前のcandidateがrequired validityを満たさない場合は、`UNSUPPORTED_FILE`等、そのboundaryに対応するrecoverable rejectionへ分類する。
 - 正規APIを通して成立済みで、moduleがvalidであることを前提として管理しているestablished internal stateのcanonical invariantが破損している場合は、`DATA_CORRUPTED`へ分類する根拠となる。
-- validated / trusted inputからmodule自身が構築したinternal candidateについて、Commit eligibilityまたはPostconditionのdiagnostic canonical validationが失敗し、そのfailureがmodule implementation / internal invariantの破損を示す場合は`DATA_CORRUPTED`へ分類してよい。
+- validated / trusted inputからmodule自身が構築したresult candidateについて、Result validationのdiagnostic canonical validationが失敗し、そのfailureがmodule implementation / internal invariantの破損を示す場合は`DATA_CORRUPTED`へ分類してよい。Commit後のestablished internal stateに対するPostcondition validation failureも、同様にinternal integrity failureの根拠となり得る。
 - trusted / hard preconditionをDEBUG / TESTで診断してfailureした場合の扱いは、そのAPIのdiagnostic policyに従う。recoverable contractとして定義されていないconditionを、機械的に通常errorへ変換しない。
 
 Engine内部producerが生成したvalueを別moduleがinputとして受け取る場合、consumerはproducer provenanceを推測して`INVALID_ARGUMENT`を`DATA_CORRUPTED`へ再分類しない。consumerは自身が観測できるinput contractに従ってresultを返し、producer側のinternal bug detectionはproducer自身のstable-boundary validationまたはdiagnosticsへ委ねてよい。
@@ -751,7 +751,7 @@ Engine内部producerが生成したvalueを別moduleがinputとして受け取�
 - established internal object / stateのcanonical invariant破損
 - established internal objectのfield relation破損
 - owner管理情報の矛盾
-- validated / trusted inputからmodule自身が構築したinternal candidateに対するdiagnostic Commit eligibility failureで、module implementationまたはinternal invariant破損を示す場合
+- validated / trusted inputからmodule自身が構築したresult candidateに対するdiagnostic Result validation failureで、module implementationまたはinternal invariant破損を示す場合
 - established internal stateに対するPostcondition validation failure
 - recoverable cleanup / rollback中に、成立済みinternal stateの安全性を確定できなくなった場合
 

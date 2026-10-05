@@ -5,25 +5,21 @@
 
 ## このドキュメントの使い方
 
-このドキュメントは、GLCEの設計方針・設計判断・内部モデルを、人間とAIの双方が参照できる形で保存することを目的としています。
+このドキュメントは、GLCEのコード記述・API設計・source layout・comment style等の共通規約を、人間とAIの双方が参照できる形で保存することを目的としています。
 
-内容は、設計意図を後から復元できることを重視しているため、一般的なプロジェクトドキュメントより詳細かつ冗長に記述されている場合があります。最初から最後まで通読することを必須とはしていません。
+GLCEのコードを新規作成、レビュー、リファクタリングする場合は、このドキュメントを共通の判断基準として使用します。Validation固有の実行規則は`validation_policy.md`、Boundary / trust / authority modelは`boundary_model.md`、確定した設計判断の履歴は`design_decisions.md`を正本とします。
 
-GLCEの設計について知りたい場合は、このドキュメントをAIへ読み込ませた上で、知りたい内容を質問したり、必要な範囲を要約させたりする利用方法を推奨します。
+内容は、規則そのものだけでなく、その意図や適用境界を後から復元できることを重視しているため、一般的なCoding Style文書より詳細に記述される場合があります。最初から最後までの通読を必須とはせず、必要なsectionを人間またはAIが参照して利用することを想定します。
 
-このドキュメント自体の作成・更新にもAIを積極的に利用しています。GLCEでは、設計についてAIと議論し、設計判断が追加・変更された際には、その内容を説明するセクションや記述をAIによって生成し、既存ドキュメントへ追記・挿入する運用を行っています。
+このドキュメント自体の作成・更新にもAIを利用します。ただし、AIによる提案や生成内容がそのままGLCEの規則になるわけではありません。採用する内容は、GLCEの目的、制約、実装経験、および既存policyとの整合性を確認した上で決定します。
 
-そのため、異なる時期に追加された複数のセクションが同じ背景や設計原則を別の観点から説明し、内容が部分的に重複する場合があります。この冗長性は、設計変更の経緯や判断理由を失わず、AIが後から設計意図を復元しやすくするため、ある程度意図的に許容しています。
+異なる時期に追加された規則が同じ背景や設計原則を別の観点から説明し、部分的に重複することは許容します。一方で、同じ事項について複数の異なる正本が生まれることや、古い規則と新しい規則が矛盾したまま残ることは避け、必要に応じて統合・整理します。
 
-一方で、同じ方針について複数の異なる正本が生まれることや、古い設計と新しい設計が矛盾したまま残ることは避けます。そのため、AIによる横断的なレビューも利用しながら、文書間および文書内の重複、矛盾、古くなった前提、不要になった記述を定期的に見直し、必要に応じて統合・整理します。
+本書に存在しない規則を、一般的な慣習だけを理由としてGLCE固有の必須規則として追加しません。また、本書の内容は一般的なソフトウェア開発に対する普遍的なbest practiceを主張するものではなく、GLCEの目的、制約、設計思想に基づくproject-specificな方針です。
 
-このドキュメントはGLCEの現在の設計方針を表しますが、プロジェクトの発展に伴って更新されることがあります。実装経験からより適切なモデルや方針が得られた場合、既存の設計、実装、および文書そのものを大きく変更することがあります。
+実装経験からより適切な規則が得られた場合は、必要に応じて関連するDesign Decisionを残した上で本書を更新します。
 
-GLCEではAIを、単なる文章生成手段ではなく、設計議論、設計レビュー、矛盾の探索、既存方針との照合、ドキュメント生成・更新などに広く利用しています。ただし、AIによる提案や生成内容がそのままGLCEの方針になるわけではありません。最終的に採用された内容は、GLCEの目的、制約、実装経験、および設計思想に基づくプロジェクト上の判断です。
-
-このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
-
-最終更新: 2026-10-02
+最終更新: 2026-10-05
 
 ## 目的
 
@@ -818,12 +814,12 @@ private helperへ分離するのは、次のいずれかに該当し、検証処
 | Phase | 役割 |
 |---|---|
 | `Preconditions` | caller／API contractとしてoperation開始前に成立している必要がある条件を検証する |
-| `Prepare` | 後続処理に必要な値、address、size、temporary resource等を準備する。operationのsemantic effectはまだ成立させない |
-| `Preflight` | operationを実行可能か判断するための探索、resource確認、対象特定等を行う。operationのsemantic effectはまだ成立させない |
-| `Commit eligibility` | Commit対象となるcandidate、値、state、resource等がCommit contractを満たし、semantic transitionを開始してよいことを確認する |
-| `Commit` | operationのsemantic effectを成立させるstate transitionを行う |
+| `Prepare` | 後続処理に必要な値、address、size、temporary resource、result candidate等を準備する。operationのsemantic effectはまだ成立させない |
+| `Preflight` | operationのsemantic effectを開始する前に、resource、capacity、target、relation等からoperationを実行可能か確認する |
+| `Result validation` | Prepare等で構築したresult candidateが、APIがsuccess時に保証するoutput contractを満たしているか確認する |
+| `Commit` | existing semantic state、ownership、lifecycle、registration、external state等に対するsemantic transitionを成立させる |
 | `Postconditions` | Commit完了後のstable stateがcontractを満たすことを確認する |
-| `Output` | semantic transitionを伴わず、成立済みの結果、value、borrowed view、status、ID等をcallerへ伝達する |
+| `Output` | semantic transitionを伴わず、確定済みのresult、value、borrowed view、status、ID等をcallerへ伝達する |
 | `Cleanup / rollback` | 必要なoperationに限り、失敗時のresource解放または状態復元を行う |
 
 `Commit`はpersistent fieldのmutationだけを意味しない。ownership／lifecycle transition、registration／unregistration、public lifetimeへのobject publication、external side effect等、そのoperationの意味上のeffectを成立させる処理も`Commit`として扱う。
@@ -834,18 +830,18 @@ private helperへ分離するのは、次のいずれかに該当し、検証処
 
 `Prepare`で取得したconstruction-localなtemporary resourceは、ownershipを移転するsemantic transitionが`Commit`されるまでcurrent operationがownershipとfailure時のcleanup responsibilityを保持する。
 
-### Commit eligibility
+### Result validation
 
-- `Commit eligibility`は、Commit対象がsemantic transitionを安全かつcontractどおりに成立させられることをCommit直前に確認するphaseである。
-- 対象は複数値の組み合わせに限定しない。Prepareで完成したcandidate representationをpublic lifetimeへ昇格またはownership transferする前にcanonical validationする場合も`Commit eligibility`として扱う。
-- `Preconditions`、`Prepare`、`Preflight`等ですでに成立しているconditionを機械的に再検査するためのphaseではない。
-- 各helperが生成または検証した複数の値やstateについて、Commit時に初めて必要となる組み合わせ整合性がある場合は`Commit eligibility`で確認する。
-- semantic `Commit`を持たないpure `Output` operationには`Commit eligibility`を機械的に設けない。
-- Commit前のcandidate validationは`Postconditions`とは呼ばない。`Postconditions`はCommit完了後のstable stateに対する確認に使用する。
+- `Result validation`は、Prepare等で構築したresult candidateが、APIがsuccess時に保証するoutput contractを満たしているか確認するphaseである。
+- result candidateをcallerへOutputする前にvalidationする必要がある場合に使用する。
+- `Result validation`はoperation feasibilityを確認するphaseではない。capacity、resource availability、target relation等、semantic effectを開始できるかの確認は`Preflight`で扱う。
+- `Result validation`はCommit後のstable stateを検査するphaseではない。Commitによって成立したmodule-owned stateの確認は`Postconditions`で扱う。
+- documented preconditionからvalid resultを構築できることが実装contractとして明確であり、diagnostic validationの価値がない場合は、result construction operationへ`Result validation`を機械的に追加しない。
+- `Result validation`成功後の`Output`が単純なvalue copyまたはborrow publicationでありsemanticを変更しない場合、同一validityをOutput後に機械的に再検査しない。
 
 ### Private mutation helperのvoid化
 
-- `Commit` phaseで使用するprivate helperについて、事前の`Commit eligibility`によってそのhelperを安全に実行できることが保証されている場合は、result codeを返さず`void`化する。
+- `Commit` phaseで使用するprivate helperについて、Commit開始前にそのhelperを安全に最後まで実行できるconditionが成立済みである場合は、result codeを返さず`void`化する。
 - `void`化のためにrecoverable errorを握りつぶしたり、失敗時にsilent returnする構造へ変更してはならない。
 - helper自身で初めて判明するrecoverable failure、resource取得失敗、外部API失敗、探索失敗、capacity不足、arithmetic overflow等が残る場合は`void`化しない。
 - `void` helperは、成立済みのinternal contractのもとでは処理を最後まで完了できる構造にする。
@@ -858,7 +854,7 @@ private helperへ分離するのは、次のいずれかに該当し、検証処
 ```c
 /*
  * Contract:
- * - xxx_allocate()のCommit eligibility成功後にのみ呼び出す。
+ * - xxx_allocate()のPreflight成功後にのみ呼び出す。
  * - target_はCommit対象として確定済みである。
  * - required_size_とtarget_の組み合わせはCommit可能である。
  *
@@ -1311,7 +1307,8 @@ file内のコメント階層は次の3段階を基本とする。
 ```c
 // Preconditions.
 // Prepare.
-// Commit eligibility.
+// Preflight.
+// Result validation.
 // Commit.
 // Postconditions.
 // Output.
@@ -1542,8 +1539,8 @@ validatorは実際にその型が保証するstructural / semantic invariantを�
 - 複数リソースをまたぐ操作では、どの時点でcommitされるかを明確にする。
 - semantic `Commit`を行うoperationでは、通常発生し得るfailureを可能な限り`Commit`開始前に処理する。
 - `Commit`開始後は、可能な限り通常のfailure pathを持たず、stable stateまで処理を完了できる構造を優先する。
-- `Commit`途中のfailureに対応するため複雑なrollbackを追加するより、可能であればfailure条件を`Preconditions`、`Prepare`、`Preflight`、`Commit eligibility`へ移動する。
-- `Commit eligibility`は、Commit対象となるcandidateや値／state／resourceについて、Commit開始前に追加のeligibility確認が必要な場合に設ける。pure `Output`だけのoperationには機械的に設けない。
+- `Commit`途中のfailureに対応するため複雑なrollbackを追加するより、可能であればrecoverableなfailure条件を`Preconditions`、`Prepare`、`Preflight`でCommit開始前に処理する。
+- Prepare等で構築したresult candidateのvalidity確認は`Result validation`、Commit完了後のstable state確認は`Postconditions`として扱い、operation feasibilityの確認と混在させない。
 
 ### 所有権取得・解放の対
 

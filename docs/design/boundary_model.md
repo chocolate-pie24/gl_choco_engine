@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-03  
+最終更新: 2026-10-05
 状態: Accepted / Project-wide Boundary Model
 
 ## 1. 文書の位置づけ
@@ -454,7 +454,7 @@ Boundary Modelはresult code taxonomyそのものではないが、failureの意
 | external asset / external representationがformat contractを満たさない | `UNSUPPORTED_FILE`等のresource-specific rejection |
 | OS / file stream / external channelでruntime failure | runtime / I/O-specific result |
 | established internal stateのintegrity failureを確認 | `DATA_CORRUPTED`候補 |
-| temporary candidateを構築した結果、module自身のconstruction contractを満たさない | Commit eligibility / Postcondition failureとしてinternal corruption候補 |
+| temporary candidateを構築した結果、module自身のconstruction / output contractを満たさない | Result validation failureとしてinternal corruption候補 |
 
 ### 8.2 `DATA_CORRUPTED`を安易に使わない
 

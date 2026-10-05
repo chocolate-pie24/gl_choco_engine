@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-03
+最終更新: 2026-10-05
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -3452,3 +3452,202 @@ Established internal stateのintegrity failureを検出した場合に、suspect
 - `project_policy.md`
 - `glce_near_term_todo.md`
 
+
+
+---
+
+## Decision: `Commit eligibility`を独立phaseとして廃止し、result candidate validationを`Result validation`として分離する
+
+**Status:** Accepted
+**Date:** 2026-10-05
+**Scope:** Coding Style / Validation / Function Phase Model
+
+### Decision
+
+GLCEのfunction internal phase modelでは、`Commit eligibility`を独立phaseとして使用しない。
+
+関数内部の処理phaseは、必要に応じて以下の語彙を使用する。存在しないphaseを機械的に追加しない。
+
+```text
+Preconditions
+Prepare
+Preflight
+Result validation
+Commit
+Postconditions
+Output
+Cleanup / rollback
+```
+
+各phaseの責務を以下のように整理する。
+
+```text
+Preconditions
+    operation開始前にcaller / API contractとして成立している必要があるconditionを確認する。
+
+Prepare
+    後続処理に必要なtemporary、candidate、derived value、resource等を準備する。
+    operationのsemantic effectはまだ成立させない。
+
+Preflight
+    operationのsemantic effectを開始する前に、
+    resource、capacity、target、relation等からoperationを実行可能か確認する。
+
+Result validation
+    Prepare等で構築したresult candidateが、
+    APIがsuccess時に保証するoutput contractを満たしているか確認する。
+
+Commit
+    existing semantic state、ownership、lifecycle、registration、
+    external state等に対するsemantic transitionを成立させる。
+
+Postconditions
+    Commit完了後のstable stateがcontractを満たしているか確認する。
+
+Output
+    確定済みのresult、value、borrowed view、status、ID等をcallerへ伝達する。
+    Output自体はmodule-owned semantic stateのtransitionを意味しない。
+
+Cleanup / rollback
+    必要なoperationに限り、failure時のresource解放またはstate restorationを行う。
+```
+
+`Commit eligibility`で扱っていた検査は、その目的に応じて以下へ分離する。
+
+```text
+operationを実行可能か確認する
+    → Preflight
+
+constructed resultがoutput contractを満たすか確認する
+    → Result validation
+
+Commit後のstable stateがcontractを満たすか確認する
+    → Postconditions
+```
+
+### Context
+
+`glce_config_utility_key_value_parse()`のvalidation documentationを整理する中で、result candidateをcallerへOutputする前のvalidationをどのphaseへ分類するかを再検討した。
+
+このAPIでは概念的に次の処理を行う。
+
+```text
+Prepare
+    temporaryなkey/value viewを構築する
+        ↓
+validation
+    temporary viewがsuccess時のAPI contractを満たしているか確認する
+        ↓
+Output
+    validated viewをcallerのoutput variableへcopyする
+```
+
+このvalidationを`Commit eligibility`と呼ぶ案では、API自身がmodule-owned semantic state、ownership、lifecycle等をCommitしていないにもかかわらず、存在しないCommitに対するeligibilityという不自然さが生じた。
+
+一方、このvalidationを`Postconditions`と呼ぶ案では、caller-visibleなOutputを行う前のtemporary candidateを検査しているため、Commit後のstable state validationと同じphase名へまとめると意味が曖昧になる。
+
+この問題を整理した結果、result candidateを構築した後、そのcandidateがsuccess時のoutput contractを満たしているかを確認する処理を`Result validation`として独立して表現する方が、実際のoperation semanticsと一致すると判断した。
+
+この整理により、pureなresult construction operationは例えば次のように表現できる。
+
+```text
+Preconditions
+    ↓
+Prepare
+    ↓
+Result validation
+    ↓
+Output
+```
+
+一方、既存stateを変更するstateful operationは例えば次のように表現できる。
+
+```text
+Preconditions
+    ↓
+Prepare
+    ↓
+Preflight
+    ↓
+Commit
+    ↓
+Postconditions
+    ↓
+Output
+```
+
+ここで`Result validation`と`Postconditions`は目的が異なる。
+
+```text
+Result validation
+    callerへ返すresult candidateのvalidityを確認する
+
+Postconditions
+    Commitによって成立したstable stateのvalidityを確認する
+```
+
+また、`Preflight`はresult validityではなく、semantic effectを開始する前のoperation feasibilityを確認するphaseとして維持する。
+
+### Rationale
+
+- result candidate validationを、存在しないCommitへ結びつけずに表現できる。
+- `Preflight`、`Result validation`、`Postconditions`の問いをそれぞれ分離できる。
+- pure output operationとstateful operationを同じphase vocabularyで自然に表現できる。
+- `Commit`を既存semantic state、ownership、lifecycle等のtransitionへ限定できる。
+- `Output`を、確定済みresultをcallerへ伝達する処理として明確に維持できる。
+- API success contractを満たすtemporary resultをOutput前に検査する一般的な実装patternを、直接的な名称で表現できる。
+- phase名を増やすこと自体を目的とせず、実際に異なる責務だけを区別できる。
+
+### Rejected Alternatives
+
+#### `Commit eligibility`を維持し、result publicationもCommitとして扱う
+
+caller-visibleなoutputへresultをcopyすることまでCommitの意味を広げる案を検討した。
+
+しかし、getterやvalue conversion等のpure OutputまでCommitと解釈すると、`Commit`と`Output`の区別が弱くなる。
+
+GLCEでは、existing semantic state、ownership、lifecycle等のtransitionを`Commit`とし、成立済みresultのcallerへの伝達を`Output`として分離する方がoperation semanticsを直接表現できると判断した。
+
+#### result candidate validationを`Postconditions`とする
+
+APIがsuccess時に保証するconditionを検査しているという意味では、postcondition validationと呼ぶことも可能である。
+
+しかし、temporary candidateをOutput前に検査する処理と、Commit後のstable stateを検査する処理ではvalidation対象とtimingが異なる。
+
+両者を同じphase名へまとめるより、前者を`Result validation`、後者を`Postconditions`として分離する方が明確であると判断した。
+
+#### genericな`Check` phaseを導入する
+
+`Check`はinput validation、resource availability、candidate validity、stable state validation等のいずれにも使えるため、phase名だけでは何を確認しているか分からない。
+
+各validationの目的をphase名から読み取れるようにするため採用しなかった。
+
+#### `Output eligibility`を導入する
+
+callerへOutputしてよいかを確認するphaseとして`Output eligibility`を設ける案も検討した。
+
+しかし、実際に検査している対象はOutput operationそのものではなく、Outputしようとしているresult candidateのvalidityである。
+
+このため、対象を直接表現する`Result validation`を採用した。
+
+### Consequences
+
+- function internal phase modelから`Commit eligibility`を削除する。
+- operation feasibilityの確認は`Preflight`で扱う。
+- result candidateのsuccess contract validationは`Result validation`で扱う。
+- Commit後のstable state validationは`Postconditions`で扱う。
+- pure result construction / conversion等では、必要に応じて`Preconditions → Prepare → Result validation → Output`を使用する。
+- stateful mutation / ownership transition等では、必要に応じて`Preconditions → Prepare → Preflight → Commit → Postconditions → Output`を使用する。
+- すべてのfunctionへすべてのphaseを機械的に追加しない。
+- `validation_policy.md`および`glce_coding_style.md`のfunction phase / validation記述は、本Decisionに合わせて更新する。
+
+### Revisit Conditions
+
+- `Result validation`と`Postconditions`の区別が実装上ほとんど機能せず、phase vocabularyを単純化した方が理解しやすいことが確認された場合。
+- caller-visible output自体にownership / lifecycle transition等のsemantic Commitを伴うAPI patternが増え、`Output`と`Commit`の関係を再定義する必要が生じた場合。
+- transaction modelやerror handling architectureを導入し、function phase全体を別のformal modelで整理する場合。
+
+### Related Documents
+
+- `validation_policy.md`
+- `glce_coding_style.md`
