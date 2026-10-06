@@ -58,6 +58,20 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
+/*
+ * GLCE configuration tokenの最大文字数。暫定的に31文字で、バッファサイズが32。
+ */
+#define GLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH 31
+
+#define GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE (GLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH + 1)
+
+typedef enum {
+    GLCE_CONFIG_UTILITY_SUCCESS = 0,
+    GLCE_CONFIG_UTILITY_INVALID_ARGUMENT,
+    GLCE_CONFIG_UTILITY_BAD_OPERATION,
+    GLCE_CONFIG_UTILITY_UNDEFINED_ERROR,
+} glce_config_utility_result_t;
+
 typedef enum glce_config_utility_line_type {
     GLCE_CONFIG_UTILITY_LINE_TYPE_BLANK = 0,
     GLCE_CONFIG_UTILITY_LINE_TYPE_COMMENT,
@@ -65,13 +79,10 @@ typedef enum glce_config_utility_line_type {
     GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID,
 } glce_config_utility_line_type_t;
 
-typedef struct glce_config_utility_key_value_view {
-    const char* key_ptr;
-    const char* value_ptr;
-
-    size_t key_length;
-    size_t value_length;
-} glce_config_utility_key_value_view_t;
+typedef struct glce_config_utility_key_value {
+    char key[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE];
+    char value[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE];
+} glce_config_utility_key_value_t;
 
 /**
  * @brief configuration lineの種別を判定する
@@ -116,6 +127,8 @@ typedef struct glce_config_utility_key_value_view {
  */
 glce_config_utility_line_type_t glce_config_utility_line_type_get(const char *line_, size_t char_count_);
 
+void glce_config_utility_key_value_reset(glce_config_utility_key_value_t* key_value_);
+
 /**
  * @brief configuration lineをkey/value viewへ解析する
  *
@@ -159,7 +172,7 @@ glce_config_utility_line_type_t glce_config_utility_line_type_get(const char *li
  * @pre callerはline_[0]からline_[char_count_]までを
  *      読み取り可能なstorageとして提供すること。
  */
-bool glce_config_utility_key_value_parse(const char* line_, size_t char_count_, glce_config_utility_key_value_view_t* out_view_);
+glce_config_utility_result_t glce_config_utility_key_value_parse(const char* line_, size_t char_count_, glce_config_utility_key_value_t* out_key_value_);
 
 /*
  * glce_config_utility_key_value_view_is_valid() Validation
@@ -182,7 +195,7 @@ bool glce_config_utility_key_value_parse(const char* line_, size_t char_count_, 
  * - したがって、keyおよびvalueは上記characterを内部に含まない
  *   連続したnon-empty tokenとして成立すること。
  */
-bool glce_config_utility_key_value_view_is_valid(const glce_config_utility_key_value_view_t* view_);
+bool glce_config_utility_key_value_is_valid(const glce_config_utility_key_value_t* key_value_);
 
 #ifdef __cplusplus
 }
