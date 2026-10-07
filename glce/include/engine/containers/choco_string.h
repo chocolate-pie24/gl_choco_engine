@@ -85,10 +85,6 @@ bool choco_string_is_equal(const char* str1_, const char* str2_);
 
 bool choco_string_substring_exists(const char* str_, const char* target_);
 
-choco_string_result_t choco_string_key_value_key_get(const char* line_, choco_string_t* out_key_);
-
-choco_string_result_t choco_string_key_value_value_get(const char* line_, choco_string_t* out_value_);
-
 bool choco_string_is_valid(const choco_string_t* string_);
 
 #ifdef __cplusplus

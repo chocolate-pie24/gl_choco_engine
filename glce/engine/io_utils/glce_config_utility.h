@@ -70,6 +70,7 @@ typedef enum {
     GLCE_CONFIG_UTILITY_INVALID_ARGUMENT,
     GLCE_CONFIG_UTILITY_BAD_OPERATION,
     GLCE_CONFIG_UTILITY_UNDEFINED_ERROR,
+    GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT,
 } glce_config_utility_result_t;
 
 typedef enum glce_config_utility_line_type {

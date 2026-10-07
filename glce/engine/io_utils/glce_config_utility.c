@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -19,7 +20,7 @@
  * - line全体に対する処理と、key / value tokenに対する処理を分離する。
  *
  * Key / Value Range Representation:
- * - key_value_range_get()が生成するleft / right rangeは、
+ * - token_ranges_get()が生成するleft / right rangeは、
  *   それぞれtoken candidateの先頭位置と末尾位置をinclusive indexで表す。
  * - 成功時には次のrelationが成立する。
  *
@@ -71,12 +72,14 @@ static const char* const s_result_str_success = "SUCCESS";
 static const char* const s_result_str_bad_operation = "BAD_OPERATION";
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
 static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
+static const char* const s_result_str_unsupported_format = "UNSUPPORTED_FORMAT";
 
 // ============================================================
 // Private Function Declarations
 // ============================================================
 // Parsing helpers
-static bool key_value_range_get(const char *line_, size_t char_count_, token_range_t* left_range_, token_range_t* right_range_);
+static bool token_ranges_get(const char *line_, size_t char_count_, token_range_t* left_range_, token_range_t* right_range_);
+static void token_copy(const char* line_, const token_range_t* range_, char out_token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]);
 
 // Utilities
 static const char* result_to_str(glce_config_utility_result_t result_);
@@ -85,6 +88,7 @@ static const char* result_to_str(glce_config_utility_result_t result_);
 static bool line_is_valid(const char* line_, size_t char_count_);
 static bool token_char_is_valid(char c);
 static bool token_range_is_valid(const token_range_t* range_);
+static bool token_is_valid(const char token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]);
 
 // ============================================================
 // Public API
@@ -114,8 +118,6 @@ static bool token_range_is_valid(const token_range_t* range_);
 glce_config_utility_line_type_t glce_config_utility_line_type_get(const char *line_, size_t char_count_) {
     size_t first_char_idx = 0;
 
-    glce_config_utility_key_value_t dummy_key_value = { 0 };
-
     // Preconditions.
     if(!line_is_valid(line_, char_count_)) {
         return GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID;
@@ -137,7 +139,7 @@ glce_config_utility_line_type_t glce_config_utility_line_type_get(const char *li
     if(line_[first_char_idx] == '#') {
         return GLCE_CONFIG_UTILITY_LINE_TYPE_COMMENT;
     }
-    if(glce_config_utility_key_value_parse(line_, char_count_, &dummy_key_value)) {
+    if(NULL != memchr(line_, '=', char_count_)) {
         return GLCE_CONFIG_UTILITY_LINE_TYPE_KEY_VALUE;
     }
     return GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID;
@@ -147,10 +149,9 @@ void glce_config_utility_key_value_reset(glce_config_utility_key_value_t* key_va
     if(NULL == key_value_) {
         return;
     }
-    for(size_t i = 0; i != GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE; ++i) {
-        key_value_->key[i] = 0;
-        key_value_->value[i] = 0;
-    }
+
+    key_value_->key[0] = '\0';
+    key_value_->value[0] = '\0';
 }
 
 /*
@@ -190,7 +191,6 @@ glce_config_utility_result_t glce_config_utility_key_value_parse(const char* lin
 
     token_range_t right_range = { 0 };
     token_range_t left_range = { 0 };
-
     glce_config_utility_key_value_t key_value = { 0 };
 
     // Preconditions.
@@ -208,22 +208,22 @@ glce_config_utility_result_t glce_config_utility_key_value_parse(const char* lin
     }
 
     // Prepare.
-    if(!key_value_range_get(line_, char_count_, &left_range, &right_range)) {
-        ret = GLCE_CONFIG_UTILITY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("glce_config_utility_key_value_parse(%s) - key_value_range_get failed.", result_to_str(ret));
+    if(!token_ranges_get(line_, char_count_, &left_range, &right_range)) {
+        ret = GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT;
+        ERROR_MESSAGE("glce_config_utility_key_value_parse(%s) - token_ranges_get failed.", result_to_str(ret));
         goto cleanup;
     }
-
-    for(size_t i = left_range.start, count = 0; i != (left_range.end + 1); ++i, ++count) {
-        key_value.key[count] = line_[i];
+    if(!token_range_is_valid(&left_range) || !token_range_is_valid(&right_range)) {
+        ret = GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT;
+        ERROR_MESSAGE("glce_config_utility_key_value_parse(%s) - Unsupported key, value.", result_to_str(ret));
+        goto cleanup;
     }
-    for(size_t i = right_range.start, count = 0; i != (right_range.end + 1); ++i, ++count) {
-        key_value.value[count] = line_[i];
-    }
+    token_copy(line_, &left_range, key_value.key);
+    token_copy(line_, &right_range, key_value.value);
 
     // Result validation.
     if(!glce_config_utility_key_value_is_valid(&key_value)) {
-        ret = GLCE_CONFIG_UTILITY_UNDEFINED_ERROR;
+        ret = GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT;
         ERROR_MESSAGE("glce_config_utility_key_value_parse(%s) - Result validation failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -241,20 +241,11 @@ bool glce_config_utility_key_value_is_valid(const glce_config_utility_key_value_
     if(NULL == key_value_) {
         return false;
     }
-    if('\0' == key_value_->key[0] || '\0' == key_value_->value[0]) {
+    if(!token_is_valid(key_value_->key)) {
         return false;
     }
-    for(size_t i = 0; i != GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE; ++i) {
-        if('\0' != key_value_->key[i]) {
-            if(!token_char_is_valid(key_value_->key[i])) {
-                return false;
-            }
-        }
-        if('\0' != key_value_->value[i]) {
-            if(!token_char_is_valid(key_value_->value[i])) {
-                return false;
-            }
-        }
+    if(!token_is_valid(key_value_->value)) {
+        return false;
     }
     return true;
 }
@@ -262,7 +253,7 @@ bool glce_config_utility_key_value_is_valid(const glce_config_utility_key_value_
 // ============================================================
 // Parsing helpers
 // ============================================================
-static bool key_value_range_get(const char *line_, size_t char_count_, token_range_t* left_range_, token_range_t* right_range_) {
+static bool token_ranges_get(const char *line_, size_t char_count_, token_range_t* left_range_, token_range_t* right_range_) {
     size_t equal_index = 0;
     size_t equal_count = 0;
 
@@ -329,17 +320,20 @@ static bool key_value_range_get(const char *line_, size_t char_count_, token_ran
         }
     }
 
-    // Result validation.
-#if defined(TEST_BUILD) || defined(DEBUG_BUILD)
-    if(!token_range_is_valid(&left_range) || ! token_range_is_valid(&right_range)) {
-        return false;
-    }
-#endif
-
     *left_range_ = left_range;
     *right_range_ = right_range;
 
     return true;
+}
+
+static void token_copy(const char* line_, const token_range_t* range_, char out_token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]) {
+    if(NULL == line_ || NULL == range_ || NULL == out_token_) {
+        return;
+    }
+
+    const size_t length = range_->end - range_->start + 1;
+    memcpy(out_token_, &line_[range_->start], length);
+    out_token_[length] = '\0';
 }
 
 // ============================================================
@@ -353,6 +347,10 @@ static const char* result_to_str(glce_config_utility_result_t result_) {
         return s_result_str_invalid_argument;
     case GLCE_CONFIG_UTILITY_BAD_OPERATION:
         return s_result_str_bad_operation;
+    case GLCE_CONFIG_UTILITY_UNDEFINED_ERROR:
+        return s_result_str_undefined_error;
+    case GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT:
+        return s_result_str_unsupported_format;
     default:
         return s_result_str_undefined_error;
     }
@@ -428,14 +426,44 @@ static bool token_char_is_valid(char c) {
 }
 
 static bool token_range_is_valid(const token_range_t* range_) {
+    size_t length = 0;
     if(NULL == range_) {
-        return false;
-    }
-    if(range_->start == range_->end) {
         return false;
     }
     if(range_->start > range_->end) {
         return false;
     }
+
+    length = range_->end - range_->start + 1;
+    if(length > GLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH) {
+        return false;
+    }
+    return true;
+}
+
+static bool token_is_valid(const char token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]) {
+    const char* terminator = NULL;
+    size_t length = 0;
+
+    if(NULL == token_) {
+        return false;
+    }
+
+    terminator = (const char*)memchr(token_, '\0', GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE);
+    if(NULL == terminator) {
+        return false;
+    }
+
+    length = (size_t)(terminator - token_);
+    if(0 == length) {
+        return false;
+    }
+
+    for(size_t i = 0; i != length; ++i) {
+        if(!token_char_is_valid(token_[i])) {
+            return false;
+        }
+    }
+
     return true;
 }

@@ -63,6 +63,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/resource/core/resource_types.h"
 
@@ -71,11 +72,13 @@ extern "C" {
  *
  */
 typedef struct ui_geom_config {
-    uint16_t icon_width;    /**< 矩形領域形状指定(幅) */
-    uint16_t icon_height;   /**< 矩形領域形状指定(高さ) */
+    int32_t icon_width;    /**< 矩形領域形状指定(幅) */
+    int32_t icon_height;   /**< 矩形領域形状指定(高さ) */
 } ui_geom_config_t;
 
 resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_geom_config_t* out_config_);
+
+bool ui_geom_config_is_valid(const ui_geom_config_t* config_);
 
 #ifdef __cplusplus
 }
