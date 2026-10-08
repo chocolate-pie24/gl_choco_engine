@@ -11,6 +11,8 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
+#include "engine/resource/core/resource_types.h"
+
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_texture.h"
 
@@ -22,7 +24,7 @@ struct texture_gpu_resource {
     const renderer_backend_context_t* backend_context;
 };
 
-texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend_context_t* backend_context_, int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, uint16_t texture_width_, uint16_t texture_height_, uint8_t channel_count_, const uint8_t* pixels_, texture_gpu_resource_t** out_texture_resource_) {
+texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend_context_t* backend_context_, int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, const texture_resource_info_t* resource_info_, const uint8_t* pixels_, texture_gpu_resource_t** out_texture_resource_) {
     texture_gpu_resource_result_t ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -34,17 +36,13 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
     bool texture_bound = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_info_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "resource_info_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "out_texture_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "*out_texture_resource_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_GPU_RESOURCE_BAD_OPERATION, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_BAD_OPERATION), "texture_gpu_resource_create", "*out_texture_resource_")
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT, texture_gpu_resource_result_to_str(TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT), "texture_gpu_resource_create", "pixels_")
-    if(3 != channel_count_ && 4 != channel_count_) {
+    if(!texture_resource_info_is_valid(resource_info_)) {
         ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - provided channel_count_ is not valid.", texture_gpu_resource_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == texture_width_ || 0 == texture_height_) {
-        ret = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - provided texture_width_ or texture_height_ is not valid.", texture_gpu_resource_result_to_str(ret));
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - Provided resource_info_ is not valid.", texture_gpu_resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -71,7 +69,7 @@ texture_gpu_resource_result_t texture_gpu_resource_create(const renderer_backend
     }
     texture_bound = true;
 
-    ret_renderer_backend = renderer_backend_texture_pixel_upload(backend_context_, texture_width_, texture_height_, channel_count_, pixels_);
+    ret_renderer_backend = renderer_backend_texture_pixel_upload(backend_context_, resource_info_->width, resource_info_->height, resource_info_->channel_count, pixels_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = texture_gpu_resource_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_pixel_upload failed.", texture_gpu_resource_result_to_str(ret));

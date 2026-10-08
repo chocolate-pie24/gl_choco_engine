@@ -99,6 +99,9 @@
  * - 実装コードはプロジェクト作成者が作成した。
  */
 
+// ============================================================
+// Private Type Definitions
+// ============================================================
 typedef struct general_allocator {
     // Allocator
     free_list_allocator_t free_list_allocator;
@@ -222,6 +225,8 @@ cleanup:
 
 // general_allocator_destroy Validation Policy
 //
+// - General Allocatorがinitialized stateであることを全BUILDで要求し、
+//   未初期化の場合はBAD_OPERATIONとして処理する。
 // - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用し、
 //   General AllocatorがModule Internal Contractを満たすStable stateであることを検証する。
 // - Free List Allocator固有のdeinitialize validationはfree_list_allocator_deinitialize()へ委譲する。
@@ -238,6 +243,10 @@ void general_allocator_destroy(void) {
     free_list_allocator_result_t ret_free_list_allocator = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     // Preconditions.
+    if(!general_allocator_is_initialized()) {
+        ERROR_MESSAGE("general_allocator_destroy(%s) - general allocator is not initialized.", result_to_str(GENERAL_ALLOCATOR_BAD_OPERATION));
+        return;
+    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!general_allocator_is_valid()) {
         ERROR_MESSAGE("general_allocator_destroy(%s) - Precondition validation failed for 's_general_allocator'.", result_to_str(GENERAL_ALLOCATOR_DATA_CORRUPTED));
@@ -260,6 +269,8 @@ void general_allocator_destroy(void) {
 // - out_ptr_はNULLでなく、*out_ptr_ == NULLであることを要求する。
 // - allocation_size_は0より大きいことを要求する。
 // - memory_tag_は有効なgeneral_allocator_memory_tag_tであることを要求する。
+// - General Allocatorがinitialized stateであることを全BUILDで要求し、
+//   未初期化の場合はBAD_OPERATIONとして処理する。
 // - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorとaccounting validatorを実行する。
 // - Free List Allocator固有のallocation validationはfree_list_allocator_allocate()へ委譲する。
 // - logical accountingの加算がsize_tの表現可能範囲を超えないことを
@@ -290,6 +301,11 @@ general_allocator_result_t general_allocator_allocate(size_t allocation_size_, g
         ret = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("general_allocator_allocate(%s) - Provided memory_tag_ is not valid.", result_to_str(ret));
         goto cleanup;
+    }
+    if(!general_allocator_is_initialized()) {
+        ret = GENERAL_ALLOCATOR_BAD_OPERATION;
+        ERROR_MESSAGE("general_allocator_allocate(%s) - general allocator is not initialized.", result_to_str(ret));
+        return ret;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow()) {
@@ -348,6 +364,8 @@ cleanup:
 //
 // - ptr_および*ptr_はNULLでないことを要求する。
 // - memory_tag_は有効なgeneral_allocator_memory_tag_tであることを要求する。
+// - General Allocatorがinitialized stateであることを全BUILDで要求し、
+//   未初期化の場合はBAD_OPERATIONとして処理する。
 // - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorとaccounting validatorを実行する。
 // - allocation identityおよびallocation sizeの検証はfree_list_allocator_allocation_info_get()へ委譲する。
 // - accounting減算前にtotal_allocatedおよび対象memory tagの値がallocation size以上であることを全BUILDで検証する。
@@ -377,6 +395,10 @@ void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_t
         ERROR_MESSAGE("general_allocator_free(%s) - Provided memory_tag_ is not valid.", result_to_str(GENERAL_ALLOCATOR_INVALID_ARGUMENT));
         return;
     }
+    if(!general_allocator_is_initialized()) {
+        ERROR_MESSAGE("general_allocator_free(%s) - general allocator is not initialized.", result_to_str(GENERAL_ALLOCATOR_BAD_OPERATION));
+        return;
+    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow()) {
         ERROR_MESSAGE("general_allocator_free(%s) - Precondition validation failed for 's_general_allocator'.", result_to_str(GENERAL_ALLOCATOR_DATA_CORRUPTED));
@@ -392,7 +414,7 @@ void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_t
     ret_free_list_allocator = free_list_allocator_allocation_info_get(&s_general_allocator.free_list_allocator, *ptr_, &allocation_size);
     // FREE_LIST_ALLOCATOR_INVALID_ARGUMENTを返した場合はptr_がaliveではないため、BAD_OPERATIONエラーを表示する
     if(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT == ret_free_list_allocator) {
-        ERROR_MESSAGE("general_allocator_free(%s) - Provided ptr_ is already freed.", result_to_str(GENERAL_ALLOCATOR_BAD_OPERATION));
+        ERROR_MESSAGE("general_allocator_free(%s) - Provided ptr_ does not refer to a live allocation.", result_to_str(GENERAL_ALLOCATOR_BAD_OPERATION));
         return;
     }
     if(FREE_LIST_ALLOCATOR_SUCCESS != ret_free_list_allocator) {
@@ -432,6 +454,7 @@ void general_allocator_free(void** ptr_, general_allocator_memory_tag_t memory_t
 // general_allocator_ptr_is_allocated Validation Policy
 //
 // - ptr_ == NULLの場合はfalseを返す。
+// - General Allocatorが未初期化の場合はfalseを返す。
 // - General Allocator側ではallocation identityを独自に検証せず、
 //   free_list_allocator_ptr_is_allocated()へqueryを委譲する。
 // - Free List Allocator固有のvalidationおよびallocation-state semanticsは
@@ -445,6 +468,10 @@ bool general_allocator_ptr_is_allocated(const void* ptr_) {
     if(NULL == ptr_) {
         return false;
     }
+    if(!general_allocator_is_initialized()) {
+        ERROR_MESSAGE("general_allocator_ptr_is_allocated(%s) - general allocator is not initialized.", result_to_str(GENERAL_ALLOCATOR_BAD_OPERATION));
+        return false;
+    }
 
     return free_list_allocator_ptr_is_allocated(&s_general_allocator.free_list_allocator, ptr_);
 }
@@ -452,6 +479,8 @@ bool general_allocator_ptr_is_allocated(const void* ptr_) {
 // general_allocator_status_get Validation Policy
 //
 // - out_status_はNULLでないことを要求する。
+// - General Allocatorがinitialized stateであることを全BUILDで要求し、
+//   未初期化の場合はBAD_OPERATIONとして処理する。
 // - DEBUG_BUILD / TEST_BUILDではPreconditionsでshallow validatorとaccounting validatorを実行する。
 // - Free List Allocatorが所有するphysical memory statusのvalidationと取得はfree_list_allocator_status_get()へ委譲する。
 // - General Allocator自身が所有するlogical accountingは
@@ -478,6 +507,11 @@ general_allocator_result_t general_allocator_status_get(general_allocator_status
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT, result_to_str(GENERAL_ALLOCATOR_INVALID_ARGUMENT), "general_allocator_status_get", "out_status_")
+    if(!general_allocator_is_initialized()) {
+        ret = GENERAL_ALLOCATOR_BAD_OPERATION;
+        ERROR_MESSAGE("general_allocator_status_get(%s) - general allocator is not initialized.", result_to_str(ret));
+        return ret;
+    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow()) {
         ret = GENERAL_ALLOCATOR_DATA_CORRUPTED;

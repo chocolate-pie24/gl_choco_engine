@@ -47,7 +47,7 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
 static renderer_backend_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_);
 static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
-static renderer_backend_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
+static renderer_backend_result_t gl33_texture_pixel_upload(int32_t width_, int32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
 static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_handle_);
 
 static bool resolve_min_filter_config(texture_min_filter_config_t src_, GLint* dst_);
@@ -250,12 +250,12 @@ cleanup:
  * - channel_count_が3, 4以外
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
-static renderer_backend_result_t gl33_texture_pixel_upload(uint32_t width_, uint32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
+static renderer_backend_result_t gl33_texture_pixel_upload(int32_t width_, int32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "pixels_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != width_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "width_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != height_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "height_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < width_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "width_")
+    IF_ARG_FALSE_GOTO_CLEANUP(0 < height_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "height_")
 
     if(3 == channel_count_) {
         mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定

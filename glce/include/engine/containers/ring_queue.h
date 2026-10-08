@@ -1,28 +1,40 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
-/** @ingroup containers
+/**
+ * @ingroup containers
  *
  * @file ring_queue.h
  * @author chocolate-pie24
- * @brief ジェネリック型のリングキューモジュールを提供する
+ * @brief 固定された要素形式をFIFO順に保持するジェネリックリングキューを提供する
  *
- * @note
- * ring_queue_t構造体は、内部データを隠蔽している。
- * このため、ring_queue_t型で変数を宣言することはできない。
- * 使用の際は、ring_queue_t*型で宣言すること
+ * @details
+ * Ring Queue moduleは、生成時に指定された要素形式のdataをFIFO順に保持する`ring_queue_t`と、その基本操作を提供する。
  *
- * @note
- * ring_queue_tに格納できるデータには、下記の制約を設ける。この制約を設けることにより、バッファが満杯になった時の処理を簡便化することができる。
- * - memory_systemのメモリアロケーションで取得するメモリは、全てmax_align_tでアライメントされていること
- * - 格納するデータのアライメント要件は2のべき乗であること
- * - 格納するデータのアライメント要件はmax_align_t以下であること
+ * `ring_queue_t`は内部表現を公開しないopaque objectであり、callerは`ring_queue_t*`を通してmodule APIを利用する。
  *
- * @note
- * ring_queue_tはジェネリック型のデータを格納可能であるが、複数のデータ型を混在して格納することはできない
+ * @section ring_queue_boundary_contract Module Boundary Contract
  *
- * @date 2025-10-14
+ * - `ring_queue_t`はopaque typeとして公開し、内部表現をmodule外部へ公開しない。
+ * - Ring Queue moduleは、`ring_queue_t` object自身のstorageおよび
+ *   queue内部で要素を保持するために必要なstorageのownershipを管理する。
+ * - callerは`ring_queue_t` object自身のstorageまたはqueue内部storageを直接解放しない。
+ * - module APIへ渡す`ring_queue_t*`は、Ring Queue moduleによって生成され、
+ *   lifetime中にあるobjectを参照するものとする。
  *
+ * - 一つの`ring_queue_t`が扱う要素のsizeおよびalignment requirementは
+ *   object生成時に固定され、objectのlifetime中は変更しない。
+ * - 一つのqueue内へ異なる要素形式を混在させない。
+ * - Ring Queue moduleは要素dataをbyte sequenceとしてcopyし、
+ *   callerが渡した要素storageへのpointerを保持しない。
+ * - 要素data内部にpointer等が含まれる場合も、Ring Queue moduleがcopyするのは
+ *   その値のrepresentationのみであり、そのpointerが参照するresourceのownershipは取得しない。
+ *
+ * - queueはFIFO semanticsを持つ。
+ * - queueが最大要素数に達した状態で新しい要素を追加した場合、
+ *   最古の要素を破棄し、新しい要素を格納する。
+ * - queueへ格納可能な最大要素数はobject生成時に固定され、
+ *   objectのlifetime中は変更しない。
  */
 #ifndef GLCE_ENGINE_CONTAINERS_RING_QUEUE_H
 #define GLCE_ENGINE_CONTAINERS_RING_QUEUE_H

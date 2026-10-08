@@ -1,2 +1,5 @@
+# GLCE UI Geometry Configuration
+# See ui_geom_config_loader.h for the canonical format specification.
+
 icon_width = 2
 icon_height = 2

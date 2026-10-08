@@ -19,8 +19,6 @@ extern "C" {
 
 #include "application/core/application_types.h"
 
-#include "engine/core/geometry_primitive/geometry_primitive_types.h"
-
 #include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
@@ -79,15 +77,6 @@ application_result_t application_result_convert_renderer_backend(renderer_backen
  * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
  */
 application_result_t application_result_convert_resource(resource_result_t result_);
-
-/**
- * @brief geometry_primitive保有モジュールの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
- *
- * @param[in] result_ geometry_primitive保有モジュール実行結果コード
- *
- * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
- */
-application_result_t application_result_convert_geometry_primitive(geometry_primitive_result_t result_);
 
 application_result_t application_result_convert_shader(shader_result_t result_);
 

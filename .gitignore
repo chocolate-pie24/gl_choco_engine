@@ -8,3 +8,5 @@ node_modules
 package-lock.json
 package.json
 default.profraw
+glce_source_context.txt
+glce_design_context.txt

@@ -7,6 +7,9 @@
   - [Who It Is For](#who-it-is-for)
   - [Contributing](#contributing)
   - [Directory Layout](#directory-layout)
+  - [Documentation](#documentation)
+    - [AI Context Generation](#ai-context-generation)
+    - [Planned project-wide policies](#planned-project-wide-policies)
   - [Setup](#setup)
     - [macOS](#macos)
     - [Linux](#linux)
@@ -96,6 +99,7 @@ The main repository layout is:
 │   ├── scripts/
 │   ├── test/
 │   └── build.sh
+├── generate_ai_context.sh
 ├── LICENSE
 └── README.md
 ```
@@ -114,6 +118,68 @@ The responsibilities of the main directories are:
 | `docs/` | Design and development documentation |
 
 Directories such as `glce/bin/`, `glce/obj/`, and `glce/cov/` are generated as needed during builds or analysis workflows.
+
+## Documentation
+
+GLCE's design documents are intended to be used by both humans and AI tools.
+
+They are intentionally detailed so that design intent, rationale, constraints, and historical context can be recovered later. Reading every document from beginning to end is not required; using AI-assisted summarization and question answering is an intended way to access the documentation.
+
+AI is also used extensively to create and maintain these documents. When design decisions or project-wide policies change, new sections are often generated through AI-assisted design discussions and added to the existing documents. As a result, some concepts may be described repeatedly from different perspectives or at different stages of the project's development.
+
+This redundancy is partly intentional, but the documents are periodically reviewed to remove unnecessary duplication, resolve contradictions, and retire outdated assumptions.
+
+The design documents are currently written primarily in Japanese. Because they are intended to be used with AI-assisted summarization, translation, and question answering, non-Japanese readers can use AI tools to access their contents.
+
+- [Design Decisions](docs/design/design_decisions.md)
+  Accepted architectural and design decisions, including rationale,
+  rejected alternatives, consequences, and revisit conditions.
+
+- [Validation Policy](docs/design/validation_policy.md)
+  Project-wide rules for validation responsibility, validation depth,
+  failure classification, and related contracts.
+
+- [Boundary Model](docs/design/boundary_model.md)
+  The model used to reason about trust, authority, ownership,
+  and integrity boundaries.
+
+- [Memory Model](docs/design/memory_model.md)
+  The current CPU-side memory architecture and allocation ownership model.
+
+- [Coding Style](docs/design/coding_style.md)
+  Project-wide naming, API semantics, module structure, and coding conventions.
+
+### AI Context Generation
+
+GLCE provides generate_ai_context.sh to make the source code and design documentation easy to provide to AI tools for code review, design discussion, investigation, and refactoring.
+
+Run the script from the repository root:
+
+```bash
+./generate_ai_context.sh
+```
+
+The script generates two files in the repository root:
+
+glce_source_context.txt
+Contains the repository tree and the contents of all .c and .h files under glce/.
+
+glce_design_context.txt
+Contains the contents of all Markdown documents under docs/design/, concatenated into a single file.
+
+Each generated file includes an explanation of its contents and file boundaries so that it can be provided directly to an AI tool.
+
+For project-wide code review, the two files can be provided together so that the implementation can be reviewed against GLCE-specific design policies and design decisions.
+
+The generated context files are not sources of truth and are not tracked by Git. The original source files and documents in the repository remain authoritative.
+
+### Planned project-wide policies
+
+- Message Policy
+- Doxygen Documentation Style Policy
+- Test Style Policy (long-term)
+
+Until these policies are established, the corresponding implementation and documentation may continue to change substantially.
 
 ## Setup
 
@@ -224,7 +290,7 @@ After building GLCE, run:
 
 ## License
 
-This project is released under the MIT License.
+GLCE source code and project documentation are released under the MIT License.
 
 See [LICENSE](LICENSE) for details.
 

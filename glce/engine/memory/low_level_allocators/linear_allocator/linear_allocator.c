@@ -83,7 +83,9 @@
  *   required pointer、capacity、alignment、address representability、
  *   memory_pool / head_ptr間のrange relationを検証する。
  *
- * - public APIは、そのoperationをmemory-safeかつboundedに実行するために必要なvalidation depthを個別に選択する。
+ * - Linear Allocatorは他moduleのmemory safetyを支える基盤moduleであるため、
+ *   DEBUG_BUILD / TEST_BUILDでは、initialized allocatorを受け取るPublic APIの
+ *   Preconditionsでcanonical validatorを使用する。
  *
  * - rollback pointの取得元allocator、generation、allocation historyはmodule内部で保持しない。
  * - rollback pointのlifetimeおよびprovenanceはModule Boundary Contractとしてcallerに要求する。
@@ -150,9 +152,18 @@ linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* alloca
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "memory_pool_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != capacity_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "capacity_")
-    if(!memory_utility_is_aligned((uintptr_t)(memory_pool_), alignof(max_align_t), &is_aligned)) {
+    if(0 == capacity_) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
+        ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided capacity_ is not valid.", result_to_str(ret));
+        goto cleanup;
+    }
+    if((UINTPTR_MAX - pool_address) < capacity_) {
+        ret = LINEAR_ALLOCATOR_OVERFLOW;
+        ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided capacity_ is not valid.", result_to_str(ret));
+        goto cleanup;
+    }
+    if(!memory_utility_is_aligned((uintptr_t)(memory_pool_), alignof(max_align_t), &is_aligned)) {
+        ret = LINEAR_ALLOCATOR_UNDEFINED_ERROR;
         ERROR_MESSAGE("linear_allocator_initialize(%s) - memory_utility_is_aligned failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -161,16 +172,20 @@ linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* alloca
         ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided memory_pool_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
-    if((UINTPTR_MAX - pool_address) < capacity_) {
-        ret = LINEAR_ALLOCATOR_OVERFLOW;
-        ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided capacity_ is not valid.", result_to_str(ret));
-        goto cleanup;
-    }
 
     // Commit.
     allocator_->capacity = capacity_;
     allocator_->head_ptr = memory_pool_;
     allocator_->memory_pool = memory_pool_;
+
+    // Postconditions.
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!linear_allocator_is_valid(allocator_)) {
+        ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("linear_allocator_initialize(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     ret = LINEAR_ALLOCATOR_SUCCESS;
 
@@ -183,7 +198,7 @@ cleanup:
 // - allocator_、out_ptr_およびrequired_size_に関するdirect argument validationを
 //   structural validationより前に行う。
 //
-// - DEBUG_BUILD / TEST_BUILDではPreconditionsでcanonical validatorを使用、allocator_がvalidなStable stateであることを確認する。
+// - DEBUG_BUILD / TEST_BUILDではPreconditions
 //
 // - required_size_をalignof(max_align_t)へ切り上げる際のoverflowをCommit前に検証する。
 // - allocation_is_ready()によって、allocation後のhead_ptrがmemory poolの範囲を
@@ -202,7 +217,7 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
     // Preconditions
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, LINEAR_ALLOCATOR_BAD_OPERATION, result_to_str(LINEAR_ALLOCATOR_BAD_OPERATION), "linear_allocator_allocate", "out_ptr_")
     if(0 == required_size_) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("linear_allocator_allocate(%s) - Provided required_size_ is not valid.", result_to_str(ret));
