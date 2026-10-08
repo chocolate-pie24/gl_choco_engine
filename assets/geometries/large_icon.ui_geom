@@ -1,14 +1,5 @@
 # GLCE UI Geometry Configuration
-#
-# Format:
-# - Blank lines are ignored.
-# - Comment lines may be indented and begin with '#'.
-# - Configuration values use: key = value
-# - Supported keys:
-#     icon_width  : 1..INT32_MAX
-#     icon_height : 1..INT32_MAX
-# - Both keys are required.
-# - Each key may appear only once.
+# See ui_geom_config_loader.h for the canonical format specification.
 
 icon_width = 2
 icon_height = 2

@@ -15,7 +15,7 @@ GLCEでは、header / sourceのcommentを単なる補足説明として扱わず
 
 本書自体の作成・更新にもAIを利用しています。ただし、AIが生成した内容がそのままGLCEの方針になるわけではありません。最終的なdocumentation structureと記述内容は、GLCEのarchitecture、implementation、Validation Policy、Boundary Model、およびproject固有の設計判断との整合性を確認した上で採用します。
 
-最終更新: 2026-10-05
+最終更新: 2026-10-08
 
 ---
 
@@ -28,7 +28,7 @@ GLCEでは、header / sourceのcommentを単なる補足説明として扱わず
 - headerへ何を記述するか
 - sourceへ何を記述するか
 - Doxygenと通常commentをどう使い分けるか
-- Module Boundary Contract / Module Internal Contract / Module Validation Policyの責務分離
+- Module Boundary Contract / API-specific Validation Policy / 必要時のみ設けるModule Internal Contract / Module Validation Policyの責務分離
 - Public API Contractの記述方法
 - API-specific Validation Policyの記述方法
 - public / private validator documentationの記述方法
@@ -99,16 +99,20 @@ validation policy
 
 documentation sectionはtemplateの穴埋めではない。
 
-例えば、module固有のvalidation ruleが存在しない場合、`Module Validation Policy`を作成しない。
+例えば、module全体を横断するinternal invariantが存在しない場合、`Module Internal Contract`を作成しない。
 
 同様に、
 
-- Internal Contractが実質的に存在しない
-- API固有のvalidation policyが存在しない
+- module全体に固有のvalidation strategyが存在しない
 - ownership / lifetime説明が不要
 - private helperに特別なcontractがない
 
 場合は、対応sectionを機械的に追加しない。
+
+ただし、Public APIの`API-specific Validation Policy`は原則として各APIに記述する。
+
+validationを実行するAPIだけでなく、operation semantics上追加validationが不要なAPIについても、
+「なぜvalidationしないのか」を明示し、意図的な非実行とcheck漏れを区別できるようにする。
 
 ### 2.4 実装から自明な処理の逐語説明を避ける
 
@@ -137,13 +141,14 @@ documentationはcodeを日本語へ置き換えるためのものではない。
 |---|---|---|---|
 | File / Module Description | `.h` file-level | Doxygen | module全体の責務を説明する |
 | Module Boundary Contract | `.h` file-level | Doxygen | module利用者が守る／期待できるmodule-level contract |
+| External Format Specification | `.h` format ownerのfile-level | Doxygen | moduleが所有するexternal formatのcanonical specification |
 | Public API Contract | `.h` 各public API | Doxygen | caller / callee間のoperation contract |
 | Public Validator Documentation | `.h` 各public validator | Doxygen | validの意味と検査scopeを公開する |
-| Module Internal Contract | `.c` file-level | 通常block comment | implementation内部のstable invariant / representation contract |
-| Module Validation Policy | `.c` file-level | 通常block comment | module全体に固有のvalidation strategy |
-| API-specific Validation Policy | `.c` 各public API definition直前 | 通常block comment | 何を、なぜ、どのphaseでvalidateするか |
+| Module Internal Contract | `.c` file-level / 必要時のみ | 通常block comment | 複数private type / helper / APIを横断するinternal invariant |
+| Module Validation Policy | `.c` file-level / 必要時のみ | 通常block comment | API単位へ局所化できないmodule-wide validation strategy |
+| API-specific Validation Policy | `.c` 各public API definition直前 | 通常block comment | 何を、なぜvalidateするか、またはなぜ追加validationしないか |
 | Private Validator Documentation | `.c` 各private validator definition直前 | 通常block comment | validatorのPurpose / Validation Scope |
-| Private Helper Contract / Rationale | `.c` 必要箇所 | 通常block comment | helper固有の成立条件や設計理由 |
+| Private Helper Contract / Rationale | `.c` 必要箇所 | 通常block comment | helper固有のPreconditions / Responsibility / Postconditions / Validation |
 
 ---
 
@@ -234,6 +239,51 @@ subsection名は固定しない。moduleに実際に存在する責務だけを�
 - implementation-specific helper contract
 
 これらはsource側documentationまたはAPI固有documentationの責務とする。
+
+### External Trust Boundaryを所有するmodule
+
+Loader等、そのmoduleがexternal / untrusted representationをGLCE内部representationへ昇格させる
+External Trust Boundary ownerである場合、その事実はModule Boundary Contractへ明示する。
+
+少なくとも次が分かるようにする。
+
+- moduleがExternal Trust Boundaryを所有すること
+- boundary outsideではinputをuntrusted representationとして扱うこと
+- required validation成功後にのみtrusted internal representationとして受理すること
+- trust promotionがどのpublic operationの成功時に完了するか
+
+個々のvalidation callやvalidation phaseはsource側のAPI-specific Validation Policyへ置く。
+
+### External Format Specification
+
+moduleが独自external formatのsemantic ownerである場合、そのformat specificationは
+format ownerのheaderへDoxygenとして記述する。
+
+代表的な対象:
+
+- line / token grammar
+- whitespace / comment rule
+- delimiter
+- supported key / field
+- case sensitivity
+- required field
+- duplicate rule
+- value representation
+- numeric range
+- ordering
+- unsupported syntax
+
+asset file自体をcanonical specificationにしない。
+
+```text
+header
+    canonical format specification
+
+asset
+    concrete example / 必要に応じてheaderへの案内
+```
+
+同じformat ruleをheaderとasset commentの両方で独立した正本として管理しない。
 
 ---
 
@@ -366,32 +416,42 @@ validator implementationで使用するprivate helper名はheaderへ記述しな
 
 ## 5.1 Module Internal Contract
 
-Module Internal Contractは、**implementation内部で成立させるstable contract**を記述する。
+Module Internal Contractは、source fileへ標準的に必ず置くsectionではない。
+
+まず、internal semanticをそのownerに近い場所へ配置する。
+
+```text
+canonical / local validity
+    → validator documentation
+
+private operation固有の成立条件
+    → Private Helper Contract
+
+public API固有のvalidation rationale
+    → API-specific Validation Policy
+```
+
+その上でなお、**複数のprivate type / helper / public APIを横断するmodule-wide invariant**が存在し、
+個別documentationへ分散すると理解が悪化する場合だけModule Internal Contractを作成する。
 
 代表的な対象:
 
-- internal representation
-- field間relation
-- range / index relation
-- internal ownership relation
-- private state machine
-- internal layout
-- helper間で信頼するstable invariant
-- valid-by-constructionなprivate representationのrelation
+- 複数private type全体で成立するstate machine
+- module全体で共有するtransient state rule
+- 複数operationが共通して信頼するownership / representation relation
+- implementation全体を理解するために必要なcross-cutting invariant
 
-例:
+### 作成しない例
 
-```c
-/*
- * Module Internal Contract
- *
- * Key / Value Range Representation:
- * - ...
- *
- * Key / Value View Construction:
- * - ...
- */
-```
+次の情報は、原則としてModule Internal Contractへ昇格させない。
+
+- 特定validatorだけが所有するvalidity definition
+- 特定helperだけのPreconditions / Postconditions
+- 一つのtemporary representationだけの局所relation
+- public API固有contract
+- validation execution policy
+
+これらはsemantic ownerの近くへ記述する。
 
 ### Module Internal Contractへ書かないもの
 
@@ -406,23 +466,28 @@ Module Internal Contractは、**implementation内部で成立させるstable con
 
 ## 5.2 Module Validation Policy
 
-Module Validation Policyは、**project-wide `validation_policy.md`だけでは決まらない、module全体に共通するvalidation strategyが存在する場合だけ**作成する。
+Module Validation Policyも標準sectionとして必須ではない。
+
+validation executionの理由はoperationごとに異なるため、基本は各Public APIの
+`API-specific Validation Policy`へ局所化する。
+
+Module Validation Policyは、**API単位へ分解してもなおmodule全体に共通するvalidation strategyが存在する場合だけ**作成する。
 
 例:
 
-- 複数public APIが共通して同じrepresentation validationを入口で行う
-- module内private helperが成立済みの特定contractを一律に信頼する
-- module固有のtransient stateについて共通validation ruleがある
-- module全体でcanonical / shallow validatorを特定の意味に使い分ける
+- module固有のtransient stateに対する共通validation ruleがある
+- 複数API / helperを横断する一つのvalidation architectureがある
+- module全体でcanonical / shallow validatorを特別な意味で使い分け、その意味を個別APIだけでは説明しにくい
 
 ### 作成しない例
 
 次の情報だけしかない場合、Module Validation Policyを作らない。
 
-- private validatorが2個ある
+- private validatorが複数存在する
 - API Aはvalidator Xを呼ぶ
 - API Bはvalidator Yを呼ぶ
 - 各API固有のvalidation理由はそれぞれ異なる
+- 「private helperでは成立済みcontractを信頼する」等、project-wide Validation Policyで既に定義されているruleだけで説明できる
 
 この場合は、
 
@@ -442,13 +507,19 @@ API-specific Validation Policy
 - 各public APIのvalidation手順一覧
 - 各private validatorのPurpose / Scope
 - Boundary Contract
-- Internal Contract
+- helper固有Contract
 
 ---
 
 ## 5.3 API-specific Validation Policy
 
-public API固有のvalidation strategyは、`.c`側のfunction definition直前へ通常commentとして記述する。
+Public APIには原則として、`.c`側のfunction definition直前へ
+`API-specific Validation Policy`を通常commentとして記述する。
+
+これはvalidationを多く実行するAPIだけを対象としない。
+
+operation semantics上、追加validationが不要なAPIについても、
+「なぜvalidationしないのか」を記述し、意図的な設計とcheck漏れを区別できるようにする。
 
 例:
 
@@ -472,16 +543,32 @@ result_t module_operation(...);
 
 ### 記述する内容
 
-各validationについて、
+必要に応じて、次を説明する。
 
 - 何を検査するか
 - なぜその検査が必要か
 - checked / trusted contractのどちらか
 - どのsemanticを安全にconsumeするための検査か
+- 何を検査しないか
+- なぜ追加validationが不要なのか
 - failure時にoperation / output / stateをどう扱うか
 - canonical / shallow / direct checkを選ぶ理由
+- DEBUG / TEST / RELEASEで実行条件が異なる場合、その理由
+- Result validation / Postconditionsを行う、または行わない理由
 
-を必要な範囲で記述する。
+### validationを行わないAPI
+
+例えば、existing representationをconsumeせず、直接reset stateへ上書きするAPIでは、
+operation開始前のcanonical validationが不要な場合がある。
+
+その場合も、
+
+```text
+- existing stateをsemantic inputとしてconsumeしないためPreconditionsでcanonical validationしない。
+- success stateがdirect writeそのものから成立するため、同一conditionのPostconditions validationを行わない。
+```
+
+のように理由を残す。
 
 ### 単なるcall一覧にしない
 
@@ -584,27 +671,82 @@ Module Validation Policy等へ同じ一覧を複製しない。
 
 ## 5.5 Private Helper Contract / Rationale
 
-private helperが、上位処理で成立済みのstrong internal contractを信頼する場合、必要に応じてdefinition直前へ通常commentで`Contract`を記述する。
+意味のあるprivate helperについて、implementationだけではresponsibilityや成立条件を復元しにくい場合、
+definition直前へ通常commentでhelper固有Contractを記述する。
 
-例:
+基本形は次とする。
 
 ```c
 /*
- * Contract:
- * - ...
+ * helper() Contract
+ *
+ * Preconditions:
  * - ...
  *
- * このhelperは上記contractを再検証しない。
+ * Responsibility:
+ * - ...
+ *
+ * Postconditions:
+ * - ...
+ *
+ * Validation:
+ * - ...
  */
-static void helper(...);
+static result_t helper(...);
 ```
 
-記述対象:
+すべてのsubsectionを機械的に追加しない。
 
-- どの処理完了後に呼ばれるか
-- argument / stateについて何が成立しているか
+helper自身がruntime validationを行わない場合は`Validation`を省略してよい。
+
+### Preconditions
+
+helperが安全かつ正しくoperationを実行するために、call時点で成立している必要があるconditionを書く。
+
+例:
+
+- argument / stateについて何が成立済みか
+- 上位処理でどのsemantic validationが完了しているか
 - transient stateとして何が一時的に許容されるか
-- helper自身が再検査しないcontract
+- helper自身が再検査せず信頼するcontract
+
+### Responsibility
+
+逐次algorithmではなく、そのhelperが所有するsemantic responsibilityを書く。
+
+例えば、
+
+```text
+delimiterの左右からkey / value candidate rangeを導出する。
+```
+
+はResponsibilityである。
+
+一方、
+
+```text
+for loopを回してindexを増やす。
+```
+
+のようなcodeから自明な手順説明は書かない。
+
+### Postconditions
+
+success時にcallerが信頼できるconditionを書く。
+
+failure時にpartial mutationがあり得る場合、その事実がcaller contractとして重要なら明示する。
+
+### Validation
+
+helper自身がvalidationする場合は、
+
+- 何を検査するか
+- なぜこのhelperがその検査を所有するか
+- failureをどのsemanticとして扱うか
+
+を必要な範囲で説明する。
+
+単に「validatorを呼ぶ」とだけ書かず、operation上の必要性を残す。
 
 実装から明らかなeffectを説明するためだけに`Effect`等のsectionを機械的に追加しない。
 
@@ -645,48 +787,59 @@ module利用者が知る必要のないimplementation strategy。
 
 ## 7. 重複を避けるための判断順序
 
-documentationを追加する前に、次の順序で配置先を判断する。
+documentationを追加する前に、まず**最もsemantic ownerに近い場所**へ配置できるかを判断する。
 
 ```text
 1. module利用者が知る必要があるか？
     yes → header
+        module全体のboundary fact
+            → Module Boundary Contract
+        external formatそのものの仕様
+            → External Format Specification
+        特定public APIのcontract
+            → Public API Contract
+        public validatorのvalidity definition
+            → Public Validator Documentation
 
-2. module全体に共通するcontractか？
-    yes → Module Boundary Contract または Module Internal Contract
+2. 特定private validatorが何をvalidとみなすか？
+    yes → Private Validator Documentation
 
-3. module全体に共通するvalidation strategyか？
-    yes → Module Validation Policy
+3. 特定private helperの成立条件 / responsibility / postcondition / validation rationaleか？
+    yes → helper直前のPrivate Helper Contract / Rationale
 
-4. 特定public APIだけのcontractか？
-    yes → Public API Contract
-
-5. 特定public APIだけのvalidation strategyか？
+4. 特定public APIがなぜvalidationする／しないか？
     yes → API-specific Validation Policy
 
-6. 特定validatorの意味か？
-    public  → headerのPublic Validator Documentation
-    private → sourceのPrivate Validator Documentation
+5. 上記へ局所化してもなお、
+   複数private type / helper / APIを横断するinternal invariantが残るか？
+    yes → Module Internal Contractを検討
 
-7. 特定private helperだけの成立条件 / rationaleか？
-    yes → helper直前のContract / rationale comment
+6. 上記へ局所化してもなお、
+   API単位では表しにくいmodule-wide validation strategyが残るか？
+    yes → Module Validation Policyを検討
 ```
 
-同じ情報が複数候補へ該当する場合は、最もsemantic ownerに近い一箇所を正本とし、他では必要な観点だけを記述する。
+Module Internal Contract / Module Validation Policyを先に作ってから個別documentationへ展開するのではなく、
+まずsemantic ownerへ情報を局所化する。
+
+同じ情報が複数候補へ該当する場合は、最もsemantic ownerに近い一箇所を正本とし、
+他ではそのdocumentation固有の観点だけを記述する。
 
 ---
 
 ## 8. Example: Parser Utility
 
-low-level parser utilityの例では、次のように分離できる。
+`glce_config_utility`のようなlow-level parser utilityでは、次のように分離できる。
 
 ```text
 header
     File / Module Description
+
     Module Boundary Contract
-        borrowed storage
-        lifetime
         module scope
-        hard readability contract
+        input / output representation
+        lifetime / storage contract
+        External Trust Boundaryを所有しないこと
 
     Public API Contract
         input representation
@@ -696,22 +849,28 @@ header
         public representation validity
 
 source
-    Module Internal Contract
-        index / range relation
-        temporary representation relation
-
-    Module Validation Policy
-        module-wide ruleがある場合だけ
-
     API-specific Validation Policy
-        APIごとのchecked precondition
+        APIごとのchecked / trusted precondition
         Result validation
-        Postcondition diagnostic
+        Postconditions validationの採否理由
+        validationしない場合の理由
 
     Private Validator Documentation
         logical line validity
-        token character validity
+        token / range validity
+
+    Private Helper Contract / Rationale
+        Preconditions
+        Responsibility
+        Postconditions
+        helper自身がvalidationする場合のValidation
 ```
+
+format-specific supported keyやrequired field等はparser utility自身へ持たせず、
+そのformatを所有する上位Loader等へ配置する。
+
+Module Internal Contract / Module Validation Policyは、
+上記へ局所化してもなおmodule-wideなcross-cutting ruleが残る場合だけ追加する。
 
 この構造では、
 
@@ -722,7 +881,7 @@ source
 と、
 
 ```text
-いつ、なぜvalidateするか
+各operationがいつ、なぜvalidateするか
 ```
 
 を別document responsibilityとして維持できる。
@@ -739,6 +898,8 @@ documentation reviewでは、少なくとも次を確認する。
 - `@brief`はmodule responsibilityを短く表しているか。
 - `@details`がBoundary Contractの全文複製になっていないか。
 - Module Boundary Contractにprivate implementation detailが漏れていないか。
+- External Trust Boundary ownerである場合、その事実とtrust promotion pointが明示されているか。
+- 独自external formatのownerである場合、canonical Format Specificationがheader側にあるか。
 - ownership / lifetime / borrowがAPI利用に必要なら明記されているか。
 - Public API Contractがchecked validation policyと混同されていないか。
 - `@pre`へrecoverable input conditionを機械的に押し込めていないか。
@@ -746,18 +907,23 @@ documentation reviewでは、少なくとも次を確認する。
 
 ### Source
 
-- Module Internal Contractがpublic contractを重複していないか。
-- Module Validation Policyは本当にmodule-wide ruleを持つ場合だけ存在しているか。
+- Module Internal Contractを、validator / helper / API固有情報の寄せ集めとして作っていないか。
+- Module Validation Policyは本当にAPI単位へ局所化できないmodule-wide ruleを持つ場合だけ存在しているか。
+- 各Public APIにAPI-specific Validation Policyがあり、validationする／しない理由が説明されているか。
 - API-specific Validation Policyが「何を呼ぶか」ではなく「なぜvalidateするか」を説明しているか。
 - private validatorにPurpose / Validation Scopeがあるか。
+- meaningfulなprivate helperに必要なPreconditions / Responsibility / Postconditionsがあるか。
+- helper自身がvalidationする場合、そのValidation rationaleが説明されているか。
 - helper固有contractがmodule-wide contractへ不必要に昇格していないか。
 - project-wide policyをsourceへ全文複製していないか。
 
 ### 全体
 
 - 同じ事実の正本が複数箇所に存在していないか。
+- 最もsemantic ownerに近い場所が正本になっているか。
 - documentationが現在のimplementationと一致しているか。
 - 存在しないsectionをtemplateとして追加していないか。
+- external format specをasset commentと二重管理していないか。
 - codeから自明な処理説明だけのcommentが増えていないか。
 - 人間だけでなくAIが「なぜこの構造なのか」を復元できる情報になっているか。
 
@@ -782,19 +948,26 @@ boundary_model.md
 
 ```text
 Module Boundary Contractだけを生成してください。
-API固有情報、Internal Contract、Validation Policyは含めないでください。
+API固有情報、private helper contract、validation execution policyは含めないでください。
+External Trust Boundary ownerである場合は、そのmodule-level responsibilityだけ含めてください。
 ```
 
 ```text
-Module Internal Contractだけを生成してください。
-Boundary Contract、Validation Policy、API固有情報は含めないでください。
+Private Helper Contractを生成してください。
+Preconditions / Responsibility / Postconditionsを中心にし、
+helper自身がvalidationする場合だけValidationを追加してください。
+codeから自明なalgorithm説明は追加しないでください。
 ```
 
 ```text
 API-specific Validation Policyを生成してください。
 Public API Contractの再掲ではなく、
-何を、なぜ、どのphaseでautomatic validationするかを書いてください。
+何を、なぜvalidateするか、またはなぜ追加validationしないかを書いてください。
 ```
+
+Module Internal Contract / Module Validation Policyを依頼する場合は、
+まずvalidator / helper / API-specific documentationへ情報を局所化できない
+cross-cutting ruleが本当に存在するかを確認する。
 
 AIが別categoryの情報を混在させた場合は、その情報を削除または正しいdocumentation locationへ移す。
 

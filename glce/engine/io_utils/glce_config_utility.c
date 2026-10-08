@@ -11,52 +11,6 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-/*
- * Module Internal Contract
- *
- * Line Processing Model:
- * - lineはchar_countを基準とするbounded character sequenceとして処理する。
- * - line bodyの走査では、character positionは0以上char_count未満の範囲として扱う。
- * - line全体に対する処理と、key / value tokenに対する処理を分離する。
- *
- * Key / Value Range Representation:
- * - token_ranges_get()が生成するleft / right rangeは、
- *   それぞれtoken candidateの先頭位置と末尾位置をinclusive indexで表す。
- * - 成功時には次のrelationが成立する。
- *
- *     left_start <= left_end < equal_index
- *     equal_index < right_start <= right_end < char_count
- *
- * - key / value rangeには、delimiterである'='および
- *   token前後のspace / tabを含めない。
- * - range constructionではkey / value textをcopyせず、
- *   source line上の位置情報だけを導出する。
- *
- * Key / Value View Construction:
- * - key / value viewはrange constructionで確定したinclusive rangeから構築する。
- * - key_ptr / value_ptrは、それぞれ対応するrangeの先頭characterを指す。
- * - key_length / value_lengthは、それぞれ
- *   end - start + 1によって算出する。
- * - view construction中はtemporary viewを使用し、
- *   range情報とview fieldのrelationを崩したpartial representationを
- *   caller-visibleなoutputへ直接構築しない。
- *
- * Token Representation:
- * - keyおよびvalueは1文字以上の連続したtokenとして扱う。
- * - token内部にはspace、tab、CR、LF、'='、NULを含めない。
- * - token前後のspace / tabはtoken representationには含めない。
- *
- * Helper Responsibility:
- * - range constructionはdelimiterの位置とkey / value candidate rangeの導出を担当する。
- * - token character判定は、1 characterがtoken representationへ含められるかだけを判定する。
- * - helper間で同一のrepresentation ruleを別々の形で重複定義しない。
- *
- * AI支援:
- * - 本セクションはChatGPTを用いて草案を作成し、
- *   プロジェクト作成者が実装との整合性を確認・修正した。
- * - 実装コードはプロジェクト作成者が作成した。
- */
-
 // ============================================================
 // Private Type Definitions
 // ============================================================
@@ -100,20 +54,21 @@ static bool token_is_valid(const char token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SI
  * Preconditions:
  * - line_is_valid()によって、line_とchar_count_が
  *   validなlogical line representationを構成していることを検査する。
- * - このvalidationは、後続のclassification処理がchar_count_によるboundedな走査と、
+ * - このvalidationは、後続のclassification処理がchar_count_によるbounded scanと
  *   line_[char_count_]のNUL terminationを前提としてline_を参照するために行う。
- * - logical line representationのinvalidityはrecoverableなinput failureとして扱い、
+ * - logical line representationがinvalidな場合はrecoverableなinput failureとして扱い、
  *   GLCE_CONFIG_UTILITY_LINE_TYPE_INVALIDを返す。
  * - line_[0]からline_[char_count_]までが実際に読み取り可能であることは
  *   C pointerから検査できないため、Public API Contractで定義された
  *   caller側のtrusted / hard preconditionとして扱う。
  *
- * Postconditions:
- * - automatic Postcondition validationは行わない。
- * - 本APIはinput lineをread-onlyでclassificationするoperationであり、
- *   module-owned state、ownership、lifecycleまたはその他のpersistent stateを変更しない。
- * - outputは明示的に定義されたglce_config_utility_line_type_tの値を
- *   returnするだけであり、stable stateに対する追加validationを必要としない。
+ * Result / Postcondition validation:
+ * - automaticなResult validationおよびPostcondition validationは行わない。
+ * - classification resultはdocumentedなglce_config_utility_line_type_tの
+ *   enumeratorから直接選択して返すため、追加のcandidate validationを必要としない。
+ * - 本APIはinputをread-onlyで参照するだけであり、
+ *   persistent state、ownership、lifecycleを変更しないため、
+ *   stable stateに対するPostcondition validationも必要としない。
  */
 glce_config_utility_line_type_t glce_config_utility_line_type_get(const char *line_, size_t char_count_) {
     size_t first_char_idx = 0;
@@ -145,6 +100,23 @@ glce_config_utility_line_type_t glce_config_utility_line_type_get(const char *li
     return GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID;
 }
 
+/*
+ * API-specific Validation Policy
+ *
+ * Preconditions:
+ * - key_value_ == NULLはno-opとして許可するため、
+ *   recoverable failureとして扱う追加validationは行わない。
+ * - key_value_ != NULLの場合、そのstorageが書き込み可能であることは
+ *   C pointerから検査できないため、caller側のtrusted / hard preconditionとして扱う。
+ * - 本APIはexisting key/value representationの内容をconsumeせず、
+ *   reset stateへ上書きするoperationであるため、
+ *   operation開始前のcanonical validationは行わない。
+ *
+ * Postcondition validation:
+ * - automatic Postcondition validationは行わない。
+ * - reset stateはkey[0]およびvalue[0]へ終端NULを書き込むことで直接成立し、
+ *   その成立がoperationそのものから導出できるため、同一conditionを再検査しない。
+ */
 void glce_config_utility_key_value_reset(glce_config_utility_key_value_t* key_value_) {
     if(NULL == key_value_) {
         return;
@@ -158,33 +130,47 @@ void glce_config_utility_key_value_reset(glce_config_utility_key_value_t* key_va
  * API-specific Validation Policy
  *
  * Preconditions:
- * - line_およびout_view_がNULLでないことを検査する。
+ * - line_およびout_key_value_がNULLではないことをchecked preconditionとして検査する。
  * - line_is_valid()によって、line_とchar_count_が
  *   validなlogical line representationを構成していることを検査する。
- * - これらは、後続のrange constructionがline_をboundedに参照し、
- *   success時にout_view_へ結果を書き込むために必要なconditionである。
- * - checked precondition violationはrecoverableなinput failureとして扱い、
- *   falseを返す。
- * - line_[0]からline_[char_count_]までが実際に読み取り可能であることは
- *   C pointerから検査できないため、Public API Contractで定義された
+ * - これらのvalidationは、後続のparsing処理がline_をboundedに参照し、
+ *   success時にout_key_value_へ結果を書き込むために必要である。
+ * - NULLまたはinvalidなlogical line representationは
+ *   GLCE_CONFIG_UTILITY_INVALID_ARGUMENTとして扱う。
+ * - out_key_value_についてkey[0] == '\0'かつvalue[0] == '\0'であることを検査する。
+ * - parse outputはreset stateのobjectへだけ書き込むcontractであるため、
+ *   reset stateを満たさない場合はGLCE_CONFIG_UTILITY_BAD_OPERATIONとして扱う。
+ * - line_[0]からline_[char_count_]までが実際に読み取り可能であること、および
+ *   out_key_value_のstorageが書き込み可能であることはC pointerから検査できないため、
  *   caller側のtrusted / hard preconditionとして扱う。
  *
- * Output Candidate Validation:
- * - key_value_range_get()の成功後、導出されたrangeからtemporaryな
- *   glce_config_utility_key_value_view_tを構築する。
- * - temporary viewはcaller-visibleなoutputへcopyする前に、
- *   glce_config_utility_key_value_view_is_valid()によって検査する。
- * - このvalidationは、module自身が構築したoutput candidateが
- *   public key/value view contractを満たしていることを確認するために行う。
- * - candidate validationに失敗した場合はout_view_を変更せずfalseを返す。
+ * Prepare validation:
+ * - token_ranges_get()によってkey/value candidate rangeを導出する。
+ * - delimiterが一意に定まらない、またはkey/value candidateを構成できない場合は、
+ *   input textのunsupported syntaxとしてGLCE_CONFIG_UTILITY_UNSUPPORTED_FORMATを返す。
+ * - token_range_is_valid()によって、導出されたleft / right rangeが
+ *   token copyに使用可能なrange representationを満たすことを確認する。
+ * - このvalidationは、range lengthを前提としてfixed-size output bufferへcopyする前に、
+ *   unsupportedなrangeをrejectするために行う。
+ * - range validation failureはcaller-provided textから導出された
+ *   unsupported representationとしてGLCE_CONFIG_UTILITY_UNSUPPORTED_FORMATを返す。
  *
- * Postconditions:
- * - out_view_へのcopy後にautomatic Postcondition validationは行わない。
- * - output前にvalidation済みのtemporary viewをvalue copyするだけであり、
- *   copyによって新しいsemantic state、ownership relationまたはlifecycle transitionは
- *   発生しないため、同一validationをcopy後に再実行しない。
- * - falseを返すfailure pathではout_view_へのOutputへ到達しないため、
- *   out_view_の既存内容は維持される。
+ * Result validation:
+ * - rangeから構築したtemporary key/value candidateを、
+ *   glce_config_utility_key_value_is_valid()でcanonical validationする。
+ * - このvalidationは、caller-visible outputへ公開する前に、
+ *   candidateがpublic key/value representation contractを満たしていることを
+ *   確認するために行う。
+ * - candidateはcaller-provided textから構築されたtrust promotion前のrepresentationであるため、
+ *   validation failureはinternal corruptionとは扱わず、
+ *   GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMATとしてrejectする。
+ *
+ * Postcondition validation:
+ * - out_key_value_へのcopy後にautomatic Postcondition validationは行わない。
+ * - output前にcanonical validation済みのtemporary candidateをvalue copyするだけであり、
+ *   copyによってrepresentation validity、ownership、lifecycle relationは変化しないため、
+ *   同一validationをcopy後に再実行しない。
+ * - failure pathではOutputへ到達しないため、out_key_value_の既存内容は変更しない。
  */
 glce_config_utility_result_t glce_config_utility_key_value_parse(const char* line_, size_t char_count_, glce_config_utility_key_value_t* out_key_value_) {
     glce_config_utility_result_t ret = GLCE_CONFIG_UTILITY_INVALID_ARGUMENT;
@@ -237,6 +223,19 @@ cleanup:
     return ret;
 }
 
+/*
+ * API-specific Validation Policy
+ *
+ * - 本API自身がglce_config_utility_key_value_tのexplicit canonical validatorであるため、
+ *   別のcanonical validationは実行しない。
+ * - key_value_ == NULLはinvalid representationとしてfalseを返す。
+ * - keyおよびvalueそれぞれについてtoken_is_valid()を実行し、
+ *   public key/value representation contractを構成するtoken validityを検査する。
+ * - explicit validatorであるため、BUILD_MODEによってvalidation scopeを変更しない。
+ * - validation中に対象stateを変更せず、validation failure時はfalseを返すのみとする。
+ * - state mutationやresult candidate constructionを行わないため、
+ *   Result validationおよびPostcondition validationは必要としない。
+ */
 bool glce_config_utility_key_value_is_valid(const glce_config_utility_key_value_t* key_value_) {
     if(NULL == key_value_) {
         return false;
@@ -253,6 +252,32 @@ bool glce_config_utility_key_value_is_valid(const glce_config_utility_key_value_
 // ============================================================
 // Parsing helpers
 // ============================================================
+/*
+ * token_ranges_get() Contract
+ *
+ * Preconditions:
+ * - line_はNULLではない。
+ * - left_range_およびright_range_はNULLではない。
+ * - line_[0]からline_[char_count_ - 1]までを読み取り可能である。
+ *
+ * Responsibility:
+ * - line_からkey / value delimiterとなる'='を特定し、
+ *   delimiterの左右にあるtoken candidateのrangeを導出する。
+ * - token前後のtoken characterではない領域をrangeから除外する。
+ *
+ * Postconditions:
+ * - trueを返した場合、left_range_およびright_range_へ
+ *   inclusive indexによるrangeを出力する。
+ * - left rangeはdelimiterより左側にあり、
+ *   right rangeはdelimiterより右側にある。
+ * - 両rangeはsource lineのbody内に収まる。
+ *
+ * Validation:
+ * - line内の'='がちょうど1つであることを確認する。
+ *   key/value separationを一意に決定するために必要である。
+ * - delimiterの左右にtoken candidateが存在することを確認する。
+ *   empty key / valueのrangeを生成しないために必要である。
+ */
 static bool token_ranges_get(const char *line_, size_t char_count_, token_range_t* left_range_, token_range_t* right_range_) {
     size_t equal_index = 0;
     size_t equal_count = 0;
@@ -326,6 +351,21 @@ static bool token_ranges_get(const char *line_, size_t char_count_, token_range_
     return true;
 }
 
+/*
+ * token_copy() Contract
+ *
+ * Preconditions:
+ * - line_、range_、out_token_はNULLではない。
+ * - range_はtoken copyに使用可能なvalid rangeである。
+ *
+ * Responsibility:
+ * - range_で指定されたsource line上のcharacter sequenceを
+ *   out_token_へcopyし、終端NULを付加する。
+ *
+ * Postconditions:
+ * - out_token_はrange lengthと同じ文字列内容を持つ
+ *   NUL terminated stringとなる。
+ */
 static void token_copy(const char* line_, const token_range_t* range_, char out_token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]) {
     if(NULL == line_ || NULL == range_ || NULL == out_token_) {
         return;
@@ -363,18 +403,13 @@ static const char* result_to_str(glce_config_utility_result_t result_) {
  * line_is_valid() Validation
  *
  * Purpose:
- * - lineとchar_countの組み合わせが、
- *   本moduleで扱うvalidなlogical line representationとして
- *   成立していることを確認する。
- * - 後続処理がchar_countによるboundedな走査とNUL terminated representationを、
- *   一貫した前提として扱えることを保証する。
+ * - line_とchar_count_が、本moduleで扱えるlogical line representationを構成していることを確認する。
  *
  * Validation Scope:
- * - lineがNULLではないこと。
- * - line[0]からline[char_count - 1]までにNUL ('\0')を含まないこと。
- * - line[0]からline[char_count - 1]までに
- *   carriage return ('\r')またはline feed ('\n')を含まないこと。
- * - line[char_count]が終端NUL ('\0')であること。
+ * - line_がNULLではないこと。
+ * - line_[0]からline_[char_count_ - 1]までにNUL、CR、LFを含まないこと。
+ * - line_[char_count_]が終端NULであること。
+ * - char_count_ == 0のempty lineはvalidとして扱う。
  */
 static bool line_is_valid(const char* line_, size_t char_count_) {
     if(NULL == line_) {
@@ -401,17 +436,15 @@ static bool line_is_valid(const char* line_, size_t char_count_) {
  * token_char_is_valid() Validation
  *
  * Purpose:
- * - 1 characterが、本moduleで定義するkey / value tokenの
- *   constituent characterとして使用可能であることを確認する。
- * - key / value tokenのcharacter-level validityを一箇所で定義する。
+ * - 1 characterがkey / value tokenを構成するcharacterとして使用可能であることを確認する。
  *
  * Validation Scope:
- * - characterがspace (' ')ではないこと。
- * - characterがhorizontal tab ('\t')ではないこと。
- * - characterがcarriage return ('\r')ではないこと。
- * - characterがline feed ('\n')ではないこと。
- * - characterがkey / value delimiter ('=')ではないこと。
- * - characterがNUL ('\0')ではないこと。
+ * - space (' ')ではないこと。
+ * - horizontal tab ('\t')ではないこと。
+ * - carriage return ('\r')ではないこと。
+ * - line feed ('\n')ではないこと。
+ * - key / value delimiter ('=')ではないこと。
+ * - NUL ('\0')ではないこと。
  * - 上記以外のcharacterはvalidなtoken characterとして扱う。
  */
 static bool token_char_is_valid(char c) {
@@ -425,6 +458,20 @@ static bool token_char_is_valid(char c) {
     );
 }
 
+/*
+ * token_range_is_valid() Validation
+ *
+ * Purpose:
+ * - token_range_tがtokenを保持可能なrange representationとしてvalidであることを確認する。
+ *
+ * Validation Scope:
+ * - range_がNULLではないこと。
+ * - start <= endであること。
+ * - end - start + 1で表されるrange lengthが
+ *   GLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH以下であること。
+ *
+ * - source line上のboundsやdelimiterとの位置関係は検査しない。
+ */
 static bool token_range_is_valid(const token_range_t* range_) {
     size_t length = 0;
     if(NULL == range_) {
@@ -441,6 +488,22 @@ static bool token_range_is_valid(const token_range_t* range_) {
     return true;
 }
 
+/*
+ * token_is_valid() Validation
+ *
+ * Purpose:
+ * - fixed-size token bufferが、本moduleで扱うcomplete token representationとして
+ *   validであることを確認する。
+ *
+ * Validation Scope:
+ * - token_がNULLではないこと。
+ * - GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE内に終端NULが存在すること。
+ * - tokenがempty stringではないこと。
+ * - 終端NULより前のすべてのcharacterがvalidなtoken characterであること。
+ *
+ * - GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE内に終端NULが必要であるため、
+ *   token lengthはGLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH以下となる。
+ */
 static bool token_is_valid(const char token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]) {
     const char* terminator = NULL;
     size_t length = 0;

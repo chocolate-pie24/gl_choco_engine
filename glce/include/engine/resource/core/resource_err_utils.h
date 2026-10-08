@@ -24,6 +24,7 @@ extern "C" {
 #include "engine/containers/choco_string.h"
 
 #include "engine/io_utils/fs_stream.h"
+#include "engine/io_utils/glce_config_utility.h"
 
 #include "engine/resource/core/resource_types.h"
 
@@ -71,6 +72,8 @@ resource_result_t resource_result_convert_choco_string(choco_string_result_t res
 resource_result_t resource_result_convert_aabb_3d(aabb_3d_result_t result_);
 
 resource_result_t resource_result_convert_general_allocator(general_allocator_result_t result_);
+
+resource_result_t resource_result_convert_glce_config_utility(glce_config_utility_result_t result_);
 
 #ifdef __cplusplus
 }
