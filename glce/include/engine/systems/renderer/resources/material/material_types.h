@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_MATERIAL_MATERIAL_TYPES_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_MATERIAL_MATERIAL_TYPES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum {
+    MATERIAL_SUCCESS = 0,
+    MATERIAL_INVALID_ARGUMENT,
+    MATERIAL_RUNTIME_ERROR,
+    MATERIAL_NO_MEMORY,
+    MATERIAL_LIMIT_EXCEEDED,
+    MATERIAL_BAD_OPERATION,
+    MATERIAL_DATA_CORRUPTED,
+    MATERIAL_UNDEFINED_ERROR,
+} material_result_t;
+
+#ifdef __cplusplus
+}
+#endif
+#endif
