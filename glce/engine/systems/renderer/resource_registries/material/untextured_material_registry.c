@@ -46,10 +46,10 @@
 // Private Type Definitions
 // ============================================================
 /* Materialの登録名と値を保持するEntry。 */
-typedef struct untextured_material_registry_entry {
+typedef struct registry_entry {
     choco_string_t* resource_name;
     untextured_material_t untextured_material;
-} untextured_material_registry_entry_t;
+} registry_entry_t;
 
 /*
  * Untextured Materialの登録状態を保持するRegistry本体。
@@ -59,21 +59,21 @@ typedef struct untextured_material_registry_entry {
  */
 struct untextured_material_registry {
     size_t max_untextured_material_count;
-    untextured_material_registry_entry_t* entries;
+    registry_entry_t* entries;
 };
 
 // ============================================================
 // Private Function Declarations
 // ============================================================
 // Lifecycle
-static void registry_entry_deinitialize(untextured_material_registry_entry_t* entry_);
+static void registry_entry_deinitialize(registry_entry_t* entry_);
 
 // State Queries
 static bool untextured_material_id_is_in_range(const untextured_material_registry_t* registry_, uint16_t untextured_material_id_);
-static bool registry_entry_is_registered(const untextured_material_registry_entry_t* entry_);
+static bool registry_entry_is_registered(const registry_entry_t* entry_);
 
 // Validation
-static bool registry_entry_is_valid(const untextured_material_registry_entry_t* entry_);
+static bool registry_entry_is_valid(const registry_entry_t* entry_);
 
 // Lookup
 static bool find_by_name(const untextured_material_registry_t* registry_, const char* name_, size_t* out_index_);
@@ -115,7 +115,7 @@ resource_registry_result_t untextured_material_registry_create(size_t max_untext
     subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
     untextured_material_registry_t* tmp_registry = NULL;
-    untextured_material_registry_entry_t* tmp_entries = NULL;
+    registry_entry_t* tmp_entries = NULL;
 
     size_t array_size = 0;
     subsystem_allocator_rollback_point_t rollback_point = { 0 };
@@ -129,12 +129,12 @@ resource_registry_result_t untextured_material_registry_create(size_t max_untext
         ERROR_MESSAGE("untextured_material_registry_create(%s) - Provided max_untextured_material_count_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         goto cleanup;
     }
-    if((SIZE_MAX / max_untextured_material_count_) < sizeof(untextured_material_registry_entry_t)) {
+    if((SIZE_MAX / max_untextured_material_count_) < sizeof(registry_entry_t)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
         ERROR_MESSAGE("untextured_material_registry_create(%s) - array size overflow.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
-    array_size = sizeof(untextured_material_registry_entry_t) * max_untextured_material_count_;
+    array_size = sizeof(registry_entry_t) * max_untextured_material_count_;
 
     // Prepare.
     ret_subsystem_allocator = subsystem_allocator_rollback_point_get(allocator_, &rollback_point);
@@ -571,7 +571,7 @@ bool untextured_material_registry_is_valid(const untextured_material_registry_t*
 // ============================================================
 // Lifecycle
 // ============================================================
-static void registry_entry_deinitialize(untextured_material_registry_entry_t* entry_) {
+static void registry_entry_deinitialize(registry_entry_t* entry_) {
     if(NULL == entry_) {
         return;
     }
@@ -591,7 +591,7 @@ static bool untextured_material_id_is_in_range(const untextured_material_registr
     return true;
 }
 
-static bool registry_entry_is_registered(const untextured_material_registry_entry_t* entry_) {
+static bool registry_entry_is_registered(const registry_entry_t* entry_) {
     if(NULL == entry_) {
         return false;
     }
@@ -604,7 +604,7 @@ static bool registry_entry_is_registered(const untextured_material_registry_entr
 // ============================================================
 // Validation
 // ============================================================
-static bool registry_entry_is_valid(const untextured_material_registry_entry_t* entry_) {
+static bool registry_entry_is_valid(const registry_entry_t* entry_) {
     if(NULL == entry_) {
         return false;
     }
