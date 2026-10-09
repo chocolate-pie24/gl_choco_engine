@@ -3651,3 +3651,87 @@ callerへOutputしてよいかを確認するphaseとして`Output eligibility`�
 
 - `validation_policy.md`
 - `glce_coding_style.md`
+
+## Decision: Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する
+
+**Status:** Accepted
+**Date:** 2026-10-09
+**Scope:** Renderer / Material / Texture Reference / Resource Ownership
+
+### Decision
+
+GLCEでは、Phong系Lightingを使用する3D Meshの描画方式を、Textureを使用しない`untextured_mesh`と、1種類以上のTexture Mapを使用する`textured_mesh`へ分離する。いずれも独立したRender Resource ownership rootとして扱う。
+
+Materialのデータ表現には次の**3つの非opaque value type**を採用し、共通の万能`material_t`や独立した`material_properties_t`は設けない。
+
+- `untextured_material_t`：`ambient`、`diffuse`、`specular`、`shininess`からなるPhong系の基本反射特性を保持する。Untextured Mesh用のMaterial表現であると同時に、Textured Materialの基本反射特性を表す値としても利用する。
+- `texture_map_t`：MaterialからTextureを参照するMap単位の値表現。Textureの実体を所有しない。
+- `textured_material_t`：基本反射特性とTexture Map参照を組み合わせる値表現。具体的なfield layoutはTextured Mesh実装時に決定する。
+
+Untextured MeshはShader、Geometry Registry、Untextured Material Registryを所有し、Texture RegistryやTexture参照状態を持たない。
+
+Textured MeshはShader、Geometry Registry、Textured Material Registry、Texture Registryを所有する。Diffuse / Specular / NormalのTexture Mapはそれぞれ独立して使用・未使用を選択できるようにする。少なくとも1種類のTexture Mapが存在する構成をTextured Meshが担当し、3種類とも使用しない構成はUntextured Meshが担当する。Textureを使用する7通りの組み合わせを設計上の対応範囲とするが、実装時に7種類のShaderやMeshを要求するものではない。
+
+Material RegistryはMesh種別ごとに独立して所有し、異なるMesh間の共通Registryは作らない。UI MeshにはPhong系Materialを強制せず、既存の直接的なTexture Registry利用を維持する。
+
+Texture Resourceの実体、Resource Name、および登録IDのauthorityはTexture Registryへ置く。一方、Materialが参照するTextureを解放しないという**参照lifetimeとrelease順の成立責任**はApplicationに持たせる。参照中のTextureを解放する前に、Applicationは当該Textureを参照するMaterialの利用を終了させなければならない。
+
+この契約について、generation付きHandle、Reference Counting、Reverse Reference Tracking、Textureの自動解放抑止は導入しない。古いIDが解放後に再利用された場合、Engineがその参照違反を自動検出することは保証しない。
+
+### Context
+
+従来の`lit_mesh`はGeometryの法線を持つが、固定色で描画しており、Material Propertiesの概念とLightingが未実装であった。はじめは`solid_color_mesh`と、Diffuse Textureを持つ`textured_mesh`の二種類を想定した。
+
+しかしMaterialの表現を検討する過程で、`ambient`、`diffuse`、`specular`、`shininess`は単なるColorではなくPhong系の材料特性であり、Textureの有無とは独立した共通の基本値であることが明確になった。
+
+さらに、Diffuse / Specular / Normal Textureを独立して使用する用途があるため、Diffuse TextureをTextured Meshの必須条件とすると、Normalのみ・Specularのみ等の合理的な構成が除外される。
+
+Texture参照のlifetimeについては、Registryにgeneration等のstale-ID検出機構を追加する案を検討したが、GLCEではApplicationがMaterialとTextureの利用関係を把握でき、かつgenerationを導入しても適切な解放順やlifetimeを自動的に保証できるわけではない。
+
+### Rationale
+
+- Textureを使用しないSTL等のGeometryに、不要なTexture IDやTexture Registry依存を持ち込まない。
+- Materialの基本反射特性とMap参照をvalueとして表し、内部heap所有やprivate stateを必要としない型をopaque化しない。
+- 各Meshの描画方式とResourceのownershipをVertical Slice内へ閉じ、兄弟Mesh間の依存や共有Registryを避ける。
+- Texture Mapの種類を一つに固定せず、Diffuse / Specular / Normalの部分的な利用を表現できる。
+- Resourceのphysical ownershipをRegistryに置くことと、参照元のrelease順をApplicationが保証することを区別する。
+- 今は必要ない自動参照追跡やgeneration managementのstate / validation / API surfaceを先行導入しない。
+
+### Rejected Alternatives
+
+- 全Meshで共通の`material_t`にTexture IDやTexture Nameを持たせる。
+  - Untextured Meshにも不要なfieldと状態組合せが生まれる。
+- `material_properties_t`を独立した型として保持し、その周囲に`untextured_material_t`をさらに設ける。
+  - この段階では基本反射特性とUntextured Materialが同じ概念であり、二重の型を要求する必要がない。
+- `solid_color_mesh` / `lit_mesh`の名前を維持する。
+  - Diffuse / Specularの反射色やLightingの存在を十分に表さず、Textureの有無による描画方式の違いが不明確になる。
+- Textured MeshでDiffuse Textureを必須にする。
+  - Specularのみ、Normalのみ等、実用的なMap構成を表せない。
+- Diffuse / Specular / Normalの7通りごとに独立したMesh種別を設ける。
+  - 同じTexture使用描画方式を組合せごとに不必要に分断する。
+- Material間で共通のTexture Registry / Material Registryを共有する。
+  - Render Resourceごとの独立ownership domainを曖昧にする。
+- generation付きHandleや参照カウントを必須化する。
+  - 現段階ではApplicationによる明示lifetime contractで足り、追跡機構を追加する具体的要件がない。generationはstale参照の検出に役立ち得るが、resource lifetime自体を自動で管理する仕組みではない。
+
+### Consequences
+
+- `lit_mesh`は`untextured_mesh`へ改名し、Material Registry / PipelineとPhong系Directional Lightingを導入する。
+- まずApplicationから`untextured_material_t`を直接登録し、描画を確認した後にMaterial Configuration Loaderを追加する。
+- Material Configuration Fileは当面1ファイル1 Material、sectionなしの`key=value`形式を予定し、具体的format contractはLoader実装時に決める。
+- Texture Mapの未使用状態には`INVALID_ID_U16`を用いる方針とし、該当IDをRegistryが発行しないことを保証する。
+- `texture_map_t`の具体field、Textured Materialの構造、Mapと反射値の合成、Tangent-space Normal Mapping、Shader Variant、Textureの登録・共有・失敗時rollbackはTextured Mesh実装時に決める。
+- MaterialとTextureの参照関係を永続追跡していないことを、Material / Texture releaseの公開contractへ明記する。
+- Render Resourceが内部的に利用するShader Headerについて、不要なApplication公開をやめてEngine privateへ移す。
+
+### Revisit Conditions
+
+- Application側での参照追跡や正しいrelease順の保証が、具体的な利用規模や動的更新要件によって実用的でなくなった場合。
+- runtimeのhot reload、streaming、texture eviction、cross-owner sharing等が必要になった場合。
+- stale handleのautomatic detectionが明確なAPI safety requirementとなった場合。
+- Phong以外のmaterial / shading modelが導入され、基本反射特性の共有範囲やMesh種別を再定義する合理的理由が生じた場合。
+
+### Related Documents
+
+- `design_notes.md` — Material and Mesh Rendering Architecture
+- `glce_near_term_todo.md` — Untextured Mesh Material / Lighting Implementation
