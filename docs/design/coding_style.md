@@ -19,7 +19,7 @@ GLCEのコードを新規作成、レビュー、リファクタリングする�
 
 実装経験からより適切な規則が得られた場合は、必要に応じて関連するDesign Decisionを残した上で本書を更新します。
 
-最終更新: 2026-10-05
+最終更新: 2026-10-10
 
 ## 目的
 
@@ -817,31 +817,31 @@ private helperへ分離するのは、次のいずれかに該当し、検証処
 | `Prepare` | 後続処理に必要な値、address、size、temporary resource、result candidate等を準備する。operationのsemantic effectはまだ成立させない |
 | `Preflight` | operationのsemantic effectを開始する前に、resource、capacity、target、relation等からoperationを実行可能か確認する |
 | `Result validation` | Prepare等で構築したresult candidateが、APIがsuccess時に保証するoutput contractを満たしているか確認する |
-| `Commit` | existing semantic state、ownership、lifecycle、registration、external state等に対するsemantic transitionを成立させる |
-| `Postconditions` | Commit完了後のstable stateがcontractを満たすことを確認する |
-| `Output` | semantic transitionを伴わず、確定済みのresult、value、borrowed view、status、ID等をcallerへ伝達する |
+| `Commit` | state変更、ownership、lifecycle、registration、external state等に対するsemantic transitionを確定する処理を表す |
+| `Postconditions` | operationのsemantic effect確定後のstable stateがcontractを満たすことを確認する |
+| `Output` | 確定したoperationのresult、value、borrowed view、status、ID等をcallerへ反映・通知する。ownership transferに伴うcaller側のpointer更新等も含めてよい |
 | `Cleanup / rollback` | 必要なoperationに限り、失敗時のresource解放または状態復元を行う |
 
-`Commit`はpersistent fieldのmutationだけを意味しない。ownership／lifecycle transition、registration／unregistration、public lifetimeへのobject publication、external side effect等、そのoperationの意味上のeffectを成立させる処理も`Commit`として扱う。
+`Commit`はpersistent fieldのmutationに限らず、ownership／lifecycle transition、registration／unregistration、public lifetimeへのobject publication等、operationのsemantic effectを確定する処理を表す。
 
-`Output`は`Commit`の別名ではない。すでに成立したoperation resultをcallerへcopyまたはborrowとして伝えるだけで、ownership、lifecycle、module state、external state等のsemantic transitionを発生させない処理に使用する。
+`Output`は、確定したoperationの結果をcallerへ反映・通知する処理を表す。ownership transferに伴うcaller側のpointer更新なども含めてよい。
 
-このため、operationによって`Commit`だけ、`Output`だけ、または両方を持つことがある。例えば、allocatorが内部allocation stateを`Commit`した後に取得pointerをcallerへ通知する処理は`Output`である。一方、constructorがtemporary objectをcallerへ公開し、その時点でpublic lifetimeやownership transferを成立させる処理は`Commit`である。getterによるvalue copyやborrowed pointerの返却は通常`Output`である。
+`Commit`と`Output`の境界は、operationの実装と意味に整合している限り柔軟に決定してよい。一連の処理を`Commit`または`Output`としてまとめて表現してもよく、両方のphaseを機械的に設ける必要はない。
 
-`Prepare`で取得したconstruction-localなtemporary resourceは、ownershipを移転するsemantic transitionが`Commit`されるまでcurrent operationがownershipとfailure時のcleanup responsibilityを保持する。
+`Prepare`で取得したconstruction-localなtemporary resourceは、実際にownershipが移転するまでcurrent operationがownershipとfailure時のcleanup responsibilityを保持する。
 
 ### Result validation
 
 - `Result validation`は、Prepare等で構築したresult candidateが、APIがsuccess時に保証するoutput contractを満たしているか確認するphaseである。
 - result candidateをcallerへOutputする前にvalidationする必要がある場合に使用する。
 - `Result validation`はoperation feasibilityを確認するphaseではない。capacity、resource availability、target relation等、semantic effectを開始できるかの確認は`Preflight`で扱う。
-- `Result validation`はCommit後のstable stateを検査するphaseではない。Commitによって成立したmodule-owned stateの確認は`Postconditions`で扱う。
+- `Result validation`はsemantic transition後のstable stateを検査するphaseではない。operationによって確定したmodule-owned stateの確認は`Postconditions`で扱う。
 - documented preconditionからvalid resultを構築できることが実装contractとして明確であり、diagnostic validationの価値がない場合は、result construction operationへ`Result validation`を機械的に追加しない。
 - `Result validation`成功後の`Output`が単純なvalue copyまたはborrow publicationでありsemanticを変更しない場合、同一validityをOutput後に機械的に再検査しない。
 
 ### Private mutation helperのvoid化
 
-- `Commit` phaseで使用するprivate helperについて、Commit開始前にそのhelperを安全に最後まで実行できるconditionが成立済みである場合は、result codeを返さず`void`化する。
+- semantic transitionを確定するprivate helperについて、その処理の開始前に安全に最後まで実行できるconditionが成立済みである場合は、result codeを返さず`void`化する。
 - `void`化のためにrecoverable errorを握りつぶしたり、失敗時にsilent returnする構造へ変更してはならない。
 - helper自身で初めて判明するrecoverable failure、resource取得失敗、外部API失敗、探索失敗、capacity不足、arithmetic overflow等が残る場合は`void`化しない。
 - `void` helperは、成立済みのinternal contractのもとでは処理を最後まで完了できる構造にする。
@@ -1333,6 +1333,14 @@ file内のコメント階層は次の3段階を基本とする。
 | slot探索 | `find_free_slot` |
 | 名前検索 | `find_by_name` |
 | 設定値変換 | `resolve_*` |
+
+### State Query HelperとCanonical Validator
+
+- State Query Helperは、成立済みのinternal contractを信頼し、通常処理で必要な状態を効率的に判定する。
+- State Query Helperは、状態を代表するfieldなど、判定に必要な最小限の条件を使用し、field間の整合性検証を担当しない。
+- Canonical Validatorは、状態を構成するfield間の整合性と、必要なinvariantを検証する。
+- Canonical Validatorは、原則としてState Query Helperに依存せず、独立した検証処理として構成する。
+- State Query Helperの判定結果は、対象objectのcanonical validityを保証しない。
 
 ## Include規約
 
