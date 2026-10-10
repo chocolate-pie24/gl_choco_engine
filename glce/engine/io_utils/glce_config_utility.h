@@ -208,10 +208,9 @@ void glce_config_utility_key_value_reset(glce_config_utility_key_value_t* key_va
  * - keyおよびvalueの前後にあるspace (' ') / horizontal tab ('\t')は
  *   tokenの一部として扱わない。
  * - keyおよびvalueは空であってはならない。
- * - keyおよびvalue内部にspace、horizontal tab、CR、LF、'='、NULを
- *   含んではならない。
- * - keyおよびvalueはそれぞれ
- *   GLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH文字以内でなければならない。
+ * - key内部にspace、horizontal tab、CR、LF、'='、NUL、vertical tab、form feedを含んではならない。
+ * - value内部にhorizontal tab、CR、LF、'='、NUL、vertical tab、form feedを含んではならない(value内部のspaceのみ許可し、前後のspaceは禁止する)。
+ * - keyおよびvalueはそれぞれGLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH文字以内でなければならない。
  *
  * Output Contract:
  * - out_key_value_はoperation開始時にreset stateでなければならない。
@@ -263,10 +262,10 @@ glce_config_utility_result_t glce_config_utility_key_value_parse(const char* lin
  *   GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE以内に終端NULを含む
  *   NUL terminated stringである。
  * - keyおよびvalueはempty stringではない。
- * - keyおよびvalue内部にspace、horizontal tab、CR、LF、'='、NULを
- *   token characterとして含まない。
- * - keyおよびvalueの文字数は
- *   GLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH以下である。
+ * - keyにspace、horizontal tab、CR、LF、'='、NUL、vertical tab、form feedを含まない。
+ * - value内部のspaceは許可するが、先頭および末尾のspaceは許可しない。
+ * - valueにhorizontal tab、CR、LF、'='、NUL、vertical tab、form feedを含まない。
+ * - keyおよびvalueの文字数はGLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH以下である。
  *
  * Validation Scope:
  * - 本validatorはkey/value tokenのstructural / lexical validityのみを判定する。

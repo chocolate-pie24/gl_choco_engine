@@ -40,9 +40,11 @@ static const char* result_to_str(glce_config_utility_result_t result_);
 
 // Validators
 static bool line_is_valid(const char* line_, size_t char_count_);
-static bool token_char_is_valid(char c);
+static bool key_char_is_valid(char c);
+static bool value_char_is_valid(char c);
 static bool token_range_is_valid(const token_range_t* range_);
-static bool token_is_valid(const char token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]);
+static bool key_token_is_valid(const char key_token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]);
+static bool value_token_is_valid(const char value_token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]);
 
 // ============================================================
 // Public API
@@ -229,8 +231,8 @@ cleanup:
  * - 本API自身がglce_config_utility_key_value_tのexplicit canonical validatorであるため、
  *   別のcanonical validationは実行しない。
  * - key_value_ == NULLはinvalid representationとしてfalseを返す。
- * - keyおよびvalueそれぞれについてtoken_is_valid()を実行し、
- *   public key/value representation contractを構成するtoken validityを検査する。
+ * - key_token_is_valid()、value_token_is_valid()を実行し、
+ *   public key/value representation contractを構成するkey/value token validityを検査する。
  * - explicit validatorであるため、BUILD_MODEによってvalidation scopeを変更しない。
  * - validation中に対象stateを変更せず、validation failure時はfalseを返すのみとする。
  * - state mutationやresult candidate constructionを行わないため、
@@ -240,10 +242,10 @@ bool glce_config_utility_key_value_is_valid(const glce_config_utility_key_value_
     if(NULL == key_value_) {
         return false;
     }
-    if(!token_is_valid(key_value_->key)) {
+    if(!key_token_is_valid(key_value_->key)) {
         return false;
     }
-    if(!token_is_valid(key_value_->value)) {
+    if(!value_token_is_valid(key_value_->value)) {
         return false;
     }
     return true;
@@ -259,11 +261,14 @@ bool glce_config_utility_key_value_is_valid(const glce_config_utility_key_value_
  * - line_はNULLではない。
  * - left_range_およびright_range_はNULLではない。
  * - line_[0]からline_[char_count_ - 1]までを読み取り可能である。
+ * - line_とchar_count_はline_is_valid()を満たす。
+ *   callerが検証済みであることを前提とする。
  *
  * Responsibility:
  * - line_からkey / value delimiterとなる'='を特定し、
  *   delimiterの左右にあるtoken candidateのrangeを導出する。
- * - token前後のtoken characterではない領域をrangeから除外する。
+ * - keyおよびvalueの前後にあるspace / horizontal tabをrangeから除外する。
+ * - value内部のspaceはrangeに保持する。
  *
  * Postconditions:
  * - trueを返した場合、left_range_およびright_range_へ
@@ -309,7 +314,7 @@ static bool token_ranges_get(const char *line_, size_t char_count_, token_range_
 
     // 左辺のチェック
     for(size_t i = 0; i != equal_index; ++i) {
-        if(token_char_is_valid(line_[i])) {
+        if(' ' != line_[i] && '\t' != line_[i]) {
             left_range.start = i;
             found_left_start = true;
             break;
@@ -321,14 +326,14 @@ static bool token_ranges_get(const char *line_, size_t char_count_, token_range_
     left_range.end = equal_index;
     while(left_range.end > 0) {
         left_range.end--;
-        if(token_char_is_valid(line_[left_range.end])) {
+        if(' ' != line_[left_range.end] && '\t' != line_[left_range.end]) {
             break;
         }
     }
 
     // 右辺のチェック
     for(size_t i = equal_index + 1; i != char_count_; ++i) {
-        if(token_char_is_valid(line_[i])) {
+        if(' ' != line_[i] && '\t' != line_[i]) {
             right_range.start = i;
             found_right_start = true;
             break;
@@ -340,7 +345,7 @@ static bool token_ranges_get(const char *line_, size_t char_count_, token_range_
     right_range.end = char_count_;
     while(right_range.end > right_range.start) {
         right_range.end--;
-        if(token_char_is_valid(line_[right_range.end])) {
+        if(' ' != line_[right_range.end] && '\t' != line_[right_range.end]) {
             break;
         }
     }
@@ -433,10 +438,10 @@ static bool line_is_valid(const char* line_, size_t char_count_) {
 }
 
 /*
- * token_char_is_valid() Validation
+ * key_char_is_valid() Validation
  *
  * Purpose:
- * - 1 characterがkey / value tokenを構成するcharacterとして使用可能であることを確認する。
+ * - 1 characterがkey tokenを構成するcharacterとして使用可能であることを確認する。
  *
  * Validation Scope:
  * - space (' ')ではないこと。
@@ -444,17 +449,49 @@ static bool line_is_valid(const char* line_, size_t char_count_) {
  * - carriage return ('\r')ではないこと。
  * - line feed ('\n')ではないこと。
  * - key / value delimiter ('=')ではないこと。
+ * - vertical tab ('\v')ではないこと。
+ * - form feed ('\f')ではないこと。
  * - NUL ('\0')ではないこと。
- * - 上記以外のcharacterはvalidなtoken characterとして扱う。
+ * - 上記以外のcharacterはvalidなkey token characterとして扱う。
  */
-static bool token_char_is_valid(char c) {
+static bool key_char_is_valid(char c) {
     return (
         ' '  != c &&
         '\t' != c &&
         '\r' != c &&
         '\n' != c &&
         '='  != c &&
-        '\0' != c
+        '\0' != c &&
+        '\v' != c &&
+        '\f' != c
+    );
+}
+
+/*
+ * value_char_is_valid() Validation
+ *
+ * Purpose:
+ * - 1 characterがvalue tokenを構成するcharacterとして使用可能であることを確認する。
+ *
+ * Validation Scope:
+ * - horizontal tab ('\t')ではないこと。
+ * - carriage return ('\r')ではないこと。
+ * - line feed ('\n')ではないこと。
+ * - key / value delimiter ('=')ではないこと。
+ * - vertical tab ('\v')ではないこと。
+ * - form feed ('\f')ではないこと。
+ * - NUL ('\0')ではないこと。
+ * - 上記以外のcharacterはvalidなvalue token characterとして扱う。
+ */
+static bool value_char_is_valid(char c) {
+    return (
+        '\t' != c &&
+        '\r' != c &&
+        '\n' != c &&
+        '='  != c &&
+        '\0' != c &&
+        '\v' != c &&
+        '\f' != c
     );
 }
 
@@ -489,41 +526,90 @@ static bool token_range_is_valid(const token_range_t* range_) {
 }
 
 /*
- * token_is_valid() Validation
+ * key_token_is_valid() Validation
  *
  * Purpose:
- * - fixed-size token bufferが、本moduleで扱うcomplete token representationとして
+ * - fixed-size key token bufferが、本moduleで扱うcomplete key token representationとして
  *   validであることを確認する。
  *
  * Validation Scope:
- * - token_がNULLではないこと。
+ * - key_token_がNULLではないこと。
  * - GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE内に終端NULが存在すること。
- * - tokenがempty stringではないこと。
- * - 終端NULより前のすべてのcharacterがvalidなtoken characterであること。
+ * - key_tokenがempty stringではないこと。
+ * - 終端NULより前のすべてのcharacterがvalidなkey token characterであること。
  *
  * - GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE内に終端NULが必要であるため、
- *   token lengthはGLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH以下となる。
+ *   key token lengthはGLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH以下となる。
  */
-static bool token_is_valid(const char token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]) {
+static bool key_token_is_valid(const char key_token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]) {
     const char* terminator = NULL;
     size_t length = 0;
 
-    if(NULL == token_) {
+    if(NULL == key_token_) {
         return false;
     }
 
-    terminator = (const char*)memchr(token_, '\0', GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE);
+    terminator = (const char*)memchr(key_token_, '\0', GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE);
     if(NULL == terminator) {
         return false;
     }
 
-    length = (size_t)(terminator - token_);
+    length = (size_t)(terminator - key_token_);
     if(0 == length) {
         return false;
     }
 
     for(size_t i = 0; i != length; ++i) {
-        if(!token_char_is_valid(token_[i])) {
+        if(!key_char_is_valid(key_token_[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/*
+ * value_token_is_valid() Validation
+ *
+ * Purpose:
+ * - fixed-size value token bufferが、本moduleで扱うcomplete value token representationとして
+ *   validであることを確認する。
+ *
+ * Validation Scope:
+ * - value_token_がNULLではないこと。
+ * - GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE内に終端NULが存在すること。
+ * - value_tokenがempty stringではないこと。
+ * - 終端NULより前のすべてのcharacterがvalidなvalue token characterであること。
+ * - value tokenの前後に' 'を含まないこと(token内部の' 'は許可する)
+ *
+ * - GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE内に終端NULが必要であるため、
+ *   value token lengthはGLCE_CONFIG_UTILITY_TOKEN_MAX_LENGTH以下となる。
+ */
+static bool value_token_is_valid(const char value_token_[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE]) {
+    const char* terminator = NULL;
+    size_t length = 0;
+
+    if(NULL == value_token_) {
+        return false;
+    }
+
+    terminator = (const char*)memchr(value_token_, '\0', GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE);
+    if(NULL == terminator) {
+        return false;
+    }
+
+    length = (size_t)(terminator - value_token_);
+    if(0 == length) {
+        return false;
+    }
+
+    // Valueの先頭および末尾にスペースを許可しない。
+    if(' ' == value_token_[0] || ' ' == value_token_[length - 1]) {
+        return false;
+    }
+
+    for(size_t i = 0; i != length; ++i) {
+        if(!value_char_is_valid(value_token_[i])) {
             return false;
         }
     }
