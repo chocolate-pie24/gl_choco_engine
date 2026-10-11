@@ -36,6 +36,8 @@
 
 #include "engine/io_utils/fs_path.h"
 
+#include "engine/resource/loaders/untextured_material_config_loader.h"  // TODO: remove this!!
+
 // Platform System
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/platform_system/config/platform_system_config.h"
@@ -123,6 +125,10 @@ typedef struct application_state {
     mat4x4f_t rabbit_mesh_model_mat;
     mat4x4f_t frog_mesh_model_mat;
     mat4x4f_t green_mesh_model_mat;
+
+    // begin temporary TODO: remove this!!
+    untextured_material_config_t penguin_material_config;
+    // end temporary
 } application_state_t;
 
 static application_state_t* s_application_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -141,6 +147,8 @@ static application_result_t lit_mesh_geometry_import(application_state_t* state_
 static application_result_t ui_mesh_textures_import(application_state_t* state_);
 
 static application_result_t executable_directory_get(application_state_t* state_);
+
+static application_result_t penguin_material_load(application_state_t* state_);   // TODO: remove this!!
 
 application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
@@ -366,6 +374,12 @@ application_result_t application_run(void) {
     if(APPLICATION_SUCCESS != ret) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run - Failed to import lit mesh geometry.");
+        goto cleanup;
+    }
+    ret = penguin_material_load(s_application_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("application_run - penguin_material_load failed.");
         goto cleanup;
     }
 
@@ -776,6 +790,45 @@ static application_result_t executable_directory_get(application_state_t* state_
         ERROR_MESSAGE("executable_directory_get(%s) - fs_path_create_from_executable_directory failed.", application_result_to_str(ret));
         goto cleanup;
     }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static application_result_t penguin_material_load(application_state_t* state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+
+    fs_path_t* penguin_path = NULL;
+    untextured_material_config_t config = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "penguin_material_load", "state_")
+
+    ret_fs_path = fs_path_create(&penguin_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/materials/", "penguin", "untextured_mat");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("penguin_material_load(%s) - fs_path_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_resource = untextured_material_config_loader_load(fs_path_fullpath_get(penguin_path), &config);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("penguin_material_load(%s) - untextured_material_config_loader_load failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    INFO_MESSAGE("penguin_material_load");
+    INFO_MESSAGE("  diffuse: %f, %f, %f", config.diffuse.elem[0], config.diffuse.elem[1], config.diffuse.elem[2]);
+    INFO_MESSAGE("  ambient: %f, %f, %f", config.ambient.elem[0], config.ambient.elem[1], config.ambient.elem[2]);
+    INFO_MESSAGE("  specular: %f, %f, %f", config.specular.elem[0], config.specular.elem[1], config.specular.elem[2]);
+    INFO_MESSAGE("  shininess: %f", config.shininess);
+
+    state_->penguin_material_config = config;
 
     ret = APPLICATION_SUCCESS;
 
