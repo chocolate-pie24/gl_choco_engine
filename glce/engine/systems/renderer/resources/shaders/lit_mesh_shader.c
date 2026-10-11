@@ -27,6 +27,8 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 
+#include "engine/systems/renderer/resources/material/material_types.h"
+
 #include "engine/systems/renderer/config/renderer_config.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
@@ -46,6 +48,11 @@ struct lit_mesh_shader {
     int32_t model_matrix_location;          /**< モデル行列のユニフォーム変数Location */
     int32_t view_matrix_location;           /**< ビュー行列のユニフォーム変数Location */
     int32_t projection_matrix_location;     /**< プロジェクション行列のユニフォーム変数Location */
+
+    int32_t material_ambient_location;
+    int32_t material_diffuse_location;
+    int32_t material_specular_location;
+    int32_t material_shininess_location;
 
     renderer_backend_context_t* backend_context;
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
@@ -385,6 +392,39 @@ cleanup:
     return ret;
 }
 
+shader_result_t lit_mesh_shader_material_set(const lit_mesh_shader_t* shader_, const untextured_material_t* material_) {
+    shader_result_t ret = SHADER_INVALID_ARGUMENT;
+
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "material_")
+    if(!is_valid_shallow(shader_)) {
+        ret = SHADER_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!untextured_material_is_valid(material_)) {
+        ret = SHADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Provided material_ is not valid.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    // ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(shader_->backend_context, shader_->projection_matrix_location, should_transpose_, projection_matrix_->elem);
+    // if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+    //     ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+    //     ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Failed to set projection matrix.", shader_result_to_str(ret));
+    //     goto cleanup;
+    // }
+
+    ret = SHADER_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 static void destroy_unchecked(lit_mesh_shader_t** shader_) {
     if(NULL == shader_) {
         return;
@@ -414,9 +454,15 @@ static shader_result_t program_initialize(lit_mesh_shader_t* shader_, const char
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     renderer_backend_shader_t* tmp_shader = NULL;
+
     int32_t tmp_model_matrix_location = 0;
     int32_t tmp_view_matrix_location = 0;
     int32_t tmp_projection_matrix_location = 0;
+
+    int32_t tmp_material_ambient_location = 0;
+    int32_t tmp_material_diffuse_location = 0;
+    int32_t tmp_material_specular_location = 0;
+    int32_t tmp_material_shininess_location = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "vertex_shader_fullpath_")
@@ -451,9 +497,43 @@ static shader_result_t program_initialize(lit_mesh_shader_t* shader_, const char
         goto cleanup;
     }
 
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_material.ambient", &tmp_material_ambient_location);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("program_initialize(%s) - Failed to get ambient location.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_material.diffuse", &tmp_material_diffuse_location);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("program_initialize(%s) - Failed to get diffuse location.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_material.specular", &tmp_material_specular_location);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("program_initialize(%s) - Failed to get specular location.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_material.shininess", &tmp_material_shininess_location);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("program_initialize(%s) - Failed to get shininess location.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
     shader_->model_matrix_location = tmp_model_matrix_location;
     shader_->view_matrix_location = tmp_view_matrix_location;
     shader_->projection_matrix_location = tmp_projection_matrix_location;
+
+    shader_->material_ambient_location = tmp_material_ambient_location;
+    shader_->material_diffuse_location = tmp_material_diffuse_location;
+    shader_->material_shininess_location = tmp_material_shininess_location;
+    shader_->material_specular_location = tmp_material_specular_location;
+
     shader_->shader = tmp_shader;
     tmp_shader = NULL;
 

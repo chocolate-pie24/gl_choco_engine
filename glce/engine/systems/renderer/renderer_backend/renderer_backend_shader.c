@@ -125,6 +125,39 @@ cleanup:
     return ret;
 }
 
+renderer_backend_result_t renderer_backend_shader_vec3f_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const float* data_) {
+    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_vec3f_uniform_set", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_vec3f_uniform_set", "backend_context_->shader_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_vec3f_uniform_set", "data_")
+
+    ret = backend_context_->shader_vtable->renderer_shader_vec3f_uniform_set(location_, data_);
+    if(RENDERER_BACKEND_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_shader_vec3f_uniform_set(%s) - Failed to set vec3f uniform.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
+renderer_backend_result_t renderer_backend_shader_float_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, float data_) {
+    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_float_uniform_set", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_float_uniform_set", "backend_context_->shader_vtable")
+
+    ret = backend_context_->shader_vtable->renderer_shader_float_uniform_set(location_, data_);
+    if(RENDERER_BACKEND_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_shader_float_uniform_set(%s) - Failed to set float uniform.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
 renderer_backend_result_t renderer_backend_shader_vec4u8_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const uint8_t* data_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 

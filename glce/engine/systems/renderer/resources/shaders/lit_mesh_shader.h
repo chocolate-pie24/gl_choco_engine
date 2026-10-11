@@ -34,6 +34,7 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
 typedef struct mat4x4f mat4x4f_t;
 typedef struct point_normal_vertex point_normal_vertex_t;
 typedef struct lit_mesh_shader_config lit_mesh_shader_config_t;
+typedef struct untextured_material untextured_material_t;
 
 shader_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const lit_mesh_shader_config_t* config_, lit_mesh_shader_t** out_shader_);
 
@@ -52,6 +53,8 @@ shader_result_t lit_mesh_shader_model_matrix_set(const lit_mesh_shader_t* shader
 shader_result_t lit_mesh_shader_view_matrix_set(const lit_mesh_shader_t* shader_, const mat4x4f_t* view_matrix_, bool should_transpose_);
 
 shader_result_t lit_mesh_shader_projection_matrix_set(const lit_mesh_shader_t* shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
+
+shader_result_t lit_mesh_shader_material_set(const lit_mesh_shader_t* shader_, const untextured_material_t* material_);
 
 #ifdef __cplusplus
 }

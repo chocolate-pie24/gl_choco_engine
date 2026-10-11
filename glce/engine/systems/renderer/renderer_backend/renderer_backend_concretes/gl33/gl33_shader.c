@@ -61,6 +61,8 @@ static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* sha
 static renderer_backend_result_t gl33_shader_use(const renderer_backend_shader_t* shader_handle_);
 static renderer_backend_result_t gl33_uniform_location_get(const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_);
 static renderer_backend_result_t gl33_mat4f_uniform_set(int32_t location_, bool should_transpose_, const float* data_);
+static renderer_backend_result_t gl33_vec3f_uniform_set(int32_t location_, const float* data_);
+static renderer_backend_result_t gl33_float_uniform_set(int32_t location_, float data_);
 static renderer_backend_result_t gl33_vec4u8_uniform_set(int32_t location_, const uint8_t* data_);
 
 static renderer_backend_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_stage_t shader_stage_, GLuint** out_handle_addr_);
@@ -81,7 +83,9 @@ static void mock_glGetProgramiv(GLuint program_, GLenum pname_, GLint *params_);
 static void mock_glGetProgramInfoLog(GLuint program_, GLsizei maxLength_, GLsizei *length_, GLchar *infoLog_);
 static void mock_glUseProgram(GLuint program_);
 static void mock_glUniformMatrix4fv(GLint location_, GLsizei count_, GLboolean transpose_, const GLfloat *value_);
-static void mock_glUniform4fv(GLint location_, GLsizei count_, const GLfloat *value_);
+static void mock_glUniform3f(GLint location_, GLfloat r_, GLfloat g_, GLfloat b_);
+static void mock_glUniform1f(GLint location_, GLfloat value_);
+static void mock_glUniform4fv(GLint location_, GLsizei count_, const GLfloat* value_);
 static GLint mock_glGetUniformLocation(GLuint program_, const GLchar *name_);
 
 static const renderer_shader_vtable_t s_gl33_shader_vtable = {
@@ -92,6 +96,8 @@ static const renderer_shader_vtable_t s_gl33_shader_vtable = {
     .renderer_shader_use = gl33_shader_use,
     .renderer_shader_uniform_location_get = gl33_uniform_location_get,
     .renderer_shader_mat4f_uniform_set = gl33_mat4f_uniform_set,
+    .renderer_shader_vec3f_uniform_set = gl33_vec3f_uniform_set,
+    .renderer_shader_float_uniform_set = gl33_float_uniform_set,
     .renderer_shader_vec4u8_uniform_set = gl33_vec4u8_uniform_set,
 };  /**< OpenGL3.3用シェーダー操作仮想関数テーブル */
 
@@ -451,6 +457,29 @@ cleanup:
     return ret;
 }
 
+static renderer_backend_result_t gl33_vec3f_uniform_set(int32_t location_, const float* data_) {
+    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_mat4f_uniform_set", "data_")
+
+    mock_glUniform3f(location_, data_[0], data_[1], data_[2]);
+
+    ret = RENDERER_BACKEND_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static renderer_backend_result_t gl33_float_uniform_set(int32_t location_, float value_) {
+    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    mock_glUniform1f(location_, value_);
+
+    ret = RENDERER_BACKEND_SUCCESS;
+
+    return ret;
+}
+
 /**
  * @brief シェーダープログラムにvec4u8型のユニフォーム変数を送信する
  *
@@ -611,6 +640,14 @@ static void NO_COVERAGE mock_glUseProgram(GLuint program_) {
 
 static void NO_COVERAGE mock_glUniformMatrix4fv(GLint location_, GLsizei count_, GLboolean transpose_, const GLfloat *value_) {
     glUniformMatrix4fv(location_, count_, transpose_, value_);
+}
+
+static void NO_COVERAGE mock_glUniform3f(GLint location_, GLfloat r_, GLfloat g_, GLfloat b_) {
+    glUniform3f(location_, r_, g_, b_);
+}
+
+static void NO_COVERAGE mock_glUniform1f(GLint location_, GLfloat value_) {
+    glUniform1f(location_, value_);
 }
 
 static void NO_COVERAGE mock_glUniform4fv(GLint location_, GLsizei count_, const GLfloat *value_) {
