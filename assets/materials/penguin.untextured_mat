@@ -1,0 +1,6 @@
+# Penguin Material
+
+ambient = [0.04, 0.05, 0.07]
+diffuse = [0.13, 0.16, 0.20]
+specular = [0.30, 0.32, 0.35]
+shininess = 32.0
