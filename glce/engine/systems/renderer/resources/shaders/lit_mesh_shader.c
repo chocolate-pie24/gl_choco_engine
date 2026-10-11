@@ -395,8 +395,6 @@ cleanup:
 shader_result_t lit_mesh_shader_material_set(const lit_mesh_shader_t* shader_, const untextured_material_t* material_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
-    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(material_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "material_")
     if(!is_valid_shallow(shader_)) {

@@ -33,21 +33,21 @@ extern "C" {
 bool memory_utility_align_up(size_t value_, size_t alignment_, size_t* out_aligned_size_);
 
 /**
- * @brief value_が指定されたバイト境界(alignment_)に配置されているかを判定する
+ * @brief value_が指定されたバイト境界(alignment_)にアラインされているかを判定する
  *
- * @pre out_is_aligned_ != NULL
- * @pre alignment_が2の冪乗であること
+ * @pre alignment_は0以外の2の冪乗であること
  *
  * @param[in] value_ 判定対象値
  * @param[in] alignment_ 判定対象バイト境界
- * @param[out] out_is_aligned_ 判定結果格納先(true: alignment_境界にアラインされている, false: alignment_境界にアラインされていない)
  *
- * @return true 処理に成功し正常終了
+ * @return true alignment_が有効で、value_が指定されたバイト境界にアラインされている
  * @return false 以下のいずれか
- * - out_is_aligned_ == NULL
- * - alignment_が2の冪乗ではない
+ * - alignment_が0または2の冪乗ではない
+ * - value_が指定されたバイト境界にアラインされていない
+ *
+ * @note falseの場合、alignment_の不正と非アライン状態は区別しない。
  */
-bool memory_utility_is_aligned(size_t value_, size_t alignment_, bool* out_is_aligned_);
+bool memory_utility_is_aligned(size_t value_, size_t alignment_);
 
 /**
  * @brief value_のサイズを指定されたバイト境界(alignment_)の倍数に切り上げた時に必要となるpadding量を計算し、out_padding_size_に格納する

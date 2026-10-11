@@ -147,7 +147,6 @@ linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* alloca
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     const uintptr_t pool_address = (uintptr_t)memory_pool_;
-    bool is_aligned = false;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "allocator_")
@@ -162,12 +161,7 @@ linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* alloca
         ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided capacity_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
-    if(!memory_utility_is_aligned((uintptr_t)(memory_pool_), alignof(max_align_t), &is_aligned)) {
-        ret = LINEAR_ALLOCATOR_UNDEFINED_ERROR;
-        ERROR_MESSAGE("linear_allocator_initialize(%s) - memory_utility_is_aligned failed.", result_to_str(ret));
-        goto cleanup;
-    }
-    if(!is_aligned) {
+    if(!memory_utility_is_aligned((uintptr_t)(memory_pool_), alignof(max_align_t))) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided memory_pool_ is not valid.", result_to_str(ret));
         goto cleanup;
@@ -354,7 +348,6 @@ cleanup:
 linear_allocator_result_t linear_allocator_rollback(linear_allocator_t* allocator_, const linear_allocator_rollback_point_t* rollback_point_) {
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
-    bool is_aligned = false;
     size_t used_range = 0;
     uintptr_t start_addr = 0;
     uintptr_t end_addr = 0;
@@ -363,12 +356,7 @@ linear_allocator_result_t linear_allocator_rollback(linear_allocator_t* allocato
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(rollback_point_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback", "rollback_point_")
-    if(!memory_utility_is_aligned((uintptr_t)(rollback_point_->offset), alignof(max_align_t), &is_aligned)) {
-        ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
-        ERROR_MESSAGE("linear_allocator_rollback(%s) - memory_utility_is_aligned failed.", result_to_str(ret));
-        goto cleanup;
-    }
-    if(!is_aligned) {
+    if(!memory_utility_is_aligned((uintptr_t)(rollback_point_->offset), alignof(max_align_t))) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("linear_allocator_rollback(%s) - Provided offset is not valid.", result_to_str(ret));
         goto cleanup;
@@ -573,7 +561,6 @@ static const char* result_to_str(linear_allocator_result_t result_) {
 // Validators
 // ============================================================
 static bool is_valid_shallow(const linear_allocator_t* allocator_) {
-    bool is_aligned = false;
     uintptr_t head_address = 0;
     uintptr_t pool_address = 0;
     uintptr_t end_address = 0;
@@ -594,16 +581,10 @@ static bool is_valid_shallow(const linear_allocator_t* allocator_) {
 
     head_address = (uintptr_t)allocator_->head_ptr;
     pool_address = (uintptr_t)allocator_->memory_pool;
-    if(!memory_utility_is_aligned(head_address, alignof(max_align_t), &is_aligned)) {
+    if(!memory_utility_is_aligned(head_address, alignof(max_align_t))) {
         return false;
     }
-    if(!is_aligned) {
-        return false;
-    }
-    if(!memory_utility_is_aligned(pool_address, alignof(max_align_t), &is_aligned)) {
-        return false;
-    }
-    if(!is_aligned) {
+    if(!memory_utility_is_aligned(pool_address, alignof(max_align_t))) {
         return false;
     }
 
