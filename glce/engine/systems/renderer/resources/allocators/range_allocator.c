@@ -173,6 +173,7 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -463,12 +464,11 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
     }
     max_node_count = max_allocation_count_ * 2 + 1;
 
-    if((SIZE_MAX / max_node_count) < sizeof(node_t)) {
+    if(!size_mul_checked(max_node_count, sizeof(node_t), &node_pool_size)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("range_allocator_create(%s) - Failed to create range allocator. reason=node_pool_size_overflow, max_node_count=%zu, node_size=%zu, max_safe_node_count=%zu", result_to_str(ret), max_node_count, sizeof(node_t), SIZE_MAX / sizeof(node_t));
         goto cleanup;
     }
-    node_pool_size = sizeof(node_t) * max_node_count;
 
     ret_general_allocator = general_allocator_allocate(sizeof(range_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_allocator);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -761,6 +761,8 @@ void range_allocator_status_print(const range_allocator_status_t* status_) {
 void range_allocator_debug_print(const range_allocator_t* allocator_) {
     size_t index = 0;
     size_t max_free_block_size = 0;
+    size_t end_offset = 0;
+
     const node_t* node = NULL;
     range_allocator_status_t status = { 0 };
     bool valid = false;
@@ -798,10 +800,10 @@ void range_allocator_debug_print(const range_allocator_t* allocator_) {
         } else {
             state_str = state_undefined;
         }
-        if((SIZE_MAX - node->block_size) < node->offset) {
+        if(!size_add_checked(node->block_size, node->offset, &end_offset)) {
             fprintf(stdout, "    list_index = %zu state = %s offset = %zu, size = %zu, end = OVERFLOW\n", index, state_str, node->offset, node->block_size);
         } else {
-            fprintf(stdout, "    list_index = %zu state = %s offset = %zu, size = %zu, end = %zu\n", index, state_str, node->offset, node->block_size, node->offset + node->block_size);
+            fprintf(stdout, "    list_index = %zu state = %s offset = %zu, size = %zu, end = %zu\n", index, state_str, node->offset, node->block_size, end_offset);
         }
         node = node->next;
         index++;
@@ -816,10 +818,12 @@ void range_allocator_debug_print(const range_allocator_t* allocator_) {
 }
 
 bool range_allocation_is_valid(const range_allocation_t* allocation_) {
+    size_t end_offset = 0;
+
     if(NULL == allocation_) {
         return false;
     }
-    if((SIZE_MAX - allocation_->allocated_size) < allocation_->offset) {
+    if(!size_add_checked(allocation_->allocated_size, allocation_->offset, &end_offset)) {
         return false;
     }
     if(0 == allocation_->allocated_size) {
@@ -901,6 +905,7 @@ static range_allocator_result_t align_up(size_t base_align_, size_t required_siz
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t padding = 0;
+    size_t allocation_size = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_allocation_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "align_up", "out_allocation_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "align_up", "base_align_")
@@ -918,12 +923,12 @@ static range_allocator_result_t align_up(size_t base_align_, size_t required_siz
         padding = base_align_ - padding;
     }
 
-    if((SIZE_MAX - padding) < required_size_) {
+    if(!size_add_checked(padding, required_size_, &allocation_size)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("align_up(%s) - Failed to align allocation size. reason=required_size_plus_padding_overflow, required_size=%zu, base_align=%zu, padding=%zu, max_safe_required_size=%zu", result_to_str(ret), required_size_, base_align_, padding, SIZE_MAX - padding);
         goto cleanup;
     }
-    *out_allocation_size_ = required_size_ + padding;    // 割り当て領域の後ろにpaddingを追加し、offsetは常にbase_alignに整列されるようにする
+    *out_allocation_size_ = allocation_size;    // 割り当て領域の後ろにpaddingを追加し、offsetは常にbase_alignに整列されるようにする
 
     ret = RANGE_ALLOCATOR_SUCCESS;
 
@@ -1218,12 +1223,11 @@ static range_allocator_result_t allocate_from_node(range_allocator_t* allocator_
     if(node_->block_size == allocation_size_) {
         set_node_to_allocated(node_, node_->prev, node_->next);
     } else {
-        if((SIZE_MAX - allocation_size_) < node_->offset) {
+        if(!size_add_checked(allocation_size_, node_->offset, &new_node_offset)) {
             ret = RANGE_ALLOCATOR_OVERFLOW;
             ERROR_MESSAGE("allocate_from_node(%s) - Failed to allocate range from free block. reason=remaining_free_block_offset_overflow, node_offset=%zu, node_block_size=%zu, allocation_size=%zu, max_safe_node_offset=%zu", result_to_str(ret), node_->offset, node_->block_size, allocation_size_, SIZE_MAX - allocation_size_);
             goto cleanup;
         }
-        new_node_offset = node_->offset + allocation_size_;
         new_node_block_size = node_->block_size - allocation_size_;
 
         ret = node_acquire(allocator_, new_node_offset, new_node_block_size, &new_node);
@@ -1807,25 +1811,22 @@ static range_allocator_result_t free_node_merge_prev(range_allocator_t* allocato
         ERROR_MESSAGE("free_node_merge_prev(%s) - Failed to merge allocated node with previous free node. reason=previous_free_node_next_mismatch, allocated_node_offset=%zu, allocated_node_block_size=%zu, previous_node_offset=%zu, previous_node_block_size=%zu, expected_next=%p, actual_next=%p", result_to_str(ret), node_->offset, node_->block_size, node_->prev->offset, node_->prev->block_size, (void*)node_, (void*)node_->prev->next);
         goto cleanup;
     }
-
-    if((SIZE_MAX - node_->prev->offset) < node_->prev->block_size) {
+    if(!size_add_checked(node_->prev->offset, node_->prev->block_size, &tmp_offset)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev(%s) - Failed to merge allocated node with previous free node. reason=previous_free_block_end_overflow, previous_node_offset=%zu, previous_node_block_size=%zu, max_safe_block_size=%zu, allocated_node_offset=%zu", result_to_str(ret), node_->prev->offset, node_->prev->block_size, SIZE_MAX - node_->prev->offset, node_->offset);
         goto cleanup;
     }
-    tmp_offset = node_->prev->offset + node_->prev->block_size;
     if(tmp_offset != node_->offset) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev(%s) - Failed to merge allocated node with previous free node. reason=previous_free_block_end_mismatch, previous_node_offset=%zu, previous_node_block_size=%zu, previous_block_end=%zu, allocated_node_offset=%zu, allocated_node_block_size=%zu", result_to_str(ret), node_->prev->offset, node_->prev->block_size, tmp_offset, node_->offset, node_->block_size);
         goto cleanup;
     }
 
-    if((SIZE_MAX - node_->prev->block_size) < node_->block_size) {
+    if(!size_add_checked(node_->prev->block_size, node_->block_size, &new_block_size)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev(%s) - Failed to merge allocated node with previous free node. reason=merged_block_size_overflow, previous_node_offset=%zu, previous_node_block_size=%zu, allocated_node_offset=%zu, allocated_node_block_size=%zu, max_safe_allocated_block_size=%zu", result_to_str(ret), node_->prev->offset, node_->prev->block_size, node_->offset, node_->block_size, SIZE_MAX - node_->prev->block_size);
         goto cleanup;
     }
-    new_block_size = node_->prev->block_size + node_->block_size;
     tmp_node = node_->prev;
 
     ret = node_remove(allocator_, node_);
@@ -1970,24 +1971,22 @@ static range_allocator_result_t free_node_merge_next(range_allocator_t* allocato
         goto cleanup;
     }
 
-    if((SIZE_MAX - node_->offset) < node_->block_size) {
+    if(!size_add_checked(node_->offset, node_->block_size, &tmp_offset)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_next(%s) - Failed to merge allocated node with next free node. reason=allocated_block_end_overflow, allocated_node_offset=%zu, allocated_node_block_size=%zu, max_safe_block_size=%zu, next_node_offset=%zu", result_to_str(ret), node_->offset, node_->block_size, SIZE_MAX - node_->offset, node_->next->offset);
         goto cleanup;
     }
-    tmp_offset = node_->offset + node_->block_size;
     if(tmp_offset != node_->next->offset) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_next(%s) - Failed to merge allocated node with next free node. reason=allocated_block_end_mismatch, allocated_node_offset=%zu, allocated_node_block_size=%zu, allocated_block_end=%zu, next_node_offset=%zu, next_node_block_size=%zu", result_to_str(ret), node_->offset, node_->block_size, tmp_offset, node_->next->offset, node_->next->block_size);
         goto cleanup;
     }
 
-    if((SIZE_MAX - node_->next->block_size) < node_->block_size) {
+    if(!size_add_checked(node_->next->block_size, node_->block_size, &new_block_size)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_next(%s) - Failed to merge allocated node with next free node. reason=merged_block_size_overflow, allocated_node_offset=%zu, allocated_node_block_size=%zu, next_node_offset=%zu, next_node_block_size=%zu, max_safe_allocated_block_size=%zu", result_to_str(ret), node_->offset, node_->block_size, node_->next->offset, node_->next->block_size, SIZE_MAX - node_->next->block_size);
         goto cleanup;
     }
-    new_block_size = node_->next->block_size + node_->block_size;
 
     tmp_next = node_->next;
     ret = node_remove(allocator_, tmp_next);
@@ -2142,43 +2141,39 @@ static range_allocator_result_t free_node_merge_prev_next(range_allocator_t* all
         goto cleanup;
     }
 
-    if((SIZE_MAX - node_->prev->block_size) < node_->prev->offset) {
+    if(!size_add_checked(node_->prev->block_size, node_->prev->offset, &tmp_offset)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - Failed to merge allocated node with previous and next free nodes. reason=previous_free_block_end_overflow, previous_node_offset=%zu, previous_node_block_size=%zu, max_safe_block_size=%zu, allocated_node_offset=%zu", result_to_str(ret), node_->prev->offset, node_->prev->block_size, SIZE_MAX - node_->prev->offset, node_->offset);
         goto cleanup;
     }
-    tmp_offset = node_->prev->offset + node_->prev->block_size;
     if(tmp_offset != node_->offset) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - Failed to merge allocated node with previous and next free nodes. reason=previous_free_block_end_mismatch, previous_node_offset=%zu, previous_node_block_size=%zu, previous_block_end=%zu, allocated_node_offset=%zu, allocated_node_block_size=%zu", result_to_str(ret), node_->prev->offset, node_->prev->block_size, tmp_offset, node_->offset, node_->block_size);
         goto cleanup;
     }
 
-    if((SIZE_MAX - node_->block_size) < node_->offset) {
+    if(!size_add_checked(node_->block_size, node_->offset, &tmp_offset)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - Failed to merge allocated node with previous and next free nodes. reason=allocated_block_end_overflow, allocated_node_offset=%zu, allocated_node_block_size=%zu, max_safe_block_size=%zu, next_node_offset=%zu", result_to_str(ret), node_->offset, node_->block_size, SIZE_MAX - node_->offset, node_->next->offset);
         goto cleanup;
     }
-    tmp_offset = node_->offset + node_->block_size;
     if(tmp_offset != node_->next->offset) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - Failed to merge allocated node with previous and next free nodes. reason=allocated_block_end_mismatch, allocated_node_offset=%zu, allocated_node_block_size=%zu, allocated_block_end=%zu, next_node_offset=%zu, next_node_block_size=%zu", result_to_str(ret), node_->offset, node_->block_size, tmp_offset, node_->next->offset, node_->next->block_size);
         goto cleanup;
     }
 
-    if((SIZE_MAX - node_->prev->block_size) < node_->block_size) {
+    if(!size_add_checked(node_->prev->block_size, node_->block_size, &new_block_size)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - Failed to merge allocated node with previous and next free nodes. reason=previous_and_allocated_block_size_overflow, previous_node_offset=%zu, previous_node_block_size=%zu, allocated_node_offset=%zu, allocated_node_block_size=%zu, max_safe_allocated_block_size=%zu", result_to_str(ret), node_->prev->offset, node_->prev->block_size, node_->offset, node_->block_size, SIZE_MAX - node_->prev->block_size);
         goto cleanup;
     }
-    new_block_size = node_->prev->block_size + node_->block_size;
 
-    if((SIZE_MAX - node_->next->block_size) < new_block_size) {
+    if(!size_add_checked(node_->next->block_size, new_block_size, &new_block_size)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_node_merge_prev_next(%s) - Failed to merge allocated node with previous and next free nodes. reason=total_merged_block_size_overflow, previous_node_offset=%zu, previous_node_block_size=%zu, allocated_node_offset=%zu, allocated_node_block_size=%zu, next_node_offset=%zu, next_node_block_size=%zu, partial_merged_block_size=%zu, max_safe_partial_merged_block_size=%zu", result_to_str(ret), node_->prev->offset, node_->prev->block_size, node_->offset, node_->block_size, node_->next->offset, node_->next->block_size, new_block_size, SIZE_MAX - node_->next->block_size);
         goto cleanup;
     }
-    new_block_size += node_->next->block_size;
 
     tmp_node_prev = node_->prev;
     tmp_node_next = node_->next;
@@ -2285,18 +2280,19 @@ static range_allocator_result_t node_acquire(range_allocator_t* allocator_, size
 
     bool found = false;
     node_t* tmp_node = NULL;
+    size_t end_offset = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "allocator_")
     IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "out_node_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "*out_node_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != block_size_, ret, RANGE_ALLOCATOR_BAD_OPERATION, result_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_acquire", "block_size_")
 
-    if((SIZE_MAX - block_size_) < offset_) {
+    if(!size_add_checked(block_size_, offset_, &end_offset)) {
         ret = RANGE_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("node_acquire(%s) - Failed to acquire node from pool. reason=requested_range_end_overflow, range_offset=%zu, range_block_size=%zu, max_safe_block_size=%zu, memory_pool_size=%zu", result_to_str(ret), offset_, block_size_, SIZE_MAX - offset_, allocator_->memory_pool_size);
         goto cleanup;
     }
-    if(allocator_->memory_pool_size < (offset_ + block_size_)) {
+    if(allocator_->memory_pool_size < end_offset) {
         ret = RANGE_ALLOCATOR_BAD_OPERATION;
         ERROR_MESSAGE("node_acquire(%s) - Failed to acquire node from pool. reason=requested_range_exceeds_memory_pool, range_offset=%zu, range_block_size=%zu, range_end=%zu, memory_pool_size=%zu", result_to_str(ret), offset_, block_size_, offset_ + block_size_, allocator_->memory_pool_size);
         goto cleanup;
@@ -3158,6 +3154,7 @@ static bool range_allocator_is_valid(const range_allocator_t* allocator_) {
     size_t loop_count = 0;
     size_t expected_offset = 0;
     size_t expected_total_allocated_size = 0;
+    size_t end_offset = 0;
     bool found = false;
 
     if(NULL == allocator_) {
@@ -3201,10 +3198,10 @@ static bool range_allocator_is_valid(const range_allocator_t* allocator_) {
         if(0 != (node->offset % allocator_->base_align)) {
             return false;
         }
-        if((SIZE_MAX - node->block_size) < node->offset) {
+        if(!size_add_checked(node->block_size, node->offset, &end_offset)) {
             return false;
         }
-        if(allocator_->memory_pool_size < (node->offset + node->block_size)) {
+        if(allocator_->memory_pool_size < end_offset) {
             return false;
         }
         if(NODE_STATE_ALLOCATED == node->node_state && 0 != (node->block_size % allocator_->base_align)) {
@@ -3216,12 +3213,11 @@ static bool range_allocator_is_valid(const range_allocator_t* allocator_) {
             }
         }
         if(NODE_STATE_ALLOCATED == node->node_state) {
-            if((SIZE_MAX - node->block_size) < expected_total_allocated_size) {
+            if(!size_add_checked(node->block_size, expected_total_allocated_size, &expected_total_allocated_size)) {
                 return false;
             }
-            expected_total_allocated_size += node->block_size;
         }
-        expected_offset = node->offset + node->block_size;  // OVERFLOWチェックは直前で完了している
+        expected_offset = end_offset;
         prev = node;
         node = node->next;
         loop_count++;

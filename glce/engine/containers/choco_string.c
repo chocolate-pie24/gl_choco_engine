@@ -10,6 +10,7 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -196,6 +197,7 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
 
     choco_string_t* tmp_string = NULL;
     size_t src_len = 0;
+    size_t capacity = 0;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "src_")
@@ -211,17 +213,17 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
 
     src_len = mock_strlen(src_);
     if(0 != src_len) {
-        if((SIZE_MAX - 1) < src_len) {
+        if(!size_add_checked(src_len, 1, &capacity)) {
             ret = CHOCO_STRING_OVERFLOW;
             ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Provided string is too large.", result_to_str(ret));
             goto cleanup;
         }
-        ret = buffer_reserve(src_len + 1, tmp_string);
+        ret = buffer_reserve(capacity, tmp_string);
         if(CHOCO_STRING_SUCCESS != ret) {
             ERROR_MESSAGE("choco_string_create_from_c_string(%s) - Failed to reserve buffer space.", result_to_str(ret));
             goto cleanup;
         }
-        memcpy(tmp_string->buffer, src_, src_len + 1);
+        memcpy(tmp_string->buffer, src_, capacity);
         tmp_string->len = src_len;
     }
 
@@ -399,7 +401,9 @@ cleanup:
 // - 実装コードはプロジェクト作成者が作成した。
 choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_string_t* dst_) {
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
+
     size_t src_len = 0;
+    size_t buff_size = 0;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "src_")
@@ -420,21 +424,21 @@ choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_st
         }
         dst_->len = 0;
     } else {
-        if((SIZE_MAX - 1) < src_len) {
+        if(!size_add_checked(src_len, 1, &buff_size)) {
             ret = CHOCO_STRING_OVERFLOW;
             ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Provided string is too large.", result_to_str(ret));
             goto cleanup;
         }
-        if(dst_->capacity >= (src_len + 1)) {
-            memcpy(dst_->buffer, src_, src_len + 1);
+        if(dst_->capacity >= buff_size) {
+            memcpy(dst_->buffer, src_, buff_size);
             dst_->len = src_len;
         } else {
-            ret = buffer_resize(src_len + 1, dst_);
+            ret = buffer_resize(buff_size, dst_);
             if(CHOCO_STRING_SUCCESS != ret) {
                 ERROR_MESSAGE("choco_string_copy_from_c_string(%s) - Failed to resize the buffer.", result_to_str(ret));
                 goto cleanup;
             }
-            memcpy(dst_->buffer, src_, src_len + 1);
+            memcpy(dst_->buffer, src_, buff_size);
             dst_->len = src_len;
         }
     }
@@ -488,6 +492,7 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t dst_len_new = 0;
+    size_t new_capacity = 0;
     char* tmp_buffer = NULL;
 
     // Preconditions.
@@ -512,18 +517,18 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
 #endif
 
     // Prepare.
-    if((SIZE_MAX - dst_->len - 1) < string_->len) {
+    if(!size_add_checked(string_->len, dst_->len + 1, &new_capacity)) {
         ret = CHOCO_STRING_OVERFLOW;
         ERROR_MESSAGE("choco_string_concat(%s) - Resulting string length is too large.", result_to_str(ret));
         goto cleanup;
     }
     if(0 != string_->len) {
         dst_len_new = string_->len + dst_->len;
-        if((dst_len_new + 1) <= dst_->capacity) {
+        if(new_capacity <= dst_->capacity) {
             memcpy(dst_->buffer + dst_->len, string_->buffer, string_->len + 1);
             dst_->len = dst_len_new;
         } else {
-            ret_general_allocator = general_allocator_allocate(dst_len_new + 1, GENERAL_ALLOCATOR_MEMORY_TAG_STRING, (void**)&tmp_buffer);
+            ret_general_allocator = general_allocator_allocate(new_capacity, GENERAL_ALLOCATOR_MEMORY_TAG_STRING, (void**)&tmp_buffer);
             if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
                 ret = result_convert_general_allocator(ret_general_allocator);
                 ERROR_MESSAGE("choco_string_concat(%s) - Failed to allocate memory for 'tmp_buffer'.", result_to_str(ret));
@@ -538,7 +543,7 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
             }
 
             dst_->buffer = tmp_buffer;
-            dst_->capacity = dst_len_new + 1;
+            dst_->capacity = new_capacity;
             dst_->len = dst_len_new;
         }
     }
@@ -592,6 +597,7 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
 
     size_t dst_len_new = 0;
     size_t src_len = 0;
+    size_t new_capacity = 0;
     char* tmp_buffer = NULL;
 
     // Preconditions.
@@ -607,18 +613,18 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
 
     // Prepare.
     src_len = mock_strlen(string_);
-    if((SIZE_MAX - dst_->len - 1) < src_len) {
+    if(!size_add_checked(src_len, dst_->len + 1, &new_capacity)) {
         ret = CHOCO_STRING_OVERFLOW;
         ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Resulting string length is too large.", result_to_str(ret));
         goto cleanup;
     }
     if(0 != src_len) {
         dst_len_new = src_len + dst_->len;
-        if((dst_len_new + 1) <= dst_->capacity) {
+        if(new_capacity <= dst_->capacity) {
             memcpy(dst_->buffer + dst_->len, string_, src_len + 1);
             dst_->len = dst_len_new;
         } else {
-            ret_general_allocator = general_allocator_allocate(dst_len_new + 1, GENERAL_ALLOCATOR_MEMORY_TAG_STRING, (void**)&tmp_buffer);
+            ret_general_allocator = general_allocator_allocate(new_capacity, GENERAL_ALLOCATOR_MEMORY_TAG_STRING, (void**)&tmp_buffer);
             if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
                 ret = result_convert_general_allocator(ret_general_allocator);
                 ERROR_MESSAGE("choco_string_concat_from_c_string(%s) - Failed to allocate memory for 'tmp_buffer'.", result_to_str(ret));
@@ -633,7 +639,7 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
             }
 
             dst_->buffer = tmp_buffer;
-            dst_->capacity = dst_len_new + 1;
+            dst_->capacity = new_capacity;
             dst_->len = dst_len_new;
         }
     }

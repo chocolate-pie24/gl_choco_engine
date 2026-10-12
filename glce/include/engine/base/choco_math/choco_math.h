@@ -339,6 +339,10 @@ void mat4f_rot_z(float radian_, mat4x4f_t* mat_);
  */
 void mat4f_rot_xyz(float x_radian_, float y_radian_, float z_radian_, mat4x4f_t* mat_);
 
+bool size_add_checked(size_t a_, size_t b_, size_t* out_result_);
+
+bool size_mul_checked(size_t a_, size_t b_, size_t* out_result_);
+
 #ifdef __cplusplus
 }
 #endif
