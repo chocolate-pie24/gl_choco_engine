@@ -54,6 +54,10 @@ struct lit_mesh_shader {
     int32_t material_specular_location;
     int32_t material_shininess_location;
 
+    int32_t light_direction_location;
+    int32_t light_color_location;
+    int32_t light_intensity_location;
+
     renderer_backend_context_t* backend_context;
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
     renderer_backend_vao_t* vao;            /** シェーダーVAO */
@@ -392,30 +396,110 @@ cleanup:
     return ret;
 }
 
+shader_result_t lit_mesh_shader_light_direction_set(const lit_mesh_shader_t* shader_, vec3f_t direction_) {
+    shader_result_t ret = SHADER_INVALID_ARGUMENT;
+
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_light_direction_set", "shader_")
+    if(!is_valid_shallow(shader_)) {
+        ret = SHADER_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_shader_light_direction_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->light_direction_location, direction_.elem);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("lit_mesh_shader_light_direction_set(%s) - Failed to set light direction.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = SHADER_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+shader_result_t lit_mesh_shader_light_color_intensity_set(const lit_mesh_shader_t* shader_, vec3f_t color_, float intensity_) {
+    shader_result_t ret = SHADER_INVALID_ARGUMENT;
+
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_light_color_intensity_set", "shader_")
+    if(!is_valid_shallow(shader_)) {
+        ret = SHADER_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_shader_light_color_intensity_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->light_color_location, color_.elem);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("lit_mesh_shader_light_color_intensity_set(%s) - Failed to set light color.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_float_uniform_set(shader_->backend_context, shader_->light_intensity_location, intensity_);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("lit_mesh_shader_light_color_intensity_set(%s) - Failed to set light color.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = SHADER_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 shader_result_t lit_mesh_shader_material_set(const lit_mesh_shader_t* shader_, const untextured_material_t* material_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "material_")
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_material_set", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_material_set", "material_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!untextured_material_is_valid(material_)) {
         ret = SHADER_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Provided material_ is not valid.", shader_result_to_str(ret));
+        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Provided material_ is not valid.", shader_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    // ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(shader_->backend_context, shader_->projection_matrix_location, should_transpose_, projection_matrix_->elem);
-    // if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-    //     ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-    //     ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Failed to set projection matrix.", shader_result_to_str(ret));
-    //     goto cleanup;
-    // }
+    ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->material_ambient_location, material_->ambient.elem);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Failed to set ambient.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->material_diffuse_location, material_->diffuse.elem);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Failed to set diffuse.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->material_specular_location, material_->specular.elem);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Failed to set specular.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_float_uniform_set(shader_->backend_context, shader_->material_shininess_location, material_->shininess);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Failed to set shininess.", shader_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = SHADER_SUCCESS;
 
@@ -461,6 +545,10 @@ static shader_result_t program_initialize(lit_mesh_shader_t* shader_, const char
     int32_t tmp_material_diffuse_location = 0;
     int32_t tmp_material_specular_location = 0;
     int32_t tmp_material_shininess_location = 0;
+
+    int32_t tmp_light_direction_location = 0;
+    int32_t tmp_light_color_location = 0;
+    int32_t tmp_light_intensity_location = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "vertex_shader_fullpath_")
@@ -523,6 +611,27 @@ static shader_result_t program_initialize(lit_mesh_shader_t* shader_, const char
         goto cleanup;
     }
 
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_light_direction", &tmp_light_direction_location);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("program_initialize(%s) - Failed to get light direction location.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_light_color", &tmp_light_color_location);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("program_initialize(%s) - Failed to get light color location.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_shader_uniform_location_get(shader_->backend_context, tmp_shader, "g_light_intensity", &tmp_light_intensity_location);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("program_initialize(%s) - Failed to get light color location.", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
     shader_->model_matrix_location = tmp_model_matrix_location;
     shader_->view_matrix_location = tmp_view_matrix_location;
     shader_->projection_matrix_location = tmp_projection_matrix_location;
@@ -531,6 +640,9 @@ static shader_result_t program_initialize(lit_mesh_shader_t* shader_, const char
     shader_->material_diffuse_location = tmp_material_diffuse_location;
     shader_->material_shininess_location = tmp_material_shininess_location;
     shader_->material_specular_location = tmp_material_specular_location;
+    shader_->light_direction_location = tmp_light_direction_location;
+    shader_->light_color_location = tmp_light_color_location;
+    shader_->light_intensity_location = tmp_light_intensity_location;
 
     shader_->shader = tmp_shader;
     tmp_shader = NULL;

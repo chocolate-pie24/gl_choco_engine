@@ -18,6 +18,8 @@
 #include "engine/core/geometry_primitive/aabb_3d.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
+#include "engine/light/directional_light.h"
+
 #include "engine/io_utils/fs_path.h"
 
 #include "engine/resource/geometry/conversion/geometry_conversion.h"
@@ -278,6 +280,133 @@ render_resource_result_t lit_mesh_render_resource_projection_matrix_set(lit_mesh
     if(!lit_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_render_resource_projection_matrix_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = RENDER_RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_resource_result_t lit_mesh_render_resource_light_direction_set(lit_mesh_render_resource_t* render_resource_, vec3f_t direction_) {
+    render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_light_direction_set", "render_resource_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_light_direction_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_shader = lit_mesh_shader_use(render_resource_->shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_render_resource_light_direction_set(%s) - lit_mesh_shader_use failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = lit_mesh_shader_light_direction_set(render_resource_->shader, direction_);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_render_resource_light_direction_set(%s) - lit_mesh_shader_light_direction_set failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!lit_mesh_render_resource_is_valid(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_light_direction_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = RENDER_RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_resource_result_t lit_mesh_render_resource_light_color_intensity_set(lit_mesh_render_resource_t* render_resource_, vec3f_t color_, float intensity_) {
+    render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_light_color_intensity_set", "render_resource_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_light_color_intensity_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_shader = lit_mesh_shader_use(render_resource_->shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_render_resource_light_color_intensity_set(%s) - lit_mesh_shader_use failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = lit_mesh_shader_light_color_intensity_set(render_resource_->shader, color_, intensity_);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_render_resource_light_color_intensity_set(%s) - lit_mesh_shader_light_color_intensity_set failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!lit_mesh_render_resource_is_valid(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_light_color_intensity_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = RENDER_RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_resource_result_t lit_mesh_render_resource_material_set(lit_mesh_render_resource_t* render_resource_, const untextured_material_t* material_) {
+    render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_material_set", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_material_set", "material_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_material_set(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_shader = lit_mesh_shader_use(render_resource_->shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_render_resource_material_set(%s) - lit_mesh_shader_use failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = lit_mesh_shader_material_set(render_resource_->shader, material_);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_render_resource_material_set(%s) - lit_mesh_shader_material_set failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!lit_mesh_render_resource_is_valid(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_material_set(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif

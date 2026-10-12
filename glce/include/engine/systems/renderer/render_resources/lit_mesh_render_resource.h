@@ -12,6 +12,8 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+#include "engine/base/choco_math/math_types.h"
+
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 
 typedef struct lit_mesh_render_resource lit_mesh_render_resource_t;
@@ -21,6 +23,7 @@ typedef struct lit_mesh_shader_config lit_mesh_shader_config_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct mat4x4f mat4x4f_t;
 typedef struct aabb_3d aabb_3d_t;
+typedef struct untextured_material untextured_material_t;
 
 render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_config_t* config_, size_t max_geometry_count_, renderer_backend_context_t* backend_context_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, lit_mesh_render_resource_t** out_render_resource_);
 
@@ -35,6 +38,13 @@ render_resource_result_t lit_mesh_render_resource_geometry_release(lit_mesh_rend
 render_resource_result_t lit_mesh_render_resource_view_matrix_set(lit_mesh_render_resource_t* render_resource_, const mat4x4f_t* view_matrix_);
 
 render_resource_result_t lit_mesh_render_resource_projection_matrix_set(lit_mesh_render_resource_t* render_resource_, const mat4x4f_t* projection_matrix_);
+
+// direction_の座標系はview座標系
+render_resource_result_t lit_mesh_render_resource_light_direction_set(lit_mesh_render_resource_t* render_resource_, vec3f_t direction_);
+
+render_resource_result_t lit_mesh_render_resource_light_color_intensity_set(lit_mesh_render_resource_t* render_resource_, vec3f_t color_, float intensity_);
+
+render_resource_result_t lit_mesh_render_resource_material_set(lit_mesh_render_resource_t* render_resource_, const untextured_material_t* material_);
 
 // Draw
 render_resource_result_t lit_mesh_render_resource_draw(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);

@@ -124,6 +124,8 @@ float vec3f_length(vec3f_t vec_);
  */
 vec3f_t vec3f_normalize(vec3f_t vec_);
 
+bool vec3f_is_normalized(vec3f_t vec_);
+
 /**
  * @brief 3次元ベクトルの全要素が有限の値かをチェックする
  *

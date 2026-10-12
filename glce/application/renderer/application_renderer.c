@@ -11,11 +11,15 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/core/geometry_primitive/aabb_3d.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+
+#include "engine/light/core/light_types.h"
+#include "engine/light/directional_light.h"
 
 #include "engine/systems/renderer/config/renderer_config.h"
 
@@ -175,16 +179,26 @@ void application_renderer_deinitialize(application_renderer_t* renderer_) {
     renderer_backend_deinitialize(renderer_->renderer_backend_context);
 }
 
-application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, application_frame_state_t* frame_state_) {
+application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* light_, application_frame_state_t* frame_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
+    vec4f_t world_light_direction = { 0 };
+    vec4f_t view_light_direction4 = { 0 };
+    vec3f_t view_light_direction3 = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "renderer_")
     IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "view_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(light_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "light_")
     IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "frame_state_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!directional_light_is_valid(light_)) {
+        ret = APPLICATION_INVALID_ARGUMENT;
+        ERROR_MESSAGE("application_renderer_update(%s) - Provided light_ is not valid.", application_result_to_str(ret));
+        goto cleanup;
+    }
     if(!is_valid_shallow(renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
         ERROR_MESSAGE("application_renderer_update(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
@@ -241,6 +255,24 @@ application_result_t application_renderer_update(application_renderer_t* rendere
         if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
             ret = application_result_convert_render_resource(ret_render_resource);
             ERROR_MESSAGE("application_renderer_update(%s) - lit_mesh_render_resource_view_matrix_set failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+
+        // TODO: light_dirtyをframe_stateに追加する(light操作インターフェイス追加後)
+        world_light_direction = vec4f_initialize(light_->direction.elem[0], light_->direction.elem[1], light_->direction.elem[2], 0.0f);
+        view_light_direction4 = mat4f_vec4f_mul(view_matrix_, world_light_direction);
+        view_light_direction3 = vec3f_initialize(view_light_direction4.elem[0], view_light_direction4.elem[1], view_light_direction4.elem[2]);
+        ret_render_resource = lit_mesh_render_resource_light_direction_set(renderer_->lit_mesh_render_resource, view_light_direction3);
+        if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+            ret = application_result_convert_render_resource(ret_render_resource);
+            ERROR_MESSAGE("application_renderer_update(%s) - lit_mesh_render_resource_light_direction_set failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret_render_resource = lit_mesh_render_resource_light_color_intensity_set(renderer_->lit_mesh_render_resource, light_->color, light_->intensity);
+        if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+            ret = application_result_convert_render_resource(ret_render_resource);
+            ERROR_MESSAGE("application_renderer_update(%s) - lit_mesh_render_resource_light_color_intensity_set failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
@@ -866,6 +898,34 @@ application_result_t application_renderer_lit_mesh_geometry_convert_to_aabb_3d(a
     // aabb_3d_tのcanonical validator追加後にtmp_aabb_3dのvalidationを実行する
 
     *out_aabb_3d_ = tmp_aabb_3d;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+application_result_t application_renderer_lit_mesh_material_set(application_renderer_t* renderer_, const untextured_material_t* material_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_material_set", "renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_material_set", "material_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(renderer_)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("application_renderer_lit_mesh_material_set(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_render_resource = lit_mesh_render_resource_material_set(renderer_->lit_mesh_render_resource, material_);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_lit_mesh_material_set(%s) - lit_mesh_render_resource_material_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = APPLICATION_SUCCESS;
 

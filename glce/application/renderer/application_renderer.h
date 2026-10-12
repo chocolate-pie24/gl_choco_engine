@@ -24,13 +24,15 @@ typedef struct line_vertex line_vertex_t;
 typedef struct aabb_3d aabb_3d_t;
 typedef struct point_vertex point_vertex_t;
 typedef struct application_frame_state application_frame_state_t;
+typedef struct directional_light directional_light_t;
+typedef struct untextured_material untextured_material_t;
 
 application_result_t application_renderer_create(const renderer_config_t* config_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_renderer_);
 
 void application_renderer_deinitialize(application_renderer_t* renderer_);
 
 // TODO: 全shader一括更新ではなく、個別に更新できるようにAPIを分割する
-application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, application_frame_state_t* frame_state_);
+application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* light_, application_frame_state_t* frame_state_);
 
 // Geometry Import
 application_result_t application_renderer_line_mesh_geometry_import_from_vertices(application_renderer_t* renderer_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
@@ -71,6 +73,9 @@ application_result_t application_renderer_ui_mesh_draw(application_renderer_t* r
 
 // Utility(これらはそのうち適切な場所に移す)
 application_result_t application_renderer_lit_mesh_geometry_convert_to_aabb_3d(application_renderer_t* renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
+
+// TODO: remove this!! material_registryとの接続追加後に削除
+application_result_t application_renderer_lit_mesh_material_set(application_renderer_t* renderer_, const untextured_material_t* material_);
 
 bool application_renderer_is_valid(const application_renderer_t* renderer_);
 

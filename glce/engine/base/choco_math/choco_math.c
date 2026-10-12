@@ -113,6 +113,14 @@ vec3f_t vec3f_normalize(vec3f_t vec_) {
     return ret;
 }
 
+bool vec3f_is_normalized(vec3f_t vec_) {
+    const float length = vec3f_length(vec_);
+    if(is_equal_float(length, 1.0f)) {
+        return true;
+    }
+    return false;
+}
+
 bool vec3f_is_finite(vec3f_t vec_) {
     if(!isfinite(vec_.elem[0]) || !isfinite(vec_.elem[1]) || !isfinite(vec_.elem[2])) {
         return false;

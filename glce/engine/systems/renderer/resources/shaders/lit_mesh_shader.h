@@ -25,6 +25,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "engine/base/choco_math/math_types.h"
+
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 typedef struct lit_mesh_shader lit_mesh_shader_t;                   /**< 単色ライティング描画用シェーダーリソースのopaque型 */
@@ -53,6 +55,11 @@ shader_result_t lit_mesh_shader_model_matrix_set(const lit_mesh_shader_t* shader
 shader_result_t lit_mesh_shader_view_matrix_set(const lit_mesh_shader_t* shader_, const mat4x4f_t* view_matrix_, bool should_transpose_);
 
 shader_result_t lit_mesh_shader_projection_matrix_set(const lit_mesh_shader_t* shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
+
+// direction_の座標系はview座標系
+shader_result_t lit_mesh_shader_light_direction_set(const lit_mesh_shader_t* shader_, vec3f_t direction_);
+
+shader_result_t lit_mesh_shader_light_color_intensity_set(const lit_mesh_shader_t* shader_, vec3f_t color_, float intensity_);
 
 shader_result_t lit_mesh_shader_material_set(const lit_mesh_shader_t* shader_, const untextured_material_t* material_);
 

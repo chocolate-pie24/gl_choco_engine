@@ -38,6 +38,9 @@
 
 #include "engine/resource/loaders/untextured_material_config_loader.h"  // TODO: remove this!!
 
+#include "engine/light/core/light_types.h"
+#include "engine/light/directional_light.h"
+
 // Platform System
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/platform_system/config/platform_system_config.h"
@@ -52,6 +55,8 @@
 // Renderer System
 #include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/config/renderer_config.h"
+#include "engine/systems/renderer/resources/material/material_types.h"
+#include "engine/systems/renderer/render_resources/lit_mesh_render_resource.h"  // TODO: remove this!!
 
 // Application Layer
 #include "application/core/application_types.h"
@@ -95,6 +100,9 @@ typedef struct application_state {
     // Camera System
     application_flight_camera_t* flight_camera;
 
+    // Light
+    directional_light_t directional_light;
+
     // Renderer System
     application_renderer_t* renderer;
 
@@ -108,6 +116,9 @@ typedef struct application_state {
     uint16_t tex_id_rabbit;
     uint16_t tex_id_frog;
     uint16_t tex_id_green;
+
+    // Material(TODO: remove this!!)
+    untextured_material_t penguin_material;
 
     // Geometry ID
     bool should_draw_penguin_aabb;
@@ -125,9 +136,6 @@ typedef struct application_state {
     mat4x4f_t rabbit_mesh_model_mat;
     mat4x4f_t frog_mesh_model_mat;
     mat4x4f_t green_mesh_model_mat;
-
-    // begin temporary TODO: remove this!!
-    untextured_material_config_t penguin_material_config;
     // end temporary
 } application_state_t;
 
@@ -157,6 +165,8 @@ application_result_t application_create(void) {
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+
+    light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
 
     application_state_t* tmp_state = NULL;
 
@@ -226,6 +236,19 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     INFO_MESSAGE("flight camera system created successfully.");
+
+    // light
+    INFO_MESSAGE("Creating directional light...");
+    // NOTE: 設定値の意味
+    // direction: 正面から少し斜め上の光で、面の違いが見やすい
+    // color: 白色光。色による影響を除外できる
+    // intensity: 明るさの計算と結果を比較しやすい
+    ret_light_result = directional_light_initialize(vec3f_initialize(0.4f, 0.8f, 1.0f), vec3f_initialize(1.0f, 1.0f, 1.0f), 10.0f, &tmp_state->directional_light);
+    if(LIGHT_SUCCESS != ret_light_result) {
+        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
+        ERROR_MESSAGE("application_create(%s) - directional_light_initialize failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
 
     // application renderer
     INFO_MESSAGE("Creating renderer system...");
@@ -357,7 +380,7 @@ application_result_t application_run(void) {
     s_application_state->frame_state.projection_dirty = true;
     s_application_state->frame_state.view_dirty = true;
     s_application_state->frame_state.window_resized = true;
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->frame_state);
+    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_run(%s) - application_renderer_update failed.", application_result_to_str(ret));
         goto cleanup;
@@ -374,12 +397,6 @@ application_result_t application_run(void) {
     if(APPLICATION_SUCCESS != ret) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run - Failed to import lit mesh geometry.");
-        goto cleanup;
-    }
-    ret = penguin_material_load(s_application_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run - penguin_material_load failed.");
         goto cleanup;
     }
 
@@ -447,6 +464,7 @@ application_result_t application_run(void) {
 
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
         glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
 
         // UI描画
@@ -541,7 +559,7 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->frame_state);
+    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", application_result_to_str(ret));
         goto cleanup;
@@ -718,6 +736,20 @@ static application_result_t lit_mesh_geometry_import(application_state_t* state_
         goto cleanup;
     }
 
+    // begin temporary
+    ret = penguin_material_load(s_application_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("lit_mesh_geometry_import - penguin_material_load failed.");
+        goto cleanup;
+    }
+    ret = application_renderer_lit_mesh_material_set(state_->renderer, &state_->penguin_material);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("lit_mesh_geometry_import(%s) - application_renderer_lit_mesh_material_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    // end temporary
+
     ret = APPLICATION_SUCCESS;
 
 cleanup:
@@ -828,7 +860,10 @@ static application_result_t penguin_material_load(application_state_t* state_) {
     INFO_MESSAGE("  specular: %f, %f, %f", config.specular.elem[0], config.specular.elem[1], config.specular.elem[2]);
     INFO_MESSAGE("  shininess: %f", config.shininess);
 
-    state_->penguin_material_config = config;
+    state_->penguin_material.ambient = config.ambient;
+    state_->penguin_material.diffuse = config.diffuse;
+    state_->penguin_material.shininess = config.shininess;
+    state_->penguin_material.specular = config.specular;
 
     ret = APPLICATION_SUCCESS;
 
