@@ -93,7 +93,7 @@ application_result_t application_renderer_create(const renderer_config_t* config
     }
 
     // TODO: 128をconfigで与えるように変更
-    ret_render_resource = lit_mesh_render_resource_create(&config_->lit_mesh_shader_config, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_lit_mesh_render_resource);
+    ret_render_resource = lit_mesh_render_resource_create(&config_->lit_mesh_shader_config, 128, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_lit_mesh_render_resource);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = application_result_convert_render_resource(ret_render_resource);
         ERROR_MESSAGE("application_renderer_create(%s) - lit_mesh_render_resource_create failed.", application_result_to_str(ret));
@@ -640,6 +640,83 @@ cleanup:
     return ret;
 }
 
+application_result_t application_renderer_untextured_material_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    uint16_t tmp_material_id = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_import_from_file", "renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_import_from_file", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_import_from_file", "resource_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_import_from_file", "out_material_id_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(renderer_)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("application_renderer_untextured_material_import_from_file(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_render_resource = lit_mesh_render_resource_material_import_from_config(renderer_->lit_mesh_render_resource, resource_name_, resource_fullpath_, &tmp_material_id);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_untextured_material_import_from_file(%s) - lit_mesh_render_resource_material_import_from_config failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!application_renderer_is_valid(renderer_)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("application_renderer_untextured_material_import_from_file(%s) - Postcondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    *out_material_id_ = tmp_material_id;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+application_result_t application_renderer_untextured_material_release(application_renderer_t* renderer_, uint16_t material_id_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_release", "renderer_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(renderer_)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("application_renderer_untextured_material_release(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_render_resource = lit_mesh_render_resource_material_release(renderer_->lit_mesh_render_resource, material_id_);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_untextured_material_release(%s) - lit_mesh_render_resource_material_release failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!application_renderer_is_valid(renderer_)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("application_renderer_untextured_material_release(%s) - Postcondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 application_result_t application_renderer_ui_mesh_texture_import_from_bmp(application_renderer_t* renderer_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
@@ -787,7 +864,7 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_lit_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_) {
+application_result_t application_renderer_lit_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
@@ -802,7 +879,7 @@ application_result_t application_renderer_lit_mesh_draw(application_renderer_t* 
     }
 #endif
 
-    ret_render_resource = lit_mesh_render_resource_draw(renderer_->lit_mesh_render_resource, geometry_id_, model_matrix_);
+    ret_render_resource = lit_mesh_render_resource_draw(renderer_->lit_mesh_render_resource, geometry_id_, material_id_, model_matrix_);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = application_result_convert_render_resource(ret_render_resource);
         ERROR_MESSAGE("application_renderer_lit_mesh_draw(%s) - lit_mesh_render_resource_draw failed.", application_result_to_str(ret));

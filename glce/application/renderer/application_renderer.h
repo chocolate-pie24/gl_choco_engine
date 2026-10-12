@@ -54,6 +54,12 @@ application_result_t application_renderer_point_mesh_geometry_release(applicatio
 
 application_result_t application_renderer_ui_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
 
+// Material Import
+application_result_t application_renderer_untextured_material_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
+
+// Material Release
+application_result_t application_renderer_untextured_material_release(application_renderer_t* renderer_, uint16_t material_id_);
+
 // Texture Import
 application_result_t application_renderer_ui_mesh_texture_import_from_bmp(application_renderer_t* renderer_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_);
 
@@ -65,7 +71,7 @@ application_result_t application_renderer_ui_mesh_texture_release(application_re
 // Mesh Draw
 application_result_t application_renderer_line_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_, const uint8_t color_[4]);
 
-application_result_t application_renderer_lit_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);
+application_result_t application_renderer_lit_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
 
 application_result_t application_renderer_point_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);
 
@@ -73,9 +79,6 @@ application_result_t application_renderer_ui_mesh_draw(application_renderer_t* r
 
 // Utility(これらはそのうち適切な場所に移す)
 application_result_t application_renderer_lit_mesh_geometry_convert_to_aabb_3d(application_renderer_t* renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
-
-// TODO: remove this!! material_registryとの接続追加後に削除
-application_result_t application_renderer_lit_mesh_material_set(application_renderer_t* renderer_, const untextured_material_t* material_);
 
 bool application_renderer_is_valid(const application_renderer_t* renderer_);
 

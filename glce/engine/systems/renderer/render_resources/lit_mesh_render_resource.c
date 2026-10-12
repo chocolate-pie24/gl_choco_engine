@@ -27,11 +27,15 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resources/shaders/lit_mesh_shader.h"
+#include "engine/systems/renderer/resources/material/material_types.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h"
+#include "engine/systems/renderer/resource_registries/material/untextured_material_registry.h"
+
 #include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resource_pipelines/geometries/lit_mesh_geometry_pipeline.h"
+#include "engine/systems/renderer/resource_pipelines/materials/untextured_material_pipeline.h"
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 #include "engine/systems/renderer/render_resources/core/render_resource_err_utils.h"
@@ -39,12 +43,13 @@
 struct lit_mesh_render_resource {
     lit_mesh_shader_t* shader;
     lit_mesh_geometry_registry_t* geometry_registry;
+    untextured_material_registry_t* material_registry;
 };
 
 static render_resource_result_t shader_create(const lit_mesh_shader_config_t* config_, renderer_backend_context_t* backend_context_, const char* executable_directory_, const char* shader_dir_, lit_mesh_shader_t** out_shader_);
 static bool is_valid_shallow(const lit_mesh_render_resource_t* render_resource_);
 
-render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_config_t* config_, size_t max_geometry_count_, renderer_backend_context_t* backend_context_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, lit_mesh_render_resource_t** out_render_resource_) {
+render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_config_t* config_, size_t max_geometry_count_, size_t max_material_count_, renderer_backend_context_t* backend_context_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, lit_mesh_render_resource_t** out_render_resource_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
@@ -52,7 +57,8 @@ render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_c
 
     lit_mesh_render_resource_t* tmp_render_resource = NULL;
     lit_mesh_shader_t* tmp_shader = NULL;
-    lit_mesh_geometry_registry_t* tmp_registry = NULL;
+    lit_mesh_geometry_registry_t* tmp_geometry_registry = NULL;
+    untextured_material_registry_t* tmp_material_registry = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_create", "config_")
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_create", "backend_context_")
@@ -75,15 +81,23 @@ render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_c
         goto cleanup;
     }
 
-    ret_resource_registry = lit_mesh_geometry_registry_create(max_geometry_count_, allocator_, &tmp_registry);
+    ret_resource_registry = lit_mesh_geometry_registry_create(max_geometry_count_, allocator_, &tmp_geometry_registry);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = render_resource_result_convert_resource_registry(ret_resource_registry);
         ERROR_MESSAGE("lit_mesh_render_resource_create(%s) - lit_mesh_geometry_registry_create failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
+    ret_resource_registry = untextured_material_registry_create(max_material_count_, allocator_, &tmp_material_registry);
+    if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+        ret = render_resource_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("lit_mesh_render_resource_create(%s) - untextured_material_registry_create failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
     tmp_render_resource->shader = tmp_shader;
-    tmp_render_resource->geometry_registry = tmp_registry;
+    tmp_render_resource->geometry_registry = tmp_geometry_registry;
+    tmp_render_resource->material_registry = tmp_material_registry;
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!lit_mesh_render_resource_is_valid(tmp_render_resource)) {
@@ -96,14 +110,18 @@ render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_c
     *out_render_resource_ = tmp_render_resource;
     tmp_render_resource = NULL;
     tmp_shader = NULL;
-    tmp_registry = NULL;
+    tmp_geometry_registry = NULL;
+    tmp_material_registry = NULL;
 
     ret = RENDER_RESOURCE_SUCCESS;
 
 cleanup:
     if(RENDER_RESOURCE_DATA_CORRUPTED != ret) {
-        if(NULL != tmp_registry && NULL != tmp_shader) {
-            lit_mesh_geometry_registry_deinitialize(tmp_registry, tmp_shader);
+        if(NULL != tmp_geometry_registry && NULL != tmp_shader) {
+            lit_mesh_geometry_registry_deinitialize(tmp_geometry_registry, tmp_shader);
+        }
+        if(NULL != tmp_material_registry) {
+            untextured_material_registry_deinitialize(tmp_material_registry);
         }
         if(NULL != tmp_shader) {
             lit_mesh_shader_destroy(&tmp_shader);
@@ -124,6 +142,7 @@ void lit_mesh_render_resource_deinitialize(lit_mesh_render_resource_t* render_re
 #endif
 
     lit_mesh_geometry_registry_deinitialize(render_resource_->geometry_registry, render_resource_->shader);
+    untextured_material_registry_deinitialize(render_resource_->material_registry);
     lit_mesh_shader_destroy(&render_resource_->shader);
 }
 
@@ -194,6 +213,83 @@ render_resource_result_t lit_mesh_render_resource_geometry_release(lit_mesh_rend
     if(!lit_mesh_render_resource_is_valid(render_resource_)) {
         ret = RENDER_RESOURCE_DATA_CORRUPTED;
         ERROR_MESSAGE("lit_mesh_render_resource_geometry_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = RENDER_RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_resource_result_t lit_mesh_render_resource_material_import_from_config(lit_mesh_render_resource_t* render_resource_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_) {
+    render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    uint16_t tmp_material_id = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_material_import_from_config", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_material_import_from_config", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_material_import_from_config", "resource_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_material_import_from_config", "out_material_id_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_material_import_from_config(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_resource_pipeline = untextured_material_pipeline_import_from_file(render_resource_->material_registry, resource_name_, resource_fullpath_, &tmp_material_id);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("lit_mesh_render_resource_material_import_from_config(%s) - untextured_material_pipeline_import_from_file failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!lit_mesh_render_resource_is_valid(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_material_import_from_config(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    *out_material_id_ = tmp_material_id;
+
+    ret = RENDER_RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_resource_result_t lit_mesh_render_resource_material_release(lit_mesh_render_resource_t* render_resource_, uint16_t material_id_) {
+    render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_material_release", "render_resource_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_material_release(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_resource_pipeline = untextured_material_pipeline_release(render_resource_->material_registry, material_id_);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = render_resource_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("lit_mesh_render_resource_material_release(%s) - untextured_material_pipeline_release failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!lit_mesh_render_resource_is_valid(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_material_release(%s) - Postcondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -418,12 +514,13 @@ cleanup:
 }
 
 // NOTE: renderer_backend_vao_unbindを行う場合renderer_backend_contextが必要となる、ただ、実行しなくても良いので当面は実行しない
-render_resource_result_t lit_mesh_render_resource_draw(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_) {
+render_resource_result_t lit_mesh_render_resource_draw(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
     const draw_range_t* draw_range = NULL;
+    const untextured_material_t* material = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_draw", "render_resource_")
     IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "lit_mesh_render_resource_draw", "model_matrix_")
@@ -435,10 +532,24 @@ render_resource_result_t lit_mesh_render_resource_draw(lit_mesh_render_resource_
     }
 #endif
 
+    material = untextured_material_registry_material_get(render_resource_->material_registry, material_id_);
+    if(NULL == material) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("lit_mesh_render_resource_draw(%s) - untextured_material_registry_material_get failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
     ret_shader = lit_mesh_shader_use(render_resource_->shader);
     if(SHADER_SUCCESS != ret_shader) {
         ret = render_resource_result_convert_shader(ret_shader);
         ERROR_MESSAGE("lit_mesh_render_resource_draw(%s) - lit_mesh_shader_use failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = lit_mesh_shader_material_set(render_resource_->shader, material);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("lit_mesh_render_resource_draw(%s) - lit_mesh_shader_material_set failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -522,6 +633,9 @@ bool lit_mesh_render_resource_is_valid(const lit_mesh_render_resource_t* render_
         return false;
     }
     if(!lit_mesh_geometry_registry_is_valid(render_resource_->geometry_registry)) {
+        return false;
+    }
+    if(!untextured_material_registry_is_valid(render_resource_->material_registry)) {
         return false;
     }
 

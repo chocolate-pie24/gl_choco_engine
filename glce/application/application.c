@@ -36,8 +36,6 @@
 
 #include "engine/io_utils/fs_path.h"
 
-#include "engine/resource/loaders/untextured_material_config_loader.h"  // TODO: remove this!!
-
 #include "engine/light/core/light_types.h"
 #include "engine/light/directional_light.h"
 
@@ -56,7 +54,6 @@
 #include "engine/systems/renderer/core/renderer_types.h"
 #include "engine/systems/renderer/config/renderer_config.h"
 #include "engine/systems/renderer/resources/material/material_types.h"
-#include "engine/systems/renderer/render_resources/lit_mesh_render_resource.h"  // TODO: remove this!!
 
 // Application Layer
 #include "application/core/application_types.h"
@@ -117,8 +114,8 @@ typedef struct application_state {
     uint16_t tex_id_frog;
     uint16_t tex_id_green;
 
-    // Material(TODO: remove this!!)
-    untextured_material_t penguin_material;
+    // Material ID
+    uint16_t material_id_penguin;
 
     // Geometry ID
     bool should_draw_penguin_aabb;
@@ -151,7 +148,7 @@ static void renderer_config_initialize(renderer_config_t* config_);
 
 static application_result_t point_mesh_geometry_import(application_state_t* state_);        // TODO: remove this!!
 static application_result_t ui_mesh_geometry_import(application_state_t* state_);
-static application_result_t lit_mesh_geometry_import(application_state_t* state_);
+static application_result_t lit_mesh_import(application_state_t* state_);
 static application_result_t ui_mesh_textures_import(application_state_t* state_);
 
 static application_result_t executable_directory_get(application_state_t* state_);
@@ -393,7 +390,7 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    ret = lit_mesh_geometry_import(s_application_state);
+    ret = lit_mesh_import(s_application_state);
     if(APPLICATION_SUCCESS != ret) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run - Failed to import lit mesh geometry.");
@@ -507,7 +504,7 @@ application_result_t application_run(void) {
         }
 
         // STL描画
-        ret = application_renderer_lit_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin, &s_application_state->model_matrix);
+        ret = application_renderer_lit_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->model_matrix);
         if(APPLICATION_SUCCESS != ret) {
             ERROR_MESSAGE("application_run(%s) - application_renderer_lit_mesh_draw failed.", application_result_to_str(ret));
             goto cleanup;
@@ -712,48 +709,50 @@ cleanup:
     return ret;
 }
 
-static application_result_t lit_mesh_geometry_import(application_state_t* state_) {
+static application_result_t lit_mesh_import(application_state_t* state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
 
-    fs_path_t* penguin_path = NULL;
+    fs_path_t* penguin_material_path = NULL;
+    fs_path_t* penguin_geometry_path = NULL;
 
-    static const char* const penguin_name = "glce_lowpoly_penguin_ascii";
+    static const char* const penguin_material_name = "penguin";
+    static const char* const penguin_geometry_name = "glce_lowpoly_penguin_ascii";
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_geometry_import", "state_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_import", "state_")
 
-    ret_fs_path = fs_path_create(&penguin_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_name, "stl");
+    ret_fs_path = fs_path_create(&penguin_material_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/materials/", penguin_material_name, "untextured_mat");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ERROR_MESSAGE("lit_mesh_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_fs_path = fs_path_create(&penguin_geometry_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_geometry_name, "stl");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
         ERROR_MESSAGE("lit_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = application_renderer_lit_mesh_geometry_import_from_file(state_->renderer, penguin_name, fs_path_fullpath_get(penguin_path), &state_->geometry_id_penguin);
+    ret = application_renderer_untextured_material_import_from_file(state_->renderer, penguin_material_name, fs_path_fullpath_get(penguin_material_path), &state_->material_id_penguin);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("lit_mesh_import(%s) - application_renderer_untextured_material_import_from_file failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_lit_mesh_geometry_import_from_file(state_->renderer, penguin_geometry_name, fs_path_fullpath_get(penguin_geometry_path), &state_->geometry_id_penguin);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("lit_mesh_geometry_import(%s) - application_renderer_lit_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    // begin temporary
-    ret = penguin_material_load(s_application_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("lit_mesh_geometry_import - penguin_material_load failed.");
-        goto cleanup;
-    }
-    ret = application_renderer_lit_mesh_material_set(state_->renderer, &state_->penguin_material);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_geometry_import(%s) - application_renderer_lit_mesh_material_set failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    // end temporary
-
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    fs_path_destroy(&penguin_path);
+    fs_path_destroy(&penguin_material_path);
+    fs_path_destroy(&penguin_geometry_path);
 
     return ret;
 }
@@ -822,48 +821,6 @@ static application_result_t executable_directory_get(application_state_t* state_
         ERROR_MESSAGE("executable_directory_get(%s) - fs_path_create_from_executable_directory failed.", application_result_to_str(ret));
         goto cleanup;
     }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-static application_result_t penguin_material_load(application_state_t* state_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-
-    fs_path_t* penguin_path = NULL;
-    untextured_material_config_t config = { 0 };
-
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "penguin_material_load", "state_")
-
-    ret_fs_path = fs_path_create(&penguin_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/materials/", "penguin", "untextured_mat");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("penguin_material_load(%s) - fs_path_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_resource = untextured_material_config_loader_load(fs_path_fullpath_get(penguin_path), &config);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("penguin_material_load(%s) - untextured_material_config_loader_load failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    INFO_MESSAGE("penguin_material_load");
-    INFO_MESSAGE("  diffuse: %f, %f, %f", config.diffuse.elem[0], config.diffuse.elem[1], config.diffuse.elem[2]);
-    INFO_MESSAGE("  ambient: %f, %f, %f", config.ambient.elem[0], config.ambient.elem[1], config.ambient.elem[2]);
-    INFO_MESSAGE("  specular: %f, %f, %f", config.specular.elem[0], config.specular.elem[1], config.specular.elem[2]);
-    INFO_MESSAGE("  shininess: %f", config.shininess);
-
-    state_->penguin_material.ambient = config.ambient;
-    state_->penguin_material.diffuse = config.diffuse;
-    state_->penguin_material.shininess = config.shininess;
-    state_->penguin_material.specular = config.specular;
 
     ret = APPLICATION_SUCCESS;
 

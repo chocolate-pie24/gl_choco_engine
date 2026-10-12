@@ -24,8 +24,9 @@ typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct mat4x4f mat4x4f_t;
 typedef struct aabb_3d aabb_3d_t;
 typedef struct untextured_material untextured_material_t;
+typedef struct untextured_material_config untextured_material_config_t;
 
-render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_config_t* config_, size_t max_geometry_count_, renderer_backend_context_t* backend_context_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, lit_mesh_render_resource_t** out_render_resource_);
+render_resource_result_t lit_mesh_render_resource_create(const lit_mesh_shader_config_t* config_, size_t max_geometry_count_, size_t max_material_count_, renderer_backend_context_t* backend_context_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, lit_mesh_render_resource_t** out_render_resource_);
 
 void lit_mesh_render_resource_deinitialize(lit_mesh_render_resource_t* render_resource_);
 
@@ -33,6 +34,11 @@ void lit_mesh_render_resource_deinitialize(lit_mesh_render_resource_t* render_re
 render_resource_result_t lit_mesh_render_resource_geometry_import_from_file(lit_mesh_render_resource_t* render_resource_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 
 render_resource_result_t lit_mesh_render_resource_geometry_release(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_);
+
+// Material resource operation
+render_resource_result_t lit_mesh_render_resource_material_import_from_config(lit_mesh_render_resource_t* render_resource_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
+
+render_resource_result_t lit_mesh_render_resource_material_release(lit_mesh_render_resource_t* render_resource_, uint16_t material_id_);
 
 // Frame-global state
 render_resource_result_t lit_mesh_render_resource_view_matrix_set(lit_mesh_render_resource_t* render_resource_, const mat4x4f_t* view_matrix_);
@@ -47,7 +53,7 @@ render_resource_result_t lit_mesh_render_resource_light_color_intensity_set(lit_
 render_resource_result_t lit_mesh_render_resource_material_set(lit_mesh_render_resource_t* render_resource_, const untextured_material_t* material_);
 
 // Draw
-render_resource_result_t lit_mesh_render_resource_draw(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);
+render_resource_result_t lit_mesh_render_resource_draw(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
 
 // Utility
 render_resource_result_t lit_mesh_render_resource_geometry_convert_to_aabb_3d(lit_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
