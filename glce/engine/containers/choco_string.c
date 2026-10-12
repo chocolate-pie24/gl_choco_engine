@@ -6,7 +6,6 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <stdint.h> // for SIZE_MAX
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -1000,12 +999,14 @@ static choco_string_result_t result_convert_general_allocator(general_allocator_
 // - 本セクションはChatGPTを用いて草案を作成し、プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
 static bool is_valid_shallow(const choco_string_t* string_) {
+    size_t buff_size = 0;
+
     if(NULL == string_) {
         return false;
     }
-    if((SIZE_MAX - 1) < string_->len) {
+    if(!size_add_checked(string_->len, 1, &buff_size)) {
         return false;
-    } else if(string_->capacity < (string_->len + 1) && 0 != string_->len) {
+    } else if(string_->capacity < buff_size && 0 != string_->len) {
         return false;
     } else if(0 == string_->capacity && NULL != string_->buffer) {
         return false;

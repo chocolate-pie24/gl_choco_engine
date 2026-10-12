@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "engine/base/choco_math/choco_math.h"
+
 bool buffer_usage_is_valid(buffer_usage_t usage_) {
     switch(usage_) {
     case BUFFER_USAGE_DYNAMIC:
@@ -56,13 +58,15 @@ bool texture_wrap_config_is_valid(texture_wrap_config_t config_) {
 }
 
 bool draw_range_is_valid(const draw_range_t* draw_range_) {
+    size_t size = 0;
+
     if(NULL == draw_range_) {
         return false;
     }
     if(0 == draw_range_->vertex_count) {
         return false;
     }
-    if((SIZE_MAX - draw_range_->vertex_count) < draw_range_->first_vertex_count) {
+    if(!size_add_checked(draw_range_->vertex_count, draw_range_->first_vertex_count, &size)) {
         return false;
     }
     return true;

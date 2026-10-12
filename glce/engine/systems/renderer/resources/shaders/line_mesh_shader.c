@@ -20,6 +20,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -189,12 +190,11 @@ shader_result_t line_mesh_shader_vbo_write(line_mesh_shader_t* shader_, size_t v
         goto cleanup;
     }
 
-    if((SIZE_MAX / sizeof(line_vertex_t) < vertex_count_)) {
+    if(!size_mul_checked(vertex_count_, sizeof(line_vertex_t), &write_size)) {
         ret = SHADER_OVERFLOW;
         ERROR_MESSAGE("line_mesh_shader_vbo_write(%s) - line_mesh_shader_vbo_write failed.", shader_result_to_str(ret));
         goto cleanup;
     }
-    write_size = sizeof(line_vertex_t) * vertex_count_;
 
     ret_buffer_manager = vbo_manager_write(shader_->vbo_manager, write_size, (const void*)vertices_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {

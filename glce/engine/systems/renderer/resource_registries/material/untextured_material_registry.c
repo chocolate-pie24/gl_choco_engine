@@ -9,6 +9,7 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
@@ -129,12 +130,11 @@ resource_registry_result_t untextured_material_registry_create(size_t max_untext
         ERROR_MESSAGE("untextured_material_registry_create(%s) - Provided max_untextured_material_count_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         goto cleanup;
     }
-    if((SIZE_MAX / max_untextured_material_count_) < sizeof(registry_entry_t)) {
+    if(!size_mul_checked(max_untextured_material_count_, sizeof(registry_entry_t), &array_size)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
         ERROR_MESSAGE("untextured_material_registry_create(%s) - array size overflow.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
-    array_size = sizeof(registry_entry_t) * max_untextured_material_count_;
 
     // Prepare.
     ret_subsystem_allocator = subsystem_allocator_rollback_point_get(allocator_, &rollback_point);

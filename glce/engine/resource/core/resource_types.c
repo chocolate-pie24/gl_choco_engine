@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "engine/base/choco_math/choco_math.h"
+
 bool texture_resource_info_is_valid(const texture_resource_info_t* resource_info_) {
     size_t pixel_count = 0;
     size_t expected_pixel_data_size = 0;
@@ -26,14 +28,12 @@ bool texture_resource_info_is_valid(const texture_resource_info_t* resource_info
     }
 
     // width, height, channel_countからpixel data sizeを再計算
-    if((SIZE_MAX / height) < width) {
+    if(!size_mul_checked(height, width, &pixel_count)) {
         return false;
     }
-    pixel_count = width * height;
-    if((SIZE_MAX / channel_count) < pixel_count) {
+    if(!size_mul_checked(channel_count, pixel_count, &expected_pixel_data_size)) {
         return false;
     }
-    expected_pixel_data_size = pixel_count * channel_count;
     if(expected_pixel_data_size != resource_info_->pixel_data_size) {
         return false;
     }

@@ -9,6 +9,7 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 #include "engine/memory/general_allocator/general_allocator.h"
@@ -123,12 +124,11 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
         ERROR_MESSAGE("flight_camera_registry_create(%s) - Provided max_flight_camera_count_ is not valid.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
-    if((SIZE_MAX / max_flight_camera_count_) < sizeof(registry_entry_t)) {
+    if(!size_mul_checked(max_flight_camera_count_, sizeof(registry_entry_t), &entry_array_size)) {
         ret = CAMERA_REGISTRY_OVERFLOW;
         ERROR_MESSAGE("flight_camera_registry_create(%s) - overflow.", camera_registry_result_to_str(ret));
         goto cleanup;
     }
-    entry_array_size = sizeof(registry_entry_t) * max_flight_camera_count_;
 
     // Prepare.
     ret_subsystem_allocator = subsystem_allocator_rollback_point_get(allocator_, &rollback_point);
@@ -520,6 +520,7 @@ cleanup:
  *   返すOperationであるため、追加のValidationは行わない。
  */
 bool flight_camera_registry_is_valid(const flight_camera_registry_t* registry_) {
+    size_t size = 0;
     if(NULL == registry_) {
         return false;
     }
@@ -529,7 +530,7 @@ bool flight_camera_registry_is_valid(const flight_camera_registry_t* registry_) 
     if(NULL == registry_->entries) {
         return false;
     }
-    if((SIZE_MAX / registry_->max_flight_camera_count) < sizeof(registry_entry_t)) {
+    if(!size_mul_checked(registry_->max_flight_camera_count, sizeof(registry_entry_t), &size)) {
         return false;
     }
 
