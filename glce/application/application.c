@@ -709,6 +709,7 @@ cleanup:
 static application_result_t untextured_mesh_import(application_state_t* state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
+    application_result_t ret_cleanup = APPLICATION_INVALID_ARGUMENT;
     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
 
     fs_path_t* penguin_material_path = NULL;
@@ -751,7 +752,6 @@ static application_result_t untextured_mesh_import(application_state_t* state_) 
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    application_result_t ret_cleanup = APPLICATION_INVALID_ARGUMENT;
     if(APPLICATION_DATA_CORRUPTED != ret) {
         fs_path_destroy(&penguin_material_path);
         fs_path_destroy(&penguin_geometry_path);
