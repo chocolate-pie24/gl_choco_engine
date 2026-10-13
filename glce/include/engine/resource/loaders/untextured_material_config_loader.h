@@ -48,14 +48,10 @@
  *
  * Supported Keys:
  * - supported keyはcase-sensitiveである。
- * - `ambient`
- * - `diffuse`
- * - `specular`
- * - `shininess`
- * - 上記4つのkeyはすべて必須である。
- * - 各keyはfile内にちょうど1回だけ記述しなければならない。
+ * - `diffuse`はRequiredであり、file内にちょうど1回指定する。
+ * - `ambient`、`specular`、`shininess`はOptionalであり、file内にそれぞれ0回または1回指定できる。
  * - keyの記述順序は問わない。
- * - unsupported keyを含むfileは受理しない。
+ * - duplicate keyおよびunsupported keyを含むfileは受理しない。
  *
  * Value Representation:
  * - `ambient`、`diffuse`、`specular`は3成分のfloat vectorとする。
@@ -73,6 +69,41 @@
  * - `shininess`に、floatの表現範囲とは別の固定上限は設けない。
  * - NaNおよびInfinityはvalidなMaterial値として受理しない。
  *
+ * Default Values:
+ * - `diffuse`はRequiredであり、デフォルト値を持たない。
+ * - `ambient`省略時: `diffuse * 0.1f`（RGB各成分に適用）。
+ * - `specular`省略時: `(0.0f, 0.0f, 0.0f)`。
+ * - `shininess`省略時: `32.0f`。
+ * - デフォルト値はkeyが省略された場合にのみ適用する。
+ *   明示的なゼロ値はvalidな指定として扱い、デフォルト値で上書きしない。
+ * - `specular`と`shininess`は独立して指定・省略できる。
+ * - デフォルト値の補完は本Loaderが担い、成功時には4 fieldすべてが確定する。
+ *   untextured_material_config_t自体に未設定状態を導入しない。
+ *
+ * Default Value Rationale:
+ * - AmbientをDiffuseの10%とするのは、基本色との関係を維持した
+ *   Ambient反射係数を生成し、暗部の視認性を補助するためである。
+ *   固定RGB値を採用すると、Materialの基本色と無関係な
+ *   Ambient反射係数になり得る。
+ *   0.1fは省略時のMaterial値を導出するための係数であり、
+ *   Ambient Lightの色・強度やShader内のambient strengthを
+ *   定義するものではない。
+ *
+ * - Specularをゼロとするのは、Untextured meshの主な用途であるSTL表示では
+ *   Geometryの形状や面の向きの把握を優先し、
+ *   光沢のないマットな表示をデフォルトとするためである。
+ *   光沢が必要な場合はSpecularを明示的に指定できる。
+ *
+ * - Shininessを32.0fとするのは、Specularだけを指定した場合にも、
+ *   Shininessの追加指定なしで光沢表現を利用できるようにするためである。
+ *   32.0fは表示用途に合わせた既定の光沢指数であり、
+ *   物理的に導出された値ではない。
+ *   Specularがゼロの場合、Shininessは描画結果へ寄与しない。
+ *
+ * - これらはConfiguration Fileの省略時動作であり、
+ *   callerが直接構築するMaterial valueに
+ *   暗黙のデフォルト適用を要求するものではない。
+ *
  * Temporary Numeric Input Contract:
  * - 現行実装は`sscanf()`の`%f`変換を使用する。
  * - callerは、変換結果がfloatで表現不能となる数値文字列を
@@ -81,13 +112,23 @@
  *   違反した場合の動作は保証されず、未定義動作が生じ得る。
  * - この制約は、将来のSafe Floating-Point Text Parsing導入までの暫定条件である。
  *
- * Example:
+ * Example (Diffuse only / defaults applied):
  * @code
- * # Untextured material
- * ambient = [0.1, 0.1, 0.1]
+ * # Matte untextured material
  * diffuse = [0.8, 0.5, 0.3]
+ * @endcode
+ *
+ * この場合、以下のデフォルト値が適用される。
+ * - ambient = [0.08, 0.05, 0.03]
+ * - specular = [0.0, 0.0, 0.0]
+ * - shininess = 32.0
+ *
+ * Example (Explicit optional values):
+ * @code
+ * diffuse = [0.8, 0.5, 0.3]
+ * ambient = [0.0, 0.0, 0.0]
  * specular = [1.0, 1.0, 1.0]
- * shininess = 32.0
+ * shininess = 64.0
  * @endcode
  *
  * File Validity:

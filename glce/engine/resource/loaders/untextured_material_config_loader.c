@@ -99,7 +99,9 @@ static bool shininess_is_valid(float value_);
  *   external file contentのrequired validationを全Buildで実行する。
  * - config_state_collect()によってline syntax、supported key、
  *   duplicate key等を検査しながらtemporary stateを構築する。
- * - config_state_parse()によってrequired fieldとnumeric syntaxを検査し、
+ * - config_state_parse()によってdiffuseの必須指定と、
+ *   指定されたfieldのnumeric syntaxを検査する。
+ * - 省略されたOptional Fieldには規定のデフォルト値を適用し、
  *   temporary material configurationを構築する。
  * - 現行のsscanf()によるfloat変換では、表現範囲外入力の事前検証を行わない。
  *   この制約はheaderのTemporary Numeric Input Contractに従う。
@@ -528,14 +530,18 @@ cleanup:
  * - out_config_は書き込み可能なuntextured_material_config_t storageである。
  *
  * Responsibility:
- * - temporary stateに収集された各value tokenを解析し、
+ * - temporary stateに収集されたvalue tokenを解析し、
  *   untextured_material_config_tのcandidateを構築する。
+ * - required fieldであるdiffuseをparseする。
+ * - Optional Fieldは指定されていればparseし、
+ *   未指定の場合は規定のデフォルト値を適用する。
  * - required fieldの欠落やunsupported numeric syntaxをrejectする。
  * - Material固有のsemantic validityの判定は行わない。
  *
  * Postconditions:
- * - RESOURCE_SUCCESSの場合、4つのfieldがすべて解析され、
- *   対応するfloat / vec3f_t値がout_config_へ格納されている。
+ * - RESOURCE_SUCCESSの場合、指定値のparseまたは
+ *   デフォルト値の補完によって4つのfieldがすべて確定し、
+ *   out_config_へ格納されている。
  * - この段階ではfinite性やMaterial固有のnumeric rangeを保証しない。
  * - failure時、out_config_の既存内容は変更しない。
  *
@@ -565,6 +571,7 @@ static resource_result_t config_state_parse(const untextured_material_config_sta
     IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_parse", "out_config_")
 
     // Prepare.
+    // Diffuse
     consumed = -1;
     parse_result = sscanf(state_->diffuse, s_vec3f_scan_format, &tmp_diffuse.elem[0], &tmp_diffuse.elem[1], &tmp_diffuse.elem[2], &consumed);
     if(3 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->diffuse)) { // (size_t)consumed != strlen(state_->diffuse)によって']'以降に無効な文字がないことを確認する
@@ -573,28 +580,43 @@ static resource_result_t config_state_parse(const untextured_material_config_sta
         goto cleanup;
     }
 
-    consumed = -1;
-    parse_result = sscanf(state_->ambient, s_vec3f_scan_format, &tmp_ambient.elem[0], &tmp_ambient.elem[1], &tmp_ambient.elem[2], &consumed);
-    if(3 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->ambient)) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
-        goto cleanup;
+    // Ambient 設定値がない場合はdiffuse x 0.1を設定する
+    if('\0' != state_->ambient[0]) {    // 設定値あり
+        consumed = -1;
+        parse_result = sscanf(state_->ambient, s_vec3f_scan_format, &tmp_ambient.elem[0], &tmp_ambient.elem[1], &tmp_ambient.elem[2], &consumed);
+        if(3 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->ambient)) {
+            ret = RESOURCE_UNSUPPORTED_FILE;
+            ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        tmp_ambient = vec3f_initialize(tmp_diffuse.elem[0] * 0.1f, tmp_diffuse.elem[1] * 0.1f, tmp_diffuse.elem[2] * 0.1f);
     }
 
-    consumed = -1;
-    parse_result = sscanf(state_->specular, s_vec3f_scan_format, &tmp_specular.elem[0], &tmp_specular.elem[1], &tmp_specular.elem[2], &consumed);
-    if(3 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->specular)) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
-        goto cleanup;
+    // Specular 設定値がない場合は0を設定する
+    if('\0' != state_->specular[0]) {    // 設定値あり
+        consumed = -1;
+        parse_result = sscanf(state_->specular, s_vec3f_scan_format, &tmp_specular.elem[0], &tmp_specular.elem[1], &tmp_specular.elem[2], &consumed);
+        if(3 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->specular)) {
+            ret = RESOURCE_UNSUPPORTED_FILE;
+            ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        tmp_specular = vec3f_initialize(0.0f, 0.0f, 0.0f);
     }
 
-    consumed = -1;
-    parse_result = sscanf(state_->shininess, s_float_scan_format, &tmp_shininess, &consumed);
-    if(1 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->shininess)) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
-        goto cleanup;
+    // Shininess 設定値がない場合は32を設定する
+    if('\0' != state_->shininess[0]) {    // 設定値あり
+        consumed = -1;
+        parse_result = sscanf(state_->shininess, s_float_scan_format, &tmp_shininess, &consumed);
+        if(1 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->shininess)) {
+            ret = RESOURCE_UNSUPPORTED_FILE;
+            ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        tmp_shininess = 32.0f;
     }
 
     // Output.
