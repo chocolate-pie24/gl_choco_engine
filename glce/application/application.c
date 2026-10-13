@@ -38,6 +38,7 @@
 
 #include "engine/light/core/light_types.h"
 #include "engine/light/directional_light.h"
+#include "engine/light/ambient_light.h"
 
 // Platform System
 #include "engine/systems/platform_system/core/platform_system_types.h"
@@ -98,6 +99,7 @@ typedef struct application_state {
 
     // Light
     directional_light_t directional_light;
+    ambient_light_t ambient_light;
 
     // Renderer System
     application_renderer_t* renderer;
@@ -237,10 +239,16 @@ application_result_t application_create(void) {
     // direction: 正面から少し斜め上の光で、面の違いが見やすい
     // color: 白色光。色による影響を除外できる
     // intensity: 明るさの計算と結果を比較しやすい
-    ret_light_result = directional_light_initialize(vec3f_initialize(0.4f, 0.8f, 1.0f), vec3f_initialize(1.0f, 1.0f, 1.0f), 10.0f, &tmp_state->directional_light);
+    ret_light_result = directional_light_initialize(vec3f_initialize(0.4f, 0.8f, 1.0f), vec3f_initialize(1.0f, 1.0f, 1.0f), 5.0f, &tmp_state->directional_light);
     if(LIGHT_SUCCESS != ret_light_result) {
         ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
         ERROR_MESSAGE("application_create(%s) - directional_light_initialize failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_light_result = ambient_light_initialize(vec3f_initialize(1.0f, 1.0f, 1.0f), 1.0f, &tmp_state->ambient_light);
+    if(LIGHT_SUCCESS != ret_light_result) {
+        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
+        ERROR_MESSAGE("application_create(%s) - ambient_light_initialize failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -374,7 +382,7 @@ application_result_t application_run(void) {
     s_application_state->frame_state.projection_dirty = true;
     s_application_state->frame_state.view_dirty = true;
     s_application_state->frame_state.window_resized = true;
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->frame_state);
+    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light, &s_application_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_run(%s) - application_renderer_update failed.", application_result_to_str(ret));
         goto cleanup;
@@ -553,7 +561,7 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->frame_state);
+    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light, &s_application_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", application_result_to_str(ret));
         goto cleanup;

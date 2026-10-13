@@ -11,20 +11,32 @@ in vec3 view_normal;
 
 out vec4 out_color;
 
-uniform float g_light_intensity;
-uniform vec3 g_light_color;
-uniform vec3 g_light_direction;
+uniform float g_directional_light_intensity;
+uniform vec3 g_directional_light_color;
+uniform vec3 g_directional_light_direction;
+
+uniform float g_ambient_light_intensity;
+uniform vec3 g_ambient_light_color;
+
 uniform Material g_material;
 
 void main() {
     vec3 normal = normalize(view_normal);
-    vec3 light_direction = normalize(g_light_direction);
+    vec3 directional_light_direction = normalize(g_directional_light_direction);
 
-    // 内積によってnormalをlight_directionに射影した長さを計算
+    // 内積によってnormalをdirectional_light_directionに射影した長さを計算
     // 値が大きいほど法線と光源方向が平行であり、光が強く当たる
-    float diffuse_factor = max(dot(normal, light_direction), 0.0);
+    float diffuse_factor = max(dot(normal, directional_light_direction), 0.0);
 
-    vec3 diffuse_color = g_material.diffuse * g_light_color * g_light_intensity * diffuse_factor;
+    // g_directional_material.diffuse: 物体がRGBそれぞれの光をどれだけ反射するか(%)
+    // g_directional_light_color: 光源から届く光のRGB成分の割合
+    // g_directional_light_intensity: 光源の強度
+    // diffuse_factor: 面が光源に対してどれだけ正面を向いているか
+    vec3 diffuse_color = g_material.diffuse * g_directional_light_color * g_directional_light_intensity * diffuse_factor;
 
-    out_color = vec4(diffuse_color, 1.0);
+    vec3 ambient_color = g_material.ambient * g_ambient_light_color * g_ambient_light_intensity;
+
+    vec3 color = diffuse_color + ambient_color;
+
+    out_color = vec4(color, 1.0);
 }

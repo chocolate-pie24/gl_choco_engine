@@ -18,6 +18,7 @@
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/light/directional_light.h"
+#include "engine/light/ambient_light.h"
 
 #include "engine/systems/renderer/config/renderer_config.h"
 
@@ -177,7 +178,7 @@ void application_renderer_deinitialize(application_renderer_t* renderer_) {
     renderer_backend_deinitialize(renderer_->renderer_backend_context);
 }
 
-application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* light_, application_frame_state_t* frame_state_) {
+application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_, application_frame_state_t* frame_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
@@ -189,12 +190,18 @@ application_result_t application_renderer_update(application_renderer_t* rendere
     IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "renderer_")
     IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "view_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "projection_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(light_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "light_")
+    IF_ARG_NULL_GOTO_CLEANUP(directional_light_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "directional_light_")
+    IF_ARG_NULL_GOTO_CLEANUP(ambient_light_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "ambient_light_")
     IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "frame_state_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!directional_light_is_valid(light_)) {
+    if(!directional_light_is_valid(directional_light_)) {
         ret = APPLICATION_INVALID_ARGUMENT;
-        ERROR_MESSAGE("application_renderer_update(%s) - Provided light_ is not valid.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_update(%s) - Provided directional_light_ is not valid.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!ambient_light_is_valid(ambient_light_)) {
+        ret = APPLICATION_INVALID_ARGUMENT;
+        ERROR_MESSAGE("application_renderer_update(%s) - Provided ambient_light_ is not valid.", application_result_to_str(ret));
         goto cleanup;
     }
     if(!is_valid_shallow(renderer_)) {
@@ -256,30 +263,37 @@ application_result_t application_renderer_update(application_renderer_t* rendere
             goto cleanup;
         }
 
-        // TODO: light_dirtyをframe_stateに追加する(light操作インターフェイス追加後)
-        world_light_direction = vec4f_initialize(light_->direction.elem[0], light_->direction.elem[1], light_->direction.elem[2], 0.0f);
-        view_light_direction4 = mat4f_vec4f_mul(view_matrix_, world_light_direction);
-        view_light_direction3 = vec3f_initialize(view_light_direction4.elem[0], view_light_direction4.elem[1], view_light_direction4.elem[2]);
-        ret_render_resource = untextured_mesh_render_resource_light_direction_set(renderer_->untextured_mesh_render_resource, view_light_direction3);
-        if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
-            ret = application_result_convert_render_resource(ret_render_resource);
-            ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_light_direction_set failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_render_resource = untextured_mesh_render_resource_light_color_intensity_set(renderer_->untextured_mesh_render_resource, light_->color, light_->intensity);
-        if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
-            ret = application_result_convert_render_resource(ret_render_resource);
-            ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_light_color_intensity_set failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
         ret_render_resource = point_mesh_render_resource_view_matrix_set(renderer_->point_mesh_render_resource, view_matrix_);
         if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
             ret = application_result_convert_render_resource(ret_render_resource);
             ERROR_MESSAGE("application_renderer_update(%s) - point_mesh_render_resource_view_matrix_set failed.", application_result_to_str(ret));
             goto cleanup;
         }
+    }
+
+    // TODO: light_dirtyをframe_stateに追加する(light操作インターフェイス追加後)
+    world_light_direction = vec4f_initialize(directional_light_->direction.elem[0], directional_light_->direction.elem[1], directional_light_->direction.elem[2], 0.0f);
+    view_light_direction4 = mat4f_vec4f_mul(view_matrix_, world_light_direction);
+    view_light_direction3 = vec3f_initialize(view_light_direction4.elem[0], view_light_direction4.elem[1], view_light_direction4.elem[2]);
+    ret_render_resource = untextured_mesh_render_resource_directional_light_direction_set(renderer_->untextured_mesh_render_resource, view_light_direction3);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_directional_light_direction_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_resource = untextured_mesh_render_resource_directional_light_color_intensity_set(renderer_->untextured_mesh_render_resource, directional_light_->color, directional_light_->intensity);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_directional_light_color_intensity_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_resource = untextured_mesh_render_resource_ambient_light_color_intensity_set(renderer_->untextured_mesh_render_resource, ambient_light_->color, ambient_light_->intensity);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_ambient_light_color_intensity_set failed.", application_result_to_str(ret));
+        goto cleanup;
     }
 
     ret = APPLICATION_SUCCESS;

@@ -57,9 +57,11 @@ shader_result_t untextured_mesh_shader_view_matrix_set(const untextured_mesh_sha
 shader_result_t untextured_mesh_shader_projection_matrix_set(const untextured_mesh_shader_t* shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
 
 // direction_の座標系はview座標系
-shader_result_t untextured_mesh_shader_light_direction_set(const untextured_mesh_shader_t* shader_, vec3f_t direction_);
+shader_result_t untextured_mesh_shader_directional_light_direction_set(const untextured_mesh_shader_t* shader_, vec3f_t direction_);
 
-shader_result_t untextured_mesh_shader_light_color_intensity_set(const untextured_mesh_shader_t* shader_, vec3f_t color_, float intensity_);
+shader_result_t untextured_mesh_shader_directional_light_color_intensity_set(const untextured_mesh_shader_t* shader_, vec3f_t color_, float intensity_);
+
+shader_result_t untextured_mesh_shader_ambient_light_color_intensity_set(const untextured_mesh_shader_t* shader_, vec3f_t color_, float intensity_);
 
 shader_result_t untextured_mesh_shader_material_set(const untextured_mesh_shader_t* shader_, const untextured_material_t* material_);
 
