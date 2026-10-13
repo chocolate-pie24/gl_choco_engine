@@ -3,7 +3,6 @@
 
 #include "engine/resource/loaders/untextured_material_config_loader.h"
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>  // for sscanf

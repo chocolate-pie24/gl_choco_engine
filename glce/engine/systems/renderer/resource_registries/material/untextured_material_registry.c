@@ -277,7 +277,7 @@ const char* untextured_material_registry_name_get(const untextured_material_regi
         return NULL;
     }
     if(!untextured_material_id_is_in_range(registry_, untextured_material_id_)) {
-        ERROR_MESSAGE("untextured_material_registry_name_get(%s) - provided untextured_material_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("untextured_material_registry_name_get(%s) - provided untextured_material_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!registry_entry_is_registered(&registry_->entries[untextured_material_id_])) {
@@ -306,7 +306,7 @@ const untextured_material_t* untextured_material_registry_material_get(const unt
         return NULL;
     }
     if(!untextured_material_id_is_in_range(registry_, untextured_material_id_)) {
-        ERROR_MESSAGE("untextured_material_registry_material_get(%s) - provided untextured_material_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("untextured_material_registry_material_get(%s) - provided untextured_material_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!registry_entry_is_registered(&registry_->entries[untextured_material_id_])) {
@@ -522,7 +522,7 @@ resource_registry_result_t untextured_material_registry_unregister(untextured_ma
     }
     if(!registry_entry_is_registered(&registry_->entries[untextured_material_id_])) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("untextured_material_registry_unregister(%s) - provided texture id entry is empty.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_material_registry_unregister(%s) - provided material id entry is empty.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 

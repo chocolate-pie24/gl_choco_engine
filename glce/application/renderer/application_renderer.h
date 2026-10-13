@@ -39,7 +39,7 @@ application_result_t application_renderer_line_mesh_geometry_import_from_vertice
 
 application_result_t application_renderer_line_mesh_geometry_import_from_aabb(application_renderer_t* renderer_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_);
 
-application_result_t application_renderer_lit_mesh_geometry_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
+application_result_t application_renderer_untextured_mesh_geometry_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 
 application_result_t application_renderer_point_mesh_geometry_import_from_vertices(application_renderer_t* renderer_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
 
@@ -48,7 +48,7 @@ application_result_t application_renderer_ui_mesh_geometry_import_from_file(appl
 // Geometry Release
 application_result_t application_renderer_line_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
 
-application_result_t application_renderer_lit_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
+application_result_t application_renderer_untextured_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
 
 application_result_t application_renderer_point_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
 
@@ -71,14 +71,14 @@ application_result_t application_renderer_ui_mesh_texture_release(application_re
 // Mesh Draw
 application_result_t application_renderer_line_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_, const uint8_t color_[4]);
 
-application_result_t application_renderer_lit_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
+application_result_t application_renderer_untextured_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
 
 application_result_t application_renderer_point_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);
 
 application_result_t application_renderer_ui_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t texture_id_, const mat4x4f_t* model_matrix_);
 
 // Utility(これらはそのうち適切な場所に移す)
-application_result_t application_renderer_lit_mesh_geometry_convert_to_aabb_3d(application_renderer_t* renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
+application_result_t application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(application_renderer_t* renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
 
 bool application_renderer_is_valid(const application_renderer_t* renderer_);
 

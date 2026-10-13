@@ -56,10 +56,10 @@ extern "C" {
 
 #include "engine/resource/core/resource_types.h"
 
-typedef struct lit_mesh_geometry lit_mesh_geometry_t;
+typedef struct untextured_mesh_geometry untextured_mesh_geometry_t;
 typedef struct aabb_3d aabb_3d_t;
 
-resource_result_t geometry_conversion_lit_mesh_geometry_to_aabb_3d(const lit_mesh_geometry_t* src_geometry_, aabb_3d_t* dst_geometry_);
+resource_result_t geometry_conversion_untextured_mesh_geometry_to_aabb_3d(const untextured_mesh_geometry_t* src_geometry_, aabb_3d_t* dst_geometry_);
 
 #ifdef __cplusplus
 }

@@ -3,18 +3,18 @@
 
 /** @ingroup resource
  *
- * @file lit_mesh_geometry.c
+ * @file untextured_mesh_geometry.c
  * @author chocolate-pie24
- * @brief lit_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装
+ * @brief untextured_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装
  *
- * @note lit_mesh_shader: 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダー
+ * @note untextured_mesh_shader: 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダー
  *
  * @todo カバレッジ改善
  *
  * @date 2026-06-04
  *
  */
-#include "engine/resource/geometry/lit_mesh_geometry.h"
+#include "engine/resource/geometry/untextured_mesh_geometry.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -43,9 +43,9 @@
  *
  * Representation / Ownership:
  * - verticesが指すstorageはGeneral Allocatorから取得したlive allocationである。
- * - Lit Mesh Geometry moduleはverticesのownershipを単独で保持し、
+ * - Untextured Mesh Geometry moduleはverticesのownershipを単独で保持し、
  *   geometry objectのlifetimeとともにそのstorageのlifetimeを管理する。
- * - lit_mesh_geometry_t object自身とverticesが指すvertex storageは、
+ * - untextured_mesh_geometry_t object自身とverticesが指すvertex storageは、
  *   それぞれ独立したallocationとして保持する。
  *
  * AI支援:
@@ -59,7 +59,7 @@
  *
  * - ValidationはModule Internal Contractで定義したcanonical stateを基準として行う。
  *
- * - private shallow validatorは、lit_mesh_geometry_t自身のroot fieldと、
+ * - private shallow validatorは、untextured_mesh_geometry_t自身のroot fieldと、
  *   root field間のlocal structural relationを検証する。
  * - shallow validatorはvertex_countが0より大きい3の倍数であること、
  *   vertex array sizeがsize_tで表現可能であること、
@@ -74,9 +74,9 @@
  *   owned vertex arrayの各要素についてpoint_normal_vertex_is_valid()へvalidationを委譲し、
  *   point_normal_vertex_tとしてのcanonical validityを確認する。
  *
- * - canonical validatorは、引数として渡されたlit_mesh_geometry_t自身の
+ * - canonical validatorは、引数として渡されたuntextured_mesh_geometry_t自身の
  *   allocation validityを検証しない。
- *   lit_mesh_geometry_tをowned pointerとして保持するownerが存在する場合、
+ *   untextured_mesh_geometry_tをowned pointerとして保持するownerが存在する場合、
  *   そのstorage validityはowner側のownership closureとして扱う。
  *
  * - 現在のcanonical validatorは、verticesがGeneral Allocator上の
@@ -87,7 +87,7 @@
  *   General Allocatorのallocation informationを利用して、
  *   vertex array sizeとのrange relationをcanonical validationへ追加することを検討する。
  *
- * - Lit Mesh Geometry moduleはexternal data(外部ファイルやネットワーク経由から取得したデータ)を
+ * - Untextured Mesh Geometry moduleはexternal data(外部ファイルやネットワーク経由から取得したデータ)を
  *   trusted internal representationへ昇格させるtrust boundaryとして扱わない。
  * - 外部source由来のfloating-point dataについては、
  *   Loader等のupstream trust boundaryで必要なfinite validationが完了していることを前提とし、
@@ -95,12 +95,12 @@
  *
  * - caller-providedなarrayについて、pointer、element count、
  *   size calculation等のcontainer / arrayとしてのstructural conditionは、
- *   そのarrayを走査するLit Mesh Geometry operationが必要に応じて検証する。
+ *   そのarrayを走査するUntextured Mesh Geometry operationが必要に応じて検証する。
  * - array element固有のsemantic validityについては、
  *   そのsemanticを実際にconsumeするoperationがvalidation responsibilityを持つ。
  * - element固有のsemantic operationを別moduleへ委譲する場合は、
  *   そのsemantic validationもsemantic ownerである委譲先moduleへ委譲し、
- *   Lit Mesh Geometry側では同一semanticを重複して検証しない。
+ *   Untextured Mesh Geometry側では同一semanticを重複して検証しない。
  * - 本module内でsource elementをcopyするだけで、そのelement固有のsemanticを
  *   operation結果の判断に使用しない場合は、
  *   upstream boundaryで成立済みのsemantic contractを前提として処理する。
@@ -124,28 +124,28 @@
 // Private Type Definitions
 // ============================================================
 /**
- * @brief lit_mesh_geometry内部状態管理構造体
+ * @brief untextured_mesh_geometry内部状態管理構造体
  *
  */
-struct lit_mesh_geometry {
-    size_t vertex_count;                /**< lit_mesh_geometryが所有する頂点数 */
-    point_normal_vertex_t* vertices;    /**< lit_mesh_geometryが所有する頂点配列 */
+struct untextured_mesh_geometry {
+    size_t vertex_count;                /**< untextured_mesh_geometryが所有する頂点数 */
+    point_normal_vertex_t* vertices;    /**< untextured_mesh_geometryが所有する頂点配列 */
 };
 
 // ============================================================
 // Private Function Declarations
 // ============================================================
 // Validators
-static bool is_valid_shallow(const lit_mesh_geometry_t* geometry_);
+static bool is_valid_shallow(const untextured_mesh_geometry_t* geometry_);
 
 // ============================================================
 // Public API
 // ============================================================
 
-// lit_mesh_geometry_create_from_vertices Validation Policy
+// untextured_mesh_geometry_create_from_vertices Validation Policy
 //
-// - create前には有効なlit_mesh_geometry_tが存在しないため、
-//   PreconditionsではLit Mesh Geometry validatorを使用しない。
+// - create前には有効なuntextured_mesh_geometry_tが存在しないため、
+//   PreconditionsではUntextured Mesh Geometry validatorを使用しない。
 //
 // - vertices_およびout_geometry_のpointer existenceは、
 //   container accessおよびpublic output contractに必要なchecked preconditionとして
@@ -163,17 +163,17 @@ static bool is_valid_shallow(const lit_mesh_geometry_t* geometry_);
 //   point_normal_vertex_t固有のsemanticをoperation判断に使用しないため、
 //   source arrayに対するpoint_normal_vertex_is_valid()の全要素Precondition validationは行わない。
 //
-// - lit_mesh_geometry_t storageおよびowned vertex storageのallocationは
+// - untextured_mesh_geometry_t storageおよびowned vertex storageのallocationは
 //   General Allocatorへ委譲する。
 // - General Allocatorから返されたresultはResource resultへ変換して伝播する。
 // - 下位moduleからDATA_CORRUPTEDを受け取った場合は、
 //   fail-stop ruleに従って通常cleanupを行わない。
 //
 // - DEBUG_BUILD / TEST_BUILDではtemporary geometryのconstruction完了後、
-//   callerへ公開する前のStable boundaryでlit_mesh_geometry_is_valid()を実行し、
+//   callerへ公開する前のStable boundaryでuntextured_mesh_geometry_is_valid()を実行し、
 //   canonical Postcondition validationを行う。
 // - このPostcondition validationはsource arrayをtrust boundaryとして
-//   再認証するためのものではなく、construction後のlit_mesh_geometry_tが
+//   再認証するためのものではなく、construction後のuntextured_mesh_geometry_tが
 //   Module Internal Contractを満たすことをdiagnosticとして確認するために行う。
 // - Postcondition validationに成功した場合のみ、geometry objectおよび
 //   owned vertex storageのownershipをcallerへcommitする。
@@ -183,44 +183,44 @@ static bool is_valid_shallow(const lit_mesh_geometry_t* geometry_);
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t lit_mesh_geometry_create_from_vertices(size_t vertex_count_, const point_normal_vertex_t* vertices_, lit_mesh_geometry_t** out_geometry_) {
+resource_result_t untextured_mesh_geometry_create_from_vertices(size_t vertex_count_, const point_normal_vertex_t* vertices_, untextured_mesh_geometry_t** out_geometry_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
-    lit_mesh_geometry_t* tmp_geometry = NULL;
+    untextured_mesh_geometry_t* tmp_geometry = NULL;
     point_normal_vertex_t* tmp_vertices = NULL;
 
     size_t allocation_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_create_from_vertices", "out_geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_create_from_vertices", "*out_geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "untextured_mesh_geometry_create_from_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "untextured_mesh_geometry_create_from_vertices", "out_geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "untextured_mesh_geometry_create_from_vertices", "*out_geometry_")
     if(0 == vertex_count_ || 0 != (vertex_count_ % 3)) {
         ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_create_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_result_to_str(ret));
         goto cleanup;
     }
     if(!size_mul_checked(vertex_count_, sizeof(point_normal_vertex_t), &allocation_size)) {
         ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count_, sizeof(point_normal_vertex_t));
+        ERROR_MESSAGE("untextured_mesh_geometry_create_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count_, sizeof(point_normal_vertex_t));
         goto cleanup;
     }
 
     // Prepare.
     // 一時リソース確保
-    ret_general_allocator = general_allocator_allocate(sizeof(lit_mesh_geometry_t), GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
+    ret_general_allocator = general_allocator_allocate(sizeof(untextured_mesh_geometry_t), GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = resource_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
         goto cleanup;
     }
 
     ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = resource_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
         goto cleanup;
     }
 
@@ -235,9 +235,9 @@ resource_result_t lit_mesh_geometry_create_from_vertices(size_t vertex_count_, c
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_is_valid(tmp_geometry)) {
+    if(!untextured_mesh_geometry_is_valid(tmp_geometry)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_create_from_vertices(%s) - Postcondition validation failed for 'tmp_geometry'.", resource_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_create_from_vertices(%s) - Postcondition validation failed for 'tmp_geometry'.", resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -261,19 +261,19 @@ cleanup:
     return ret;
 }
 
-// lit_mesh_geometry_destroy Validation Policy
+// untextured_mesh_geometry_destroy Validation Policy
 //
 // - geometry_ == NULLまたは*geometry_ == NULLはno-opとして扱う。
 //
 // - DEBUG_BUILD / TEST_BUILDではresource release開始前に
-//   lit_mesh_geometry_is_valid()を実行し、
+//   untextured_mesh_geometry_is_valid()を実行し、
 //   canonical Precondition validationを行う。
 // - canonical validationに失敗した場合はsuspectなowned vertex storageを辿らず、
-//   vertex storageおよびlit_mesh_geometry_t storageのfreeを行わない。
+//   vertex storageおよびuntextured_mesh_geometry_t storageのfreeを行わない。
 // - RELEASE_BUILDではautomatic canonical validationを行わず、
 //   Module Internal Contractが成立していることを前提としてdestroyを実行する。
 //
-// - owned vertex storageおよびlit_mesh_geometry_t自身のstorage releaseは
+// - owned vertex storageおよびuntextured_mesh_geometry_t自身のstorage releaseは
 //   General Allocatorへ委譲する。
 // - destroyによってobject lifetimeが終了するため、
 //   Postcondition validationは行わない。
@@ -282,7 +282,7 @@ cleanup:
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
+void untextured_mesh_geometry_destroy(untextured_mesh_geometry_t** geometry_) {
     if(NULL == geometry_) {
         return;
     }
@@ -290,8 +290,8 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
         return;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_is_valid(*geometry_)) {
-        ERROR_MESSAGE("lit_mesh_geometry_destroy(%s) - Provided geometry_ is corrupted.", resource_result_to_str(RESOURCE_DATA_CORRUPTED));
+    if(!untextured_mesh_geometry_is_valid(*geometry_)) {
+        ERROR_MESSAGE("untextured_mesh_geometry_destroy(%s) - Provided geometry_ is corrupted.", resource_result_to_str(RESOURCE_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -300,7 +300,7 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
     general_allocator_free((void**)geometry_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
 }
 
-// lit_mesh_geometry_vertices_get Validation Policy
+// untextured_mesh_geometry_vertices_get Validation Policy
 //
 // - geometry_、out_vertices_およびout_vertex_count_のpointer existenceは
 //   public API contractとしてRELEASE_BUILDを含む全BUILDで検証する。
@@ -313,32 +313,32 @@ void lit_mesh_geometry_destroy(lit_mesh_geometry_t** geometry_) {
 //   operation結果としてconsumeする。
 //
 // - DEBUG_BUILD / TEST_BUILDではoutput公開前に
-//   lit_mesh_geometry_is_valid()を実行し、
+//   untextured_mesh_geometry_is_valid()を実行し、
 //   geometry_にcanonical Precondition validationを行う。
 // - canonical validationに失敗した場合はRESOURCE_DATA_CORRUPTEDを返し、
 //   borrowed vertex array viewをcallerへ公開しない。
 // - RELEASE_BUILDではautomatic canonical validationを行わず、
 //   Module Internal Contractが成立していることを前提としてviewを公開する。
 //
-// - 本operationはlit_mesh_geometry_tおよびowned vertex storageを変更せず、
+// - 本operationはuntextured_mesh_geometry_tおよびowned vertex storageを変更せず、
 //   ownership relationも変更しないため、Postcondition validationは行わない。
 //
 // AI支援:
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t lit_mesh_geometry_vertices_get(const lit_mesh_geometry_t* geometry_, const point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_) {
+resource_result_t untextured_mesh_geometry_vertices_get(const untextured_mesh_geometry_t* geometry_, const point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_) {
     resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertices_get", "geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertices_get", "out_vertices_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "lit_mesh_geometry_vertices_get", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "lit_mesh_geometry_vertices_get", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "untextured_mesh_geometry_vertices_get", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "untextured_mesh_geometry_vertices_get", "out_vertices_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "untextured_mesh_geometry_vertices_get", "*out_vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "untextured_mesh_geometry_vertices_get", "out_vertex_count_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_is_valid(geometry_)) {
+    if(!untextured_mesh_geometry_is_valid(geometry_)) {
         ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_vertices_get(%s) - Precondition validation failed for 'geometry_'.", resource_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_vertices_get(%s) - Precondition validation failed for 'geometry_'.", resource_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -353,9 +353,9 @@ cleanup:
     return ret;
 }
 
-// lit_mesh_geometry_is_valid Validation Policy
+// untextured_mesh_geometry_is_valid Validation Policy
 //
-// - 本APIはlit_mesh_geometry_tのpublic canonical validatorである。
+// - 本APIはuntextured_mesh_geometry_tのpublic canonical validatorである。
 // - geometry_ == NULLの場合はfalseを返す。
 // - explicit validatorであるため、BUILD_MODEによってvalidation semanticsを変更しない。
 //
@@ -385,7 +385,7 @@ cleanup:
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-bool lit_mesh_geometry_is_valid(const lit_mesh_geometry_t* geometry_) {
+bool untextured_mesh_geometry_is_valid(const untextured_mesh_geometry_t* geometry_) {
     if(NULL == geometry_) {
         return false;
     }
@@ -406,7 +406,7 @@ bool lit_mesh_geometry_is_valid(const lit_mesh_geometry_t* geometry_) {
 // ============================================================
 // Validators
 // ============================================================
-static bool is_valid_shallow(const lit_mesh_geometry_t* geometry_) {
+static bool is_valid_shallow(const untextured_mesh_geometry_t* geometry_) {
     size_t allocation_size = 0;
 
     if(NULL == geometry_) {

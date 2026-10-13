@@ -4,14 +4,10 @@
 #include "engine/systems/renderer/resource_pipelines/materials/untextured_material_pipeline.h"
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
-#include "engine/base/choco_math/choco_math.h"
-
-#include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/resource/core/resource_types.h"
 #include "engine/resource/loaders/untextured_material_config_loader.h"
@@ -77,12 +73,12 @@ resource_pipeline_result_t untextured_material_pipeline_release(untextured_mater
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_material_material_pipeline_release", "material_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_material_pipeline_release", "material_registry_")
 
     ret_resource_registry = untextured_material_registry_unregister(material_registry_, material_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("untextured_material_material_pipeline_release(%s) - untextured_material_registry_unregister failed.", resource_pipeline_result_to_str(ret));
+        ERROR_MESSAGE("untextured_material_pipeline_release(%s) - untextured_material_registry_unregister failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
 

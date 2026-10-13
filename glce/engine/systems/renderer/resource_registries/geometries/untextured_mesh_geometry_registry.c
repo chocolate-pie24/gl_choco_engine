@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "engine/systems/renderer/resource_registries/geometries/lit_mesh_geometry_registry.h"
+#include "engine/systems/renderer/resource_registries/geometries/untextured_mesh_geometry_registry.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -16,10 +16,10 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/resource/geometry/lit_mesh_geometry.h"
+#include "engine/resource/geometry/untextured_mesh_geometry.h"
 
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/resources/shaders/lit_mesh_shader.h"
+#include "engine/systems/renderer/resources/shaders/untextured_mesh_shader.h"
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resource_registries/core/resource_registry_err_utils.h"
@@ -53,7 +53,7 @@
 // Private Type Definitions
 // ============================================================
 /*
- * Lit Mesh Geometryの登録情報を保持するEntry。
+ * Untextured Mesh Geometryの登録情報を保持するEntry。
  *
  * - resource_nameはRegistryが所有するResource Nameを指す。
  * - cpu_resourceはRegistryが所有するCPU Geometryを指す。
@@ -64,12 +64,12 @@
  */
 typedef struct registry_entry {
     choco_string_t* resource_name;
-    lit_mesh_geometry_t* cpu_resource;
+    untextured_mesh_geometry_t* cpu_resource;
     vbo_range_t allocation_descriptor;
 } registry_entry_t;
 
 /*
- * Lit Mesh Geometryの登録状態を管理するRegistry本体。
+ * Untextured Mesh Geometryの登録状態を管理するRegistry本体。
  *
  * - max_geometry_countはEntry配列の容量を表す。
  * - entriesはGeometry IDによって直接参照するEntry配列である。
@@ -78,7 +78,7 @@ typedef struct registry_entry {
  * - deinitialize後はmax_geometry_countが0となり、
  *   Registryのlogical lifetimeが終了する。
  */
-struct lit_mesh_geometry_registry {
+struct untextured_mesh_geometry_registry {
     size_t max_geometry_count;          /**< レジストリに登録可能な最大ジオメトリ数(0は許可しない. 単色ライティング描画を使用しなくても1以上にする) */
     registry_entry_t* entries;
 };
@@ -87,17 +87,17 @@ struct lit_mesh_geometry_registry {
 // Private Function Declarations
 // ============================================================
 // Lifecycle
-static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, lit_mesh_shader_t* shader_);
+static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, untextured_mesh_shader_t* shader_);
 
 // State Queries
-static bool geometry_id_is_in_range(const lit_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
+static bool geometry_id_is_in_range(const untextured_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 static bool registry_entry_is_empty(const registry_entry_t* entry_);
 
 // Validation
 static bool registry_entry_is_valid(const registry_entry_t* entry_);
 
 // Lookup
-static bool find_by_name(const lit_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_);
+static bool find_by_name(const untextured_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_);
 
 // ============================================================
 // Public API
@@ -131,29 +131,29 @@ static bool find_by_name(const lit_mesh_geometry_registry_t* registry_, const ch
  *   Output後にRegistryのsemantic stateを変更しないため、
  *   同じcanonical validationを繰り返さない。
  */
-resource_registry_result_t lit_mesh_geometry_registry_create(size_t max_geometry_count_, subsystem_allocator_t* allocator_, lit_mesh_geometry_registry_t** out_registry_) {
+resource_registry_result_t untextured_mesh_geometry_registry_create(size_t max_geometry_count_, subsystem_allocator_t* allocator_, untextured_mesh_geometry_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
-    lit_mesh_geometry_registry_t* tmp_registry = NULL;
+    untextured_mesh_geometry_registry_t* tmp_registry = NULL;
     registry_entry_t* tmp_entry_array = NULL;
 
     size_t entry_array_size = 0;
     subsystem_allocator_rollback_point_t rollback_point = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_create", "out_registry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "lit_mesh_geometry_registry_create", "*out_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_create", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_create", "out_registry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "untextured_mesh_geometry_registry_create", "*out_registry_")
     if(0 == max_geometry_count_ || UINT16_MAX < max_geometry_count_) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_create(%s) - Provided max_geometry_count_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_create(%s) - Provided max_geometry_count_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         goto cleanup;
     }
     if(!size_mul_checked(max_geometry_count_, sizeof(registry_entry_t), &entry_array_size)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_create(%s) - overflow.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_create(%s) - overflow.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -161,22 +161,22 @@ resource_registry_result_t lit_mesh_geometry_registry_create(size_t max_geometry
     ret_subsystem_allocator = subsystem_allocator_rollback_point_get(allocator_, &rollback_point);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("lit_mesh_geometry_registry_create(%s) - subsystem_allocator_rollback_point_get failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_create(%s) - subsystem_allocator_rollback_point_get failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // geometry_registry_tメモリ確保
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(lit_mesh_geometry_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_registry);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(untextured_mesh_geometry_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_registry);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("lit_mesh_geometry_registry_create(%s) - Failed to allocate registry instance. target=lit_mesh_geometry_registry_t, bytes=%zu, max_geometry_count=%zu", resource_registry_result_to_str(ret), sizeof(lit_mesh_geometry_registry_t), max_geometry_count_);
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_create(%s) - Failed to allocate registry instance. target=untextured_mesh_geometry_registry_t, bytes=%zu, max_geometry_count=%zu", resource_registry_result_to_str(ret), sizeof(untextured_mesh_geometry_registry_t), max_geometry_count_);
         goto cleanup;
     }
 
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, entry_array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_entry_array);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("lit_mesh_geometry_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -185,9 +185,9 @@ resource_registry_result_t lit_mesh_geometry_registry_create(size_t max_geometry
 
     // Result validation.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_registry_is_valid(tmp_registry)) {
+    if(!untextured_mesh_geometry_registry_is_valid(tmp_registry)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_create(%s) - Result validation failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_create(%s) - Result validation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -203,7 +203,7 @@ cleanup:
         ret_subsystem_allocator = subsystem_allocator_rollback(allocator_, &rollback_point);
         if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
             ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-            ERROR_MESSAGE("lit_mesh_geometry_registry_create(%s) - subsystem_allocator rollback failed.", resource_registry_result_to_str(ret));
+            ERROR_MESSAGE("untextured_mesh_geometry_registry_create(%s) - subsystem_allocator rollback failed.", resource_registry_result_to_str(ret));
             goto cleanup;
         }
     }
@@ -221,7 +221,7 @@ cleanup:
  * - RELEASEでは、成立済みのRegistry internal contractを信頼し、
  *   canonical validationを省略する。
  * - Shaderの内部整合性およびVBO Allocationの解放条件は、
- *   Lit Mesh Shader側のAPI contractとvalidationに委ねる。
+ *   Untextured Mesh Shader側のAPI contractとvalidationに委ねる。
  *
  * Failure:
  * - VBO Allocationの解放に失敗した場合は、
@@ -233,21 +233,21 @@ cleanup:
  * - 正常終了後のRegistryは利用可能なstable object modelから
  *   外れるため、通常のcanonical validationを実行しない。
  */
-void lit_mesh_geometry_registry_deinitialize(lit_mesh_geometry_registry_t* registry_, lit_mesh_shader_t* shader_) {
+void untextured_mesh_geometry_registry_deinitialize(untextured_mesh_geometry_registry_t* registry_, untextured_mesh_shader_t* shader_) {
     if(NULL == registry_ || NULL == shader_) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_deinitialize(%s) - provided registry_ or shader_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_deinitialize(%s) - provided registry_ or shader_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_deinitialize(%s) - lit_mesh_geometry_registry_t internal state is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+    if(!untextured_mesh_geometry_registry_is_valid(registry_)) {
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_deinitialize(%s) - untextured_mesh_geometry_registry_t internal state is corrupted.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return;
     }
 #endif
     for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
         if(!registry_entry_is_empty(&registry_->entries[i])) {
             if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[i], shader_)) {
-                ERROR_MESSAGE("lit_mesh_geometry_registry_deinitialize(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+                ERROR_MESSAGE("untextured_mesh_geometry_registry_deinitialize(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
                 return;
             }
         }
@@ -269,19 +269,19 @@ void lit_mesh_geometry_registry_deinitialize(lit_mesh_geometry_registry_t* regis
  * - このAPIは登録状態を変更せず、検索結果のみを返すため、
  *   Result validationとPostconditions validationは行わない。
  */
-bool lit_mesh_geometry_registry_exists(const lit_mesh_geometry_registry_t* registry_, const char* name_) {
+bool untextured_mesh_geometry_registry_exists(const untextured_mesh_geometry_registry_t* registry_, const char* name_) {
     size_t tmp_id = 0;
 
     if(NULL == registry_ || NULL == name_) {
         return false;
     }
     if('\0' == name_[0]) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return false;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_exists(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+    if(!untextured_mesh_geometry_registry_is_valid(registry_)) {
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_exists(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return false;
     }
 #endif
@@ -305,17 +305,17 @@ bool lit_mesh_geometry_registry_exists(const lit_mesh_geometry_registry_t* regis
  *   新しいstateを構築・変更しないため、
  *   Result validationとPostconditions validationは行わない。
  */
-const lit_mesh_geometry_t* lit_mesh_geometry_registry_geometry_get(const lit_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
+const untextured_mesh_geometry_t* untextured_mesh_geometry_registry_geometry_get(const untextured_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_geometry_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!geometry_id_is_in_range(registry_, geometry_id_)) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_get(%s) - provided geometry_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_geometry_get(%s) - provided geometry_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
     if(registry_entry_is_empty(&registry_->entries[geometry_id_])) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_geometry_get(%s) - provided geometry_id_ is not registered.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_geometry_get(%s) - provided geometry_id_ is not registered.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
 
@@ -343,24 +343,24 @@ const lit_mesh_geometry_t* lit_mesh_geometry_registry_geometry_get(const lit_mes
  * - Registryの登録状態は変更せず、確定したIDを出力するだけなので、
  *   Postconditions validationは行わない。
  */
-resource_registry_result_t lit_mesh_geometry_registry_id_get(const lit_mesh_geometry_registry_t* registry_, const char* name_, uint16_t* out_geometry_id_) {
+resource_registry_result_t untextured_mesh_geometry_registry_id_get(const untextured_mesh_geometry_registry_t* registry_, const char* name_, uint16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t tmp_id = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_id_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_id_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_id_get", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_id_get", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_id_get", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_id_get", "out_geometry_id_")
     if('\0' == name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_id_get(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_id_get(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_registry_is_valid(registry_)) {
+    if(!untextured_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_id_get(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_id_get(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -368,7 +368,7 @@ resource_registry_result_t lit_mesh_geometry_registry_id_get(const lit_mesh_geom
     // Prepare.
     if(!find_by_name(registry_, name_, &tmp_id)) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_id_get(%s) - find_by_name failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_id_get(%s) - find_by_name failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -397,17 +397,17 @@ cleanup:
  *   読み取り専用borrowであり、新しいstateを構築・変更しないため、
  *   Result validationとPostconditions validationは行わない。
  */
-const draw_range_t* lit_mesh_geometry_registry_draw_range_get(const lit_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
+const draw_range_t* untextured_mesh_geometry_registry_draw_range_get(const untextured_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_draw_range_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_draw_range_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!geometry_id_is_in_range(registry_, geometry_id_)) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_draw_range_get(%s) - provided geometry_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_draw_range_get(%s) - provided geometry_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(registry_entry_is_empty(&registry_->entries[geometry_id_])) {
-        ERROR_MESSAGE("lit_mesh_geometry_registry_draw_range_get(%s) - no allocation.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_draw_range_get(%s) - no allocation.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
 
@@ -452,7 +452,7 @@ const draw_range_t* lit_mesh_geometry_registry_draw_range_get(const lit_mesh_geo
  * - Commit後のPostconditions validationで失敗した場合も
  *   DATA_CORRUPTEDとなり、所有権移転状態の復元は保証しない。
  */
-resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry_registry_t* registry_, const char* resource_name_, lit_mesh_geometry_t** geometry_, vbo_range_t* vbo_range_, uint16_t* out_geometry_id_) {
+resource_registry_result_t untextured_mesh_geometry_registry_register(untextured_mesh_geometry_registry_t* registry_, const char* resource_name_, untextured_mesh_geometry_t** geometry_, vbo_range_t* vbo_range_, uint16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -462,37 +462,37 @@ resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry
     choco_string_t* tmp_name = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "*geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "vbo_range_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_register", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_register", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_register", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_register", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(*geometry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_register", "*geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_range_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_register", "vbo_range_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_register", "out_geometry_id_")
     if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_register(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_registry_is_valid(registry_)) {
+    if(!untextured_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_register(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
-    if(!lit_mesh_geometry_is_valid(*geometry_)) {
+    if(!untextured_mesh_geometry_is_valid(*geometry_)) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - provided *geometry_ is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_register(%s) - provided *geometry_ is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(!vbo_range_is_valid(vbo_range_)) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - provided *vbo_range_ is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_register(%s) - provided *vbo_range_ is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(find_by_name(registry_, resource_name_, &tmp_index)) {   // リソースの重複チェック
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - provided resource name is already registered.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_register(%s) - provided resource name is already registered.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -506,7 +506,7 @@ resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry
     }
     if(!found_free_slot) {
         ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - free slot not found.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_register(%s) - free slot not found.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -514,7 +514,7 @@ resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry
     ret_choco_string = choco_string_create_from_c_string(resource_name_, &tmp_name);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
         ret = resource_registry_result_convert_choco_string(ret_choco_string);
-        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - choco_string_create_from_c_string failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_register(%s) - choco_string_create_from_c_string failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -526,9 +526,9 @@ resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_registry_is_valid(registry_)) {
+    if(!untextured_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_register(%s) - Postcondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_register(%s) - Postcondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -564,7 +564,7 @@ cleanup:
  *   誤ったEntryの参照や登録解除を防ぐため、
  *   全Build Modeで直接検査する。
  * - Shaderの内部整合性とVBO Allocationの解放条件は、
- *   Lit Mesh Shader側のAPI contractとvalidationに委ねる。
+ *   Untextured Mesh Shader側のAPI contractとvalidationに委ねる。
  *
  * Failure:
  * - VBO Allocationの解放に失敗した場合は、
@@ -579,34 +579,34 @@ cleanup:
  * - 解放完了後のEntryを同じ条件で再検証する必要はないため、
  *   Registry全体のPostconditions validationは行わない。
  */
-resource_registry_result_t lit_mesh_geometry_registry_unregister(lit_mesh_geometry_registry_t* registry_, lit_mesh_shader_t* shader_, uint16_t geometry_id_) {
+resource_registry_result_t untextured_mesh_geometry_registry_unregister(untextured_mesh_geometry_registry_t* registry_, untextured_mesh_shader_t* shader_, uint16_t geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_unregister", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "lit_mesh_geometry_registry_unregister", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_unregister", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_unregister", "shader_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!lit_mesh_geometry_registry_is_valid(registry_)) {
+    if(!untextured_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_unregister(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_unregister(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
     if(!geometry_id_is_in_range(registry_, geometry_id_)) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_unregister(%s) - Provided geometry_id_ is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_unregister(%s) - Provided geometry_id_ is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(registry_entry_is_empty(&registry_->entries[geometry_id_])) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_unregister(%s) - provided geometry_id_ entry is empty.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_unregister(%s) - provided geometry_id_ entry is empty.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // Commit.
     if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[geometry_id_], shader_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_geometry_registry_unregister(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_unregister(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -637,7 +637,7 @@ cleanup:
  * - Validator自体はRegistryを変更せず、Result validationや
  *   Postconditions validationは行わない。
  */
-bool lit_mesh_geometry_registry_is_valid(const lit_mesh_geometry_registry_t* registry_) {
+bool untextured_mesh_geometry_registry_is_valid(const untextured_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
     }
@@ -658,7 +658,7 @@ bool lit_mesh_geometry_registry_is_valid(const lit_mesh_geometry_registry_t* reg
 // ============================================================
 // Lifecycle
 // ============================================================
-static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, lit_mesh_shader_t* shader_) {
+static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, untextured_mesh_shader_t* shader_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     if(NULL == entry_ || NULL == shader_) {
@@ -666,14 +666,14 @@ static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* 
         goto cleanup;
     }
 
-    if(SHADER_SUCCESS != lit_mesh_shader_vbo_free(shader_, &entry_->allocation_descriptor)) {
+    if(SHADER_SUCCESS != untextured_mesh_shader_vbo_free(shader_, &entry_->allocation_descriptor)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("registry_entry_deinitialize(%s) - lit_mesh_shader_vbo_free failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("registry_entry_deinitialize(%s) - untextured_mesh_shader_vbo_free failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     memset(&entry_->allocation_descriptor, 0, sizeof(vbo_range_t));
 
-    lit_mesh_geometry_destroy(&entry_->cpu_resource);
+    untextured_mesh_geometry_destroy(&entry_->cpu_resource);
     choco_string_destroy(&entry_->resource_name);
 
     ret = RESOURCE_REGISTRY_SUCCESS;
@@ -685,7 +685,7 @@ cleanup:
 // ============================================================
 // State Queries
 // ============================================================
-static bool geometry_id_is_in_range(const lit_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
+static bool geometry_id_is_in_range(const untextured_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
     if(NULL == registry_) {
         return false;
     }
@@ -746,7 +746,7 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
     if(0 == choco_string_length(entry_->resource_name)) {
         return false;
     }
-    if(!lit_mesh_geometry_is_valid(entry_->cpu_resource)) {
+    if(!untextured_mesh_geometry_is_valid(entry_->cpu_resource)) {
         return false;
     }
     if(!vbo_range_is_valid(&entry_->allocation_descriptor)) {
@@ -759,7 +759,7 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
 // ============================================================
 // Lookup
 // ============================================================
-static bool find_by_name(const lit_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_) {
+static bool find_by_name(const untextured_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_) {
     size_t tmp_slot = 0;
     bool found = false;
 

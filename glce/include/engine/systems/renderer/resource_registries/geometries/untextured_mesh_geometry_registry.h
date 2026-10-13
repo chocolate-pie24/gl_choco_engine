@@ -3,22 +3,22 @@
 
 /** @ingroup renderer
  *
- * @file lit_mesh_geometry_registry.h
+ * @file untextured_mesh_geometry_registry.h
  * @author chocolate-pie24
- * @brief Lit Mesh Geometryの登録、検索、および登録解除を提供する。
+ * @brief Untextured Mesh Geometryの登録、検索、および登録解除を提供する。
  *
  * @details
- * Lit Mesh GeometryのCPU Resourceと対応するVBO Allocationを、
+ * Untextured Mesh GeometryのCPU Resourceと対応するVBO Allocationを、
  * Resource NameおよびGeometry IDによって管理するRegistry。
  * Geometryの生成、GPUへの頂点データの転送、描画処理は担当しない。
  *
- * @section lit_mesh_geometry_registry_boundary_contract Module Boundary Contract
+ * @section untextured_mesh_geometry_registry_boundary_contract Module Boundary Contract
  *
  * @par Ownership
- * - Registryは登録済みLit Mesh GeometryのCPU Resourceを所有する。
+ * - Registryは登録済みUntextured Mesh GeometryのCPU Resourceを所有する。
  * - Registryは登録名の文字列Resourceを所有する。
  * - Registryは登録済みGeometryに対応するVBO Allocationの解放責務を持つ。
- * - VBO本体はLit Mesh Shader側が所有し、Registryは所有しない。
+ * - VBO本体はUntextured Mesh Shader側が所有し、Registryは所有しない。
  * - 登録成功時、CPU GeometryおよびVBO Allocationの解放責務は
  *   callerからRegistryへ移転する。
  *
@@ -28,9 +28,9 @@
  * - Registryはこれらのbacking storageを個別に解放しない。
  * - callerはRegistryの利用期間中、Allocatorのlifetimeを保証する。
  * - VBO Allocationの解放には、対象Allocationを管理する
- *   Lit Mesh Shaderを使用する。
+ *   Untextured Mesh Shaderを使用する。
  * - callerは登録済みVBO Allocationの解放が完了するまで、
- *   対応するLit Mesh Shaderのlifetimeを保証する。
+ *   対応するUntextured Mesh Shaderのlifetimeを保証する。
  *
  * @par Resource Identity
  * - Geometry IDはRegistry内でのみ意味を持つ。
@@ -49,8 +49,8 @@
  *   プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_REGISTRIES_GEOMETRIES_LIT_MESH_GEOMETRY_REGISTRY_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_REGISTRIES_GEOMETRIES_LIT_MESH_GEOMETRY_REGISTRY_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_REGISTRIES_GEOMETRIES_UNTEXTURED_MESH_GEOMETRY_REGISTRY_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCE_REGISTRIES_GEOMETRIES_UNTEXTURED_MESH_GEOMETRY_REGISTRY_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,16 +62,16 @@ extern "C" {
 
 #include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
 
-typedef struct lit_mesh_geometry_registry lit_mesh_geometry_registry_t; /**< 単色ライティング描画用ジオメトリレジストリのopaque型 */
+typedef struct untextured_mesh_geometry_registry untextured_mesh_geometry_registry_t; /**< 単色ライティング描画用ジオメトリレジストリのopaque型 */
 
 typedef struct subsystem_allocator subsystem_allocator_t;
-typedef struct lit_mesh_geometry lit_mesh_geometry_t;                   /**< 単色ライティング描画用ジオメトリのopaque型 */
+typedef struct untextured_mesh_geometry untextured_mesh_geometry_t;                   /**< 単色ライティング描画用ジオメトリのopaque型 */
 typedef struct vbo_range vbo_range_t;
 typedef struct draw_range draw_range_t;
-typedef struct lit_mesh_shader lit_mesh_shader_t;
+typedef struct untextured_mesh_shader untextured_mesh_shader_t;
 
 /**
- * @brief Lit Mesh Geometry Registryを生成する。
+ * @brief Untextured Mesh Geometry Registryを生成する。
  *
  * @par Public API Contract
  * - 最大登録数は1以上UINT16_MAX以下とする。
@@ -96,14 +96,14 @@ typedef struct lit_mesh_shader lit_mesh_shader_t;
  * @pre allocator_は利用可能なSubsystem Allocatorを指していること。
  * @post 成功時、*out_registry_は通常操作に使用できるRegistryを指す。
  */
-resource_registry_result_t lit_mesh_geometry_registry_create(size_t max_geometry_count_, subsystem_allocator_t* allocator_, lit_mesh_geometry_registry_t** out_registry_);
+resource_registry_result_t untextured_mesh_geometry_registry_create(size_t max_geometry_count_, subsystem_allocator_t* allocator_, untextured_mesh_geometry_registry_t** out_registry_);
 
 /**
  * @brief Registryの利用可能状態を終了する。
  *
  * @par Public API Contract
  * - 登録済みEntryが所有するCPU GeometryとResource Nameを破棄する。
- * - 登録済みVBO Allocationを、対応するLit Mesh Shaderを使用して解放する。
+ * - 登録済みVBO Allocationを、対応するUntextured Mesh Shaderを使用して解放する。
  * - Registry本体とEntry配列のbacking storageは解放しない。
  * - 正常終了後、Registryは利用可能状態ではなくなり、
  *   再初期化せずに通常操作へ使用することはできない。
@@ -115,19 +115,19 @@ resource_registry_result_t lit_mesh_geometry_registry_create(size_t max_geometry
  * - 処理中断時は、すべての登録済みResourceの解放完了を保証しない。
  *
  * @param[in,out] registry_ 終了対象のRegistry。
- * @param[in,out] shader_ VBO Allocationの解放に使用するLit Mesh Shader。
+ * @param[in,out] shader_ VBO Allocationの解放に使用するUntextured Mesh Shader。
  *
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  * @pre shader_は登録済みVBO Allocationを管理する、利用可能な
- *      Lit Mesh Shaderを指していること。
+ *      Untextured Mesh Shaderを指していること。
  * @pre shader_のlifetimeは本APIの実行完了まで維持されること。
  *
  * @post 正常終了後、registry_のlogical lifetimeは終了する。
  */
-void lit_mesh_geometry_registry_deinitialize(lit_mesh_geometry_registry_t* registry_, lit_mesh_shader_t* shader_);
+void untextured_mesh_geometry_registry_deinitialize(untextured_mesh_geometry_registry_t* registry_, untextured_mesh_shader_t* shader_);
 
 /**
- * @brief 指定名のLit Mesh Geometryが登録されているか判定する。
+ * @brief 指定名のUntextured Mesh Geometryが登録されているか判定する。
  *
  * @par Public API Contract
  * - Resource Nameは空文字列ではないNUL終端文字列とする。
@@ -144,10 +144,10 @@ void lit_mesh_geometry_registry_deinitialize(lit_mesh_geometry_registry_t* regis
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  * @pre name_は読み取り可能なNUL終端文字列を指していること。
  */
-bool lit_mesh_geometry_registry_exists(const lit_mesh_geometry_registry_t* registry_, const char* name_);
+bool untextured_mesh_geometry_registry_exists(const untextured_mesh_geometry_registry_t* registry_, const char* name_);
 
 /**
- * @brief Geometry IDに対応するLit Mesh Geometryを取得する。
+ * @brief Geometry IDに対応するUntextured Mesh Geometryを取得する。
  *
  * @par Public API Contract
  * - 指定IDはRegistryの有効範囲内であり、登録済みである必要がある。
@@ -160,12 +160,12 @@ bool lit_mesh_geometry_registry_exists(const lit_mesh_geometry_registry_t* regis
  * @param[in] registry_ 検索対象のRegistry。
  * @param[in] geometry_id_ 取得するGeometryのID。
  *
- * @return 成功時はLit Mesh Geometryへのconstポインタ。
+ * @return 成功時はUntextured Mesh Geometryへのconstポインタ。
  * @return 失敗時はNULL。
  *
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  */
-const lit_mesh_geometry_t* lit_mesh_geometry_registry_geometry_get(const lit_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
+const untextured_mesh_geometry_t* untextured_mesh_geometry_registry_geometry_get(const untextured_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 
 /**
  * @brief Resource Nameに対応するGeometry IDを取得する。
@@ -191,7 +191,7 @@ const lit_mesh_geometry_t* lit_mesh_geometry_registry_geometry_get(const lit_mes
  *
  * @post 成功時、出力したIDは指定名の登録済みGeometryを識別する。
  */
-resource_registry_result_t lit_mesh_geometry_registry_id_get(const lit_mesh_geometry_registry_t* registry_, const char* name_, uint16_t* out_geometry_id_);
+resource_registry_result_t untextured_mesh_geometry_registry_id_get(const untextured_mesh_geometry_registry_t* registry_, const char* name_, uint16_t* out_geometry_id_);
 
 /**
  * @brief Geometry IDに対応するDraw Rangeを取得する。
@@ -212,14 +212,14 @@ resource_registry_result_t lit_mesh_geometry_registry_id_get(const lit_mesh_geom
  *
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  */
-const draw_range_t* lit_mesh_geometry_registry_draw_range_get(const lit_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
+const draw_range_t* untextured_mesh_geometry_registry_draw_range_get(const untextured_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 
 /**
- * @brief Lit Mesh Geometryを指定名でRegistryへ登録する。
+ * @brief Untextured Mesh Geometryを指定名でRegistryへ登録する。
  *
  * @par Public API Contract
  * - Resource Nameは空文字列ではないNUL終端文字列とする。
- * - CPU Geometryは`lit_mesh_geometry_is_valid()`の条件を満たす必要がある。
+ * - CPU Geometryは`untextured_mesh_geometry_is_valid()`の条件を満たす必要がある。
  * - VBO Rangeは`vbo_range_is_valid()`の条件を満たす必要がある。
  * - 同じResource Nameの重複登録は許可しない。
  * - 登録可能なEntryが存在しない場合はLIMIT_EXCEEDEDを返す。
@@ -260,10 +260,10 @@ const draw_range_t* lit_mesh_geometry_registry_draw_range_get(const lit_mesh_geo
  * @post 成功時、指定名と出力IDによって登録したGeometryを参照できる。
  * @post 成功時、CPU GeometryとVBO Allocationの解放責務はRegistryが持つ。
  */
-resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry_registry_t* registry_, const char* resource_name_, lit_mesh_geometry_t** geometry_, vbo_range_t* vbo_range_, uint16_t* out_geometry_id_);
+resource_registry_result_t untextured_mesh_geometry_registry_register(untextured_mesh_geometry_registry_t* registry_, const char* resource_name_, untextured_mesh_geometry_t** geometry_, vbo_range_t* vbo_range_, uint16_t* out_geometry_id_);
 
 /**
- * @brief 指定IDのLit Mesh Geometryを登録解除する。
+ * @brief 指定IDのUntextured Mesh Geometryを登録解除する。
  *
  * @par Public API Contract
  * - 指定IDはRegistryの有効範囲内である必要がある。
@@ -282,7 +282,7 @@ resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry
  *   Registryの状態復元を保証しない。
  *
  * @param[in,out] registry_ 登録解除対象のRegistry。
- * @param[in,out] shader_ VBO Allocationの解放に使用するLit Mesh Shader。
+ * @param[in,out] shader_ VBO Allocationの解放に使用するUntextured Mesh Shader。
  * @param[in] geometry_id_ 登録解除するGeometry ID。
  *
  * @retval RESOURCE_REGISTRY_SUCCESS 登録解除成功。
@@ -292,16 +292,16 @@ resource_registry_result_t lit_mesh_geometry_registry_register(lit_mesh_geometry
  *
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  * @pre shader_は対象VBO Allocationを管理する、利用可能な
- *      Lit Mesh Shaderを指していること。
+ *      Untextured Mesh Shaderを指していること。
  * @pre 登録解除するGeometryに対するborrowの利用が終了していること。
  *
  * @post 成功時、指定IDに対応するEntryは未登録状態になる。
  * @post 成功時、対象Entryが所有していたResourceは解放済みとなる。
  */
-resource_registry_result_t lit_mesh_geometry_registry_unregister(lit_mesh_geometry_registry_t* registry_, lit_mesh_shader_t* shader_, uint16_t geometry_id_);
+resource_registry_result_t untextured_mesh_geometry_registry_unregister(untextured_mesh_geometry_registry_t* registry_, untextured_mesh_shader_t* shader_, uint16_t geometry_id_);
 
 /**
- * @brief Lit Mesh Geometry Registryのcanonical validityを判定する。
+ * @brief Untextured Mesh Geometry Registryのcanonical validityを判定する。
  *
  * @par Validation Scope
  * 以下の条件を検証する。
@@ -333,7 +333,7 @@ resource_registry_result_t lit_mesh_geometry_registry_unregister(lit_mesh_geomet
  *      およびEntryが参照するResourceのstorageは、
  *      検証処理に必要な範囲で読み取り可能であること。
  */
-bool lit_mesh_geometry_registry_is_valid(const lit_mesh_geometry_registry_t* registry_);
+bool untextured_mesh_geometry_registry_is_valid(const untextured_mesh_geometry_registry_t* registry_);
 
 #ifdef __cplusplus
 }

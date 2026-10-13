@@ -4,7 +4,6 @@
 #include "engine/systems/renderer/resources/material/material_types.h"
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <math.h>
 #include <stddef.h>
 

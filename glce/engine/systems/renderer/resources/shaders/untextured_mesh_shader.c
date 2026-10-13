@@ -3,16 +3,14 @@
 
 /** @ingroup renderer
  *
- * @file lit_mesh_shader.c
+ * @file untextured_mesh_shader.c
  * @author chocolate-pie24
- * @brief 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるlit_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装
- *
- * @note ライティング等がまだ未実装なので、当面は単色描画となる
+ * @brief 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるuntextured_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装
  *
  * @date 2026-06-03
  *
  */
-#include "engine/systems/renderer/resources/shaders/lit_mesh_shader.h"
+#include "engine/systems/renderer/resources/shaders/untextured_mesh_shader.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -43,9 +41,9 @@
 #include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_program_builder.h"
 
-// TODO: テスト(lit_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
+// TODO: テスト(untextured_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
 // TODO: DYNAMIC / STATICでそれぞれVBOを作る
-struct lit_mesh_shader {
+struct untextured_mesh_shader {
     int32_t model_matrix_location;          /**< モデル行列のユニフォーム変数Location */
     int32_t view_matrix_location;           /**< ビュー行列のユニフォーム変数Location */
     int32_t projection_matrix_location;     /**< プロジェクション行列のユニフォーム変数Location */
@@ -66,84 +64,84 @@ struct lit_mesh_shader {
     vbo_manager_t* vbo_manager;
 };
 
-static void destroy_unchecked(lit_mesh_shader_t** shader_);
-static shader_result_t program_initialize(lit_mesh_shader_t* shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_);
-static shader_result_t vbo_initialize(lit_mesh_shader_t* shader_, const lit_mesh_shader_config_t* config_);
-static shader_result_t vao_initialize(lit_mesh_shader_t* shader_);
+static void destroy_unchecked(untextured_mesh_shader_t** shader_);
+static shader_result_t program_initialize(untextured_mesh_shader_t* shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_);
+static shader_result_t vbo_initialize(untextured_mesh_shader_t* shader_, const untextured_mesh_shader_config_t* config_);
+static shader_result_t vao_initialize(untextured_mesh_shader_t* shader_);
 
 // validation
-static bool is_valid_shallow(const lit_mesh_shader_t* shader_);
+static bool is_valid_shallow(const untextured_mesh_shader_t* shader_);
 
-shader_result_t lit_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const lit_mesh_shader_config_t* config_, lit_mesh_shader_t** out_shader_) {
+shader_result_t untextured_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const untextured_mesh_shader_config_t* config_, untextured_mesh_shader_t** out_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
-    lit_mesh_shader_t* tmp_lit_mesh_shader = NULL;
+    untextured_mesh_shader_t* tmp_untextured_mesh_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_create", "out_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION, shader_result_to_str(SHADER_BAD_OPERATION), "lit_mesh_shader_create", "*out_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_create", "vertex_shader_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_create", "fragment_shader_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_create", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_create", "out_shader_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION, shader_result_to_str(SHADER_BAD_OPERATION), "untextured_mesh_shader_create", "*out_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_create", "vertex_shader_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_create", "fragment_shader_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_create", "config_")
     if('\0' == vertex_shader_fullpath_[0]) {
         ret = SHADER_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_shader_create(%s) - Provided vertex_shader_fullpath_ is not valid.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_create(%s) - Provided vertex_shader_fullpath_ is not valid.", shader_result_to_str(ret));
         goto cleanup;
     }
     if('\0' == fragment_shader_fullpath_[0]) {
         ret = SHADER_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_shader_create(%s) - Provided fragment_shader_fullpath_ is not valid.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_create(%s) - Provided fragment_shader_fullpath_ is not valid.", shader_result_to_str(ret));
         goto cleanup;
     }
-    if(!lit_mesh_shader_config_is_valid(config_)) {
+    if(!untextured_mesh_shader_config_is_valid(config_)) {
         ret = SHADER_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_shader_create(%s) - Provided config_ is not valid.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_create(%s) - Provided config_ is not valid.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    // lit mesh shader構造体インスタンス生成
-    ret_general_allocator = general_allocator_allocate(sizeof(lit_mesh_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_lit_mesh_shader);
+    // textured mesh shader構造体インスタンス生成
+    ret_general_allocator = general_allocator_allocate(sizeof(untextured_mesh_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_untextured_mesh_shader);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = shader_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("lit_mesh_shader_create(%s) - general_allocator_allocate failed.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_create(%s) - general_allocator_allocate failed.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    tmp_lit_mesh_shader->backend_context = backend_context_;
+    tmp_untextured_mesh_shader->backend_context = backend_context_;
 
-    ret = program_initialize(tmp_lit_mesh_shader, vertex_shader_fullpath_, fragment_shader_fullpath_);
+    ret = program_initialize(tmp_untextured_mesh_shader, vertex_shader_fullpath_, fragment_shader_fullpath_);
     if(SHADER_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_shader_create(%s) - program_initialize failed.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_create(%s) - program_initialize failed.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = vbo_initialize(tmp_lit_mesh_shader, config_);
+    ret = vbo_initialize(tmp_untextured_mesh_shader, config_);
     if(SHADER_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_shader_create(%s) - vbo_initialize failed.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_create(%s) - vbo_initialize failed.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = vao_initialize(tmp_lit_mesh_shader);
+    ret = vao_initialize(tmp_untextured_mesh_shader);
     if(SHADER_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_shader_create(%s) - vao_initialize failed.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_create(%s) - vao_initialize failed.", shader_result_to_str(ret));
         goto cleanup;
     }
 
-    *out_shader_ = tmp_lit_mesh_shader;
-    tmp_lit_mesh_shader = NULL;
+    *out_shader_ = tmp_untextured_mesh_shader;
+    tmp_untextured_mesh_shader = NULL;
 
     ret = SHADER_SUCCESS;
 
 cleanup:
-    if(NULL != tmp_lit_mesh_shader) {
-        destroy_unchecked(&tmp_lit_mesh_shader);
+    if(NULL != tmp_untextured_mesh_shader) {
+        destroy_unchecked(&tmp_untextured_mesh_shader);
     }
     return ret;
 }
 
-void lit_mesh_shader_destroy(lit_mesh_shader_t** shader_) {
+void untextured_mesh_shader_destroy(untextured_mesh_shader_t** shader_) {
     if(NULL == shader_) {
         return;
     }
@@ -153,26 +151,26 @@ void lit_mesh_shader_destroy(lit_mesh_shader_t** shader_) {
 
     // TODO: validatorに変更する
     if(NULL == (*shader_)->backend_context) {
-        ERROR_MESSAGE("lit_mesh_shader_destroy - Provided shader_ is corrupted.");
+        ERROR_MESSAGE("untextured_mesh_shader_destroy - Provided shader_ is corrupted.");
         return;
     }
     if(NULL == (*shader_)->shader) {
-        ERROR_MESSAGE("lit_mesh_shader_destroy - Provided shader_ is corrupted.");
+        ERROR_MESSAGE("untextured_mesh_shader_destroy - Provided shader_ is corrupted.");
         return;
     }
     if(NULL == (*shader_)->vao) {
-        ERROR_MESSAGE("lit_mesh_shader_destroy - Provided shader_ is corrupted.");
+        ERROR_MESSAGE("untextured_mesh_shader_destroy - Provided shader_ is corrupted.");
         return;
     }
     if(NULL == (*shader_)->vbo_manager) {
-        ERROR_MESSAGE("lit_mesh_shader_destroy - Provided shader_ is corrupted.");
+        ERROR_MESSAGE("untextured_mesh_shader_destroy - Provided shader_ is corrupted.");
         return;
     }
 
     destroy_unchecked(shader_);
 }
 
-shader_result_t lit_mesh_shader_vbo_write(lit_mesh_shader_t* shader_, size_t vertex_count_, const point_normal_vertex_t* vertices_, vbo_range_t* out_buffer_range_) {
+shader_result_t untextured_mesh_shader_vbo_write(untextured_mesh_shader_t* shader_, size_t vertex_count_, const point_normal_vertex_t* vertices_, vbo_range_t* out_buffer_range_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     shader_result_t ret_cleanup = SHADER_INVALID_ARGUMENT;
@@ -182,36 +180,36 @@ shader_result_t lit_mesh_shader_vbo_write(lit_mesh_shader_t* shader_, size_t ver
     size_t write_size = 0;
     bool vbo_written = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_write", "out_buffer_range_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_write", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_write", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_write", "out_buffer_range_")
     if(0 == vertex_count_ || 0 != (vertex_count_ % 3)) {
         ret = SHADER_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s) - Provided vertex_count_ is not valid.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - Provided vertex_count_ is not valid.", shader_result_to_str(ret));
         goto cleanup;
     }
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
     if(!size_mul_checked(vertex_count_, sizeof(point_normal_vertex_t), &write_size)) {
         ret = SHADER_OVERFLOW;
-        ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s) - lit_mesh_shader_vbo_write failed.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - untextured_mesh_shader_vbo_write failed.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_buffer_manager = vbo_manager_write(shader_->vbo_manager, write_size, (const void*)vertices_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
         ret = shader_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s) - vbo write failed.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - vbo write failed.", shader_result_to_str(ret));
         goto cleanup;
     }
     vbo_written = true;
 
     if(0 != (tmp_alloc_handle.offset % sizeof(point_normal_vertex_t))) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s) - vbo write failed.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - vbo write failed.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -224,40 +222,40 @@ shader_result_t lit_mesh_shader_vbo_write(lit_mesh_shader_t* shader_, size_t ver
 cleanup:
     if(SHADER_SUCCESS != ret && vbo_written) {
         // NOTE: vbo_manager_freeが失敗した場合はvbo_managerにデータ不整合が発生しているため、
-        // lit_mesh_shader_vbo_write失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
+        // untextured_mesh_shader_vbo_write失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
         ret_buffer_manager = vbo_manager_free(shader_->vbo_manager, &tmp_alloc_handle);
         if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
             ret_cleanup = shader_result_convert_buffer_manager(ret_buffer_manager);
             ret = SHADER_DATA_CORRUPTED;
-            ERROR_MESSAGE("lit_mesh_shader_vbo_write(%s, %s) - vbo free failed.", shader_result_to_str(ret), shader_result_to_str(ret_cleanup));
+            ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s, %s) - vbo free failed.", shader_result_to_str(ret), shader_result_to_str(ret_cleanup));
         }
     }
     return ret;
 }
 
-shader_result_t lit_mesh_shader_vbo_free(lit_mesh_shader_t* shader_, const vbo_range_t* buffer_range_) {
+shader_result_t untextured_mesh_shader_vbo_free(untextured_mesh_shader_t* shader_, const vbo_range_t* buffer_range_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_free", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vbo_free", "buffer_range_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_free", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_free", "buffer_range_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_vbo_free(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vbo_free(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     if(!vbo_range_is_valid(buffer_range_)) {
         ret = SHADER_BAD_OPERATION;
-        ERROR_MESSAGE("lit_mesh_shader_vbo_free(%s) - Provided buffer_range_ is not valid.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vbo_free(%s) - Provided buffer_range_ is not valid.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_buffer_manager = vbo_manager_free(shader_->vbo_manager, &buffer_range_->allocation_info);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
         ret = shader_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("lit_mesh_shader_vbo_free(%s) - vbo free failed.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vbo_free(%s) - vbo free failed.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -267,22 +265,22 @@ cleanup:
     return ret;
 }
 
-shader_result_t lit_mesh_shader_vao_bind(const lit_mesh_shader_t* shader_) {
+shader_result_t untextured_mesh_shader_vao_bind(const untextured_mesh_shader_t* shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_vao_bind", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vao_bind", "shader_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_vao_bind(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vao_bind(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_vao_bind(shader_->backend_context, shader_->vao);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_vao_bind(%s) - Failed to bind vertex array.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_vao_bind(%s) - Failed to bind vertex array.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -292,22 +290,22 @@ cleanup:
     return ret;
 }
 
-shader_result_t lit_mesh_shader_use(const lit_mesh_shader_t* shader_) {
+shader_result_t untextured_mesh_shader_use(const untextured_mesh_shader_t* shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_use", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_use", "shader_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_use(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_use(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_use(shader_->backend_context, shader_->shader);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_use(%s) - Failed to switch program for lit_mesh_shader.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_use(%s) - Failed to switch program for untextured_mesh_shader.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -317,23 +315,23 @@ cleanup:
     return ret;
 }
 
-shader_result_t lit_mesh_shader_model_matrix_set(const lit_mesh_shader_t* shader_, const mat4x4f_t* model_matrix_, bool should_transpose_) {
+shader_result_t untextured_mesh_shader_model_matrix_set(const untextured_mesh_shader_t* shader_, const mat4x4f_t* model_matrix_, bool should_transpose_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_model_matrix_set", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_model_matrix_set", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_model_matrix_set", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_model_matrix_set", "model_matrix_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_model_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_model_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(shader_->backend_context, shader_->model_matrix_location, should_transpose_, model_matrix_->elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_model_matrix_set(%s) - Failed to set model matrix.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_model_matrix_set(%s) - Failed to set model matrix.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -343,23 +341,23 @@ cleanup:
     return ret;
 }
 
-shader_result_t lit_mesh_shader_view_matrix_set(const lit_mesh_shader_t* shader_, const mat4x4f_t* view_matrix_, bool should_transpose_) {
+shader_result_t untextured_mesh_shader_view_matrix_set(const untextured_mesh_shader_t* shader_, const mat4x4f_t* view_matrix_, bool should_transpose_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_view_matrix_set", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_view_matrix_set", "view_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_view_matrix_set", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_view_matrix_set", "view_matrix_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_view_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_view_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(shader_->backend_context, shader_->view_matrix_location, should_transpose_, view_matrix_->elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_view_matrix_set(%s) - Failed to set view matrix.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_view_matrix_set(%s) - Failed to set view matrix.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -369,23 +367,23 @@ cleanup:
     return ret;
 }
 
-shader_result_t lit_mesh_shader_projection_matrix_set(const lit_mesh_shader_t* shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_) {
+shader_result_t untextured_mesh_shader_projection_matrix_set(const untextured_mesh_shader_t* shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_projection_matrix_set", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_projection_matrix_set", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_projection_matrix_set", "projection_matrix_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_projection_matrix_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_mat4f_uniform_set(shader_->backend_context, shader_->projection_matrix_location, should_transpose_, projection_matrix_->elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_projection_matrix_set(%s) - Failed to set projection matrix.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_projection_matrix_set(%s) - Failed to set projection matrix.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -395,22 +393,22 @@ cleanup:
     return ret;
 }
 
-shader_result_t lit_mesh_shader_light_direction_set(const lit_mesh_shader_t* shader_, vec3f_t direction_) {
+shader_result_t untextured_mesh_shader_light_direction_set(const untextured_mesh_shader_t* shader_, vec3f_t direction_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_light_direction_set", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_light_direction_set", "shader_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_light_direction_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_light_direction_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->light_direction_location, direction_.elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_light_direction_set(%s) - Failed to set light direction.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_light_direction_set(%s) - Failed to set light direction.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -420,29 +418,29 @@ cleanup:
     return ret;
 }
 
-shader_result_t lit_mesh_shader_light_color_intensity_set(const lit_mesh_shader_t* shader_, vec3f_t color_, float intensity_) {
+shader_result_t untextured_mesh_shader_light_color_intensity_set(const untextured_mesh_shader_t* shader_, vec3f_t color_, float intensity_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_light_color_intensity_set", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_light_color_intensity_set", "shader_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_light_color_intensity_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_light_color_intensity_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->light_color_location, color_.elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_light_color_intensity_set(%s) - Failed to set light color.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_light_color_intensity_set(%s) - Failed to set light color.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_float_uniform_set(shader_->backend_context, shader_->light_intensity_location, intensity_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_light_color_intensity_set(%s) - Failed to set light color.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_light_color_intensity_set(%s) - Failed to set light intensity.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -452,22 +450,22 @@ cleanup:
     return ret;
 }
 
-shader_result_t lit_mesh_shader_material_set(const lit_mesh_shader_t* shader_, const untextured_material_t* material_) {
+shader_result_t untextured_mesh_shader_material_set(const untextured_mesh_shader_t* shader_, const untextured_material_t* material_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_material_set", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "lit_mesh_shader_material_set", "material_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_material_set", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_material_set", "material_")
     if(!is_valid_shallow(shader_)) {
         ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_material_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!untextured_material_is_valid(material_)) {
         ret = SHADER_INVALID_ARGUMENT;
-        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Provided material_ is not valid.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_material_set(%s) - Provided material_ is not valid.", shader_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -475,28 +473,28 @@ shader_result_t lit_mesh_shader_material_set(const lit_mesh_shader_t* shader_, c
     ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->material_ambient_location, material_->ambient.elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Failed to set ambient.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_material_set(%s) - Failed to set ambient.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->material_diffuse_location, material_->diffuse.elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Failed to set diffuse.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_material_set(%s) - Failed to set diffuse.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_vec3f_uniform_set(shader_->backend_context, shader_->material_specular_location, material_->specular.elem);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Failed to set specular.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_material_set(%s) - Failed to set specular.", shader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_renderer_backend = renderer_backend_shader_float_uniform_set(shader_->backend_context, shader_->material_shininess_location, material_->shininess);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("lit_mesh_shader_material_set(%s) - Failed to set shininess.", shader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_shader_material_set(%s) - Failed to set shininess.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -506,7 +504,7 @@ cleanup:
     return ret;
 }
 
-static void destroy_unchecked(lit_mesh_shader_t** shader_) {
+static void destroy_unchecked(untextured_mesh_shader_t** shader_) {
     if(NULL == shader_) {
         return;
     }
@@ -514,7 +512,7 @@ static void destroy_unchecked(lit_mesh_shader_t** shader_) {
         return;
     }
     if(NULL == (*shader_)->backend_context) {
-        ERROR_MESSAGE("lit_mesh_shader_destroy - Provided backend_context_ is not valid.");
+        ERROR_MESSAGE("untextured_mesh_shader_destroy - Provided backend_context_ is not valid.");
         return;
     }
     if(NULL != (*shader_)->vbo_manager) {
@@ -529,7 +527,7 @@ static void destroy_unchecked(lit_mesh_shader_t** shader_) {
     general_allocator_free((void**)shader_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
-static shader_result_t program_initialize(lit_mesh_shader_t* shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_) {
+static shader_result_t program_initialize(untextured_mesh_shader_t* shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -657,7 +655,7 @@ cleanup:
     return ret;
 }
 
-static shader_result_t vbo_initialize(lit_mesh_shader_t* shader_, const lit_mesh_shader_config_t* config_) {
+static shader_result_t vbo_initialize(untextured_mesh_shader_t* shader_, const untextured_mesh_shader_config_t* config_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
@@ -694,7 +692,7 @@ cleanup:
     return ret;
 }
 
-static shader_result_t vao_initialize(lit_mesh_shader_t* shader_) {
+static shader_result_t vao_initialize(untextured_mesh_shader_t* shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     shader_result_t ret_cleanup = SHADER_INVALID_ARGUMENT;
@@ -710,7 +708,7 @@ static shader_result_t vao_initialize(lit_mesh_shader_t* shader_) {
     ret_renderer_backend = renderer_backend_vao_create(shader_->backend_context, &shader_->vao);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("vao_initialize(%s) - Failed to create lit mesh vao.", shader_result_to_str(ret));
+        ERROR_MESSAGE("vao_initialize(%s) - Failed to create textured mesh vao.", shader_result_to_str(ret));
         goto cleanup;
     }
     vao_created = true;
@@ -791,7 +789,7 @@ cleanup:
     return ret;
 }
 
-static bool is_valid_shallow(const lit_mesh_shader_t* shader_) {
+static bool is_valid_shallow(const untextured_mesh_shader_t* shader_) {
     if(NULL == shader_) {
         return false;
     }
