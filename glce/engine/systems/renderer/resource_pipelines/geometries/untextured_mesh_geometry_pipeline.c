@@ -103,7 +103,7 @@ cleanup:
             // NOTE: untextured_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
             // untextured_mesh_geometry_pipeline_import_from_file失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
             ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - textured mesh geometry import failed.", resource_pipeline_result_to_str(ret));
+            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - untextured mesh geometry import failed.", resource_pipeline_result_to_str(ret));
         }
     }
     untextured_mesh_geometry_destroy(&geometry);
