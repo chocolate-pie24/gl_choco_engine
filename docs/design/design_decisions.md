@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-05
+最終更新: 2026-10-13
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -3735,3 +3735,126 @@ Texture参照のlifetimeについては、Registryにgeneration等のstale-ID検
 
 - `design_notes.md` — Material and Mesh Rendering Architecture
 - `glce_near_term_todo.md` — Untextured Mesh Material / Lighting Implementation
+
+---
+
+## Decision: Untextured Material ConfigurationはDiffuseのみを必須とし、その他の反射特性にデフォルト値を適用する
+
+**Status:** Accepted  
+**Date:** 2026-10-13  
+**Scope:** Untextured Material / Configuration Format / Default Values / Lighting
+
+### Decision
+
+Untextured Material Configuration Fileでは、`diffuse`のみを必須fieldとし、`ambient`、`specular`、`shininess`をOptional Fieldとする。
+
+| Field | Requirement | Default |
+|---|---|---|
+| `diffuse` | Required | なし |
+| `ambient` | Optional | `diffuse * 0.1f` |
+| `specular` | Optional | `(0.0f, 0.0f, 0.0f)` |
+| `shininess` | Optional | `32.0f` |
+
+Optional Fieldのデフォルト値は`untextured_material_config_loader`がConfiguration Fileの読み込み時に適用する。
+
+`untextured_material_config_t`および`untextured_material_t`には未設定状態を導入せず、常に4つのfieldが確定した完全なvalueとして扱う。
+
+明示的に指定された値はデフォルト値で上書きしない。特に`ambient`、`specular`、`shininess`のゼロ値は、未設定を表すsentinelとして扱わない。
+
+`specular`と`shininess`の指定は相互に独立させる。
+
+- `specular`のみ指定した場合、`shininess`にはデフォルト値を使用する。
+- `shininess`のみ指定した場合、`specular`にはデフォルト値を使用する。
+- 両方を省略した場合、鏡面反射係数はゼロとなり、初期状態ではSpecularによる描画寄与を持たない。
+
+このOptional仕様はExternal Material Configuration Formatの契約であり、Applicationが直接構築する`untextured_material_t`にOptional Fieldや暗黙のデフォルト処理を要求するものではない。
+
+### Context
+
+GLCEでは、Textureを使用しない3D Geometryの描画に向けて、`untextured_material_t`へPhong系の反射特性である`ambient`、`diffuse`、`specular`、`shininess`を導入した。
+
+Material Registry、Material Pipeline、Material Config Loaderを実装した段階では、Configuration Fileに4つのfieldをすべて記述する仕様としていた。
+
+その後、一般的なSTLビューワに適したLightingを検討した結果、STLの主要な表示目的はMaterialの写実的な再現ではなく、Geometryの形状や面の向きを把握しやすく表示することであると整理した。
+
+この用途ではDiffuseを主体とするマットな描画が基本となり、Specularによる光沢は必ずしも必要ではない。
+
+また、Ambientは直接光が届かない面の視認性を改善するために有用であるが、通常のMaterial設定ごとにAmbient反射係数を明示的に記述することは煩雑である。
+
+そのため、Materialの表現能力を維持しながら、Configuration Fileの必須項目を削減する方針を採用した。
+
+### Rationale
+
+#### Diffuseのみを必須とする
+
+Diffuseは、Materialの基本色とDirectional Lightによる拡散反射を定義する。一般的なSTL表示では、Diffuseを指定すれば基本的なMaterialとして成立する。
+
+一方、Ambient、Specular、Shininessは描画の補助的な特性として扱えるため、すべてのConfiguration Fileに明示的な指定を要求する必要はない。
+
+#### Ambientのデフォルト値をDiffuseから導出する
+
+Ambientのデフォルト値は、固定のRGB値ではなく`diffuse * 0.1f`とする。
+
+これにより、Materialの基本色に応じたAmbient反射係数を生成できる。例えば、赤いMaterialには赤系のAmbient反射係数が生成され、暗部においても基本色との関係を維持できる。
+
+この`0.1f`はConfiguration FileでAmbientが省略された場合のデフォルト値生成係数であり、Shaderへ固定の`ambient_strength`を導入するものではない。
+
+Ambient Lightそのものの色や強度、Directional Lightとの関係は別の責務として扱う。Ambient Lightの具体的な設計を、このDefault Value Decisionによって確定しない。
+
+#### Specularをデフォルトで無効にする
+
+Specularのデフォルト値をゼロとすることで、通常のSTL表示では光沢のないマットな外観を基本とする。光沢が必要なMaterialでは、Configuration FileでSpecularを明示的に指定できる。
+
+これにより、単純なGeometry表示を優先しながら、Materialの表現能力を制限しない。
+
+#### Shininessへ独立したデフォルト値を与える
+
+Shininessのデフォルト値を`32.0f`とする。Specularがゼロの場合、Shininessは描画結果へ寄与しない。一方、Specularのみを指定した場合には、Shininessの追加設定なしで光沢を使用できる。
+
+SpecularとShininessを必須の組として扱わないことで、Configuration Formatに不要なfield間依存を導入しない。
+
+#### Optional処理をLoaderに閉じる
+
+External Configuration File上の未指定状態は、Loaderによる解析とデフォルト値の補完によって解決する。
+
+Loaderが成功した後の`untextured_material_config_t`には、すべてのfieldについて確定した値が格納される。Material Pipeline、Material Registry、Shaderは、Configuration Fileでどのfieldが省略されたかを意識する必要がない。
+
+この構造により、External Trust BoundaryにおけるConfigurationの解釈と、Engine内部のMaterial表現を分離できる。
+
+### Rejected Alternatives
+
+- 4つのMaterial Fieldをすべて必須とする。
+  - 通常のSTL表示では不要なSpecularやShininessの記述まで要求することになる。
+- Ambientのデフォルト値を固定のRGB値とする。
+  - MaterialのDiffuse Colorと無関係なAmbient Colorになり得るため、基本色から導出する方式を採用する。
+- Optional Fieldの未設定状態を`untextured_material_t`へ持ち込む。
+  - Materialの利用側で未設定判定やデフォルト補完が必要となり、完成済みvalueの契約が複雑になる。
+- ゼロ値を未設定のsentinelとして扱う。
+  - 明示的に反射係数をゼロへ設定する有効な操作と区別できない。
+- SpecularとShininessを必須の組として扱う。
+  - Specularだけを指定したい場合にもShininessの記述を要求し、デフォルト値の利点が失われる。
+
+### Consequences
+
+- `untextured_material_config_loader`のRequired Field判定を変更し、`diffuse`のみを必須とする。
+- Optional Fieldが存在する場合は従来どおりParsingとSemantic Validationを実施する。
+- Optional Fieldが存在しない場合は、定義済みデフォルト値を適用する。
+- Required / Optionalの区別、重複Keyの禁止、Unsupported Keyの拒否など、External Format固有の規則はLoaderが管理する。
+- 完成したConfigurationについては、引き続き`untextured_material_config_is_valid()`によるCanonical Validationを行う。
+- `untextured_material_t`の4つのfield、およびそのCanonical Validityを変更しない。
+- Loader HeaderのUntextured Material Configuration Format、Supported Keys、Required Field、Default Values、Exampleを新仕様に更新する。
+- ShaderにおけるAmbient / Diffuse / Specularの計算方式、Ambient Lightの所有者と操作Interface、およびShininessがゼロの場合の具体的な描画semanticsは、Lighting実装の継続作業で確認・確定する。
+
+### Revisit Conditions
+
+- STLビューワ以外の用途が主要となり、Materialのデフォルト特性を変更する合理的な要求が生じた場合。
+- Ambient LightやEnvironment Lightingの正式導入に伴い、Ambient反射係数のデフォルト値を再評価する必要が生じた場合。
+- MaterialのShader ModelがPhong系から変更され、Ambient / Diffuse / Specular / Shininessというfield構成そのものを再検討する場合。
+- Configuration Fileの用途が拡大し、Material Presetや継承、複数Materialの定義など、現在とは異なるデフォルト解決方式が必要になった場合。
+
+### Related Documents
+
+- `design_decisions.md` — Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する
+- `design_notes.md` — Material and Mesh Rendering Architecture
+- `glce_near_term_todo.md` — Untextured Mesh Material / Lighting Completion
+- `untextured_material_config_loader.h` — Untextured Material Configuration Format

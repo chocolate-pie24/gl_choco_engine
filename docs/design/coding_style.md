@@ -19,7 +19,7 @@ GLCEのコードを新規作成、レビュー、リファクタリングする�
 
 実装経験からより適切な規則が得られた場合は、必要に応じて関連するDesign Decisionを残した上で本書を更新します。
 
-最終更新: 2026-10-10
+最終更新: 2026-10-13
 
 ## 目的
 
@@ -53,8 +53,8 @@ GLCE全体で、ディレクトリ構成、命名、API設計、include、Doxyge
 避けたい例:
 
 ```text
-resource_pipelines/lit_mesh_geometry.h
-resource_pipelines_lit_mesh_geometry_import_from_file()
+resource_pipelines/geometries/untextured_mesh_geometry.h
+resource_pipelines_untextured_mesh_geometry_import_from_file()
 ```
 
 この場合、`resource_pipelines`は配置カテゴリであり、公開API prefixへ転写しない。
@@ -64,11 +64,11 @@ resource_pipelines_lit_mesh_geometry_import_from_file()
 許容する例:
 
 ```text
-resource_pipelines/lit_mesh_geometry_pipeline.h
-lit_mesh_geometry_pipeline_import_from_file()
+resource_pipelines/geometries/untextured_mesh_geometry_pipeline.h
+untextured_mesh_geometry_pipeline_import_from_file()
 ```
 
-この場合、`pipeline`はディレクトリ名の転写ではなく、`lit_mesh_geometry`をimport、upload、registerするモジュールの役割名である。
+この場合、`pipeline`はディレクトリ名の転写ではなく、`untextured_mesh_geometry`をimport、upload、registerするモジュールの役割名である。
 
 親ディレクトリ名またはその一部をモジュール名へ含めるのは、次のいずれかに該当する場合とする。
 
@@ -200,9 +200,9 @@ include/engine/systems/renderer/
 │   ├── core/
 │   │   └── render_resource_types.h
 │   ├── line_mesh_render_resource.h
-│   ├── lit_mesh_render_resource.h
 │   ├── point_mesh_render_resource.h
-│   └── ui_mesh_render_resource.h
+│   ├── ui_mesh_render_resource.h
+│   └── untextured_mesh_render_resource.h
 ├── renderer_backend/
 │   ├── core/
 │   │   └── renderer_backend_types.h
@@ -216,9 +216,11 @@ include/engine/systems/renderer/
 │   │   └── resource_pipeline_types.h
 │   ├── geometries/
 │   │   ├── line_mesh_geometry_pipeline.h
-│   │   ├── lit_mesh_geometry_pipeline.h
 │   │   ├── point_mesh_geometry_pipeline.h
-│   │   └── ui_mesh_geometry_pipeline.h
+│   │   ├── ui_mesh_geometry_pipeline.h
+│   │   └── untextured_mesh_geometry_pipeline.h
+│   ├── materials/
+│   │   └── untextured_material_pipeline.h
 │   └── texture/
 │       └── texture_pipeline.h
 ├── resource_registries/
@@ -226,17 +228,16 @@ include/engine/systems/renderer/
 │   │   └── resource_registry_types.h
 │   ├── geometries/
 │   │   ├── line_mesh_geometry_registry.h
-│   │   ├── lit_mesh_geometry_registry.h
 │   │   ├── point_mesh_geometry_registry.h
-│   │   └── ui_mesh_geometry_registry.h
+│   │   ├── ui_mesh_geometry_registry.h
+│   │   └── untextured_mesh_geometry_registry.h
+│   ├── material/
+│   │   └── untextured_material_registry.h
 │   └── texture/
 │       └── texture_registry.h
 └── resources/
-    ├── shaders/
-    │   ├── line_mesh_shader.h
-    │   ├── lit_mesh_shader.h
-    │   ├── point_mesh_shader.h
-    │   └── ui_mesh_shader.h
+    ├── material/
+    │   └── material_types.h
     └── texture/
         ├── texture_gpu_resource_types.h
         └── texture_gpu_resource.h
@@ -255,9 +256,9 @@ engine/systems/renderer/
 │   │   ├── render_resource_err_utils.c
 │   │   └── render_resource_err_utils.h
 │   ├── line_mesh_render_resource.c
-│   ├── lit_mesh_render_resource.c
 │   ├── point_mesh_render_resource.c
-│   └── ui_mesh_render_resource.c
+│   ├── ui_mesh_render_resource.c
+│   └── untextured_mesh_render_resource.c
 ├── renderer_backend/
 │   ├── core/
 │   │   ├── renderer_backend_err_utils.c
@@ -274,25 +275,27 @@ engine/systems/renderer/
 │   │       ├── gl33_vao.h
 │   │       ├── gl33_vbo.c
 │   │       └── gl33_vbo.h
-│   ├── vtables/
-│   │   ├── renderer_backend_shader_vtable.h
-│   │   ├── renderer_backend_texture_vtable.h
-│   │   ├── renderer_backend_vao_vtable.h
-│   │   └── renderer_backend_vbo_vtable.h
 │   ├── renderer_backend_context.c
 │   ├── renderer_backend_shader.c
 │   ├── renderer_backend_texture.c
 │   ├── renderer_backend_vao.c
-│   └── renderer_backend_vbo.c
+│   ├── renderer_backend_vbo.c
+│   └── vtables/
+│       ├── renderer_backend_shader_vtable.h
+│       ├── renderer_backend_texture_vtable.h
+│       ├── renderer_backend_vao_vtable.h
+│       └── renderer_backend_vbo_vtable.h
 ├── resource_pipelines/
 │   ├── core/
 │   │   ├── resource_pipeline_err_utils.c
 │   │   └── resource_pipeline_err_utils.h
 │   ├── geometries/
 │   │   ├── line_mesh_geometry_pipeline.c
-│   │   ├── lit_mesh_geometry_pipeline.c
 │   │   ├── point_mesh_geometry_pipeline.c
-│   │   └── ui_mesh_geometry_pipeline.c
+│   │   ├── ui_mesh_geometry_pipeline.c
+│   │   └── untextured_mesh_geometry_pipeline.c
+│   ├── materials/
+│   │   └── untextured_material_pipeline.c
 │   └── texture/
 │       └── texture_pipeline.c
 ├── resource_registries/
@@ -301,9 +304,11 @@ engine/systems/renderer/
 │   │   └── resource_registry_err_utils.h
 │   ├── geometries/
 │   │   ├── line_mesh_geometry_registry.c
-│   │   ├── lit_mesh_geometry_registry.c
 │   │   ├── point_mesh_geometry_registry.c
-│   │   └── ui_mesh_geometry_registry.c
+│   │   ├── ui_mesh_geometry_registry.c
+│   │   └── untextured_mesh_geometry_registry.c
+│   ├── material/
+│   │   └── untextured_material_registry.c
 │   └── texture/
 │       └── texture_registry.c
 └── resources/
@@ -317,6 +322,8 @@ engine/systems/renderer/
     │   │   └── buffer_manager_types.h
     │   ├── vbo_manager.c
     │   └── vbo_manager.h
+    ├── material/
+    │   └── material_types.c
     ├── shaders/
     │   ├── core/
     │   │   ├── shader_err_utils.c
@@ -326,9 +333,13 @@ engine/systems/renderer/
     │   │   ├── shader_resource_types.c
     │   │   └── shader_resource_types.h
     │   ├── line_mesh_shader.c
-    │   ├── lit_mesh_shader.c
+    │   ├── line_mesh_shader.h
     │   ├── point_mesh_shader.c
-    │   └── ui_mesh_shader.c
+    │   ├── point_mesh_shader.h
+    │   ├── ui_mesh_shader.c
+    │   ├── ui_mesh_shader.h
+    │   ├── untextured_mesh_shader.c
+    │   └── untextured_mesh_shader.h
     └── texture/
         ├── texture_gpu_resource_err_utils.c
         ├── texture_gpu_resource_err_utils.h
@@ -336,6 +347,10 @@ engine/systems/renderer/
 ```
 
 この構成では、`include/engine/`側に公開契約だけを置き、Engine内部の共有表現、補助実装、Strategy契約およびConcrete実装を`engine/`側へ置く。公開側と内部側のディレクトリを機械的に完全一致させず、それぞれの公開範囲と所有者に必要なファイルだけを配置する。
+
+`material_types.h`は、Applicationを含むEngine利用者がMaterial valueを構築・参照するため、`include/engine/systems/renderer/resources/material/`へ配置する。対応する`material_types.c`はEngine内部へ配置する。
+
+個別のShader Header（`line_mesh_shader.h`、`point_mesh_shader.h`、`ui_mesh_shader.h`、`untextured_mesh_shader.h`）は、Render Resource等のEngine内部モジュールが使用する契約であり、Applicationから直接操作する必要がない。このため、対応する`.c`と同じ`engine/systems/renderer/resources/shaders/`へ配置する。Shader Headerの公開範囲変更は、Shader ResourceのOwnership変更を意味しない。
 
 Range Allocator、VBO ManagerおよびShaderの内部共通型はEngine内部の実装契約であり、Application向け公開APIへ置かない。Application向け公開contractから内部allocation descriptorまたはallocatorへのpointerが必要になる場合は、それらを公開するのではなく、上位APIの責務を見直す。
 
@@ -384,9 +399,9 @@ Renderer Backendの現在の契約はOpenGLのVAO/VBO概念を採用している
 
 | 避けたい形 | 方針 |
 |---|---|
-| `resource_pipelines_lit_mesh_geometry_import_from_file` | ディレクトリ名をprefixへ転写しない |
-| `lit_mesh_geometry_import_from_file` | geometry本体APIとpipeline APIが混ざる場合は役割名を含める |
-| `lit_mesh_geometry_registry_geometry_register` | `geometry`の重複を避ける |
+| `resource_pipelines_untextured_mesh_geometry_import_from_file` | ディレクトリ名をprefixへ転写しない |
+| `untextured_mesh_geometry_import_from_file` | geometry本体APIとpipeline APIが混ざる場合は役割名を含める |
+| `untextured_mesh_geometry_registry_geometry_register` | `geometry`の重複を避ける |
 | `*_valid_check` | boolの意味が分かる名前にする |
 
 ## 関数名共通規約
