@@ -124,6 +124,8 @@ float vec3f_length(vec3f_t vec_);
  */
 vec3f_t vec3f_normalize(vec3f_t vec_);
 
+bool vec3f_is_normalized(vec3f_t vec_);
+
 /**
  * @brief 3次元ベクトルの全要素が有限の値かをチェックする
  *
@@ -336,6 +338,10 @@ void mat4f_rot_z(float radian_, mat4x4f_t* mat_);
  * @param[out] mat_ 回転行列格納先
  */
 void mat4f_rot_xyz(float x_radian_, float y_radian_, float z_radian_, mat4x4f_t* mat_);
+
+bool size_add_checked(size_t a_, size_t b_, size_t* out_result_);
+
+bool size_mul_checked(size_t a_, size_t b_, size_t* out_result_);
 
 #ifdef __cplusplus
 }

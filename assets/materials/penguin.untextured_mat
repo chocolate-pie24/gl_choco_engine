@@ -1,0 +1,5 @@
+# Penguin Material
+
+diffuse = [0.13, 0.16, 0.20]
+specular = [1.0, 1.0, 1.0]
+shininess = 10.0

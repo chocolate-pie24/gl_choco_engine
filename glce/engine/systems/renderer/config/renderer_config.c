@@ -24,7 +24,7 @@ bool line_mesh_shader_config_is_valid(const line_mesh_shader_config_t* config_) 
     return true;
 }
 
-bool lit_mesh_shader_config_is_valid(const lit_mesh_shader_config_t* config_) {
+bool untextured_mesh_shader_config_is_valid(const untextured_mesh_shader_config_t* config_) {
     if(NULL == config_) {
         return false;
     }
@@ -79,7 +79,7 @@ bool renderer_config_is_valid(const renderer_config_t* config_) {
     if(!line_mesh_shader_config_is_valid(&config_->line_mesh_shader_config)) {
         return false;
     }
-    if(!lit_mesh_shader_config_is_valid(&config_->lit_mesh_shader_config)) {
+    if(!untextured_mesh_shader_config_is_valid(&config_->untextured_mesh_shader_config)) {
         return false;
     }
     if(!point_mesh_shader_config_is_valid(&config_->point_mesh_shader_config)) {

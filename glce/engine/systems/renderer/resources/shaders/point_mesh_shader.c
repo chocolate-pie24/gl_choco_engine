@@ -20,6 +20,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -190,13 +191,11 @@ shader_result_t point_mesh_shader_vbo_write(point_mesh_shader_t* shader_, size_t
         ERROR_MESSAGE("point_mesh_shader_vbo_write(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
         goto cleanup;
     }
-
-    if((SIZE_MAX / sizeof(point_vertex_t) < vertex_count_)) {
+    if(!size_mul_checked(vertex_count_, sizeof(point_vertex_t), &write_size)) {
         ret = SHADER_OVERFLOW;
         ERROR_MESSAGE("point_mesh_shader_vbo_write(%s) - point_mesh_shader_vbo_write failed.", shader_result_to_str(ret));
         goto cleanup;
     }
-    write_size = sizeof(point_vertex_t) * vertex_count_;
 
     ret_buffer_manager = vbo_manager_write(shader_->vbo_manager, write_size, (const void*)vertices_, &tmp_alloc_handle);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {

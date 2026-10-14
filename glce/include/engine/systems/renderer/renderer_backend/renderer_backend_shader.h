@@ -150,6 +150,10 @@ renderer_backend_result_t renderer_backend_shader_uniform_location_get(const ren
  */
 renderer_backend_result_t renderer_backend_shader_mat4f_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, bool should_transpose_, const float* data_);
 
+renderer_backend_result_t renderer_backend_shader_vec3f_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const float* data_);
+
+renderer_backend_result_t renderer_backend_shader_float_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, float data_);
+
 /**
  * @brief シェーダープログラムにvec4u8型のユニフォーム変数を送信する
  *

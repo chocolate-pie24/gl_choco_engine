@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-05
+最終更新: 2026-10-13
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -3651,3 +3651,210 @@ callerへOutputしてよいかを確認するphaseとして`Output eligibility`�
 
 - `validation_policy.md`
 - `glce_coding_style.md`
+
+## Decision: Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する
+
+**Status:** Accepted
+**Date:** 2026-10-09
+**Scope:** Renderer / Material / Texture Reference / Resource Ownership
+
+### Decision
+
+GLCEでは、Phong系Lightingを使用する3D Meshの描画方式を、Textureを使用しない`untextured_mesh`と、1種類以上のTexture Mapを使用する`textured_mesh`へ分離する。いずれも独立したRender Resource ownership rootとして扱う。
+
+Materialのデータ表現には次の**3つの非opaque value type**を採用し、共通の万能`material_t`や独立した`material_properties_t`は設けない。
+
+- `untextured_material_t`：`ambient`、`diffuse`、`specular`、`shininess`からなるPhong系の基本反射特性を保持する。Untextured Mesh用のMaterial表現であると同時に、Textured Materialの基本反射特性を表す値としても利用する。
+- `texture_map_t`：MaterialからTextureを参照するMap単位の値表現。Textureの実体を所有しない。
+- `textured_material_t`：基本反射特性とTexture Map参照を組み合わせる値表現。具体的なfield layoutはTextured Mesh実装時に決定する。
+
+Untextured MeshはShader、Geometry Registry、Untextured Material Registryを所有し、Texture RegistryやTexture参照状態を持たない。
+
+Textured MeshはShader、Geometry Registry、Textured Material Registry、Texture Registryを所有する。Diffuse / Specular / NormalのTexture Mapはそれぞれ独立して使用・未使用を選択できるようにする。少なくとも1種類のTexture Mapが存在する構成をTextured Meshが担当し、3種類とも使用しない構成はUntextured Meshが担当する。Textureを使用する7通りの組み合わせを設計上の対応範囲とするが、実装時に7種類のShaderやMeshを要求するものではない。
+
+Material RegistryはMesh種別ごとに独立して所有し、異なるMesh間の共通Registryは作らない。UI MeshにはPhong系Materialを強制せず、既存の直接的なTexture Registry利用を維持する。
+
+Texture Resourceの実体、Resource Name、および登録IDのauthorityはTexture Registryへ置く。一方、Materialが参照するTextureを解放しないという**参照lifetimeとrelease順の成立責任**はApplicationに持たせる。参照中のTextureを解放する前に、Applicationは当該Textureを参照するMaterialの利用を終了させなければならない。
+
+この契約について、generation付きHandle、Reference Counting、Reverse Reference Tracking、Textureの自動解放抑止は導入しない。古いIDが解放後に再利用された場合、Engineがその参照違反を自動検出することは保証しない。
+
+### Context
+
+従来の`lit_mesh`はGeometryの法線を持つが、固定色で描画しており、Material Propertiesの概念とLightingが未実装であった。はじめは`solid_color_mesh`と、Diffuse Textureを持つ`textured_mesh`の二種類を想定した。
+
+しかしMaterialの表現を検討する過程で、`ambient`、`diffuse`、`specular`、`shininess`は単なるColorではなくPhong系の材料特性であり、Textureの有無とは独立した共通の基本値であることが明確になった。
+
+さらに、Diffuse / Specular / Normal Textureを独立して使用する用途があるため、Diffuse TextureをTextured Meshの必須条件とすると、Normalのみ・Specularのみ等の合理的な構成が除外される。
+
+Texture参照のlifetimeについては、Registryにgeneration等のstale-ID検出機構を追加する案を検討したが、GLCEではApplicationがMaterialとTextureの利用関係を把握でき、かつgenerationを導入しても適切な解放順やlifetimeを自動的に保証できるわけではない。
+
+### Rationale
+
+- Textureを使用しないSTL等のGeometryに、不要なTexture IDやTexture Registry依存を持ち込まない。
+- Materialの基本反射特性とMap参照をvalueとして表し、内部heap所有やprivate stateを必要としない型をopaque化しない。
+- 各Meshの描画方式とResourceのownershipをVertical Slice内へ閉じ、兄弟Mesh間の依存や共有Registryを避ける。
+- Texture Mapの種類を一つに固定せず、Diffuse / Specular / Normalの部分的な利用を表現できる。
+- Resourceのphysical ownershipをRegistryに置くことと、参照元のrelease順をApplicationが保証することを区別する。
+- 今は必要ない自動参照追跡やgeneration managementのstate / validation / API surfaceを先行導入しない。
+
+### Rejected Alternatives
+
+- 全Meshで共通の`material_t`にTexture IDやTexture Nameを持たせる。
+  - Untextured Meshにも不要なfieldと状態組合せが生まれる。
+- `material_properties_t`を独立した型として保持し、その周囲に`untextured_material_t`をさらに設ける。
+  - この段階では基本反射特性とUntextured Materialが同じ概念であり、二重の型を要求する必要がない。
+- `solid_color_mesh` / `lit_mesh`の名前を維持する。
+  - Diffuse / Specularの反射色やLightingの存在を十分に表さず、Textureの有無による描画方式の違いが不明確になる。
+- Textured MeshでDiffuse Textureを必須にする。
+  - Specularのみ、Normalのみ等、実用的なMap構成を表せない。
+- Diffuse / Specular / Normalの7通りごとに独立したMesh種別を設ける。
+  - 同じTexture使用描画方式を組合せごとに不必要に分断する。
+- Material間で共通のTexture Registry / Material Registryを共有する。
+  - Render Resourceごとの独立ownership domainを曖昧にする。
+- generation付きHandleや参照カウントを必須化する。
+  - 現段階ではApplicationによる明示lifetime contractで足り、追跡機構を追加する具体的要件がない。generationはstale参照の検出に役立ち得るが、resource lifetime自体を自動で管理する仕組みではない。
+
+### Consequences
+
+- `lit_mesh`は`untextured_mesh`へ改名し、Material Registry / PipelineとPhong系Directional Lightingを導入する。
+- まずApplicationから`untextured_material_t`を直接登録し、描画を確認した後にMaterial Configuration Loaderを追加する。
+- Material Configuration Fileは当面1ファイル1 Material、sectionなしの`key=value`形式を予定し、具体的format contractはLoader実装時に決める。
+- Texture Mapの未使用状態には`INVALID_ID_U16`を用いる方針とし、該当IDをRegistryが発行しないことを保証する。
+- `texture_map_t`の具体field、Textured Materialの構造、Mapと反射値の合成、Tangent-space Normal Mapping、Shader Variant、Textureの登録・共有・失敗時rollbackはTextured Mesh実装時に決める。
+- MaterialとTextureの参照関係を永続追跡していないことを、Material / Texture releaseの公開contractへ明記する。
+- Render Resourceが内部的に利用するShader Headerについて、不要なApplication公開をやめてEngine privateへ移す。
+
+### Revisit Conditions
+
+- Application側での参照追跡や正しいrelease順の保証が、具体的な利用規模や動的更新要件によって実用的でなくなった場合。
+- runtimeのhot reload、streaming、texture eviction、cross-owner sharing等が必要になった場合。
+- stale handleのautomatic detectionが明確なAPI safety requirementとなった場合。
+- Phong以外のmaterial / shading modelが導入され、基本反射特性の共有範囲やMesh種別を再定義する合理的理由が生じた場合。
+
+### Related Documents
+
+- `design_notes.md` — Material and Mesh Rendering Architecture
+- `glce_near_term_todo.md` — Untextured Mesh Material / Lighting Implementation
+
+---
+
+## Decision: Untextured Material ConfigurationはDiffuseのみを必須とし、その他の反射特性にデフォルト値を適用する
+
+**Status:** Accepted  
+**Date:** 2026-10-13  
+**Scope:** Untextured Material / Configuration Format / Default Values / Lighting
+
+### Decision
+
+Untextured Material Configuration Fileでは、`diffuse`のみを必須fieldとし、`ambient`、`specular`、`shininess`をOptional Fieldとする。
+
+| Field | Requirement | Default |
+|---|---|---|
+| `diffuse` | Required | なし |
+| `ambient` | Optional | `diffuse * 0.1f` |
+| `specular` | Optional | `(0.0f, 0.0f, 0.0f)` |
+| `shininess` | Optional | `32.0f` |
+
+Optional Fieldのデフォルト値は`untextured_material_config_loader`がConfiguration Fileの読み込み時に適用する。
+
+`untextured_material_config_t`および`untextured_material_t`には未設定状態を導入せず、常に4つのfieldが確定した完全なvalueとして扱う。
+
+明示的に指定された値はデフォルト値で上書きしない。特に`ambient`、`specular`、`shininess`のゼロ値は、未設定を表すsentinelとして扱わない。
+
+`specular`と`shininess`の指定は相互に独立させる。
+
+- `specular`のみ指定した場合、`shininess`にはデフォルト値を使用する。
+- `shininess`のみ指定した場合、`specular`にはデフォルト値を使用する。
+- 両方を省略した場合、鏡面反射係数はゼロとなり、初期状態ではSpecularによる描画寄与を持たない。
+
+このOptional仕様はExternal Material Configuration Formatの契約であり、Applicationが直接構築する`untextured_material_t`にOptional Fieldや暗黙のデフォルト処理を要求するものではない。
+
+### Context
+
+GLCEでは、Textureを使用しない3D Geometryの描画に向けて、`untextured_material_t`へPhong系の反射特性である`ambient`、`diffuse`、`specular`、`shininess`を導入した。
+
+Material Registry、Material Pipeline、Material Config Loaderを実装した段階では、Configuration Fileに4つのfieldをすべて記述する仕様としていた。
+
+その後、一般的なSTLビューワに適したLightingを検討した結果、STLの主要な表示目的はMaterialの写実的な再現ではなく、Geometryの形状や面の向きを把握しやすく表示することであると整理した。
+
+この用途ではDiffuseを主体とするマットな描画が基本となり、Specularによる光沢は必ずしも必要ではない。
+
+また、Ambientは直接光が届かない面の視認性を改善するために有用であるが、通常のMaterial設定ごとにAmbient反射係数を明示的に記述することは煩雑である。
+
+そのため、Materialの表現能力を維持しながら、Configuration Fileの必須項目を削減する方針を採用した。
+
+### Rationale
+
+#### Diffuseのみを必須とする
+
+Diffuseは、Materialの基本色とDirectional Lightによる拡散反射を定義する。一般的なSTL表示では、Diffuseを指定すれば基本的なMaterialとして成立する。
+
+一方、Ambient、Specular、Shininessは描画の補助的な特性として扱えるため、すべてのConfiguration Fileに明示的な指定を要求する必要はない。
+
+#### Ambientのデフォルト値をDiffuseから導出する
+
+Ambientのデフォルト値は、固定のRGB値ではなく`diffuse * 0.1f`とする。
+
+これにより、Materialの基本色に応じたAmbient反射係数を生成できる。例えば、赤いMaterialには赤系のAmbient反射係数が生成され、暗部においても基本色との関係を維持できる。
+
+この`0.1f`はConfiguration FileでAmbientが省略された場合のデフォルト値生成係数であり、Shaderへ固定の`ambient_strength`を導入するものではない。
+
+Ambient Lightそのものの色や強度、Directional Lightとの関係は別の責務として扱う。Ambient Lightの具体的な設計を、このDefault Value Decisionによって確定しない。
+
+#### Specularをデフォルトで無効にする
+
+Specularのデフォルト値をゼロとすることで、通常のSTL表示では光沢のないマットな外観を基本とする。光沢が必要なMaterialでは、Configuration FileでSpecularを明示的に指定できる。
+
+これにより、単純なGeometry表示を優先しながら、Materialの表現能力を制限しない。
+
+#### Shininessへ独立したデフォルト値を与える
+
+Shininessのデフォルト値を`32.0f`とする。Specularがゼロの場合、Shininessは描画結果へ寄与しない。一方、Specularのみを指定した場合には、Shininessの追加設定なしで光沢を使用できる。
+
+SpecularとShininessを必須の組として扱わないことで、Configuration Formatに不要なfield間依存を導入しない。
+
+#### Optional処理をLoaderに閉じる
+
+External Configuration File上の未指定状態は、Loaderによる解析とデフォルト値の補完によって解決する。
+
+Loaderが成功した後の`untextured_material_config_t`には、すべてのfieldについて確定した値が格納される。Material Pipeline、Material Registry、Shaderは、Configuration Fileでどのfieldが省略されたかを意識する必要がない。
+
+この構造により、External Trust BoundaryにおけるConfigurationの解釈と、Engine内部のMaterial表現を分離できる。
+
+### Rejected Alternatives
+
+- 4つのMaterial Fieldをすべて必須とする。
+  - 通常のSTL表示では不要なSpecularやShininessの記述まで要求することになる。
+- Ambientのデフォルト値を固定のRGB値とする。
+  - MaterialのDiffuse Colorと無関係なAmbient Colorになり得るため、基本色から導出する方式を採用する。
+- Optional Fieldの未設定状態を`untextured_material_t`へ持ち込む。
+  - Materialの利用側で未設定判定やデフォルト補完が必要となり、完成済みvalueの契約が複雑になる。
+- ゼロ値を未設定のsentinelとして扱う。
+  - 明示的に反射係数をゼロへ設定する有効な操作と区別できない。
+- SpecularとShininessを必須の組として扱う。
+  - Specularだけを指定したい場合にもShininessの記述を要求し、デフォルト値の利点が失われる。
+
+### Consequences
+
+- `untextured_material_config_loader`のRequired Field判定を変更し、`diffuse`のみを必須とする。
+- Optional Fieldが存在する場合は従来どおりParsingとSemantic Validationを実施する。
+- Optional Fieldが存在しない場合は、定義済みデフォルト値を適用する。
+- Required / Optionalの区別、重複Keyの禁止、Unsupported Keyの拒否など、External Format固有の規則はLoaderが管理する。
+- 完成したConfigurationについては、引き続き`untextured_material_config_is_valid()`によるCanonical Validationを行う。
+- `untextured_material_t`の4つのfield、およびそのCanonical Validityを変更しない。
+- Loader HeaderのUntextured Material Configuration Format、Supported Keys、Required Field、Default Values、Exampleを新仕様に更新する。
+- ShaderにおけるAmbient / Diffuse / Specularの計算方式、Ambient Lightの所有者と操作Interface、およびShininessがゼロの場合の具体的な描画semanticsは、Lighting実装の継続作業で確認・確定する。
+
+### Revisit Conditions
+
+- STLビューワ以外の用途が主要となり、Materialのデフォルト特性を変更する合理的な要求が生じた場合。
+- Ambient LightやEnvironment Lightingの正式導入に伴い、Ambient反射係数のデフォルト値を再評価する必要が生じた場合。
+- MaterialのShader ModelがPhong系から変更され、Ambient / Diffuse / Specular / Shininessというfield構成そのものを再検討する場合。
+- Configuration Fileの用途が拡大し、Material Presetや継承、複数Materialの定義など、現在とは異なるデフォルト解決方式が必要になった場合。
+
+### Related Documents
+
+- `design_decisions.md` — Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する
+- `design_notes.md` — Material and Mesh Rendering Architecture
+- `glce_near_term_todo.md` — Untextured Mesh Material / Lighting Completion
+- `untextured_material_config_loader.h` — Untextured Material Configuration Format

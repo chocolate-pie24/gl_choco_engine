@@ -26,16 +26,12 @@ bool memory_utility_align_up(size_t value_, size_t alignment_, size_t* out_align
     return true;
 }
 
-bool memory_utility_is_aligned(size_t value_, size_t alignment_, bool* out_is_aligned_) {
-    if(NULL == out_is_aligned_) {
+bool memory_utility_is_aligned(size_t value_, size_t alignment_) {
+    if(0 == alignment_ || 0 != (alignment_ & (alignment_ - 1))) {
         return false;
     }
-    if(!is_power_of_two(alignment_)) {
-        return false;
-    }
-    *out_is_aligned_ = ((value_) & ((alignment_) - 1)) == 0;
 
-    return true;
+    return 0 == (value_ & (alignment_ - 1));
 }
 
 bool memory_utility_padding_calc(size_t value_, size_t alignment_, size_t* out_padding_size_) {

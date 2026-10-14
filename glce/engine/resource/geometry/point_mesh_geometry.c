@@ -22,6 +22,7 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -190,6 +191,8 @@ resource_result_t point_mesh_geometry_create_from_vertices(size_t vertex_count_,
     point_mesh_geometry_t* tmp_geometry = NULL;
     point_vertex_t* tmp_vertices = NULL;
 
+    size_t allocation_size = 0;
+
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "point_mesh_geometry_create_from_vertices", "out_geometry_")
@@ -199,7 +202,7 @@ resource_result_t point_mesh_geometry_create_from_vertices(size_t vertex_count_,
         ERROR_MESSAGE("point_mesh_geometry_create_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_result_to_str(ret));
         goto cleanup;
     }
-    if((SIZE_MAX / vertex_count_) < sizeof(point_vertex_t)) {
+    if(!size_mul_checked(vertex_count_, sizeof(point_vertex_t), &allocation_size)) {
         ret = RESOURCE_OVERFLOW;
         ERROR_MESSAGE("point_mesh_geometry_create_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count_, sizeof(point_vertex_t));
         goto cleanup;
@@ -214,7 +217,7 @@ resource_result_t point_mesh_geometry_create_from_vertices(size_t vertex_count_,
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(point_vertex_t) * vertex_count_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = resource_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("point_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
@@ -404,13 +407,14 @@ bool point_mesh_geometry_is_valid(const point_mesh_geometry_t* geometry_) {
 // Validators
 // ============================================================
 static bool is_valid_shallow(const point_mesh_geometry_t* geometry_) {
+    size_t allocation_size = 0;
     if(NULL == geometry_) {
         return false;
     }
     if(0 == geometry_->vertex_count) {
         return false;
     }
-    if((SIZE_MAX / geometry_->vertex_count) < sizeof(point_vertex_t)) {
+    if(!size_mul_checked(geometry_->vertex_count, sizeof(point_vertex_t), &allocation_size)) {
         return false;
     }
     if(NULL == geometry_->vertices) {

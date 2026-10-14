@@ -11,6 +11,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/memory_utility.h"
+#include "engine/base/choco_math/choco_math.h"
 
 /*
  * Module Internal Contract
@@ -165,8 +166,6 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
     size_t payload_offset = 0;
     size_t minimum_block_size = 0;
 
-    bool is_aligned = false;
-
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "memory_pool_")
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "allocator_")
@@ -175,12 +174,7 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
-    if(!memory_utility_is_aligned((uintptr_t)(memory_pool_), alignof(max_align_t), &is_aligned)) {
-        ret = FREE_LIST_ALLOCATOR_UNDEFINED_ERROR;
-        ERROR_MESSAGE("free_list_allocator_initialize(%s) - memory_utility_is_aligned failed.", result_to_str(ret));
-        goto cleanup;
-    }
-    if(!is_aligned) {
+    if(!memory_utility_is_aligned((uintptr_t)(memory_pool_), alignof(max_align_t))) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_ is not valid.", result_to_str(ret));
         goto cleanup;
@@ -197,12 +191,11 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - memory_utility_align_up failed.", result_to_str(ret));
         goto cleanup;
     }
-    if((SIZE_MAX - payload_offset) < alignof(max_align_t)) {
-        ret = FREE_LIST_ALLOCATOR_OVERFLOW; // このケースでmemory_utility_align_upが失敗するのはOVERFLOWのみ
+    if(!size_add_checked(payload_offset, alignof(max_align_t), &minimum_block_size)) {
+        ret = FREE_LIST_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - minimum_block_size overflow.", result_to_str(ret));
         goto cleanup;
     }
-    minimum_block_size = payload_offset + alignof(max_align_t);
     if(memory_pool_size_ < minimum_block_size) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
@@ -680,6 +673,7 @@ static free_list_allocator_result_t allocation_block_size_calc(size_t payload_of
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     size_t required_block_size = 0;
+    size_t aligned_size = 0;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_required_block_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_block_size_calc", "out_required_block_size_")
@@ -693,14 +687,14 @@ static free_list_allocator_result_t allocation_block_size_calc(size_t payload_of
         ERROR_MESSAGE("allocation_block_size_calc(%s) - Provided payload_offset_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
-    if((SIZE_MAX - allocation_size_) < payload_offset_) {
+    if(!size_add_checked(allocation_size_, payload_offset_, &aligned_size)) {
         ret = FREE_LIST_ALLOCATOR_OVERFLOW;
         ERROR_MESSAGE("allocation_block_size_calc(%s) - Provided allocation_size_ overflow.", result_to_str(ret));
         goto cleanup;
     }
 
     // Prepare.
-    if(!memory_utility_align_up(allocation_size_ + payload_offset_, alignof(max_align_t), &required_block_size)) {
+    if(!memory_utility_align_up(aligned_size, alignof(max_align_t), &required_block_size)) {
         ret = FREE_LIST_ALLOCATOR_OVERFLOW; // このケースでmemory_utility_align_upが失敗するのはOVERFLOWのみ
         ERROR_MESSAGE("allocation_block_size_calc(%s) - memory_utility_align_up failed.", result_to_str(ret));
         goto cleanup;
@@ -1103,7 +1097,6 @@ static bool is_valid_shallow(const free_list_allocator_t* allocator_) {
     size_t expected_payload_offset = 0;
     size_t expected_minimum_block_size = 0;
     uintptr_t pool_address = 0;
-    bool is_aligned = false;
 
     if(NULL == allocator_) {
         return false;
@@ -1125,10 +1118,9 @@ static bool is_valid_shallow(const free_list_allocator_t* allocator_) {
         return false;
     }
 
-    if((SIZE_MAX - expected_payload_offset) < alignof(max_align_t)) {
+    if(!size_add_checked(expected_payload_offset, alignof(max_align_t), &expected_minimum_block_size)) {
         return false;
     }
-    expected_minimum_block_size = expected_payload_offset + alignof(max_align_t);
 
     if(allocator_->minimum_block_size != expected_minimum_block_size) {
         return false;
@@ -1139,10 +1131,7 @@ static bool is_valid_shallow(const free_list_allocator_t* allocator_) {
 
     pool_address = (uintptr_t)allocator_->memory_pool;
 
-    if(!memory_utility_is_aligned(pool_address, alignof(max_align_t), &is_aligned)) {
-        return false;
-    }
-    if(!is_aligned) {
+    if(!memory_utility_is_aligned(pool_address, alignof(max_align_t))) {
         return false;
     }
 
@@ -1162,16 +1151,11 @@ static bool block_state_is_valid(free_list_block_state_t state_) {
 
 // ブロック単体のvalidationを行う。free_list_allocator_tへの接続状態は検査しない
 static bool block_is_valid(const free_list_block_header_t* block_, size_t minimum_block_size_) {
-    bool is_aligned = false;
-
     if(NULL == block_) {
         return false;
     }
 
-    if(!memory_utility_is_aligned((uintptr_t)block_, alignof(max_align_t), &is_aligned)) {
-        return false;
-    }
-    if(!is_aligned) {
+    if(!memory_utility_is_aligned((uintptr_t)block_, alignof(max_align_t))) {
         return false;
     }
 

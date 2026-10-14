@@ -36,6 +36,10 @@
 
 #include "engine/io_utils/fs_path.h"
 
+#include "engine/light/core/light_types.h"
+#include "engine/light/directional_light.h"
+#include "engine/light/ambient_light.h"
+
 // Platform System
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/platform_system/config/platform_system_config.h"
@@ -93,6 +97,10 @@ typedef struct application_state {
     // Camera System
     application_flight_camera_t* flight_camera;
 
+    // Light
+    directional_light_t directional_light;
+    ambient_light_t ambient_light;
+
     // Renderer System
     application_renderer_t* renderer;
 
@@ -101,11 +109,15 @@ typedef struct application_state {
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
     mat4x4f_t model_matrix;
+    mat4x4f_t penguin_model_matrix;
 
     // Texture ID
     uint16_t tex_id_rabbit;
     uint16_t tex_id_frog;
     uint16_t tex_id_green;
+
+    // Material ID
+    uint16_t material_id_penguin;
 
     // Geometry ID
     bool should_draw_penguin_aabb;
@@ -123,6 +135,7 @@ typedef struct application_state {
     mat4x4f_t rabbit_mesh_model_mat;
     mat4x4f_t frog_mesh_model_mat;
     mat4x4f_t green_mesh_model_mat;
+    // end temporary
 } application_state_t;
 
 static application_state_t* s_application_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -137,7 +150,7 @@ static void renderer_config_initialize(renderer_config_t* config_);
 
 static application_result_t point_mesh_geometry_import(application_state_t* state_);        // TODO: remove this!!
 static application_result_t ui_mesh_geometry_import(application_state_t* state_);
-static application_result_t lit_mesh_geometry_import(application_state_t* state_);
+static application_result_t untextured_mesh_import(application_state_t* state_);
 static application_result_t ui_mesh_textures_import(application_state_t* state_);
 
 static application_result_t executable_directory_get(application_state_t* state_);
@@ -149,6 +162,8 @@ application_result_t application_create(void) {
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+
+    light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
 
     application_state_t* tmp_state = NULL;
 
@@ -218,6 +233,25 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     INFO_MESSAGE("flight camera system created successfully.");
+
+    // light
+    INFO_MESSAGE("Creating directional light...");
+    // NOTE: 設定値の意味
+    // direction: 正面から少し斜め上の光で、面の違いが見やすい
+    // color: 白色光。色による影響を除外できる
+    // intensity: 明るさの計算と結果を比較しやすい
+    ret_light_result = directional_light_initialize(vec3f_initialize(0.4f, 0.8f, 1.0f), vec3f_initialize(1.0f, 1.0f, 1.0f), 5.0f, &tmp_state->directional_light);
+    if(LIGHT_SUCCESS != ret_light_result) {
+        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
+        ERROR_MESSAGE("application_create(%s) - directional_light_initialize failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_light_result = ambient_light_initialize(vec3f_initialize(1.0f, 1.0f, 1.0f), 1.0f, &tmp_state->ambient_light);
+    if(LIGHT_SUCCESS != ret_light_result) {
+        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
+        ERROR_MESSAGE("application_create(%s) - ambient_light_initialize failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
 
     // application renderer
     INFO_MESSAGE("Creating renderer system...");
@@ -313,6 +347,10 @@ application_result_t application_run(void) {
 
     struct timespec  req = {0, 1000000};
 
+    float penguin_rotation_angle = 0.0f;
+    mat4x4f_t penguin_orientation = { 0 };
+    mat4x4f_t penguin_rotation = { 0 };
+
     if(NULL == s_application_state) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", application_result_to_str(ret));
@@ -325,6 +363,7 @@ application_result_t application_run(void) {
 
     // MVP Matrix
     mat4f_identity(&s_application_state->model_matrix);
+    mat4f_rot_x(CHOCO_DEG_TO_RAD(-90.0f), &penguin_orientation);
     mat4f_identity(&s_application_state->rabbit_mesh_model_mat);
     mat4f_identity(&s_application_state->frog_mesh_model_mat);
     mat4f_identity(&s_application_state->green_mesh_model_mat);
@@ -349,7 +388,7 @@ application_result_t application_run(void) {
     s_application_state->frame_state.projection_dirty = true;
     s_application_state->frame_state.view_dirty = true;
     s_application_state->frame_state.window_resized = true;
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->frame_state);
+    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light, &s_application_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_run(%s) - application_renderer_update failed.", application_result_to_str(ret));
         goto cleanup;
@@ -362,10 +401,10 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    ret = lit_mesh_geometry_import(s_application_state);
+    ret = untextured_mesh_import(s_application_state);
     if(APPLICATION_SUCCESS != ret) {
         ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run - Failed to import lit mesh geometry.");
+        ERROR_MESSAGE("application_run - Failed to import untextured mesh.");
         goto cleanup;
     }
 
@@ -379,9 +418,9 @@ application_result_t application_run(void) {
     s_application_state->should_draw_penguin_aabb = true;
     s_application_state->penguin_aabb_color = vec4u8_initialize(255, 0, 0, 255);
     if(s_application_state->should_draw_penguin_aabb) {
-        ret = application_renderer_lit_mesh_geometry_convert_to_aabb_3d(s_application_state->renderer, s_application_state->geometry_id_penguin, &penguin_aabb);
+        ret = application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(s_application_state->renderer, s_application_state->geometry_id_penguin, &penguin_aabb);
         if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_lit_mesh_geometry_convert_to_aabb_3d failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("application_run(%s) - application_renderer_untextured_mesh_geometry_convert_to_aabb_3d failed.", application_result_to_str(ret));
             goto cleanup;
         }
         ret = application_renderer_line_mesh_geometry_import_from_aabb(s_application_state->renderer, "penguin_aabb", &penguin_aabb, &s_application_state->geometry_id_penguin_aabb);
@@ -412,8 +451,12 @@ application_result_t application_run(void) {
 
     // TODO: window NULLチェック
     // end temporary
-
     while(!s_application_state->window_should_close) {
+        penguin_rotation_angle += 0.001f;
+        mat4f_rot_z(penguin_rotation_angle, &penguin_rotation);
+
+        mat4f_mul(&penguin_orientation, &penguin_rotation, &s_application_state->penguin_model_matrix);
+
         app_state_begin_frame();
 
         ret = app_state_update();
@@ -433,6 +476,7 @@ application_result_t application_run(void) {
 
         // begin temporary TODO: remove this!!
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
         glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
 
         // UI描画
@@ -455,7 +499,7 @@ application_result_t application_run(void) {
         }
 
         // 線分描画
-        ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin_aabb, &s_application_state->model_matrix, s_application_state->penguin_aabb_color.elem);
+        ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin_aabb, &s_application_state->penguin_model_matrix, s_application_state->penguin_aabb_color.elem);
         if(APPLICATION_SUCCESS != ret) {
             ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_draw failed.", application_result_to_str(ret));
             goto cleanup;
@@ -475,9 +519,9 @@ application_result_t application_run(void) {
         }
 
         // STL描画
-        ret = application_renderer_lit_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin, &s_application_state->model_matrix);
+        ret = application_renderer_untextured_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
         if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_lit_mesh_draw failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("application_run(%s) - application_renderer_untextured_mesh_draw failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
@@ -527,7 +571,7 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->frame_state);
+    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light, &s_application_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", application_result_to_str(ret));
         goto cleanup;
@@ -589,9 +633,9 @@ static void renderer_config_initialize(renderer_config_t* config_) {
     config_->point_mesh_shader_config.max_allocation_count = 128;
     config_->point_mesh_shader_config.vbo_size = 1 * KIB;
 
-    config_->lit_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    config_->lit_mesh_shader_config.max_allocation_count = 512;
-    config_->lit_mesh_shader_config.vbo_size = 1 * GIB;
+    config_->untextured_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
+    config_->untextured_mesh_shader_config.max_allocation_count = 512;
+    config_->untextured_mesh_shader_config.vbo_size = 1 * GIB;
 }
 
 // TODO: remove this!!
@@ -680,34 +724,63 @@ cleanup:
     return ret;
 }
 
-static application_result_t lit_mesh_geometry_import(application_state_t* state_) {
+static application_result_t untextured_mesh_import(application_state_t* state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
+    application_result_t ret_cleanup = APPLICATION_INVALID_ARGUMENT;
     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
 
-    fs_path_t* penguin_path = NULL;
+    fs_path_t* penguin_material_path = NULL;
+    fs_path_t* penguin_geometry_path = NULL;
 
-    static const char* const penguin_name = "glce_lowpoly_penguin_ascii";
+    static const char* const penguin_material_name = "penguin";
+    static const char* const penguin_geometry_name = "glce_lowpoly_penguin_ascii";
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "lit_mesh_geometry_import", "state_")
+    bool material_imported = false;
 
-    ret_fs_path = fs_path_create(&penguin_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_name, "stl");
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "untextured_mesh_import", "state_")
+
+    ret_fs_path = fs_path_create(&penguin_material_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/materials/", penguin_material_name, "untextured_mat");
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
-        ERROR_MESSAGE("lit_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_import(%s) - fs_path_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = application_renderer_lit_mesh_geometry_import_from_file(state_->renderer, penguin_name, fs_path_fullpath_get(penguin_path), &state_->geometry_id_penguin);
+    ret_fs_path = fs_path_create(&penguin_geometry_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_geometry_name, "stl");
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ERROR_MESSAGE("untextured_mesh_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = application_renderer_untextured_material_import_from_file(state_->renderer, penguin_material_name, fs_path_fullpath_get(penguin_material_path), &state_->material_id_penguin);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("lit_mesh_geometry_import(%s) - application_renderer_lit_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_import(%s) - application_renderer_untextured_material_import_from_file failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    material_imported = true;
+
+    ret = application_renderer_untextured_mesh_geometry_import_from_file(state_->renderer, penguin_geometry_name, fs_path_fullpath_get(penguin_geometry_path), &state_->geometry_id_penguin);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("untextured_mesh_import(%s) - application_renderer_untextured_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    fs_path_destroy(&penguin_path);
+    if(APPLICATION_DATA_CORRUPTED != ret) {
+        fs_path_destroy(&penguin_material_path);
+        fs_path_destroy(&penguin_geometry_path);
+        if(material_imported && APPLICATION_SUCCESS != ret) {
+            ret_cleanup = application_renderer_untextured_material_release(state_->renderer, state_->material_id_penguin);
+            if(APPLICATION_SUCCESS != ret_cleanup) {
+                ret = APPLICATION_DATA_CORRUPTED;   // importに成功しているのにreleaseに失敗するのはDATA_CORRUPTED
+                ERROR_MESSAGE("untextured_mesh_import(%s) - application_renderer_untextured_material_release failed.", application_result_to_str(ret_cleanup));
+            }
+        }
+    }
 
     return ret;
 }

@@ -113,6 +113,14 @@ vec3f_t vec3f_normalize(vec3f_t vec_) {
     return ret;
 }
 
+bool vec3f_is_normalized(vec3f_t vec_) {
+    const float length = vec3f_length(vec_);
+    if(is_equal_float(length, 1.0f)) {
+        return true;
+    }
+    return false;
+}
+
 bool vec3f_is_finite(vec3f_t vec_) {
     if(!isfinite(vec_.elem[0]) || !isfinite(vec_.elem[1]) || !isfinite(vec_.elem[2])) {
         return false;
@@ -496,4 +504,26 @@ void mat4f_rot_xyz(float x_radian_, float y_radian_, float z_radian_, mat4x4f_t*
     mat4f_rot_z(z_radian_, &z_rot);
     mat4f_mul(&x_rot, &y_rot, &tmp);
     mat4f_mul(&tmp, &z_rot, mat_);
+}
+
+bool size_add_checked(size_t a_, size_t b_, size_t* out_result_) {
+    if(NULL == out_result_) {
+        return false;
+    }
+    if((SIZE_MAX - b_) < a_) {
+        return false;
+    }
+    *out_result_ = a_ + b_;
+    return true;
+}
+
+bool size_mul_checked(size_t a_, size_t b_, size_t* out_result_) {
+    if(NULL == out_result_) {
+        return false;
+    }
+    if(0 != b_ && (SIZE_MAX / b_) < a_) {
+        return false;
+    }
+    *out_result_ = a_ * b_;
+    return true;
 }

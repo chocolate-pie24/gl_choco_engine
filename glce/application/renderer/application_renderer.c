@@ -4,18 +4,21 @@
 #include "application/renderer/application_renderer.h"
 
 #include <stdbool.h>
-#include <stdalign.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/core/geometry_primitive/aabb_3d.h"
 #include "engine/core/geometry_primitive/vertex.h"
 
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+
+#include "engine/light/directional_light.h"
+#include "engine/light/ambient_light.h"
 
 #include "engine/systems/renderer/config/renderer_config.h"
 
@@ -26,7 +29,7 @@
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 #include "engine/systems/renderer/render_resources/line_mesh_render_resource.h"
-#include "engine/systems/renderer/render_resources/lit_mesh_render_resource.h"
+#include "engine/systems/renderer/render_resources/untextured_mesh_render_resource.h"
 #include "engine/systems/renderer/render_resources/point_mesh_render_resource.h"
 #include "engine/systems/renderer/render_resources/ui_mesh_render_resource.h"
 
@@ -38,7 +41,7 @@ struct application_renderer {
     renderer_backend_context_t* renderer_backend_context;
 
     line_mesh_render_resource_t* line_mesh_render_resource;
-    lit_mesh_render_resource_t* lit_mesh_render_resource;
+    untextured_mesh_render_resource_t* untextured_mesh_render_resource;
     point_mesh_render_resource_t* point_mesh_render_resource;
     ui_mesh_render_resource_t* ui_mesh_render_resource;
 };
@@ -55,7 +58,7 @@ application_result_t application_renderer_create(const renderer_config_t* config
     application_renderer_t* tmp_application_renderer = NULL;
     renderer_backend_context_t* tmp_renderer_backend_context = NULL;
     line_mesh_render_resource_t* tmp_line_mesh_render_resource = NULL;
-    lit_mesh_render_resource_t* tmp_lit_mesh_render_resource = NULL;
+    untextured_mesh_render_resource_t* tmp_untextured_mesh_render_resource = NULL;
     point_mesh_render_resource_t* tmp_point_mesh_render_resource = NULL;
     ui_mesh_render_resource_t* tmp_ui_mesh_render_resource = NULL;
 
@@ -89,10 +92,10 @@ application_result_t application_renderer_create(const renderer_config_t* config
     }
 
     // TODO: 128をconfigで与えるように変更
-    ret_render_resource = lit_mesh_render_resource_create(&config_->lit_mesh_shader_config, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_lit_mesh_render_resource);
+    ret_render_resource = untextured_mesh_render_resource_create(&config_->untextured_mesh_shader_config, 128, 128, tmp_renderer_backend_context, allocator_, executable_directory_, shader_dir_, &tmp_untextured_mesh_render_resource);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = application_result_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_create(%s) - lit_mesh_render_resource_create failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_create(%s) - untextured_mesh_render_resource_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -113,7 +116,7 @@ application_result_t application_renderer_create(const renderer_config_t* config
     }
 
     tmp_application_renderer->line_mesh_render_resource = tmp_line_mesh_render_resource;
-    tmp_application_renderer->lit_mesh_render_resource = tmp_lit_mesh_render_resource;
+    tmp_application_renderer->untextured_mesh_render_resource = tmp_untextured_mesh_render_resource;
     tmp_application_renderer->point_mesh_render_resource = tmp_point_mesh_render_resource;
     tmp_application_renderer->ui_mesh_render_resource = tmp_ui_mesh_render_resource;
     tmp_application_renderer->renderer_backend_context = tmp_renderer_backend_context;
@@ -130,7 +133,7 @@ application_result_t application_renderer_create(const renderer_config_t* config
     tmp_application_renderer = NULL;
     tmp_renderer_backend_context = NULL;
     tmp_line_mesh_render_resource = NULL;
-    tmp_lit_mesh_render_resource = NULL;
+    tmp_untextured_mesh_render_resource = NULL;
     tmp_point_mesh_render_resource = NULL;
     tmp_ui_mesh_render_resource = NULL;
 
@@ -141,8 +144,8 @@ cleanup:
         if(NULL != tmp_line_mesh_render_resource) {
             line_mesh_render_resource_deinitialize(tmp_line_mesh_render_resource);
         }
-        if(NULL != tmp_lit_mesh_render_resource) {
-            lit_mesh_render_resource_deinitialize(tmp_lit_mesh_render_resource);
+        if(NULL != tmp_untextured_mesh_render_resource) {
+            untextured_mesh_render_resource_deinitialize(tmp_untextured_mesh_render_resource);
         }
         if(NULL != tmp_point_mesh_render_resource) {
             point_mesh_render_resource_deinitialize(tmp_point_mesh_render_resource);
@@ -169,22 +172,38 @@ void application_renderer_deinitialize(application_renderer_t* renderer_) {
 #endif
 
     line_mesh_render_resource_deinitialize(renderer_->line_mesh_render_resource);
-    lit_mesh_render_resource_deinitialize(renderer_->lit_mesh_render_resource);
+    untextured_mesh_render_resource_deinitialize(renderer_->untextured_mesh_render_resource);
     point_mesh_render_resource_deinitialize(renderer_->point_mesh_render_resource);
     ui_mesh_render_resource_deinitialize(renderer_->ui_mesh_render_resource);
     renderer_backend_deinitialize(renderer_->renderer_backend_context);
 }
 
-application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, application_frame_state_t* frame_state_) {
+application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_, application_frame_state_t* frame_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
+    vec4f_t world_light_direction = { 0 };
+    vec4f_t view_light_direction4 = { 0 };
+    vec3f_t view_light_direction3 = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "renderer_")
     IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "view_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(directional_light_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "directional_light_")
+    IF_ARG_NULL_GOTO_CLEANUP(ambient_light_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "ambient_light_")
     IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_update", "frame_state_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!directional_light_is_valid(directional_light_)) {
+        ret = APPLICATION_INVALID_ARGUMENT;
+        ERROR_MESSAGE("application_renderer_update(%s) - Provided directional_light_ is not valid.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!ambient_light_is_valid(ambient_light_)) {
+        ret = APPLICATION_INVALID_ARGUMENT;
+        ERROR_MESSAGE("application_renderer_update(%s) - Provided ambient_light_ is not valid.", application_result_to_str(ret));
+        goto cleanup;
+    }
     if(!is_valid_shallow(renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
         ERROR_MESSAGE("application_renderer_update(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
@@ -207,10 +226,10 @@ application_result_t application_renderer_update(application_renderer_t* rendere
             goto cleanup;
         }
 
-        ret_render_resource = lit_mesh_render_resource_projection_matrix_set(renderer_->lit_mesh_render_resource, projection_matrix_);
+        ret_render_resource = untextured_mesh_render_resource_projection_matrix_set(renderer_->untextured_mesh_render_resource, projection_matrix_);
         if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
             ret = application_result_convert_render_resource(ret_render_resource);
-            ERROR_MESSAGE("application_renderer_update(%s) - lit_mesh_render_resource_projection_matrix_set failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_projection_matrix_set failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
@@ -237,10 +256,10 @@ application_result_t application_renderer_update(application_renderer_t* rendere
             goto cleanup;
         }
 
-        ret_render_resource = lit_mesh_render_resource_view_matrix_set(renderer_->lit_mesh_render_resource, view_matrix_);
+        ret_render_resource = untextured_mesh_render_resource_view_matrix_set(renderer_->untextured_mesh_render_resource, view_matrix_);
         if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
             ret = application_result_convert_render_resource(ret_render_resource);
-            ERROR_MESSAGE("application_renderer_update(%s) - lit_mesh_render_resource_view_matrix_set failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_view_matrix_set failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
@@ -250,6 +269,31 @@ application_result_t application_renderer_update(application_renderer_t* rendere
             ERROR_MESSAGE("application_renderer_update(%s) - point_mesh_render_resource_view_matrix_set failed.", application_result_to_str(ret));
             goto cleanup;
         }
+    }
+
+    // TODO: light_dirtyをframe_stateに追加する(light操作インターフェイス追加後)
+    world_light_direction = vec4f_initialize(directional_light_->direction.elem[0], directional_light_->direction.elem[1], directional_light_->direction.elem[2], 0.0f);
+    view_light_direction4 = mat4f_vec4f_mul(view_matrix_, world_light_direction);
+    view_light_direction3 = vec3f_initialize(view_light_direction4.elem[0], view_light_direction4.elem[1], view_light_direction4.elem[2]);
+    ret_render_resource = untextured_mesh_render_resource_directional_light_direction_set(renderer_->untextured_mesh_render_resource, view_light_direction3);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_directional_light_direction_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_resource = untextured_mesh_render_resource_directional_light_color_intensity_set(renderer_->untextured_mesh_render_resource, directional_light_->color, directional_light_->intensity);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_directional_light_color_intensity_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_resource = untextured_mesh_render_resource_ambient_light_color_intensity_set(renderer_->untextured_mesh_render_resource, ambient_light_->color, ambient_light_->intensity);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_update(%s) - untextured_mesh_render_resource_ambient_light_color_intensity_set failed.", application_result_to_str(ret));
+        goto cleanup;
     }
 
     ret = APPLICATION_SUCCESS;
@@ -342,36 +386,36 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_lit_mesh_geometry_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_) {
+application_result_t application_renderer_untextured_mesh_geometry_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     uint16_t tmp_geometry_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_import_from_file", "renderer_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_import_from_file", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_import_from_file", "resource_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_import_from_file", "out_geometry_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_mesh_geometry_import_from_file", "renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_mesh_geometry_import_from_file", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_mesh_geometry_import_from_file", "resource_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_mesh_geometry_import_from_file", "out_geometry_id_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_import_from_file(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_geometry_import_from_file(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_render_resource = lit_mesh_render_resource_geometry_import_from_file(renderer_->lit_mesh_render_resource, resource_name_, resource_fullpath_, &tmp_geometry_id);
+    ret_render_resource = untextured_mesh_render_resource_geometry_import_from_file(renderer_->untextured_mesh_render_resource, resource_name_, resource_fullpath_, &tmp_geometry_id);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = application_result_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_import_from_file(%s) - lit_mesh_render_resource_geometry_import_from_file failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_geometry_import_from_file(%s) - untextured_mesh_render_resource_geometry_import_from_file failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!application_renderer_is_valid(renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_import_from_file(%s) - Postcondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_geometry_import_from_file(%s) - Postcondition validation failed for 'renderer_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -503,31 +547,31 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_lit_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_) {
+application_result_t application_renderer_untextured_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_release", "renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_mesh_geometry_release", "renderer_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_release(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_geometry_release(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_render_resource = lit_mesh_render_resource_geometry_release(renderer_->lit_mesh_render_resource, geometry_id_);
+    ret_render_resource = untextured_mesh_render_resource_geometry_release(renderer_->untextured_mesh_render_resource, geometry_id_);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = application_result_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_release(%s) - lit_mesh_render_resource_geometry_release failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_geometry_release(%s) - untextured_mesh_render_resource_geometry_release failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!application_renderer_is_valid(renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_release(%s) - Postcondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_geometry_release(%s) - Postcondition validation failed for 'renderer_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -598,6 +642,83 @@ application_result_t application_renderer_ui_mesh_geometry_release(application_r
     if(!application_renderer_is_valid(renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
         ERROR_MESSAGE("application_renderer_ui_mesh_geometry_release(%s) - Postcondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+application_result_t application_renderer_untextured_material_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    uint16_t tmp_material_id = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_import_from_file", "renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_import_from_file", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_import_from_file", "resource_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_import_from_file", "out_material_id_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(renderer_)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("application_renderer_untextured_material_import_from_file(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_render_resource = untextured_mesh_render_resource_material_import_from_file(renderer_->untextured_mesh_render_resource, resource_name_, resource_fullpath_, &tmp_material_id);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_untextured_material_import_from_file(%s) - untextured_mesh_render_resource_material_import_from_file failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!application_renderer_is_valid(renderer_)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("application_renderer_untextured_material_import_from_file(%s) - Postcondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    *out_material_id_ = tmp_material_id;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+application_result_t application_renderer_untextured_material_release(application_renderer_t* renderer_, uint16_t material_id_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_material_release", "renderer_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(renderer_)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("application_renderer_untextured_material_release(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret_render_resource = untextured_mesh_render_resource_material_release(renderer_->untextured_mesh_render_resource, material_id_);
+    if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
+        ret = application_result_convert_render_resource(ret_render_resource);
+        ERROR_MESSAGE("application_renderer_untextured_material_release(%s) - untextured_mesh_render_resource_material_release failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!application_renderer_is_valid(renderer_)) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("application_renderer_untextured_material_release(%s) - Postcondition validation failed for 'renderer_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -755,25 +876,25 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_lit_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_) {
+application_result_t application_renderer_untextured_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_draw", "renderer_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_draw", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_mesh_draw", "renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_mesh_draw", "model_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_lit_mesh_draw(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_draw(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_render_resource = lit_mesh_render_resource_draw(renderer_->lit_mesh_render_resource, geometry_id_, model_matrix_);
+    ret_render_resource = untextured_mesh_render_resource_draw(renderer_->untextured_mesh_render_resource, geometry_id_, material_id_, model_matrix_);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = application_result_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_lit_mesh_draw(%s) - lit_mesh_render_resource_draw failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_draw(%s) - untextured_mesh_render_resource_draw failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -839,27 +960,27 @@ cleanup:
     return ret;
 }
 
-application_result_t application_renderer_lit_mesh_geometry_convert_to_aabb_3d(application_renderer_t* renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_) {
+application_result_t application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(application_renderer_t* renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     render_resource_result_t ret_render_resource = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     aabb_3d_t tmp_aabb_3d = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_convert_to_aabb_3d", "renderer_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_3d_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_lit_mesh_geometry_convert_to_aabb_3d", "out_aabb_3d_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_mesh_geometry_convert_to_aabb_3d", "renderer_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_3d_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_renderer_untextured_mesh_geometry_convert_to_aabb_3d", "out_aabb_3d_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(renderer_)) {
         ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_convert_to_aabb_3d(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(%s) - Precondition validation failed for 'renderer_'.", application_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
-    ret_render_resource = lit_mesh_render_resource_geometry_convert_to_aabb_3d(renderer_->lit_mesh_render_resource, geometry_id_, &tmp_aabb_3d);
+    ret_render_resource = untextured_mesh_render_resource_geometry_convert_to_aabb_3d(renderer_->untextured_mesh_render_resource, geometry_id_, &tmp_aabb_3d);
     if(RENDER_RESOURCE_SUCCESS != ret_render_resource) {
         ret = application_result_convert_render_resource(ret_render_resource);
-        ERROR_MESSAGE("application_renderer_lit_mesh_geometry_convert_to_aabb_3d(%s) - lit_mesh_render_resource_geometry_convert_to_aabb_3d failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(%s) - untextured_mesh_render_resource_geometry_convert_to_aabb_3d failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -883,7 +1004,7 @@ bool application_renderer_is_valid(const application_renderer_t* renderer_) {
     if(!line_mesh_render_resource_is_valid(renderer_->line_mesh_render_resource)) {
         return false;
     }
-    if(!lit_mesh_render_resource_is_valid(renderer_->lit_mesh_render_resource)) {
+    if(!untextured_mesh_render_resource_is_valid(renderer_->untextured_mesh_render_resource)) {
         return false;
     }
     if(!point_mesh_render_resource_is_valid(renderer_->point_mesh_render_resource)) {
@@ -905,7 +1026,7 @@ static bool is_valid_shallow(const application_renderer_t* renderer_) {
     if(NULL == renderer_->line_mesh_render_resource) {
         return false;
     }
-    if(NULL == renderer_->lit_mesh_render_resource) {
+    if(NULL == renderer_->untextured_mesh_render_resource) {
         return false;
     }
     if(NULL == renderer_->point_mesh_render_resource) {

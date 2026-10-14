@@ -12,6 +12,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/memory_utility.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -198,12 +199,11 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
         ERROR_MESSAGE("ring_queue_create(%s) - memory_utility_align_up failed.", result_to_str(ret));
         goto cleanup;
     }
-    if(SIZE_MAX / max_element_count_ < stride) {
+    if(!size_mul_checked(max_element_count_, stride, &capacity)) {
         ret = RING_QUEUE_OVERFLOW;
         ERROR_MESSAGE("ring_queue_create(%s) - ring_queue overflow.", result_to_str(ret));
         goto cleanup;
     }
-    capacity = stride * max_element_count_;
 
     ret_general_allocator = general_allocator_allocate(sizeof(ring_queue_t), GENERAL_ALLOCATOR_MEMORY_TAG_RING_QUEUE, (void**)&tmp_queue);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -648,6 +648,8 @@ static ring_queue_result_t result_convert_general_allocator(general_allocator_re
 // - 実装コードはプロジェクト作成者が作成した。
 static bool is_valid_shallow(const ring_queue_t* queue_) {
     size_t expected_stride = 0;
+    size_t expected_capacity = 0;
+
     if(NULL == queue_) {
         return false;
     }
@@ -678,10 +680,10 @@ static bool is_valid_shallow(const ring_queue_t* queue_) {
     if(queue_->len > queue_->max_element_count) {
         return false;
     }
-    if((SIZE_MAX / queue_->stride) < queue_->max_element_count) {
+    if(!size_mul_checked(queue_->stride, queue_->max_element_count, &expected_capacity)) {
         return false;
     }
-    if(queue_->capacity != queue_->stride * queue_->max_element_count) {
+    if(queue_->capacity != expected_capacity) {
         return false;
     }
     if(NULL == queue_->memory_pool) {
