@@ -109,6 +109,7 @@ typedef struct application_state {
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
     mat4x4f_t model_matrix;
+    mat4x4f_t penguin_model_matrix;
 
     // Texture ID
     uint16_t tex_id_rabbit;
@@ -346,6 +347,10 @@ application_result_t application_run(void) {
 
     struct timespec  req = {0, 1000000};
 
+    float penguin_rotation_angle = 0.0f;
+    mat4x4f_t penguin_orientation = { 0 };
+    mat4x4f_t penguin_rotation = { 0 };
+
     if(NULL == s_application_state) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", application_result_to_str(ret));
@@ -358,6 +363,7 @@ application_result_t application_run(void) {
 
     // MVP Matrix
     mat4f_identity(&s_application_state->model_matrix);
+    mat4f_rot_x(CHOCO_DEG_TO_RAD(-90.0f), &penguin_orientation);
     mat4f_identity(&s_application_state->rabbit_mesh_model_mat);
     mat4f_identity(&s_application_state->frog_mesh_model_mat);
     mat4f_identity(&s_application_state->green_mesh_model_mat);
@@ -445,8 +451,12 @@ application_result_t application_run(void) {
 
     // TODO: window NULLチェック
     // end temporary
-
     while(!s_application_state->window_should_close) {
+        penguin_rotation_angle += 0.001f;
+        mat4f_rot_z(penguin_rotation_angle, &penguin_rotation);
+
+        mat4f_mul(&penguin_orientation, &penguin_rotation, &s_application_state->penguin_model_matrix);
+
         app_state_begin_frame();
 
         ret = app_state_update();
@@ -489,7 +499,7 @@ application_result_t application_run(void) {
         }
 
         // 線分描画
-        ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin_aabb, &s_application_state->model_matrix, s_application_state->penguin_aabb_color.elem);
+        ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin_aabb, &s_application_state->penguin_model_matrix, s_application_state->penguin_aabb_color.elem);
         if(APPLICATION_SUCCESS != ret) {
             ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_draw failed.", application_result_to_str(ret));
             goto cleanup;
@@ -509,7 +519,7 @@ application_result_t application_run(void) {
         }
 
         // STL描画
-        ret = application_renderer_untextured_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->model_matrix);
+        ret = application_renderer_untextured_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
         if(APPLICATION_SUCCESS != ret) {
             ERROR_MESSAGE("application_run(%s) - application_renderer_untextured_mesh_draw failed.", application_result_to_str(ret));
             goto cleanup;
