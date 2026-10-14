@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-13
+最終更新: 2026-10-14
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -3858,3 +3858,93 @@ Loaderが成功した後の`untextured_material_config_t`には、すべてのfi
 - `design_notes.md` — Material and Mesh Rendering Architecture
 - `glce_near_term_todo.md` — Untextured Mesh Material / Lighting Completion
 - `untextured_material_config_loader.h` — Untextured Material Configuration Format
+
+---
+
+## Decision: Ambient LightとDirectional Lightを独立したLight Valueとして扱う
+
+**Date:** 2026-10-14  
+**Status:** Accepted / Implemented  
+**Scope:** Engine Light / Untextured Mesh Lighting / Application State
+
+### Decision
+
+Untextured MeshのLightingでは、Ambient LightとDirectional Lightを独立したLight Dataとして扱う。
+
+- `directional_light_t`はDirection（World Space）、Color、Intensityを保持する。Directionは物体表面から光源へ向かう向きを表し、初期化時に正規化する。
+- `ambient_light_t`はColor、Intensityを保持する。特定のDirectionを持たず、Directional LightのColor / Intensityを借用しない。
+- 双方は独立した非opaque value typeとし、それぞれInitializerとValidatorを設ける。
+- ColorはRGB各成分について有限な`0.0f`〜`1.0f`、Intensityは有限な`0.0f`以上の値とする。Directional LightのDirectionには非零を要求する。
+- 現段階ではApplicationが各Lightを1つ保持し、Rendererへの更新時に渡す。LightごとのRegistry、汎用Light System、複数LightのContainerは導入しない。
+- Lightの値と`untextured_material_t`の反射係数を分離する。Material Ambientは環境光の反射係数であり、Ambient Light Intensityとは異なる。
+
+### Context and Rationale
+
+Diffuseは面のNormalとDirectional Lightとの向きの関係を表すため、方向を持つLightが必要となる。一方、直接光が届かない面の視認性を確保するAmbientは方向を持たない簡易的な環境光として表現できる。
+
+AmbientをDirectional LightのIntensityから導出すると、直接光の明るさと暗部の明るさを独立して調整できない。STL Viewerでは形状の視認性を優先したいことから、両LightのColor / Intensityを独立させた。
+
+また、現在必要なのは2種類のLight ValueをRendererへ渡すことだけであり、Light一般のRegistry / Lifecycle / Systemを構築する実需要はない。現在の一種類一要素という構成も、産業・ロボット・Embedded向けの将来要件を確認するまでの実装上の制約であり、普遍的な光源数上限の規定ではない。
+
+### Considered Alternatives
+
+- AmbientにDirectional LightのColor / Intensityを共用させる：Light Stateは小さくなるが、暗部と直接光を独立して調整できないため不採用。
+- 先に全種類共通のLight Registry / Light Systemを作る：現行要件を超える責務とResource管理を先取りするため採用しない。
+- 複数Light Sourceを最初からArrayで管理する：具体的なLight数、Shader転送方式、GPU上限の要件が固まるまで先行導入しない。
+
+### Revisit Conditions
+
+Spot Light、複数Directional Light、複数の同一種Light、Light Animation / External Control、SceneのLighting構成管理が具体的に必要になった場合は、State Owner、数の制約、Shaderへの転送方法を再検討する。その際もMaterial反射係数とScene Lightの分離を出発点とする。
+
+---
+
+## Decision: Untextured MeshのPhong LightingをView Spaceで計算し、Ambient・Diffuse・Specularを加算する
+
+**Date:** 2026-10-14  
+**Status:** Accepted / Implemented  
+**Scope:** Untextured Mesh Shader / Material / Coordinate Space / Lighting Semantics
+
+### Decision
+
+Untextured MeshのFragment Shaderは、Ambient、Diffuse、Specularの3つの反射成分を計算し、加算して最終RGB Colorを求める。Shader ModelにはPhong Reflection Modelを採用する。
+
+- **Ambient**：`material.ambient * ambient_light.color * ambient_light.intensity`。Normal、Light Direction、View Directionによらない。
+- **Diffuse**：`material.diffuse * directional_light.color * directional_light.intensity * max(dot(N, L), 0)`。`N`と`L`は正規化されたView SpaceのNormalと物体表面から光源へ向かう方向である。
+- **Specular**：`material.specular * directional_light.color * directional_light.intensity * pow(max(dot(R, V), 0), shininess)`。`R = reflect(-L, N)`、`V = normalize(-view_position)`とする。ただし、`dot(N, L) <= 0`または`shininess <= 0`の場合はSpecularの寄与をゼロとする。
+- SpecularはDirectional Lightからの光に対して計算する。Ambient Lightの色や強度をSpecularへ混ぜない。
+- `shininess == 0.0f`はSpecular無効を意味する。正値の`shininess`でもMaterial Specular Colorがゼロならハイライトは現れない。
+- Vertex ShaderはView Spaceへ変換したPosition (`view_position`) とNormal (`view_normal`) をFragment Shaderへ渡す。Directional Light DirectionはApplication Renderer側でWorld SpaceからView Spaceへ変換してShaderへ設定する。
+- View SpaceではCameraが原点にあるため、Fragment ShaderでCamera World Positionの追加Uniformを要求しない。
+- Normal変換は当面、Model MatrixのX/Y/ZのScalingが均等であることを前提とする。非均等Scalingへの対応は別判断とする。
+
+### Context and Rationale
+
+従来のDiffuse-only表示では、光が当たらない面が黒くなり、STL形状の把握が難しい。また、Materialが保持していたAmbient、Specular、ShininessのFieldが描画計算に利用されなかった。
+
+Ambientを追加して暗部に一定の明るさを残し、SpecularとShininessで必要に応じた光沢を表現する。Viewerの基本MaterialではSpecularをゼロとして、形状認識に適したマット表示を維持する。
+
+SpecularにはCameraから見た方向と反射方向が必要になる。既存のView Matrix更新機構を再利用できるため、Fragment PositionとLight Directionを同じView Spaceへ揃えた。カメラ位置Uniformを新規導入したり、`view_dirty`へLight更新を結び付け直したりしない。Light Color / Intensityの更新はCamera View Matrixの変更有無と独立した処理とする。
+
+`shininess == 0`の場合に`pow(x, 0)`の結果に描画Semanticsを依存させると、意図しない全方向への反射や`pow(0, 0)`の問題につながる。そのため、Specularを計算しない規則を明示した。また、光源が面の裏側にある場合のSpecularを抑制することで、Viewerにおける直感的な描画を優先した。
+
+Material Configurationの`ambient`省略時のデフォルト`diffuse * 0.1f`、`specular = (0,0,0)`、`shininess = 32.0f`は、既存の「Untextured Material ConfigurationはDiffuseのみを必須とし、その他の反射特性にデフォルト値を適用する」Decisionに従う。今回のShader Semantics確定によって、Config Defaultの値を変更していない。
+
+### Considered Alternatives
+
+- Diffuse-onlyの維持：Materialの3つのFieldが実描画に寄与せず、暗部の視認性や光沢表示に制約があるため不採用。
+- AmbientとDirectional Lightの同一強度化：別Decisionにより、それぞれ独立したLight Valueを採用。
+- Specularで光源の裏面判定を省く：表面に直接光がない場合にもハイライトが生じ得るため採用しない。
+- `shininess == 0`を通常の`pow(x, 0)`へ任せる：意図した無効化Semanticsを保証しないため採用しない。
+- World SpaceでCamera Position Uniformを渡す：実装可能だが、既存View Matrixを利用したView Space方式の方が現構成で追加Stateを必要としないため採用しない。
+
+### Verification and Limits
+
+2026-10-14、ペンギンSTLを静止表示・Model Matrixで回転させた描画を通じて、Ambient、Diffuse、Specularの効果の変化を確認した。これは基本機能の動作確認であり、すべての数値境界・異常入力・GPU環境について網羅的なRegression Testが完了したことを意味しない。
+
+非均等Scaling、Gamma / Linear Color Space、HDR / Saturation、Spot Light、複数Light Sourceは今回のLighting Decisionの対象外とする。
+
+### References
+
+- `design_notes.md` — Material and Mesh Rendering Architecture
+- `untextured_material_config_loader.h` — Untextured Material Configuration Format
+- `directional_light.h` / `ambient_light.h` — Light Value API
