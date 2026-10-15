@@ -1,0 +1,175 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
+/** @ingroup resource
+ *
+ * @file resource_err_utils.c
+ * @author chocolate-pie24
+ * @brief Resourceレイヤー内でのエラー処理仕様を統一するため、実行結果コード変換機能の実装
+ *
+ * @date 2026-05-05
+ *
+ */
+#include "engine/systems/renderer/resources/core/resource_err_utils.h"
+
+#include "engine/memory/general_allocator/general_allocator.h"
+
+#include "engine/core/geometry_primitive/aabb_3d.h"
+
+#include "engine/containers/choco_string.h"
+
+#include "engine/io_utils/fs_stream.h"
+#include "engine/io_utils/glce_config_utility.h"
+
+#include "engine/systems/renderer/resources/core/resource_types.h"
+
+static const char* const s_result_str_success = "SUCCESS";                      /**< 実行結果コード文字列: 正常終了 */
+static const char* const s_result_str_no_memory = "NO_MEMORY";                  /**< 実行結果コード文字列: メモリ不足 */
+static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";          /**< 実行結果コード文字列: 実行時エラー */
+static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";    /**< 実行結果コード文字列: 引数異常 */
+static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";        /**< 実行結果コード文字列: メモリ破壊 */
+static const char* const s_result_str_bad_operation = "BAD_OPERATION";          /**< 実行結果コード文字列: API誤用、未初期化 */
+static const char* const s_result_str_overflow = "OVERFLOW";                    /**< 実行結果コード文字列: 計算過程でオーバーフロー発生 */
+static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";        /**< 実行結果コード文字列: システム使用可能範囲上限超過 */
+static const char* const s_result_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実行結果コード文字列: ファイルオープンエラー */
+static const char* const s_result_str_file_read_error = "FILE_READ_ERROR";      /**< 実行結果コード文字列: ファイル読み込みエラー */
+static const char* const s_result_str_unsupported_file = "UNSUPPORTED_FILE";    /**< 実行結果コード文字列: 未対応のファイル形式エラー */
+static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 未定義エラー */
+
+const char* resource_result_to_str(resource_result_t result_) {
+    switch(result_) {
+    case RESOURCE_SUCCESS:
+        return s_result_str_success;
+    case RESOURCE_NO_MEMORY:
+        return s_result_str_no_memory;
+    case RESOURCE_RUNTIME_ERROR:
+        return s_result_str_runtime_error;
+    case RESOURCE_INVALID_ARGUMENT:
+        return s_result_str_invalid_argument;
+    case RESOURCE_DATA_CORRUPTED:
+        return s_result_str_data_corrupted;
+    case RESOURCE_BAD_OPERATION:
+        return s_result_str_bad_operation;
+    case RESOURCE_OVERFLOW:
+        return s_result_str_overflow;
+    case RESOURCE_LIMIT_EXCEEDED:
+        return s_result_str_limit_exceeded;
+    case RESOURCE_FILE_OPEN_ERROR:
+        return s_result_str_file_open_error;
+    case RESOURCE_FILE_READ_ERROR:
+        return s_result_str_file_read_error;
+    case RESOURCE_UNSUPPORTED_FILE:
+        return s_result_str_unsupported_file;
+    case RESOURCE_UNDEFINED_ERROR:
+        return s_result_str_undefined_error;
+    default:
+        return s_result_str_undefined_error;
+    }
+}
+
+resource_result_t resource_result_convert_fs_stream(fs_stream_result_t result_) {
+    switch(result_) {
+    case FS_STREAM_SUCCESS:
+        return RESOURCE_SUCCESS;
+    case FS_STREAM_INVALID_ARGUMENT:
+        return RESOURCE_INVALID_ARGUMENT;
+    case FS_STREAM_BAD_OPERATION:
+        return RESOURCE_BAD_OPERATION;
+    case FS_STREAM_DATA_CORRUPTED:
+        return RESOURCE_DATA_CORRUPTED;
+    case FS_STREAM_NO_MEMORY:
+        return RESOURCE_NO_MEMORY;
+    case FS_STREAM_LIMIT_EXCEEDED:
+        return RESOURCE_LIMIT_EXCEEDED;
+    case FS_STREAM_OVERFLOW:
+        return RESOURCE_OVERFLOW;
+    case FS_STREAM_FILE_OPEN_ERROR:
+        return RESOURCE_FILE_OPEN_ERROR;
+    case FS_STREAM_RUNTIME_ERROR:
+        return RESOURCE_RUNTIME_ERROR;
+    case FS_STREAM_EOF:
+        return RESOURCE_RUNTIME_ERROR;  // 基本的にEOFをそのまま伝播させることはないのでとりあえずRUNTIME_ERRORに変換する
+    case FS_STREAM_UNDEFINED_ERROR:
+        return RESOURCE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_UNDEFINED_ERROR;
+    }
+}
+
+resource_result_t resource_result_convert_choco_string(choco_string_result_t result_) {
+    switch(result_) {
+    case CHOCO_STRING_SUCCESS:
+        return RESOURCE_SUCCESS;
+    case CHOCO_STRING_DATA_CORRUPTED:
+        return RESOURCE_DATA_CORRUPTED;
+    case CHOCO_STRING_BAD_OPERATION:
+        return RESOURCE_BAD_OPERATION;
+    case CHOCO_STRING_NO_MEMORY:
+        return RESOURCE_NO_MEMORY;
+    case CHOCO_STRING_INVALID_ARGUMENT:
+        return RESOURCE_INVALID_ARGUMENT;
+    case CHOCO_STRING_RUNTIME_ERROR:
+        return RESOURCE_RUNTIME_ERROR;
+    case CHOCO_STRING_UNDEFINED_ERROR:
+        return RESOURCE_UNDEFINED_ERROR;
+    case CHOCO_STRING_OVERFLOW:
+        return RESOURCE_OVERFLOW;
+    case CHOCO_STRING_LIMIT_EXCEEDED:
+        return RESOURCE_LIMIT_EXCEEDED;
+    default:
+        return RESOURCE_UNDEFINED_ERROR;
+    }
+}
+
+resource_result_t resource_result_convert_aabb_3d(aabb_3d_result_t result_) {
+    switch(result_) {
+    case AABB_3D_SUCCESS:
+        return RESOURCE_SUCCESS;
+    case AABB_3D_INVALID_ARGUMENT:
+        return RESOURCE_INVALID_ARGUMENT;
+    case AABB_3D_UNDEFINED_ERROR:
+        return RESOURCE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_UNDEFINED_ERROR;
+    }
+}
+
+resource_result_t resource_result_convert_general_allocator(general_allocator_result_t result_) {
+    switch(result_) {
+    case GENERAL_ALLOCATOR_SUCCESS:
+        return RESOURCE_SUCCESS;
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return RESOURCE_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
+        return RESOURCE_BAD_OPERATION;
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return RESOURCE_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
+        return RESOURCE_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return RESOURCE_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return RESOURCE_LIMIT_EXCEEDED;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return RESOURCE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_UNDEFINED_ERROR;
+    }
+}
+
+resource_result_t resource_result_convert_glce_config_utility(glce_config_utility_result_t result_) {
+    switch(result_) {
+    case GLCE_CONFIG_UTILITY_SUCCESS:
+        return RESOURCE_SUCCESS;
+    case GLCE_CONFIG_UTILITY_INVALID_ARGUMENT:
+        return RESOURCE_INVALID_ARGUMENT;
+    case GLCE_CONFIG_UTILITY_BAD_OPERATION:
+        return RESOURCE_BAD_OPERATION;
+    case GLCE_CONFIG_UTILITY_UNDEFINED_ERROR:
+        return RESOURCE_UNDEFINED_ERROR;
+    case GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT:
+        return RESOURCE_UNSUPPORTED_FILE;
+    default:
+        return RESOURCE_UNDEFINED_ERROR;
+    }
+}

@@ -21,7 +21,7 @@
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
-#include "engine/resource/core/resource_types.h"
+#include "engine/systems/renderer/resources/core/resource_types.h"
 
 #include "application/core/application_types.h"
 

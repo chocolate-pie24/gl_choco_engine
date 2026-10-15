@@ -19,20 +19,17 @@
 
 #include "engine/io_utils/fs_path.h"
 
-#include "engine/resource/geometry/conversion/geometry_conversion.h"
-
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
+#include "engine/systems/renderer/resources/geometries/conversion/geometry_conversion.h"
 #include "engine/systems/renderer/resources/shaders/untextured_mesh_shader.h"
-#include "engine/systems/renderer/resources/material/material_types.h"
-
-#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
-#include "engine/systems/renderer/resource_registries/geometries/untextured_mesh_geometry_registry.h"
-#include "engine/systems/renderer/resource_registries/material/untextured_material_registry.h"
-
-#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
-#include "engine/systems/renderer/resource_pipelines/geometries/untextured_mesh_geometry_pipeline.h"
-#include "engine/systems/renderer/resource_pipelines/materials/untextured_material_pipeline.h"
+#include "engine/systems/renderer/resources/materials/material_types.h"
+#include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/resources/registries/geometries/untextured_mesh_geometry_registry.h"
+#include "engine/systems/renderer/resources/registries/materials/untextured_material_registry.h"
+#include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resources/pipelines/geometries/untextured_mesh_geometry_pipeline.h"
+#include "engine/systems/renderer/resources/pipelines/materials/untextured_material_pipeline.h"
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 #include "engine/systems/renderer/render_resources/core/render_resource_err_utils.h"

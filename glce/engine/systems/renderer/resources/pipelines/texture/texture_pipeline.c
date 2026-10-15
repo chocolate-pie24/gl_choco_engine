@@ -1,0 +1,270 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
+#include "engine/systems/renderer/resources/pipelines/texture/texture_pipeline.h"
+
+#include <stdint.h>
+#include <stddef.h>
+
+#include "engine/base/choco_macros.h"
+#include "engine/base/choco_message.h"
+
+#include "engine/memory/general_allocator/general_allocator.h"
+
+#include "engine/systems/renderer/core/renderer_types.h"
+
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
+
+#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/loaders/bmp_loader.h"
+#include "engine/systems/renderer/resources/textures/texture_cpu_resource.h"
+#include "engine/systems/renderer/resources/textures/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/textures/texture_gpu_resource.h"
+#include "engine/systems/renderer/resources/registries/texture/texture_registry.h"
+#include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_err_utils.h"
+
+static resource_pipeline_result_t bmp_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_);
+static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_);
+
+resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* registry_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
+    resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    texture_gpu_resource_result_t ret_texture_gpu_resource = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
+    resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+
+    texture_cpu_resource_t* cpu_resource = NULL;
+    texture_gpu_resource_t* gpu_resource = NULL;
+
+    texture_resource_info_t resource_info = { 0 };
+    uint8_t* tmp_pixels = NULL; // CPUリソースにmoveされるピクセルデータ
+    const uint8_t* tmp_pixels2 = NULL;  // CPUリソースから借用するピクセルデータ
+    uint16_t tmp_texture_id = 0;
+
+    // 入力値検証
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "texture_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "out_texture_id_")
+
+    ret = bmp_load(texture_fullpath_, &resource_info, &tmp_pixels);
+    if(RESOURCE_PIPELINE_SUCCESS != ret) {
+        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - bmp_load failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // CPU側リソース生成
+    ret_resource = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = resource_pipeline_result_convert_resource(ret_resource);
+        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+    // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
+    ret_resource = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = resource_pipeline_result_convert_resource(ret_resource);
+        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // GPU側リソース生成
+    ret_texture_gpu_resource = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
+    if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_texture_gpu_resource) {
+        ret = resource_pipeline_result_convert_texture_gpu_resource(ret_texture_gpu_resource);
+        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Registry登録(gpu_resource, cpu_resourceはregistry側にmoveされる)
+    ret_resource_registry = texture_registry_register(registry_, resource_name_, &gpu_resource, &cpu_resource, &tmp_texture_id);
+    if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+        ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_registry_register failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_texture_id_ = tmp_texture_id;
+
+    ret = RESOURCE_PIPELINE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_PIPELINE_SUCCESS != ret) {
+        if(NULL != tmp_pixels) {
+            general_allocator_free((void**)&tmp_pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
+        }
+        texture_gpu_resource_destroy(&gpu_resource);
+        texture_cpu_resource_destroy(&cpu_resource);
+    }
+    return ret;
+}
+
+resource_pipeline_result_t texture_pipeline_import_from_solid_color(const renderer_backend_context_t* backend_context_, texture_registry_t* registry_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_) {
+    resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    texture_gpu_resource_result_t ret_texture_gpu_resource = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
+    resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+
+    texture_cpu_resource_t* cpu_resource = NULL;
+    texture_gpu_resource_t* gpu_resource = NULL;
+
+    texture_resource_info_t resource_info = { 0 };
+    uint8_t* tmp_pixels = NULL; // CPUリソースにmoveされるピクセルデータ
+    const uint8_t* tmp_pixels2 = NULL;  // CPUリソースから借用するピクセルデータ
+    uint16_t tmp_texture_id = 0;
+
+    // 入力値検証
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "out_texture_id_")
+
+    ret = solid_color_texture_generate(red_, green_, blue_, &resource_info, &tmp_pixels);
+    if(RESOURCE_PIPELINE_SUCCESS != ret) {
+        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - solid_color_texture_generate failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // CPU側リソース生成
+    ret_resource = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = resource_pipeline_result_convert_resource(ret_resource);
+        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+    // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
+    ret_resource = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = resource_pipeline_result_convert_resource(ret_resource);
+        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // GPU側リソース生成
+    ret_texture_gpu_resource = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
+    if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_texture_gpu_resource) {
+        ret = resource_pipeline_result_convert_texture_gpu_resource(ret_texture_gpu_resource);
+        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Registry登録(gpu_resource, cpu_resourceはregistry側にmoveされる)
+    ret_resource_registry = texture_registry_register(registry_, resource_name_, &gpu_resource, &cpu_resource, &tmp_texture_id);
+    if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+        ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_registry_register failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_texture_id_ = tmp_texture_id;
+
+    ret = RESOURCE_PIPELINE_SUCCESS;
+
+cleanup:
+    if(RESOURCE_PIPELINE_SUCCESS != ret) {
+        if(NULL != tmp_pixels) {
+            general_allocator_free((void**)&tmp_pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
+        }
+        texture_gpu_resource_destroy(&gpu_resource);
+        texture_cpu_resource_destroy(&cpu_resource);
+    }
+    return ret;
+}
+
+resource_pipeline_result_t texture_pipeline_release(texture_registry_t* registry_, uint16_t texture_id_) {
+    resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_release", "registry_")
+
+    ret_resource_registry = texture_registry_unregister(registry_, texture_id_);
+    if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+        ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+        ERROR_MESSAGE("texture_pipeline_release(%s) - texture_registry_unregister failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = RESOURCE_PIPELINE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static resource_pipeline_result_t bmp_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_) {
+    resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+
+    uint8_t* tmp_pixels = NULL;
+    texture_resource_info_t tmp_resource_info = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "bmp_load", "fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "bmp_load", "out_pixels_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_BAD_OPERATION, resource_pipeline_result_to_str(RESOURCE_PIPELINE_BAD_OPERATION), "bmp_load", "*out_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "bmp_load", "out_resource_info_")
+
+    ret_resource = bmp_loader_load(fullpath_, &tmp_resource_info, &tmp_pixels);
+    if(RESOURCE_SUCCESS != ret_resource) {
+        ret = resource_pipeline_result_convert_resource(ret_resource);
+        ERROR_MESSAGE("bmp_load(%s) - Failed to load BMP file(%s).", resource_pipeline_result_to_str(ret), fullpath_);
+        goto cleanup;
+    }
+
+    *out_resource_info_ = tmp_resource_info;
+    *out_pixels_ = tmp_pixels;
+
+    ret = RESOURCE_PIPELINE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_) {
+    resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+
+    const int32_t tmp_width = 32;
+    const int32_t tmp_height = 32;
+    const uint8_t tmp_channel_count = 3;
+    const size_t pixel_size = (size_t)tmp_width * (size_t)tmp_height * (size_t)tmp_channel_count;
+    uint8_t* tmp_pixels = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "out_pixels_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "*out_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "out_resource_info_")
+
+    ret_general_allocator = general_allocator_allocate(pixel_size, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = resource_pipeline_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("solid_color_texture_generate(%s) - general_allocator_allocate failed.", resource_pipeline_result_to_str(ret));
+        goto cleanup;
+    }
+
+    for(size_t i = 0, ii = 0; i != (tmp_width * tmp_height); ++i, ii += 3) {
+        tmp_pixels[ii] = red_;
+        tmp_pixels[ii + 1] = green_;
+        tmp_pixels[ii + 2] = blue_;
+    }
+
+    out_resource_info_->channel_count = tmp_channel_count;
+    out_resource_info_->height = tmp_height;
+    out_resource_info_->pixel_data_size = pixel_size;
+    out_resource_info_->width = tmp_width;
+    *out_pixels_ = tmp_pixels;
+
+    tmp_pixels = NULL;
+
+    ret = RESOURCE_PIPELINE_SUCCESS;
+
+cleanup:
+    if(NULL != tmp_pixels) {
+        general_allocator_free((void**)&tmp_pixels, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
+        tmp_pixels = NULL;
+    }
+    return ret;
+}

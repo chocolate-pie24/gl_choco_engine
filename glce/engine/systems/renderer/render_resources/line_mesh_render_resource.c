@@ -24,11 +24,10 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
-
-#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
-#include "engine/systems/renderer/resource_registries/geometries/line_mesh_geometry_registry.h"
-#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
-#include "engine/systems/renderer/resource_pipelines/geometries/line_mesh_geometry_pipeline.h"
+#include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/resources/registries/geometries/line_mesh_geometry_registry.h"
+#include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resources/pipelines/geometries/line_mesh_geometry_pipeline.h"
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 #include "engine/systems/renderer/render_resources/core/render_resource_err_utils.h"

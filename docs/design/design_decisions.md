@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-14
+最終更新: 2026-10-15
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -560,7 +560,8 @@ Camera redesignでは、Camera objectへresource identity、active selection、�
 
 ## Decision: TopologyごとのRender ResourceをRenderer resource ownership rootとする
 
-**Status:** Accepted  
+**Status:** Superseded（target architecture。旧実装は移行完了まで存続）  
+**Superseded by:** 2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」  
 **Date:** 2026-09-12  
 **Scope:** Renderer / Resource Ownership
 
@@ -3948,3 +3949,203 @@ Material Configurationの`ambient`省略時のデフォルト`diffuse * 0.1f`、
 - `design_notes.md` — Material and Mesh Rendering Architecture
 - `untextured_material_config_loader.h` — Untextured Material Configuration Format
 - `directional_light.h` / `ambient_light.h` — Light Value API
+
+
+---
+
+## Decision: Renderer専用ResourceをRenderer Domainへ統合し、Range AllocatorをMemory Domainへ移動する
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-15  
+**Scope:** Renderer / Resource Domain / Directory Architecture / Memory Range Allocation
+
+### Decision
+
+従来の`engine/resource/`と`engine/systems/renderer/resources/`という二つのResource配置を統合し、**Renderer用途のResource表現・生成・登録・管理を`engine/systems/renderer/resources/`配下へ集約する**。
+
+- `engine/resource/`にあるCPU Geometry、CPU Texture Resource、Resource Core、Loader、Geometry Conversion等をRenderer側Resource Domainへ移す。
+- `renderer/resource_registries/`および`renderer/resource_pipelines/`も`renderer/resources/`配下へ移し、既存Shader、Material、GPU Texture、VBO Manager等と一つのResource Domainにまとめる。
+- この移行が完了した時点で従来の`engine/resource/`を廃止する。
+- `renderer/resources/allocators/range_allocator`は`engine/memory/low_level_allocators/range_allocator`へ移す。
+- `engine/core/geometry_primitive`等のRenderer非依存な幾何PrimitiveやMath機能はResource移動の対象にしない。
+
+このDecisionは**配置と責務領域の決定**であり、Shader、Registry、Pipeline、CPU/GPU Resourceの既存の公開APIやOwnershipをDirectory移動だけで再定義するものではない。Renderer FrontendへのOwnership移管は別Decisionに従い、独立した後続Workで行う。
+
+### Context
+
+これまでResourceは、おおむねCPU Resourceを`engine/resource`、GPU側ResourceやShaderを`renderer/resources`として分けていた。しかし、Resource PipelineはCPU側のLoad / CreateとGPU Uploadをまたぎ、RegistryもCPUとGPUのResourceを一体で所有する。Materialや新しいMesh / ModelもCPU/GPUの単純な二分法だけでは自然な置き場所を決められない。
+
+また、`range_allocator`は現状GPU Buffer用として使われるものの、実GPU Buffer Object、base pointer、GPU APIやPixel / Vertex Dataの実体を所有せず、byte offsetの論理的なRange割当を担当している。そのAllocation Mechanismは`vbo_manager`のGPU Resource Managementとは別の責務である。
+
+将来Collision / Physicsが必要になった場合にも、Renderer側GeometryをそのままCollisionのAuthorityとする必要はない。Renderer非依存のPrimitive / Intersection処理を共通基盤とし、Rendererは必要に応じてそれらを利用する構造が考えられる。
+
+### Rationale
+
+- CPU/GPUの保存先ではなく、Renderer用途ResourceのLifecycle / Identity / Consumptionというまとまった責務でResource Domainを説明できる。
+- CPU Geometry・Material・Mesh・Model・Shader・Registry・Pipelineが同一Renderer Domain内に置かれ、同じResourceの管理責務を複数のトップレベル領域へ分割せずに済む。
+- ShaderやGPU Textureが参照するRenderer Backendも同じRenderer System内にあり、Directory上のCross-domain Dependencyを減らせる。
+- Range Allocation MechanismをMemory Domainに置き、GPU Buffer自体のOwnerであるVBO Managerとの区別を明確にできる。
+- 旧Resource APIの移動と、後続Frontend移行でのOwnership再設計を別Workにすることで、回帰の原因を切り分けやすい。
+
+### Considered Alternatives
+
+- `engine/resource`へRenderer側Shader / Registry / Pipelineまで集約する。
+  - General-purpose Resource Domainとして発展させやすいが、GPU依存を持つShader / TextureからRenderer BackendへのCross-domain Dependencyが増える。現時点のResource群の主目的はRendererにあるため採用しない。
+- CPU/GPUの従来の二分割を維持する。
+  - Resource TransactionとRegistry Ownershipが境界を横断し、Mesh / Modelの所属が曖昧なままとなる。
+- `range_allocator`をGPU Buffer用という理由だけでRenderer内部へ残す。
+  - GPU API操作を担当しない論理range管理の責務が配置から読み取りにくい。
+- Renderer外のPhysics / Collisionの将来需要を理由として、現時点で共通Model / Scene Resource Domainを構築する。
+  - 要件未確定の共通Authorityを先行導入することになり、現在のRenderer目的のModel設計を複雑化する。
+
+### Consequences
+
+- `renderer/resources/`はCPU Resource限定でもGPU Resource限定でもなく、**Rendererに属するResource全般のDomain**となる。
+- Geometry CPU ResourceのOwned Vertex、Texture CPU / GPU ResourceのAuthority、Registry登録時のOwnership Commitなど、既存の内部Contractは配置変更だけでは変えない。
+- `engine/memory/low_level_allocators/range_allocator`は論理Rangeのallocation / freeを提供する。GPU Bufferの生成・転送・破棄は引き続きRenderer内のVBO Manager / Backendが担う。
+- 本DecisionのMemory Domain拡張はGPU Memory ObjectのOwnershipをMemory Domainに移すことを意味しない。既存のCPU allocation-level validation trust rootはそのまま維持する。
+- Directory移動後のHeader、Build、Doxygen、設計文書の参照を整合させる。
+
+### Revisit Conditions
+
+- Renderer外で独立して所有・利用すべきAsset / Resource群が実装され、共通Resource Domainが実際に必要となった場合。
+- Collision / Physics / Simulation等が同じ幾何データのAuthorityを共有する具体的要件を持つようになった場合。
+- Range AllocationがMemory Domainより独立した汎用Resource Handle / Interval Domainへ属すると判断できる用途が増えた場合。
+
+### Related Documents
+
+- `glce_near_term_todo.md` — Renderer Resource Directory Consolidation
+- `design_notes.md` — Renderer Resource Domain and Frontend Migration
+- `memory_model.md`
+
+---
+
+## Decision: Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-15  
+**Scope:** Renderer Frontend / Ownership / Mesh Renderer / Resource Pipeline / API Boundary
+
+### Decision
+
+Renderer Frontendが、Renderer Backend Contextと、描画種別ごとに必要なShaderおよびRegistry群を**直接かつ長寿命に所有する**構造へ移行する。
+
+- `renderer_frontend`はRenderer ResourceのLifecycle、Import / Release APIの入口、Render Packet処理と描画のOrchestrationを担当する。
+- `mesh_renderers`はShader種別ごとの**StatelessなDraw Operation Module**とする。Shader / Registry等をOperation中にBorrowして描画を実行し、内部のPersistent StateやOwned Resourceを持たない。
+- Mesh RendererはUniform設定、描画時のResource解決、BackendへのDraw要求等を扱うが、Resource Import / Releaseを担当しない。
+- FrontendのImport APIは既存のStateless Resource Pipelineへ具体的なLoad / Create / GPU Upload / Registerを委譲する。Registryは登録後のResource Identity / Ownershipを維持する。
+- ReleaseはFrontendを受付境界とし、Registry等の既存解放経路を利用する。
+- 新しい`resource_set`等のOwnership Wrapper Objectは設けず、Frontendが各Shader / Registryを直接所有する。
+- 新しいStateless Importerモジュール群は**今は作らない**。FrontendのImport / Releaseを実装して必要性が明確になった場合に分離する。
+- 現行`render_resources`のImport / ReleaseはFrontend移行と同時に撤去し、OwnershipとDraw機能を新しい担当へ移管した後、旧`render_resources`自体を廃止する。`application_renderer`も不要なFacade / Compositionを整理する。
+
+個々のShader / Registry間の独立性は維持し、共通の万能Material Registry、Mesh Registry、Resource Set Object等の導入を要求しない。
+
+### Context
+
+2026-09-12にはTopology別`render_resource`をShader / RegistryのOwnership Rootとして採用し、Import / Release / Drawを同一Objectに集約した。これは当時ApplicationへShader / Registry管理を露出させないために有効だった。
+
+その後、新しく`renderer_frontend`、`xxx_mesh_t`、Model、Render Packetを導入する計画を進める中で、`render_resource`はResourceを所有する側面と、描画を実行する側面を兼ねていることが明確になった。
+
+`mesh_renderer`という名称を採用する場合、そこへImport / Releaseを残すと、Resource Lifecycleと描画実行が再び混在する。また、各Render ResourceとFrontendの間にResource Set的なObjectを追加すると長寿命Ownerが余分に一層増える。現段階のShader / Registry数なら、Frontendによる直接所有の方が実装とOwnership Relationを追いやすいと判断した。
+
+### Rationale
+
+- Shader / Registryの長寿命OwnerをRenderer Frontend一箇所として見通しよく管理できる。
+- Resource ImportのTransaction Responsibilityを既存Pipelineに維持し、Frontendに詳細処理を複製しない。
+- Mesh RendererはDrawだけを担当するため、状態・Construction / Destruction・内部Ownershipを持たずに済む。
+- Import / ReleaseとDrawを明確なAPI Boundaryへ分離できる。
+- 既存RegistryのRegistration Commitと独立Vertical SliceのResource管理を維持できる。
+- Resource SetやImporter等の追加のForwarding / Ownership層を設けず、実需要が現れた段階で抽出できる。
+
+### Considered Alternatives
+
+- 従来のTopology別Render ResourceをOwnership Rootとして残す。
+  - Frontend導入後もImport / Release / Drawが同一Objectへ混在し、StatelessなMesh Rendererへ描画責務を分離する狙いと合わない。
+- Stateless Mesh RendererにImport / Releaseも担当させる。
+  - 「描画を実行する」という責務と、Resource Lifecycle / Registry Mutationが混在する。
+- `xxx_mesh_resource_set_t`等の中間Stateful Ownerを新設する。
+  - Vertical SliceごとのOwnershipを局所化できるが、今回の規模ではFrontendとの間に別Object Lifecycleが増え、構成が複雑になる。
+- Renderer FrontendへImport / Releaseの具体的なLoad / Upload / Registration処理をすべて埋め込む。
+  - 既存PipelineのOrchestrationを重複実装し、Frontendの責務が過大になる。
+- 直ちにStateless Importer Layerを新設する。
+  - 現在のPipelineと単純Forwardingになる可能性があり、Mesh / Modelの具体的Import Semanticsも未確定なので保留する。
+
+### Consequences
+
+- Renderer FrontendのConstructor / Destructorは複数Shader / RegistryとBackend Contextを整合した順序で生成・破棄する。特にRegistry / GPU Resourceが参照するShaderやBackend Contextを先に解放しない。
+- 旧`render_resources`をOwnership Rootとする2026-09-12のDecisionは、**採用したTarget Architectureとしては本Decisionに置き換わる**。旧Sourceは移行が完了するまで歴史的Implementationとして残る。
+- 2026-09-12「Backend ContextはRender Resourceがborrowする」Decisionの**Backend Contextを個別Resourceが所有しない／長寿命Ownerが支える**という原則は維持するが、Borrow関係の具体的なOwnerは移行後のFrontend / Shader / GPU Resource構造へ更新する。
+- 2026-09-12「Resource Pipelineはstateless orchestrationとして維持する」DecisionのStateless / Temporary Ownershipは維持し、Pipelineへ渡す長寿命Shader / RegistryのOwnerだけをFrontendへ変更する。
+- 2026-10-09「Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する」DecisionのMaterial Value・Vertical Slice・Texture Lifetime Contractは維持する。Render ResourceがShader / Registryを所有するとの記述だけを新Targetに合わせて置き換える。
+- Material / Texture、Geometry / Material等のReference Lifetime保証は既存Contractを維持し、MeshやFrontendの導入だけでReference CountingやGeneration付きHandleを追加しない。
+- ApplicationのResult Conversion、FrontendのOutput Contract / Validation、State Update、既存描画と同等のDrawを実装・Review時に確認する。
+
+### Revisit Conditions
+
+- Frontendが多数の独立Resource集合を管理し、Construction / DestructionやLifetimeの局所性を分ける明確な必要が生じた場合。
+- FrontendにImport / Release APIが増大し、独立したStateless Importer / Resource Orchestratorの方が見通しがよくなる場合。
+- Resource Streaming、Hot Reload、GPU Residency等によりResource LifetimeとFrontend Lifetimeを再定義する必要が生じた場合。
+- Render Packetの実装結果からStateless Mesh Rendererという分割が不適切と判明した場合。
+
+### Related Documents
+
+- `glce_near_term_todo.md` — Renderer Frontend / Model / Mesh / Frame Allocator Integration
+- `design_notes.md` — Renderer Resource Domain and Frontend Migration
+
+---
+
+## Decision: MeshはShader別Value Typeとし、当面ModelがCoordinateを所有する
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-15  
+**Scope:** Mesh / Model / Resource Reference / Coordinate Ownership / Future Spatial Boundary
+
+### Decision
+
+- `untextured_mesh_t`や`ui_mesh_t`等、Shader / Rendering Vertical Sliceごとに独立した`xxx_mesh_t`を設け、**非opaque Value Type**とする。
+- Meshは描画対象に必要なRegistry Resourceの**非所有参照の組合せ**を表し、Geometry / Material / Textureの実体およびそれらのRegistration IdentityのAuthorityを持たない。
+- Meshは自分自身の配置姿勢とResourceの組合せを同一視しない。Model Matrix / Coordinateの管理をMeshに一律に組み込まず、Model側でのBindingを検討する。
+- 今回構築するModelは複数のMesh参照とCoordinate配列を管理し、**当面Model自身がCoordinate Storage / LifetimeのOwner**となる。
+- ModelのCoordinateはPenguin全体姿勢とBody / Head / Wing等の部位姿勢を表すために利用する。親子関係、Indexの保持場所、Local / Worldの具体SemanticsはModel実装時に確定する。
+- Scene / Spatial SystemをRendererと同格に設け、BridgeでCoordinateをRendererへ提供する構想は将来の再検討候補とし、今回のWorkでは導入しない。
+
+### Context
+
+Shader別Meshを導入する際、既存`untextured_mesh_render_resource_draw()`等ではGeometry IDとMaterial ID（またはTexture ID）をDraw時に渡していた。Meshはそれらの組み合わせをひとつの描画要素として表現する自然なValue Objectとなる。
+
+他方、ModelへCoordinate Arrayを持たせると、将来Physics / CollisionがRenderer内のModelをCoordinate Authorityとして参照しなければならない可能性がある。Rendererと同格のSpatial SystemとBridgeを設ける構想も検討したが、現段階ではCollision / Physicsを実装せず、Penguinの部位操作とSpot Lightへの発展をまず検証したい。そのため、早期のSubsystemとBridge導入は行わず、当面はRenderer ModelにCoordinateを持たせる判断とした。
+
+### Rationale
+
+- Meshが小さなResource参照の組み合わせである現要件に、Heap OwnershipやOpaque Object Lifecycleを強制せずに済む。
+- Shader別の型によって、UI MeshにPhong Materialを要求する等の不要なCross-slice共通状態を避けられる。
+- Resource OwnershipをRegistryへ残し、MeshがResourceの解放順序や実体Ownerを重複管理しない。
+- MeshのResource Compositionと、Model内のCoordinate / Placementを分離して設計できる。
+- 当面のModelに必要な部位別Transformを、別Scene / Spatial SystemやBridgeを先行実装せずに成立させられる。
+- 将来独立したCoordinate Authorityが必要になれば、描画Resourceの構成とCoordinateのAuthorityを別境界へ切り出す余地がある。
+
+### Alternatives and Open Design Details
+
+- **ID参照とBorrowed Pointer参照：未決定。** Pointer BorrowはRegistry Lookupを一部省略できるが、Lifetime / address stabilityを強く要求する。既存Geometry描画はGPU Draw RangeをRegistryから解決する必要があり、CPU Geometry Pointerだけでは完全なDraw情報を得られない。この比較を行ってからField型を決める。
+- Mesh Identity用の独立Registry / Stable ID：具体的な需要が確定していないため、今回のValue Type採用だけを理由に先行導入しない。
+- Model内のMesh配置方式：種別別配列、Tagged Entry等は未確定。Mesh参照とCoordinate IndexをどのObject / Entryが持つかも未確定。
+- CoordinateのLocal / World、親子Transform、Pivot、Transform Cache、Model Instance化：今回のPenguin操作に必要なContractから決定し、汎用Scene Graphは先行導入しない。
+
+### Consequences
+
+- Mesh Value TypeのValidator / Initializer、Borrow / ID Contractは具体的Field選択後に設計する。
+- Geometry / Material / TextureのResource IdentityとOwnershipは引き続き既存Registryに属する。MeshやModelから参照する間のResource Lifetime / Release Orderを明文化する。
+- ModelのCoordinateは当面Renderer内部のModelが保持するが、独立Scene / Spatial Systemへ一方向に抽出することも将来案として残す。
+- 今回の実装検証は分割Penguin、部位AABB、頭部Keyboard操作、異種UI Mesh、Render Packet経路を対象とする。Collision / Physicsは実装しない。
+
+### Revisit Conditions
+
+- Physics / Collision / Animation等がRendererから独立してPosition / OrientationのAuthorityを必要とした場合。
+- 同じMesh構成を持つ多数のModel InstanceでCoordinateだけを分ける具体的要件が生じた場合。
+- Model内のCoordinate Ownershipにより、Renderer外部のLight / Simulation等との情報共有が複雑化した場合。
+
+### Related Documents
+
+- `glce_near_term_todo.md` — Renderer Frontend / Model / Mesh / Frame Allocator Integration
+- `design_notes.md` — Renderer Resource Domain and Frontend Migration / Material and Mesh Rendering Architecture

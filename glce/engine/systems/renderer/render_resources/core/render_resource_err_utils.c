@@ -9,8 +9,8 @@
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
-#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";
 static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";

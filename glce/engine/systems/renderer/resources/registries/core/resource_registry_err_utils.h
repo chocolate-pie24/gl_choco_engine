@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 chocolate-pie24
+
+/** @ingroup renderer
+ *
+ * @file resource_registry_err_utils.h
+ * @author chocolate-pie24
+ *
+ * @brief resource_registry_err_utilsは、resource_registries内でのエラー処理仕様を統一するため、実行結果コード変換機能を提供する
+ *
+ * @date 2026-06-20
+ *
+ */
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_REGISTRIES_CORE_RESOURCE_REGISTRY_ERR_UTILS_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_REGISTRIES_CORE_RESOURCE_REGISTRY_ERR_UTILS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+
+#include "engine/containers/choco_string.h"
+
+#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
+
+/**
+ * @brief ログ出力用にresource_registriesの実行結果コードを文字列に変換する
+ *
+ * @param[in] result_ 実行結果コード
+ *
+ * @return const char* 文字列化された実行結果コード
+ */
+const char* resource_registry_result_to_str(resource_registry_result_t result_);
+
+resource_registry_result_t resource_registry_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
+
+/**
+ * @brief resourceレイヤーが出力する実行結果コードをresource_registriesの実行結果コードに変換する
+ *
+ * @param[in] result_ resourceレイヤーが出力する実行結果コード
+ *
+ * @return resource_registry_result_t 変換されたresource_registriesの実行結果コード
+ */
+resource_registry_result_t resource_registry_result_convert_resource(resource_result_t result_);
+
+resource_registry_result_t resource_registry_result_convert_choco_string(choco_string_result_t result_);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

@@ -30,13 +30,12 @@ extern "C" {
 
 #include "engine/systems/camera/camera_registries/core/camera_registry_types.h"
 
-#include "engine/resource/core/resource_types.h"
-
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+#include "engine/systems/renderer/resources/core/resource_types.h"
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 

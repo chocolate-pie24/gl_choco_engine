@@ -22,15 +22,14 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resources/shaders/ui_mesh_shader.h"
-#include "engine/systems/renderer/resources/texture/texture_gpu_resource_types.h"
-#include "engine/systems/renderer/resources/texture/texture_gpu_resource.h"
-
-#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
-#include "engine/systems/renderer/resource_registries/geometries/ui_mesh_geometry_registry.h"
-#include "engine/systems/renderer/resource_registries/texture/texture_registry.h"
-#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
-#include "engine/systems/renderer/resource_pipelines/geometries/ui_mesh_geometry_pipeline.h"
-#include "engine/systems/renderer/resource_pipelines/texture/texture_pipeline.h"
+#include "engine/systems/renderer/resources/textures/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/textures/texture_gpu_resource.h"
+#include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/resources/registries/geometries/ui_mesh_geometry_registry.h"
+#include "engine/systems/renderer/resources/registries/texture/texture_registry.h"
+#include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
+#include "engine/systems/renderer/resources/pipelines/geometries/ui_mesh_geometry_pipeline.h"
+#include "engine/systems/renderer/resources/pipelines/texture/texture_pipeline.h"
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 #include "engine/systems/renderer/render_resources/core/render_resource_err_utils.h"

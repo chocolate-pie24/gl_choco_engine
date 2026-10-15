@@ -12,13 +12,14 @@ extern "C" {
 
 #include "engine/io_utils/fs_path.h"
 
-#include "engine/resource/core/resource_types.h"
+
+#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/textures/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
-#include "engine/systems/renderer/resources/texture/texture_gpu_resource_types.h"
-#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/resource_registries/core/resource_registry_types.h"
-#include "engine/systems/renderer/resource_pipelines/core/resource_pipeline_types.h"
 
 const char* render_resource_result_to_str(render_resource_result_t result_);
 

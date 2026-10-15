@@ -10,9 +10,9 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "engine/systems/renderer/core/renderer_types.h"
+#include "engine/memory/low_level_allocators/range_allocator/range_allocator.h"
 
-#include "engine/systems/renderer/resources/allocators/range_allocator.h"
+#include "engine/systems/renderer/core/renderer_types.h"
 
 typedef enum {
     SHADER_SUCCESS = 0,

@@ -26,7 +26,7 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/resources/material/material_types.h"
+#include "engine/systems/renderer/resources/materials/material_types.h"
 
 #include "engine/systems/renderer/config/renderer_config.h"
 
