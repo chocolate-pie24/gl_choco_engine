@@ -24,8 +24,7 @@
  *   ui_geom_config_tのsemantic validityを検証した後にのみ、
  *   GLCE内部のtrusted representationとして受理する。
  * - trust promotionはui_geom_config_loader_load()の成功時に完了する。
- * - RESOURCE_SUCCESS以外の場合、external representationはtrusted stateへ
- *   commitされない。
+ * - LOADER_SUCCESS以外の場合、external representationはtrusted stateへcommitされない。
  *
  * @section ui_geom_config_format UI Geometry Configuration Format
  *
@@ -78,7 +77,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 
 /**
  * @brief UI geometry configurationを保持するvalue type
@@ -120,29 +119,28 @@ typedef struct ui_geom_config {
  *             NULLは許可しない。
  *             success時にのみ書き換えられ、failure時は既存内容を変更しない。
  *
- * @retval RESOURCE_SUCCESS
+ * @retval LOADER_SUCCESS
  *         configurationの読み込み、解析およびvalidationに成功した。
  *
- * @retval RESOURCE_INVALID_ARGUMENT
+ * @retval LOADER_INVALID_ARGUMENT
  *         public API argumentがcontractを満たしていない。
  *
- * @retval RESOURCE_UNSUPPORTED_FILE
+ * @retval LOADER_UNSUPPORTED_FILE
  *         file contentがUI Geometry Configuration Formatまたは
  *         ui_geom_config_tのsemantic requirementsを満たしていない。
  *
- * @return 上記以外では、file access、temporary resource operation等で発生した
- *         Resource layer result codeを返す。
+ * @return 上記以外では、file access、temporary resource operation等で発生したloader result codeを返す。
  *
  * @pre config_fullpath_は、API実行中に読み取り可能な
  *      NUL terminated stringを参照していなければならない。
  * @pre out_config_は、API実行中に書き込み可能な
  *      ui_geom_config_t storageを参照していなければならない。
  *
- * @post RESOURCE_SUCCESSの場合、
+ * @post LOADER_SUCCESSの場合、
  *       `ui_geom_config_is_valid(out_config_) == true`が成立する。
- * @post RESOURCE_SUCCESS以外の場合、out_config_の既存内容は変更されない。
+ * @post LOADER_SUCCESS以外の場合、out_config_の既存内容は変更されない。
  */
-resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_geom_config_t* out_config_);
+loader_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_geom_config_t* out_config_);
 
 /**
  * @brief ui_geom_config_tのcanonical validityを判定する

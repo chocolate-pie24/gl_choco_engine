@@ -13,8 +13,8 @@ extern "C" {
 #include "engine/io_utils/fs_path.h"
 
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
-#include "engine/systems/renderer/resources/textures/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
@@ -33,9 +33,9 @@ render_resource_result_t render_resource_result_convert_resource_registry(resour
 
 render_resource_result_t render_resource_result_convert_resource_pipeline(resource_pipeline_result_t result_);
 
-render_resource_result_t render_resource_result_convert_resource(resource_result_t result_);
+render_resource_result_t render_resource_result_convert_geometry(geometry_result_t result_);
 
-render_resource_result_t render_resource_result_convert_texture_gpu_resource(texture_gpu_resource_result_t result_);
+render_resource_result_t render_resource_result_convert_texture(texture_result_t result_);
 
 #ifdef __cplusplus
 }

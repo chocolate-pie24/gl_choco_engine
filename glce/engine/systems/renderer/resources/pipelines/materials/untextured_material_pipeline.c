@@ -9,8 +9,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
-
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/loaders/untextured_material_config_loader.h"
 #include "engine/systems/renderer/resources/materials/material_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
@@ -22,7 +21,7 @@ resource_pipeline_result_t untextured_material_pipeline_import_from_file(untextu
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    loader_result_t ret_loader = LOADER_INVALID_ARGUMENT;
 
     untextured_material_config_t material_config = { 0 };
     untextured_material_t material = { 0 };
@@ -34,9 +33,9 @@ resource_pipeline_result_t untextured_material_pipeline_import_from_file(untextu
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_material_pipeline_import_from_file", "resource_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_material_pipeline_import_from_file", "out_material_id_")
 
-    ret_resource = untextured_material_config_loader_load(resource_fullpath_, &material_config);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_loader = untextured_material_config_loader_load(resource_fullpath_, &material_config);
+    if(LOADER_SUCCESS != ret_loader) {
+        ret = resource_pipeline_result_convert_loader(ret_loader);
         ERROR_MESSAGE("untextured_material_pipeline_import_from_file(%s) - untextured_material_config_loader_load failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }

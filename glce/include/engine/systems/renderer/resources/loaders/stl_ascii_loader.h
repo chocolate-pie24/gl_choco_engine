@@ -54,9 +54,9 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 
-resource_result_t stl_ascii_loader_load(const char* fullpath_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_);
+loader_result_t stl_ascii_loader_load(const char* fullpath_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_);
 
 #ifdef __cplusplus
 }

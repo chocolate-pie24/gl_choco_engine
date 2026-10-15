@@ -63,15 +63,15 @@ extern "C" {
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 
 typedef struct untextured_mesh_geometry untextured_mesh_geometry_t;   /**< untextured_mesh_geometryモジュール内部状態管理構造体 */
 
-resource_result_t untextured_mesh_geometry_create_from_vertices(size_t vertex_count_, const point_normal_vertex_t* vertices_, untextured_mesh_geometry_t** out_geometry_);
+geometry_result_t untextured_mesh_geometry_create_from_vertices(size_t vertex_count_, const point_normal_vertex_t* vertices_, untextured_mesh_geometry_t** out_geometry_);
 
 void untextured_mesh_geometry_destroy(untextured_mesh_geometry_t** geometry_);
 
-resource_result_t untextured_mesh_geometry_vertices_get(const untextured_mesh_geometry_t* geometry_, const point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_);
+geometry_result_t untextured_mesh_geometry_vertices_get(const untextured_mesh_geometry_t* geometry_, const point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_);
 
 bool untextured_mesh_geometry_is_valid(const untextured_mesh_geometry_t* geometry_);
 

@@ -7,7 +7,6 @@
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
@@ -57,31 +56,25 @@ const char* resource_pipeline_result_to_str(resource_pipeline_result_t result_) 
     }
 }
 
-resource_pipeline_result_t resource_pipeline_result_convert_resource(resource_result_t result_) {
+resource_pipeline_result_t resource_pipeline_result_convert_geometry(geometry_result_t result_) {
     switch(result_) {
-    case RESOURCE_SUCCESS:
+    case GEOMETRY_SUCCESS:
         return RESOURCE_PIPELINE_SUCCESS;
-    case RESOURCE_NO_MEMORY:
+    case GEOMETRY_NO_MEMORY:
         return RESOURCE_PIPELINE_NO_MEMORY;
-    case RESOURCE_RUNTIME_ERROR:
+    case GEOMETRY_RUNTIME_ERROR:
         return RESOURCE_PIPELINE_RUNTIME_ERROR;
-    case RESOURCE_INVALID_ARGUMENT:
+    case GEOMETRY_INVALID_ARGUMENT:
         return RESOURCE_PIPELINE_INVALID_ARGUMENT;
-    case RESOURCE_DATA_CORRUPTED:
+    case GEOMETRY_DATA_CORRUPTED:
         return RESOURCE_PIPELINE_DATA_CORRUPTED;
-    case RESOURCE_BAD_OPERATION:
+    case GEOMETRY_BAD_OPERATION:
         return RESOURCE_PIPELINE_BAD_OPERATION;
-    case RESOURCE_OVERFLOW:
+    case GEOMETRY_OVERFLOW:
         return RESOURCE_PIPELINE_OVERFLOW;
-    case RESOURCE_LIMIT_EXCEEDED:
+    case GEOMETRY_LIMIT_EXCEEDED:
         return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
-    case RESOURCE_FILE_OPEN_ERROR:
-        return RESOURCE_PIPELINE_FILE_OPEN_ERROR;
-    case RESOURCE_FILE_READ_ERROR:
-        return RESOURCE_PIPELINE_FILE_READ_ERROR;
-    case RESOURCE_UNSUPPORTED_FILE:
-        return RESOURCE_PIPELINE_UNSUPPORTED_FILE;
-    case RESOURCE_UNDEFINED_ERROR:
+    case GEOMETRY_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
@@ -226,25 +219,25 @@ resource_pipeline_result_t resource_pipeline_result_convert_fs_stream(fs_stream_
     }
 }
 
-resource_pipeline_result_t resource_pipeline_result_convert_texture_gpu_resource(texture_gpu_resource_result_t result_) {
+resource_pipeline_result_t resource_pipeline_result_convert_texture(texture_result_t result_) {
     switch(result_) {
-    case TEXTURE_GPU_RESOURCE_SUCCESS:
+    case TEXTURE_SUCCESS:
         return RESOURCE_PIPELINE_SUCCESS;
-    case TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT:
+    case TEXTURE_INVALID_ARGUMENT:
         return RESOURCE_PIPELINE_INVALID_ARGUMENT;
-    case TEXTURE_GPU_RESOURCE_RUNTIME_ERROR:
+    case TEXTURE_RUNTIME_ERROR:
         return RESOURCE_PIPELINE_RUNTIME_ERROR;
-    case TEXTURE_GPU_RESOURCE_NO_MEMORY:
+    case TEXTURE_NO_MEMORY:
         return RESOURCE_PIPELINE_NO_MEMORY;
-    case TEXTURE_GPU_RESOURCE_LIMIT_EXCEEDED:
+    case TEXTURE_LIMIT_EXCEEDED:
         return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
-    case TEXTURE_GPU_RESOURCE_BAD_OPERATION:
+    case TEXTURE_BAD_OPERATION:
         return RESOURCE_PIPELINE_BAD_OPERATION;
-    case TEXTURE_GPU_RESOURCE_DATA_CORRUPTED:
+    case TEXTURE_DATA_CORRUPTED:
         return RESOURCE_PIPELINE_DATA_CORRUPTED;
-    case TEXTURE_GPU_RESOURCE_OVERFLOW:
+    case TEXTURE_OVERFLOW:
         return RESOURCE_PIPELINE_OVERFLOW;
-    case TEXTURE_GPU_RESOURCE_UNDEFINED_ERROR:
+    case TEXTURE_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
@@ -268,6 +261,37 @@ resource_pipeline_result_t resource_pipeline_result_convert_general_allocator(ge
     case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
         return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    }
+}
+
+resource_pipeline_result_t resource_pipeline_result_convert_loader(loader_result_t result_) {
+    switch(result_) {
+    case LOADER_SUCCESS:
+        return RESOURCE_PIPELINE_SUCCESS;
+    case LOADER_NO_MEMORY:
+        return RESOURCE_PIPELINE_NO_MEMORY;
+    case LOADER_RUNTIME_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR;
+    case LOADER_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    case LOADER_DATA_CORRUPTED:
+        return RESOURCE_PIPELINE_DATA_CORRUPTED;
+    case LOADER_BAD_OPERATION:
+        return RESOURCE_PIPELINE_BAD_OPERATION;
+    case LOADER_OVERFLOW:
+        return RESOURCE_PIPELINE_OVERFLOW;
+    case LOADER_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
+    case LOADER_FILE_OPEN_ERROR:
+        return RESOURCE_PIPELINE_FILE_OPEN_ERROR;
+    case LOADER_FILE_READ_ERROR:
+        return RESOURCE_PIPELINE_FILE_READ_ERROR;
+    case LOADER_UNSUPPORTED_FILE:
+        return RESOURCE_PIPELINE_UNSUPPORTED_FILE;
+    case LOADER_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;

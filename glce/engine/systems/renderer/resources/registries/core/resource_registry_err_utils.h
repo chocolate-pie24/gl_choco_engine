@@ -22,7 +22,6 @@ extern "C" {
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 
 /**
@@ -35,15 +34,6 @@ extern "C" {
 const char* resource_registry_result_to_str(resource_registry_result_t result_);
 
 resource_registry_result_t resource_registry_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
-
-/**
- * @brief resourceレイヤーが出力する実行結果コードをresource_registriesの実行結果コードに変換する
- *
- * @param[in] result_ resourceレイヤーが出力する実行結果コード
- *
- * @return resource_registry_result_t 変換されたresource_registriesの実行結果コード
- */
-resource_registry_result_t resource_registry_result_convert_resource(resource_result_t result_);
 
 resource_registry_result_t resource_registry_result_convert_choco_string(choco_string_result_t result_);
 

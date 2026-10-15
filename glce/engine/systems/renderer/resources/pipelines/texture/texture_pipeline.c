@@ -15,10 +15,10 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/loaders/bmp_loader.h"
+#include "engine/systems/renderer/resources/textures/core/texture_types.h"
 #include "engine/systems/renderer/resources/textures/texture_cpu_resource.h"
-#include "engine/systems/renderer/resources/textures/texture_gpu_resource_types.h"
 #include "engine/systems/renderer/resources/textures/texture_gpu_resource.h"
 #include "engine/systems/renderer/resources/registries/texture/texture_registry.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
@@ -30,8 +30,7 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
 resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* registry_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-    texture_gpu_resource_result_t ret_texture_gpu_resource = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
+    texture_result_t ret_texture = TEXTURE_INVALID_ARGUMENT;
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     texture_cpu_resource_t* cpu_resource = NULL;
@@ -56,24 +55,24 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
     }
 
     // CPU側リソース生成
-    ret_resource = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_texture = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
+    if(TEXTURE_SUCCESS != ret_texture) {
+        ret = resource_pipeline_result_convert_texture(ret_texture);
         ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
     // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
-    ret_resource = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_texture = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
+    if(TEXTURE_SUCCESS != ret_texture) {
+        ret = resource_pipeline_result_convert_texture(ret_texture);
         ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
 
     // GPU側リソース生成
-    ret_texture_gpu_resource = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
-    if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_texture_gpu_resource) {
-        ret = resource_pipeline_result_convert_texture_gpu_resource(ret_texture_gpu_resource);
+    ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
+    if(TEXTURE_SUCCESS != ret_texture) {
+        ret = resource_pipeline_result_convert_texture(ret_texture);
         ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
@@ -104,8 +103,7 @@ cleanup:
 resource_pipeline_result_t texture_pipeline_import_from_solid_color(const renderer_backend_context_t* backend_context_, texture_registry_t* registry_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
-    texture_gpu_resource_result_t ret_texture_gpu_resource = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
+    texture_result_t ret_texture = TEXTURE_INVALID_ARGUMENT;
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     texture_cpu_resource_t* cpu_resource = NULL;
@@ -129,24 +127,24 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
     }
 
     // CPU側リソース生成
-    ret_resource = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_texture = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
+    if(TEXTURE_SUCCESS != ret_texture) {
+        ret = resource_pipeline_result_convert_texture(ret_texture);
         ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
     // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
-    ret_resource = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_texture = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
+    if(TEXTURE_SUCCESS != ret_texture) {
+        ret = resource_pipeline_result_convert_texture(ret_texture);
         ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
 
     // GPU側リソース生成
-    ret_texture_gpu_resource = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
-    if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_texture_gpu_resource) {
-        ret = resource_pipeline_result_convert_texture_gpu_resource(ret_texture_gpu_resource);
+    ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
+    if(TEXTURE_SUCCESS != ret_texture) {
+        ret = resource_pipeline_result_convert_texture(ret_texture);
         ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
@@ -197,7 +195,7 @@ cleanup:
 static resource_pipeline_result_t bmp_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    loader_result_t ret_loader = LOADER_INVALID_ARGUMENT;
 
     uint8_t* tmp_pixels = NULL;
     texture_resource_info_t tmp_resource_info = { 0 };
@@ -207,9 +205,9 @@ static resource_pipeline_result_t bmp_load(const char* fullpath_, texture_resour
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_BAD_OPERATION, resource_pipeline_result_to_str(RESOURCE_PIPELINE_BAD_OPERATION), "bmp_load", "*out_pixels_")
     IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "bmp_load", "out_resource_info_")
 
-    ret_resource = bmp_loader_load(fullpath_, &tmp_resource_info, &tmp_pixels);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_loader = bmp_loader_load(fullpath_, &tmp_resource_info, &tmp_pixels);
+    if(LOADER_SUCCESS != ret_loader) {
+        ret = resource_pipeline_result_convert_loader(ret_loader);
         ERROR_MESSAGE("bmp_load(%s) - Failed to load BMP file(%s).", resource_pipeline_result_to_str(ret), fullpath_);
         goto cleanup;
     }

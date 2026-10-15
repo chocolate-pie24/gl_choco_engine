@@ -35,7 +35,6 @@ extern "C" {
 #include "engine/systems/event_system/core/event_system_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
-#include "engine/systems/renderer/resources/core/resource_types.h"
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 
@@ -67,15 +66,6 @@ application_result_t application_result_convert_platform_system(platform_system_
 application_result_t application_result_convert_ring_queue(ring_queue_result_t result_);
 
 application_result_t application_result_convert_renderer_backend(renderer_backend_result_t result_);
-
-/**
- * @brief Resourceレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
- *
- * @param[in] result_ Resourceレイヤー実行結果コード
- *
- * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
- */
-application_result_t application_result_convert_resource(resource_result_t result_);
 
 application_result_t application_result_convert_shader(shader_result_t result_);
 

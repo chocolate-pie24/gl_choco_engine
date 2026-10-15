@@ -19,8 +19,8 @@
 #include "engine/io_utils/fs_stream.h"
 #include "engine/io_utils/glce_config_utility.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
-#include "engine/systems/renderer/resources/core/resource_err_utils.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_err_utils.h"
 
 // ============================================================
 // Private Type Definitions
@@ -65,13 +65,13 @@ static const char* const s_float_scan_format = "%f%n";
 // Private Function Declarations
 // ============================================================
 // Collection helpers
-static resource_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, untextured_material_config_state_t* out_state_);
-static resource_result_t line_collect(untextured_material_config_state_t* state_, const choco_string_t* line_);
-static resource_result_t key_value_collect(untextured_material_config_state_t* state_, const char* line_, size_t line_length_);
-static resource_result_t value_store(char* dst_, size_t dst_buffer_size_, const char* value_);
+static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, untextured_material_config_state_t* out_state_);
+static loader_result_t line_collect(untextured_material_config_state_t* state_, const choco_string_t* line_);
+static loader_result_t key_value_collect(untextured_material_config_state_t* state_, const char* line_, size_t line_length_);
+static loader_result_t value_store(char* dst_, size_t dst_buffer_size_, const char* value_);
 
 // Parsing helpers
-static resource_result_t config_state_parse(const untextured_material_config_state_t* state_, untextured_material_config_t* out_config_);
+static loader_result_t config_state_parse(const untextured_material_config_state_t* state_, untextured_material_config_t* out_config_);
 
 // Validators
 static bool diffuse_is_valid(vec3f_t value_);
@@ -89,7 +89,7 @@ static bool shininess_is_valid(float value_);
  * - config_fullpath_およびout_config_がNULLではないことを
  *   checked preconditionとして検査する。
  * - config_fullpath_[0]がNULではないことを確認し、
- *   empty pathをRESOURCE_INVALID_ARGUMENTとしてrejectする。
+ *   empty pathをLOADER_INVALID_ARGUMENTとしてrejectする。
  * - config_fullpath_が読み取り可能なNUL terminated stringを参照すること、
  *   out_config_が書き込み可能なstorageを参照することは、
  *   C pointerから検査できないためcaller側のtrusted / hard preconditionとする。
@@ -107,7 +107,7 @@ static bool shininess_is_valid(float value_);
  *   この制約はheaderのTemporary Numeric Input Contractに従う。
  * - external file由来のunsupported representationは
  *   established internal stateのcorruptionとして扱わず、
- *   RESOURCE_UNSUPPORTED_FILEとしてrejectする。
+ *   LOADER_UNSUPPORTED_FILEとしてrejectする。
  *
  * Result validation:
  * - temporary configurationをcaller-visible outputへ公開する前に、
@@ -118,7 +118,7 @@ static bool shininess_is_valid(float value_);
  * - External Trust Boundaryでのtrust promotionに必要なため、
  *   BUILD_MODEによって省略しない。
  * - validation failureはunsupported external representationとして扱い、
- *   RESOURCE_UNSUPPORTED_FILEを返す。
+ *   LOADER_UNSUPPORTED_FILEを返す。
  *
  * Postcondition validation:
  * - out_config_へのcopy後にautomatic Postcondition validationは行わない。
@@ -129,12 +129,12 @@ static bool shininess_is_valid(float value_);
  *   out_config_の既存内容は変更しない。
  *
  * DATA_CORRUPTED handling:
- * - subordinate moduleからRESOURCE_DATA_CORRUPTEDが伝播した場合、
+ * - subordinate moduleからLOADER_DATA_CORRUPTEDが伝播した場合、
  *   corrupted stateへ追加accessすることを避けるため、
  *   temporary resourceの通常destroy処理を実行しない。
  */
-resource_result_t untextured_material_config_loader_load(const char* config_fullpath_, untextured_material_config_t* out_config_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+loader_result_t untextured_material_config_loader_load(const char* config_fullpath_, untextured_material_config_t* out_config_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -146,11 +146,11 @@ resource_result_t untextured_material_config_loader_load(const char* config_full
     untextured_material_config_t tmp_config = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "untextured_material_config_loader_load", "config_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "untextured_material_config_loader_load", "out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "untextured_material_config_loader_load", "config_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "untextured_material_config_loader_load", "out_config_")
     if('\0' == config_fullpath_[0]) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Provided config_fullpath_ is not valid.", resource_result_to_str(ret));
+        ret = LOADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Provided config_fullpath_ is not valid.", loader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -158,44 +158,44 @@ resource_result_t untextured_material_config_loader_load(const char* config_full
     // リソース確保
     ret_fs_stream = fs_stream_create(&fs_stream, config_fullpath_, FS_OPEN_MODE_READ);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = resource_result_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Failed to load untextured material config. reason=fs_stream_create, config_path='%s'", resource_result_to_str(ret), config_fullpath_);
+        ret = loader_result_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Failed to load untextured material config. reason=fs_stream_create, config_path='%s'", loader_result_to_str(ret), config_fullpath_);
         goto cleanup;
     }
     ret_choco_string = choco_string_default_create(&line_string);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
-        ret = resource_result_convert_choco_string(ret_choco_string);
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Failed to load untextured material config. reason=choco_string_default_create_failed(line_string).", resource_result_to_str(ret));
+        ret = loader_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Failed to load untextured material config. reason=choco_string_default_create_failed(line_string).", loader_result_to_str(ret));
         goto cleanup;
     }
 
     // 設定値文字列の収集
     ret = config_state_collect(fs_stream, line_string, &tmp_state);
-    if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - config_state_collect failed.", resource_result_to_str(ret));
+    if(LOADER_SUCCESS != ret) {
+        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - config_state_collect failed.", loader_result_to_str(ret));
         goto cleanup;
     }
     // 設定値文字列のパース
     ret = config_state_parse(&tmp_state, &tmp_config);
-    if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - config_state_parse failed.", resource_result_to_str(ret));
+    if(LOADER_SUCCESS != ret) {
+        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - config_state_parse failed.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     // Result validation.
     if(!untextured_material_config_is_valid(&tmp_config)) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Invalid config.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Invalid config.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     // Output.
     *out_config_ = tmp_config;
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
-    if(RESOURCE_DATA_CORRUPTED != ret) {
+    if(LOADER_DATA_CORRUPTED != ret) {
         if(NULL != line_string) {
             choco_string_destroy(&line_string);
         }
@@ -251,27 +251,27 @@ bool untextured_material_config_is_valid(const untextured_material_config_t* con
  *   out_state_へ収集する。
  *
  * Postconditions:
- * - RESOURCE_SUCCESSの場合、fileはEOFまで走査され、
+ * - LOADER_SUCCESSの場合、fileはEOFまで走査され、
  *   supported keyのvalueがout_state_へ収集されている。
  * - この段階ではrequired fieldの充足やnumeric / semantic validityを保証しない。
  * - failure時、out_state_は途中まで更新されている場合がある。
  *
  * Validation:
  * - line_countがsize_t overflowしないことを確認する。
- * - file読み取りのfailureをResource layer resultへ変換して返す。
+ * - file読み取りのfailureをLoader resultへ変換して返す。
  * - line contentのformat validationはline_collect()以下へ委譲する。
  */
-static resource_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, untextured_material_config_state_t* out_state_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, untextured_material_config_state_t* out_state_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
 
     bool complete = false;
     size_t line_count = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_collect", "fs_stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_string_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_collect", "line_string_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_state_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_collect", "out_state_")
+    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_collect", "fs_stream_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_string_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_collect", "line_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_collect", "out_state_")
 
     while(!complete) {
         ret_fs_stream = fs_stream_text_file_line_read(fs_stream_, line_string_);
@@ -281,29 +281,29 @@ static resource_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_st
         }
         if(FS_STREAM_SUCCESS != ret_fs_stream) {
             if(FS_STREAM_RUNTIME_ERROR == ret_fs_stream || FS_STREAM_UNDEFINED_ERROR == ret_fs_stream) {
-                ret = RESOURCE_FILE_READ_ERROR; // line_readのRUNTIME_ERROR, UNDEFINED_ERRORはREAD_ERRORに変換する
+                ret = LOADER_FILE_READ_ERROR; // line_readのRUNTIME_ERROR, UNDEFINED_ERRORはREAD_ERRORに変換する
             } else {
-                ret = resource_result_convert_fs_stream(ret_fs_stream);
+                ret = loader_result_convert_fs_stream(ret_fs_stream);
             }
-            ERROR_MESSAGE("config_state_collect(%s) - Failed to load untextured material config. reason=fs_stream_text_file_line_read_failed, next_line=%zu", resource_result_to_str(ret), line_count + 1);
+            ERROR_MESSAGE("config_state_collect(%s) - Failed to load untextured material config. reason=fs_stream_text_file_line_read_failed, next_line=%zu", loader_result_to_str(ret), line_count + 1);
             goto cleanup;
         }
 
         if((SIZE_MAX - 1) < line_count) {
-            ret = RESOURCE_OVERFLOW;
-            ERROR_MESSAGE("config_state_collect(%s) - Failed to load untextured material config. reason=line_count_overflow, line_count=%zu", resource_result_to_str(ret), line_count);
+            ret = LOADER_OVERFLOW;
+            ERROR_MESSAGE("config_state_collect(%s) - Failed to load untextured material config. reason=line_count_overflow, line_count=%zu", loader_result_to_str(ret), line_count);
             goto cleanup;
         }
         line_count++;
 
         ret = line_collect(out_state_, line_string_);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("config_state_collect(%s) - line_collect failed.", resource_result_to_str(ret));
+        if(LOADER_SUCCESS != ret) {
+            ERROR_MESSAGE("config_state_collect(%s) - line_collect failed.", loader_result_to_str(ret));
             goto cleanup;
         }
     }
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
     return ret;
@@ -326,7 +326,7 @@ cleanup:
  * - blank / comment lineを受理した場合、state_を変更しない。
  * - supported key/value lineのcollectionに成功した場合、
  *   対応するfieldがstate_へ反映される。
- * - invalid lineはRESOURCE_UNSUPPORTED_FILEとしてrejectする。
+ * - invalid lineはLOADER_UNSUPPORTED_FILEとしてrejectする。
  *
  * Validation:
  * - logical lineのclassificationにより、
@@ -334,30 +334,30 @@ cleanup:
  * - key/value syntaxおよびMaterial固有のkey validationは
  *   key_value_collect()へ委譲する。
  */
-static resource_result_t line_collect(untextured_material_config_state_t* state_, const choco_string_t* line_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t line_collect(untextured_material_config_state_t* state_, const choco_string_t* line_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     glce_config_utility_line_type_t line_type = GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID;
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_collect", "state_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_collect", "line_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "line_collect", "state_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "line_collect", "line_")
 
     line_type = glce_config_utility_line_type_get(choco_string_c_str(line_), choco_string_length(line_));
     switch(line_type) {
     case GLCE_CONFIG_UTILITY_LINE_TYPE_BLANK:
-        ret = RESOURCE_SUCCESS;
+        ret = LOADER_SUCCESS;
         break;
     case GLCE_CONFIG_UTILITY_LINE_TYPE_COMMENT:
-        ret = RESOURCE_SUCCESS;
+        ret = LOADER_SUCCESS;
         break;
     case GLCE_CONFIG_UTILITY_LINE_TYPE_KEY_VALUE:
         ret = key_value_collect(state_, choco_string_c_str(line_), choco_string_length(line_));
         break;
     case GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID:
-        ret = RESOURCE_UNSUPPORTED_FILE;
+        ret = LOADER_UNSUPPORTED_FILE;
         break;
     default:
-        ret = RESOURCE_UNDEFINED_ERROR;
+        ret = LOADER_UNDEFINED_ERROR;
         break;
     }
 
@@ -382,7 +382,7 @@ cleanup:
  * - 対応するfieldへvalue tokenを収集する。
  *
  * Postconditions:
- * - RESOURCE_SUCCESSの場合、supported keyに対応するfieldへ
+ * - LOADER_SUCCESSの場合、supported keyに対応するfieldへ
  *   NUL terminated value tokenが格納されている。
  * - unsupported key、duplicate key、unsupported representationを
  *   validなconfiguration entryとして受理しない。
@@ -397,59 +397,59 @@ cleanup:
  * - numeric parsingはconfig_state_parse()へ、
  *   Material固有のsemantic validationはPublic Validatorへ委譲する。
  */
-static resource_result_t key_value_collect(untextured_material_config_state_t* state_, const char* line_, size_t line_length_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t key_value_collect(untextured_material_config_state_t* state_, const char* line_, size_t line_length_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     glce_config_utility_result_t ret_glce_config_utility = GLCE_CONFIG_UTILITY_INVALID_ARGUMENT;
 
     glce_config_utility_key_value_t key_value = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "key_value_collect", "state_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "key_value_collect", "line_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "key_value_collect", "state_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "key_value_collect", "line_")
     if(0 == line_length_) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("key_value_collect(%s) - Provided line_length_ is not valid.", resource_result_to_str(ret));
+        ret = LOADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("key_value_collect(%s) - Provided line_length_ is not valid.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_glce_config_utility = glce_config_utility_key_value_parse(line_, line_length_, &key_value);
     if(GLCE_CONFIG_UTILITY_SUCCESS != ret_glce_config_utility) {
-        ret = resource_result_convert_glce_config_utility(ret_glce_config_utility);
-        ERROR_MESSAGE("key_value_collect(%s) - glce_config_utility_key_value_parse failed.", resource_result_to_str(ret));
+        ret = loader_result_convert_glce_config_utility(ret_glce_config_utility);
+        ERROR_MESSAGE("key_value_collect(%s) - glce_config_utility_key_value_parse failed.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     if(choco_string_is_equal(s_key_str_ambient, key_value.key)) {
         ret = value_store(state_->ambient, GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE, key_value.value);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", resource_result_to_str(ret), key_value.key, key_value.value);
+        if(LOADER_SUCCESS != ret) {
+            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", loader_result_to_str(ret), key_value.key, key_value.value);
             goto cleanup;
         }
     } else if(choco_string_is_equal(s_key_str_diffuse, key_value.key)) {
         ret = value_store(state_->diffuse, GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE, key_value.value);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", resource_result_to_str(ret), key_value.key, key_value.value);
+        if(LOADER_SUCCESS != ret) {
+            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", loader_result_to_str(ret), key_value.key, key_value.value);
             goto cleanup;
         }
     } else if(choco_string_is_equal(s_key_str_shininess, key_value.key)) {
         ret = value_store(state_->shininess, GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE, key_value.value);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", resource_result_to_str(ret), key_value.key, key_value.value);
+        if(LOADER_SUCCESS != ret) {
+            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", loader_result_to_str(ret), key_value.key, key_value.value);
             goto cleanup;
         }
     } else if(choco_string_is_equal(s_key_str_specular, key_value.key)) {
         ret = value_store(state_->specular, GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE, key_value.value);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", resource_result_to_str(ret), key_value.key, key_value.value);
+        if(LOADER_SUCCESS != ret) {
+            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", loader_result_to_str(ret), key_value.key, key_value.value);
             goto cleanup;
         }
     } else {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("key_value_collect(%s) - Undefined key. key = %s", resource_result_to_str(ret), key_value.key);
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("key_value_collect(%s) - Undefined key. key = %s", loader_result_to_str(ret), key_value.key);
         goto cleanup;
     }
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
     return ret;
@@ -473,43 +473,43 @@ cleanup:
  * - destinationのexisting stateを利用してduplicate keyを検出する。
  *
  * Postconditions:
- * - RESOURCE_SUCCESSの場合、dst_はvalue_と同一内容の
+ * - LOADER_SUCCESSの場合、dst_はvalue_と同一内容の
  *   NUL terminated stringを保持する。
  * - failure時、dst_の内容は変更しない。
  *
  * Validation:
  * - dst_[0]がNULであることを確認し、
- *   既に収集済みのfieldへの再設定をRESOURCE_UNSUPPORTED_FILEとしてrejectする。
+ *   既に収集済みのfieldへの再設定をLOADER_UNSUPPORTED_FILEとしてrejectする。
  * - value lengthと終端NULがdestination capacity内に収まることを確認し、
  *   fixed-size bufferへのcopyを安全に実行できることを保証する。
  */
-static resource_result_t value_store(char* dst_, size_t dst_buffer_size_, const char* value_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t value_store(char* dst_, size_t dst_buffer_size_, const char* value_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     size_t value_length = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "value_store", "dst_")
-    IF_ARG_NULL_GOTO_CLEANUP(value_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "value_store", "value_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "value_store", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(value_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "value_store", "value_")
     if(0 == dst_buffer_size_) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("value_store(%s) - Provided dst_buffer_size_ is not valid.", resource_result_to_str(ret));
+        ret = LOADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("value_store(%s) - Provided dst_buffer_size_ is not valid.", loader_result_to_str(ret));
         goto cleanup;
     }
     if('\0' != dst_[0]) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("value_store(%s) - Duplicate key.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("value_store(%s) - Duplicate key.", loader_result_to_str(ret));
         goto cleanup;
     }
     value_length = strlen(value_);
     if((value_length + 1) > dst_buffer_size_) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("value_store(%s) - Buffer size error.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("value_store(%s) - Buffer size error.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     memcpy(dst_, value_, value_length + 1);
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
     return ret;
@@ -539,7 +539,7 @@ cleanup:
  * - Material固有のsemantic validityの判定は行わない。
  *
  * Postconditions:
- * - RESOURCE_SUCCESSの場合、指定値のparseまたは
+ * - LOADER_SUCCESSの場合、指定値のparseまたは
  *   デフォルト値の補完によって4つのfieldがすべて確定し、
  *   out_config_へ格納されている。
  * - この段階ではfinite性やMaterial固有のnumeric rangeを保証しない。
@@ -550,14 +550,14 @@ cleanup:
  *   numeric syntaxの成立を確認する。
  * - %nで取得したconsumed lengthをvalue tokenのlengthと比較し、
  *   余分な文字が残っていないことを確認する。
- * - malformed numeric representationはRESOURCE_UNSUPPORTED_FILEとしてrejectする。
+ * - malformed numeric representationはLOADER_UNSUPPORTED_FILEとしてrejectする。
  * - 現行のsscanf("%f")はfloatの表現範囲外入力を安全にrejectしない。
  *   その制約はheaderのTemporary Numeric Input Contractに従う。
  * - 構築されたcandidateのsemantic validationは、
  *   上位のuntextured_material_config_loader_load()が所有する。
  */
-static resource_result_t config_state_parse(const untextured_material_config_state_t* state_, untextured_material_config_t* out_config_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t config_state_parse(const untextured_material_config_state_t* state_, untextured_material_config_t* out_config_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     int consumed = -1;  // sscanf()の%nより前に読み取った文字数
     int parse_result = 0;
@@ -567,16 +567,16 @@ static resource_result_t config_state_parse(const untextured_material_config_sta
     float tmp_shininess = 0.0f;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_parse", "state_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_parse", "out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_parse", "state_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_parse", "out_config_")
 
     // Prepare.
     // Diffuse
     consumed = -1;
     parse_result = sscanf(state_->diffuse, s_vec3f_scan_format, &tmp_diffuse.elem[0], &tmp_diffuse.elem[1], &tmp_diffuse.elem[2], &consumed);
     if(3 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->diffuse)) { // (size_t)consumed != strlen(state_->diffuse)によって']'以降に無効な文字がないことを確認する
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", loader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -585,8 +585,8 @@ static resource_result_t config_state_parse(const untextured_material_config_sta
         consumed = -1;
         parse_result = sscanf(state_->ambient, s_vec3f_scan_format, &tmp_ambient.elem[0], &tmp_ambient.elem[1], &tmp_ambient.elem[2], &consumed);
         if(3 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->ambient)) {
-            ret = RESOURCE_UNSUPPORTED_FILE;
-            ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+            ret = LOADER_UNSUPPORTED_FILE;
+            ERROR_MESSAGE("config_state_parse(%s) - parse failed.", loader_result_to_str(ret));
             goto cleanup;
         }
     } else {
@@ -598,8 +598,8 @@ static resource_result_t config_state_parse(const untextured_material_config_sta
         consumed = -1;
         parse_result = sscanf(state_->specular, s_vec3f_scan_format, &tmp_specular.elem[0], &tmp_specular.elem[1], &tmp_specular.elem[2], &consumed);
         if(3 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->specular)) {
-            ret = RESOURCE_UNSUPPORTED_FILE;
-            ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+            ret = LOADER_UNSUPPORTED_FILE;
+            ERROR_MESSAGE("config_state_parse(%s) - parse failed.", loader_result_to_str(ret));
             goto cleanup;
         }
     } else {
@@ -611,8 +611,8 @@ static resource_result_t config_state_parse(const untextured_material_config_sta
         consumed = -1;
         parse_result = sscanf(state_->shininess, s_float_scan_format, &tmp_shininess, &consumed);
         if(1 != parse_result || 0 > consumed || (size_t)consumed != strlen(state_->shininess)) {
-            ret = RESOURCE_UNSUPPORTED_FILE;
-            ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+            ret = LOADER_UNSUPPORTED_FILE;
+            ERROR_MESSAGE("config_state_parse(%s) - parse failed.", loader_result_to_str(ret));
             goto cleanup;
         }
     } else {
@@ -625,7 +625,7 @@ static resource_result_t config_state_parse(const untextured_material_config_sta
     out_config_->shininess = tmp_shininess;
     out_config_->specular = tmp_specular;
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
     return ret;

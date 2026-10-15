@@ -19,6 +19,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include "engine/base/choco_math/math_types.h"
 

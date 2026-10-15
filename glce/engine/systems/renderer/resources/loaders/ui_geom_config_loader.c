@@ -27,8 +27,8 @@
 #include "engine/io_utils/fs_stream.h"
 #include "engine/io_utils/glce_config_utility.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
-#include "engine/systems/renderer/resources/core/resource_err_utils.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_err_utils.h"
 
 // ============================================================
 // Private Type Definitions
@@ -60,13 +60,13 @@ static const char* const s_int64_scan_format = "%" SCNd64 " %c";
 // Private Function Declarations
 // ============================================================
 // Collection helpers
-static resource_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, ui_geom_config_state_t* out_state_);
-static resource_result_t line_collect(ui_geom_config_state_t* state_, const choco_string_t* line_);
-static resource_result_t key_value_collect(ui_geom_config_state_t* state_, const char* line_, size_t line_length_);
-static resource_result_t value_store(char* dst_, size_t dst_buffer_size_, const char* value_);
+static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, ui_geom_config_state_t* out_state_);
+static loader_result_t line_collect(ui_geom_config_state_t* state_, const choco_string_t* line_);
+static loader_result_t key_value_collect(ui_geom_config_state_t* state_, const char* line_, size_t line_length_);
+static loader_result_t value_store(char* dst_, size_t dst_buffer_size_, const char* value_);
 
 // Parsing helpers
-static resource_result_t config_state_parse(const ui_geom_config_state_t* state_, ui_geom_config_t* out_config_);
+static loader_result_t config_state_parse(const ui_geom_config_state_t* state_, ui_geom_config_t* out_config_);
 
 // ============================================================
 // Public API
@@ -77,7 +77,7 @@ static resource_result_t config_state_parse(const ui_geom_config_state_t* state_
  * Preconditions:
  * - config_fullpath_およびout_config_がNULLではないことをchecked preconditionとして検査する。
  * - config_fullpath_[0]がNULではないことを確認し、
- *   empty pathをRESOURCE_INVALID_ARGUMENTとしてrejectする。
+ *   empty pathをLOADER_INVALID_ARGUMENTとしてrejectする。
  * - config_fullpath_が読み取り可能なNUL terminated stringを参照すること、および
  *   out_config_が書き込み可能なstorageを参照することは
  *   C pointerから検査できないため、caller側のtrusted / hard preconditionとして扱う。
@@ -92,7 +92,7 @@ static resource_result_t config_state_parse(const ui_geom_config_state_t* state_
  *   int32_tへの変換可能性を検査しながらtemporary ui_geom_config_tを構築する。
  * - external file由来のunsupported representationは
  *   established internal stateのcorruptionとは扱わず、
- *   RESOURCE_UNSUPPORTED_FILEとしてrejectする。
+ *   LOADER_UNSUPPORTED_FILEとしてrejectする。
  *
  * Result validation:
  * - constructed temporary configはcaller-visible outputへcopyする前に
@@ -103,7 +103,7 @@ static resource_result_t config_state_parse(const ui_geom_config_state_t* state_
  * - External Trust Boundaryで必要なsemantic validationであるため、
  *   BUILD_MODEによって省略しない。
  * - validation failureはuntrusted external inputのunsupported semanticとして扱い、
- *   RESOURCE_UNSUPPORTED_FILEを返す。
+ *   LOADER_UNSUPPORTED_FILEを返す。
  *
  * Postcondition validation:
  * - out_config_へのcopy後にautomatic Postcondition validationは行わない。
@@ -114,12 +114,12 @@ static resource_result_t config_state_parse(const ui_geom_config_state_t* state_
  *   out_config_の既存内容は変更しない。
  *
  * DATA_CORRUPTED handling:
- * - subordinate moduleからRESOURCE_DATA_CORRUPTEDが伝播した場合は、
+ * - subordinate moduleからLOADER_DATA_CORRUPTEDが伝播した場合は、
  *   normal cleanupによってcorrupted stateへ追加accessすることを避けるため、
  *   cleanup resourceのdestroy処理を実行しない。
  */
-resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_geom_config_t* out_config_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+loader_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_geom_config_t* out_config_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -131,11 +131,11 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
     ui_geom_config_t tmp_config = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_geom_config_loader_load", "config_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "ui_geom_config_loader_load", "out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "ui_geom_config_loader_load", "config_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "ui_geom_config_loader_load", "out_config_")
     if('\0' == config_fullpath_[0]) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Provided config_fullpath_ is not valid.", resource_result_to_str(ret));
+        ret = LOADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Provided config_fullpath_ is not valid.", loader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -143,44 +143,44 @@ resource_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_ge
     // リソース確保
     ret_fs_stream = fs_stream_create(&fs_stream, config_fullpath_, FS_OPEN_MODE_READ);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
-        ret = resource_result_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_create, config_path='%s'", resource_result_to_str(ret), config_fullpath_);
+        ret = loader_result_convert_fs_stream(ret_fs_stream);
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_create, config_path='%s'", loader_result_to_str(ret), config_fullpath_);
         goto cleanup;
     }
     ret_choco_string = choco_string_default_create(&line_string);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
-        ret = resource_result_convert_choco_string(ret_choco_string);
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=choco_string_default_create_failed(line_string).", resource_result_to_str(ret));
+        ret = loader_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=choco_string_default_create_failed(line_string).", loader_result_to_str(ret));
         goto cleanup;
     }
 
     // 設定値文字列の収集
     ret = config_state_collect(fs_stream, line_string, &tmp_state);
-    if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - config_state_collect failed.", resource_result_to_str(ret));
+    if(LOADER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - config_state_collect failed.", loader_result_to_str(ret));
         goto cleanup;
     }
     // 設定値文字列のパース
     ret = config_state_parse(&tmp_state, &tmp_config);
-    if(RESOURCE_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - config_state_parse failed.", resource_result_to_str(ret));
+    if(LOADER_SUCCESS != ret) {
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - config_state_parse failed.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     // Result validation.
     if(!ui_geom_config_is_valid(&tmp_config)) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Invalid config.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Invalid config.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     // Output.
     *out_config_ = tmp_config;
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
-    if(RESOURCE_DATA_CORRUPTED != ret) {
+    if(LOADER_DATA_CORRUPTED != ret) {
         if(NULL != line_string) {
             choco_string_destroy(&line_string);
         }
@@ -234,29 +234,29 @@ bool ui_geom_config_is_valid(const ui_geom_config_t* config_) {
  *   out_state_へ収集する。
  *
  * Postconditions:
- * - RESOURCE_SUCCESSの場合、fileはEOFまで走査され、
+ * - LOADER_SUCCESSの場合、fileはEOFまで走査され、
  *   file内で受理されたsupported keyのvalueがout_state_へ収集されている。
- * - RESOURCE_SUCCESSはrequired keyがすべて存在することや、
+ * - LOADER_SUCCESSはrequired keyがすべて存在することや、
  *   collected valueのnumeric / semantic validityを保証しない。
  * - failure時、out_state_は途中まで更新されている場合がある。
  *
  * Validation:
  * - line_countのincrementがsize_t overflowしないことを確認する。
  *   diagnostic用line countをboundedに更新するために必要である。
- * - fs_stream_text_file_line_read()のfailureはResource layer resultへ変換して返す。
+ * - fs_stream_text_file_line_read()のfailureはLoader resultへ変換して返す。
  * - line contentのformat validationはline_collect()以下へ委譲する。
  */
-static resource_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, ui_geom_config_state_t* out_state_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, ui_geom_config_state_t* out_state_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
 
     bool complete = false;
     size_t line_count = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_collect", "fs_stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_string_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_collect", "line_string_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_state_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_collect", "out_state_")
+    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_collect", "fs_stream_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_string_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_collect", "line_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_collect", "out_state_")
 
     while(!complete) {
         ret_fs_stream = fs_stream_text_file_line_read(fs_stream_, line_string_);
@@ -266,29 +266,29 @@ static resource_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_st
         }
         if(FS_STREAM_SUCCESS != ret_fs_stream) {
             if(FS_STREAM_RUNTIME_ERROR == ret_fs_stream || FS_STREAM_UNDEFINED_ERROR == ret_fs_stream) {
-                ret = RESOURCE_FILE_READ_ERROR; // line_readのRUNTIME_ERROR, UNDEFINED_ERRORはREAD_ERRORに変換する
+                ret = LOADER_FILE_READ_ERROR; // line_readのRUNTIME_ERROR, UNDEFINED_ERRORはREAD_ERRORに変換する
             } else {
-                ret = resource_result_convert_fs_stream(ret_fs_stream);
+                ret = loader_result_convert_fs_stream(ret_fs_stream);
             }
-            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_text_file_line_read_failed, next_line=%zu", resource_result_to_str(ret), line_count + 1);
+            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=fs_stream_text_file_line_read_failed, next_line=%zu", loader_result_to_str(ret), line_count + 1);
             goto cleanup;
         }
 
         if((SIZE_MAX - 1) < line_count) {
-            ret = RESOURCE_OVERFLOW;
-            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=line_count_overflow, line_count=%zu", resource_result_to_str(ret), line_count);
+            ret = LOADER_OVERFLOW;
+            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Failed to load ui geometry config. reason=line_count_overflow, line_count=%zu", loader_result_to_str(ret), line_count);
             goto cleanup;
         }
         line_count++;
 
         ret = line_collect(out_state_, line_string_);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - line_collect failed.", resource_result_to_str(ret));
+        if(LOADER_SUCCESS != ret) {
+            ERROR_MESSAGE("ui_geom_config_loader_load(%s) - line_collect failed.", loader_result_to_str(ret));
             goto cleanup;
         }
     }
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
     return ret;
@@ -308,10 +308,10 @@ cleanup:
  * - key/value candidateはkey_value_collect()へ渡してcollection処理を行う。
  *
  * Postconditions:
- * - blank / comment lineを受理した場合、state_を変更せずRESOURCE_SUCCESSを返す。
+ * - blank / comment lineを受理した場合、state_を変更せずLOADER_SUCCESSを返す。
  * - supported key/value lineのcollectionに成功した場合、
  *   対応するfieldがstate_へ反映される。
- * - invalid lineはRESOURCE_UNSUPPORTED_FILEとしてrejectする。
+ * - invalid lineはLOADER_UNSUPPORTED_FILEとしてrejectする。
  *
  * Validation:
  * - glce_config_utility_line_type_get()によってlogical line representationを分類する。
@@ -320,30 +320,30 @@ cleanup:
  * - key/value syntaxおよびformat-specific key validationは
  *   key_value_collect()へ委譲する。
  */
-static resource_result_t line_collect(ui_geom_config_state_t* state_, const choco_string_t* line_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t line_collect(ui_geom_config_state_t* state_, const choco_string_t* line_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     glce_config_utility_line_type_t line_type = GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID;
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_collect", "state_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_collect", "line_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "line_collect", "state_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "line_collect", "line_")
 
     line_type = glce_config_utility_line_type_get(choco_string_c_str(line_), choco_string_length(line_));
     switch(line_type) {
     case GLCE_CONFIG_UTILITY_LINE_TYPE_BLANK:
-        ret = RESOURCE_SUCCESS;
+        ret = LOADER_SUCCESS;
         break;
     case GLCE_CONFIG_UTILITY_LINE_TYPE_COMMENT:
-        ret = RESOURCE_SUCCESS;
+        ret = LOADER_SUCCESS;
         break;
     case GLCE_CONFIG_UTILITY_LINE_TYPE_KEY_VALUE:
         ret = key_value_collect(state_, choco_string_c_str(line_), choco_string_length(line_));
         break;
     case GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID:
-        ret = RESOURCE_UNSUPPORTED_FILE;
+        ret = LOADER_UNSUPPORTED_FILE;
         break;
     default:
-        ret = RESOURCE_UNDEFINED_ERROR;
+        ret = LOADER_UNDEFINED_ERROR;
         break;
     }
 
@@ -367,7 +367,7 @@ cleanup:
  * - supported keyに対応するvalueをstate_へ収集する。
  *
  * Postconditions:
- * - RESOURCE_SUCCESSの場合、supported keyに対応するstate_ fieldへ
+ * - LOADER_SUCCESSの場合、supported keyに対応するstate_ fieldへ
  *   parsed valueが格納されている。
  * - unsupported key、duplicate key、またはunsupported key/value representationは
  *   trusted configuration stateとして受理しない。
@@ -381,47 +381,47 @@ cleanup:
  * - numeric valueのparseおよびsemantic range validationは
  *   config_state_parse()へ委譲する。
  */
-static resource_result_t key_value_collect(ui_geom_config_state_t* state_, const char* line_, size_t line_length_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t key_value_collect(ui_geom_config_state_t* state_, const char* line_, size_t line_length_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     glce_config_utility_result_t ret_glce_config_utility = GLCE_CONFIG_UTILITY_INVALID_ARGUMENT;
 
     glce_config_utility_key_value_t key_value = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "key_value_collect", "state_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "key_value_collect", "line_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "key_value_collect", "state_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "key_value_collect", "line_")
     if(0 == line_length_) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("key_value_collect(%s) - Provided line_length_ is not valid.", resource_result_to_str(ret));
+        ret = LOADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("key_value_collect(%s) - Provided line_length_ is not valid.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     ret_glce_config_utility = glce_config_utility_key_value_parse(line_, line_length_, &key_value);
     if(GLCE_CONFIG_UTILITY_SUCCESS != ret_glce_config_utility) {
-        ret = resource_result_convert_glce_config_utility(ret_glce_config_utility);
-        ERROR_MESSAGE("key_value_collect(%s) - glce_config_utility_key_value_parse failed.", resource_result_to_str(ret));
+        ret = loader_result_convert_glce_config_utility(ret_glce_config_utility);
+        ERROR_MESSAGE("key_value_collect(%s) - glce_config_utility_key_value_parse failed.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     if(choco_string_is_equal(s_key_str_icon_height, key_value.key)) {
         ret = value_store(state_->icon_height, GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE, key_value.value);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", resource_result_to_str(ret), key_value.key, key_value.value);
+        if(LOADER_SUCCESS != ret) {
+            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", loader_result_to_str(ret), key_value.key, key_value.value);
             goto cleanup;
         }
     } else if(choco_string_is_equal(s_key_str_icon_width, key_value.key)) {
         ret = value_store(state_->icon_width, GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE, key_value.value);
-        if(RESOURCE_SUCCESS != ret) {
-            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", resource_result_to_str(ret), key_value.key, key_value.value);
+        if(LOADER_SUCCESS != ret) {
+            ERROR_MESSAGE("key_value_collect(%s) - value_store failed. key = %s, value = %s.", loader_result_to_str(ret), key_value.key, key_value.value);
             goto cleanup;
         }
     } else {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("key_value_collect(%s) - Undefined key. key = %s", resource_result_to_str(ret), key_value.key);
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("key_value_collect(%s) - Undefined key. key = %s", loader_result_to_str(ret), key_value.key);
         goto cleanup;
     }
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
     return ret;
@@ -441,44 +441,44 @@ cleanup:
  * - destinationのexisting stateを利用してduplicate keyを検出する。
  *
  * Postconditions:
- * - RESOURCE_SUCCESSの場合、dst_はvalue_と同一内容の
+ * - LOADER_SUCCESSの場合、dst_はvalue_と同一内容の
  *   NUL terminated stringを保持する。
  * - failure時、dst_の内容は変更しない。
  *
  * Validation:
  * - dst_[0]がNULであることを確認する。
  *   non-empty destinationは同一keyが既に収集済みであることを表すため、
- *   duplicate keyとしてRESOURCE_UNSUPPORTED_FILEを返す。
+ *   duplicate keyとしてLOADER_UNSUPPORTED_FILEを返す。
  * - value lengthと終端NULがdst_buffer_size_内に収まることを確認する。
  *   fixed-size destinationへのbounded copyを保証するために必要である。
  */
-static resource_result_t value_store(char* dst_, size_t dst_buffer_size_, const char* value_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t value_store(char* dst_, size_t dst_buffer_size_, const char* value_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     size_t value_length = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "value_store", "dst_")
-    IF_ARG_NULL_GOTO_CLEANUP(value_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "value_store", "value_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "value_store", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(value_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "value_store", "value_")
     if(0 == dst_buffer_size_) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("value_store(%s) - Provided dst_buffer_size_ is not valid.", resource_result_to_str(ret));
+        ret = LOADER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("value_store(%s) - Provided dst_buffer_size_ is not valid.", loader_result_to_str(ret));
         goto cleanup;
     }
     if('\0' != dst_[0]) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("value_store(%s) - Duplicate key.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("value_store(%s) - Duplicate key.", loader_result_to_str(ret));
         goto cleanup;
     }
     value_length = strlen(value_);
     if((value_length + 1) > dst_buffer_size_) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("value_store(%s) - Buffer size error.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("value_store(%s) - Buffer size error.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     memcpy(dst_, value_, value_length + 1);
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
     return ret;
@@ -501,10 +501,10 @@ cleanup:
  * - parse済みvalueからui_geom_config_t candidateを構築する。
  *
  * Postconditions:
- * - RESOURCE_SUCCESSの場合、
+ * - LOADER_SUCCESSの場合、
  *   out_config_->icon_widthおよびout_config_->icon_heightへ
  *   parse済みのint32_t valueを出力する。
- * - RESOURCE_SUCCESSはui_geom_config_tのcanonical semantic validityを保証しない。
+ * - LOADER_SUCCESSはui_geom_config_tのcanonical semantic validityを保証しない。
  *   icon_width > 0およびicon_height > 0の最終validationは
  *   ui_geom_config_is_valid()へ委譲する。
  * - failure時、out_config_の既存内容は変更しない。
@@ -525,8 +525,8 @@ cleanup:
  *   これはui_geom_config_tのsemantic validityであり、
  *   public canonical validatorであるui_geom_config_is_valid()が所有する。
  */
-static resource_result_t config_state_parse(const ui_geom_config_state_t* state_, ui_geom_config_t* out_config_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+static loader_result_t config_state_parse(const ui_geom_config_state_t* state_, ui_geom_config_t* out_config_) {
+    loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     char extra = '\0';
     int parse_result = 0;
@@ -534,40 +534,40 @@ static resource_result_t config_state_parse(const ui_geom_config_state_t* state_
     int64_t tmp_width = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_parse", "state_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "config_state_parse", "out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_parse", "state_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_parse", "out_config_")
     if(state_->icon_height[0] < '0' || state_->icon_height[0] > '9') {  // 文字列先頭の数値以外を拒否
-        ret = RESOURCE_UNSUPPORTED_FILE;
+        ret = LOADER_UNSUPPORTED_FILE;
         goto cleanup;
     }
     if(state_->icon_width[0] < '0' || state_->icon_width[0] > '9') {  // 文字列先頭の数値以外を拒否
-        ret = RESOURCE_UNSUPPORTED_FILE;
+        ret = LOADER_UNSUPPORTED_FILE;
         goto cleanup;
     }
     if(10 < strlen(state_->icon_height) || 10 < strlen(state_->icon_width)) {  // int32_tの最大桁数チェック
-        ret = RESOURCE_UNSUPPORTED_FILE;
+        ret = LOADER_UNSUPPORTED_FILE;
         goto cleanup;
     }
 
     // Prepare.
     parse_result = sscanf(state_->icon_height, s_int64_scan_format, &tmp_height, &extra);
     if(1 != parse_result) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     parse_result = sscanf(state_->icon_width, s_int64_scan_format, &tmp_width, &extra);
     if(1 != parse_result) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     // Result validation.
     if(INT32_MAX < tmp_height || INT32_MAX < tmp_width) {
-        ret = RESOURCE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", resource_result_to_str(ret));
+        ret = LOADER_UNSUPPORTED_FILE;
+        ERROR_MESSAGE("config_state_parse(%s) - parse failed.", loader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -575,7 +575,7 @@ static resource_result_t config_state_parse(const ui_geom_config_state_t* state_
     out_config_->icon_height = (int32_t)tmp_height;
     out_config_->icon_width = (int32_t)tmp_width;
 
-    ret = RESOURCE_SUCCESS;
+    ret = LOADER_SUCCESS;
 
 cleanup:
     return ret;

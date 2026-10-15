@@ -26,8 +26,8 @@
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
-#include "engine/systems/renderer/resources/core/resource_err_utils.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_err_utils.h"
 
 /*
  * Module Internal Contract
@@ -163,7 +163,7 @@ static bool is_valid_shallow(const line_mesh_geometry_t* geometry_);
 //
 // - line_mesh_geometry_t storageおよびowned vertex storageのallocationは
 //   General Allocatorへ委譲する。
-// - General Allocatorから返されたresultはResource resultへ変換して伝播する。
+// - General Allocatorから返されたresultはGeometry resultへ変換して伝播する。
 // - 下位moduleからDATA_CORRUPTEDを受け取った場合は、
 //   fail-stop ruleに従って通常cleanupを行わない。
 //
@@ -181,8 +181,8 @@ static bool is_valid_shallow(const line_mesh_geometry_t* geometry_);
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** out_geometry_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+geometry_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** out_geometry_) {
+    geometry_result_t ret = GEOMETRY_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -191,17 +191,17 @@ resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, 
     size_t allocation_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "out_geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_create_from_vertices", "*out_geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_mesh_geometry_create_from_vertices", "out_geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "line_mesh_geometry_create_from_vertices", "*out_geometry_")
     if(0 == vertex_count_ || 0 != (vertex_count_ % 2)) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - Provided vertex_count_ is not valid.", resource_result_to_str(ret));
+        ret = GEOMETRY_INVALID_ARGUMENT;
+        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - Provided vertex_count_ is not valid.", geometry_result_to_str(ret));
         goto cleanup;
     }
     if(!size_mul_checked(vertex_count_, sizeof(line_vertex_t), &allocation_size)) {
-        ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count_, sizeof(line_vertex_t));
+        ret = GEOMETRY_OVERFLOW;
+        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", geometry_result_to_str(ret), vertex_count_, sizeof(line_vertex_t));
         goto cleanup;
     }
 
@@ -209,15 +209,15 @@ resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, 
     // 一時リソース確保
     ret_general_allocator = general_allocator_allocate(sizeof(line_mesh_geometry_t), GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = resource_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
+        ret = geometry_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", geometry_result_to_str(ret));
         goto cleanup;
     }
 
     ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = resource_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
+        ret = geometry_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - general_allocator_allocate failed.", geometry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -233,8 +233,8 @@ resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_geometry_is_valid(tmp_geometry)) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - Postcondition validation failed for 'tmp_geometry'.", resource_result_to_str(ret));
+        ret = GEOMETRY_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_create_from_vertices(%s) - Postcondition validation failed for 'tmp_geometry'.", geometry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -244,10 +244,10 @@ resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, 
     tmp_geometry = NULL;
     tmp_vertices = NULL;
 
-    ret = RESOURCE_SUCCESS;
+    ret = GEOMETRY_SUCCESS;
 
 cleanup:
-    if(RESOURCE_DATA_CORRUPTED != ret) {
+    if(GEOMETRY_DATA_CORRUPTED != ret) {
         if(NULL != tmp_vertices) {
             general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
         }
@@ -279,11 +279,11 @@ cleanup:
 //   AABBをvertex representationへ変換するaabb_3d_vertices_get()へ処理とvalidationを委譲する。
 // - Line Mesh Geometry側ではaabbs_全体を事前走査して
 //   aabb_3d_is_valid()を重複実行しない。
-// - aabb_3d_vertices_get()から返されたresultはResource resultへ変換して伝播する。
+// - aabb_3d_vertices_get()から返されたresultはGeometry resultへ変換して伝播する。
 //
 // - line_mesh_geometry_t storageおよびowned vertex storageのallocationは
 //   General Allocatorへ委譲する。
-// - General Allocatorから返されたresultはResource resultへ変換して伝播する。
+// - General Allocatorから返されたresultはGeometry resultへ変換して伝播する。
 // - 下位moduleからDATA_CORRUPTEDを受け取った場合は、
 //   fail-stop ruleに従って通常cleanupを行わない。
 //
@@ -298,8 +298,8 @@ cleanup:
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** out_geometry_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+geometry_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** out_geometry_) {
+    geometry_result_t ret = GEOMETRY_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     aabb_3d_result_t ret_aabb_3d = AABB_3D_INVALID_ARGUMENT;
@@ -311,22 +311,22 @@ resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const
     size_t allocation_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(aabbs_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "aabbs_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "out_geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_create_from_aabbs", "*out_geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabbs_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "aabbs_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_mesh_geometry_create_from_aabbs", "out_geometry_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "line_mesh_geometry_create_from_aabbs", "*out_geometry_")
     if(0 == aabb_count_) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - Provided aabb_count_ is not valid.", resource_result_to_str(ret));
+        ret = GEOMETRY_INVALID_ARGUMENT;
+        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - Provided aabb_count_ is not valid.", geometry_result_to_str(ret));
         goto cleanup;
     }
     if(!size_mul_checked(aabb_count_, 24, &vertex_count)) {
-        ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - CPU-side vertex array size overflow. aabb_count = %zu.", resource_result_to_str(ret), aabb_count_);
+        ret = GEOMETRY_OVERFLOW;
+        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - CPU-side vertex array size overflow. aabb_count = %zu.", geometry_result_to_str(ret), aabb_count_);
         goto cleanup;
     }
     if(!size_mul_checked(vertex_count, sizeof(line_vertex_t), &allocation_size)) {
-        ret = RESOURCE_OVERFLOW;
-        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", resource_result_to_str(ret), vertex_count, sizeof(line_vertex_t));
+        ret = GEOMETRY_OVERFLOW;
+        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - CPU-side vertex array size overflow. vertex_count = %zu, vertex_size = %zu.", geometry_result_to_str(ret), vertex_count, sizeof(line_vertex_t));
         goto cleanup;
     }
 
@@ -334,15 +334,15 @@ resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const
     // 一時リソース確保
     ret_general_allocator = general_allocator_allocate(sizeof(line_mesh_geometry_t), GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_geometry);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = resource_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
+        ret = geometry_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - general_allocator_allocate failed.", geometry_result_to_str(ret));
         goto cleanup;
     }
 
     ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = resource_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
+        ret = geometry_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - general_allocator_allocate failed.", geometry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -351,8 +351,8 @@ resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const
         vec3f_t aabb_vertices[8] = { 0 };
         ret_aabb_3d = aabb_3d_vertices_get(&aabbs_[i], aabb_vertices);
         if(AABB_3D_SUCCESS != ret_aabb_3d) {
-            ret = resource_result_convert_aabb_3d(ret_aabb_3d);
-            ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - Failed to get AABB vertices from aabbs_[%zu].", resource_result_to_str(ret), i);
+            ret = geometry_result_convert_aabb_3d(ret_aabb_3d);
+            ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - Failed to get AABB vertices from aabbs_[%zu].", geometry_result_to_str(ret), i);
             goto cleanup;
         }
 
@@ -379,8 +379,8 @@ resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_geometry_is_valid(tmp_geometry)) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - Postcondition validation failed for 'tmp_geometry'.", resource_result_to_str(ret));
+        ret = GEOMETRY_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_create_from_aabbs(%s) - Postcondition validation failed for 'tmp_geometry'.", geometry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -390,10 +390,10 @@ resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const
     tmp_geometry = NULL;
     tmp_vertices = NULL;
 
-    ret = RESOURCE_SUCCESS;
+    ret = GEOMETRY_SUCCESS;
 
 cleanup:
-    if(RESOURCE_DATA_CORRUPTED != ret) {
+    if(GEOMETRY_DATA_CORRUPTED != ret) {
         if(NULL != tmp_vertices) {
             general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
         }
@@ -434,7 +434,7 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_) {
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_geometry_is_valid(*geometry_)) {
-        ERROR_MESSAGE("line_mesh_geometry_destroy(%s) - Provided geometry_ is corrupted.", resource_result_to_str(RESOURCE_DATA_CORRUPTED));
+        ERROR_MESSAGE("line_mesh_geometry_destroy(%s) - Provided geometry_ is corrupted.", geometry_result_to_str(GEOMETRY_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -458,7 +458,7 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_) {
 // - DEBUG_BUILD / TEST_BUILDではoutput公開前に
 //   line_mesh_geometry_is_valid()を実行し、
 //   geometry_にcanonical Precondition validationを行う。
-// - canonical validationに失敗した場合はRESOURCE_DATA_CORRUPTEDを返し、
+// - canonical validationに失敗した場合はGEOMETRY_DATA_CORRUPTEDを返し、
 //   borrowed vertex array viewをcallerへ公開しない。
 // - RELEASE_BUILDではautomatic canonical validationを行わず、
 //   Module Internal Contractが成立していることを前提としてviewを公開する。
@@ -470,18 +470,18 @@ void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_) {
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t line_mesh_geometry_vertices_get(const line_mesh_geometry_t* geometry_, const line_vertex_t** out_vertices_, size_t* out_vertex_count_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+geometry_result_t line_mesh_geometry_vertices_get(const line_mesh_geometry_t* geometry_, const line_vertex_t** out_vertices_, size_t* out_vertex_count_) {
+    geometry_result_t ret = GEOMETRY_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_vertices_get", "geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_vertices_get", "out_vertices_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "line_mesh_geometry_vertices_get", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "line_mesh_geometry_vertices_get", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_mesh_geometry_vertices_get", "geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_mesh_geometry_vertices_get", "out_vertices_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "line_mesh_geometry_vertices_get", "*out_vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_mesh_geometry_vertices_get", "out_vertex_count_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!line_mesh_geometry_is_valid(geometry_)) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_geometry_vertices_get(%s) - Precondition validation failed for 'geometry_'.", resource_result_to_str(ret));
+        ret = GEOMETRY_DATA_CORRUPTED;
+        ERROR_MESSAGE("line_mesh_geometry_vertices_get(%s) - Precondition validation failed for 'geometry_'.", geometry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -490,7 +490,7 @@ resource_result_t line_mesh_geometry_vertices_get(const line_mesh_geometry_t* ge
     *out_vertices_ = geometry_->vertices;
     *out_vertex_count_ = geometry_->vertex_count;
 
-    ret = RESOURCE_SUCCESS;
+    ret = GEOMETRY_SUCCESS;
 
 cleanup:
     return ret;

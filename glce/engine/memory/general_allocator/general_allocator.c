@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "config/build_config.h"
 

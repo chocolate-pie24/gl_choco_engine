@@ -180,56 +180,50 @@ render_resource_result_t render_resource_result_convert_resource_pipeline(resour
     }
 }
 
-render_resource_result_t render_resource_result_convert_resource(resource_result_t result_) {
+render_resource_result_t render_resource_result_convert_geometry(geometry_result_t result_) {
     switch(result_) {
-    case RESOURCE_SUCCESS:
+    case GEOMETRY_SUCCESS:
         return RENDER_RESOURCE_SUCCESS;
-    case RESOURCE_NO_MEMORY:
+    case GEOMETRY_NO_MEMORY:
         return RENDER_RESOURCE_NO_MEMORY;
-    case RESOURCE_RUNTIME_ERROR:
+    case GEOMETRY_RUNTIME_ERROR:
         return RENDER_RESOURCE_RUNTIME_ERROR;
-    case RESOURCE_INVALID_ARGUMENT:
+    case GEOMETRY_INVALID_ARGUMENT:
         return RENDER_RESOURCE_INVALID_ARGUMENT;
-    case RESOURCE_DATA_CORRUPTED:
+    case GEOMETRY_DATA_CORRUPTED:
         return RENDER_RESOURCE_DATA_CORRUPTED;
-    case RESOURCE_BAD_OPERATION:
+    case GEOMETRY_BAD_OPERATION:
         return RENDER_RESOURCE_BAD_OPERATION;
-    case RESOURCE_OVERFLOW:
+    case GEOMETRY_OVERFLOW:
         return RENDER_RESOURCE_OVERFLOW;
-    case RESOURCE_LIMIT_EXCEEDED:
+    case GEOMETRY_LIMIT_EXCEEDED:
         return RENDER_RESOURCE_LIMIT_EXCEEDED;
-    case RESOURCE_FILE_OPEN_ERROR:
-        return RENDER_RESOURCE_RUNTIME_ERROR;
-    case RESOURCE_FILE_READ_ERROR:
-        return RENDER_RESOURCE_RUNTIME_ERROR;
-    case RESOURCE_UNSUPPORTED_FILE:
-        return RENDER_RESOURCE_RUNTIME_ERROR;
-    case RESOURCE_UNDEFINED_ERROR:
+    case GEOMETRY_UNDEFINED_ERROR:
         return RENDER_RESOURCE_UNDEFINED_ERROR;
     default:
         return RENDER_RESOURCE_UNDEFINED_ERROR;
     }
 }
 
-render_resource_result_t render_resource_result_convert_texture_gpu_resource(texture_gpu_resource_result_t result_) {
+render_resource_result_t render_resource_result_convert_texture(texture_result_t result_) {
     switch(result_) {
-    case TEXTURE_GPU_RESOURCE_SUCCESS:
+    case TEXTURE_SUCCESS:
         return RENDER_RESOURCE_SUCCESS;
-    case TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT:
+    case TEXTURE_INVALID_ARGUMENT:
         return RENDER_RESOURCE_INVALID_ARGUMENT;
-    case TEXTURE_GPU_RESOURCE_RUNTIME_ERROR:
+    case TEXTURE_RUNTIME_ERROR:
         return RENDER_RESOURCE_RUNTIME_ERROR;
-    case TEXTURE_GPU_RESOURCE_NO_MEMORY:
+    case TEXTURE_NO_MEMORY:
         return RENDER_RESOURCE_NO_MEMORY;
-    case TEXTURE_GPU_RESOURCE_LIMIT_EXCEEDED:
+    case TEXTURE_LIMIT_EXCEEDED:
         return RENDER_RESOURCE_LIMIT_EXCEEDED;
-    case TEXTURE_GPU_RESOURCE_BAD_OPERATION:
+    case TEXTURE_BAD_OPERATION:
         return RENDER_RESOURCE_BAD_OPERATION;
-    case TEXTURE_GPU_RESOURCE_DATA_CORRUPTED:
+    case TEXTURE_DATA_CORRUPTED:
         return RENDER_RESOURCE_DATA_CORRUPTED;
-    case TEXTURE_GPU_RESOURCE_OVERFLOW:
+    case TEXTURE_OVERFLOW:
         return RENDER_RESOURCE_OVERFLOW;
-    case TEXTURE_GPU_RESOURCE_UNDEFINED_ERROR:
+    case TEXTURE_UNDEFINED_ERROR:
         return RENDER_RESOURCE_UNDEFINED_ERROR;
     default:
         return RENDER_RESOURCE_UNDEFINED_ERROR;

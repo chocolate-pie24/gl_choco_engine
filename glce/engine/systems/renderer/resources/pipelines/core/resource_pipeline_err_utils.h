@@ -16,15 +16,16 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/resources/textures/texture_gpu_resource_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
 const char* resource_pipeline_result_to_str(resource_pipeline_result_t result_);
 
-resource_pipeline_result_t resource_pipeline_result_convert_resource(resource_result_t result_);
+resource_pipeline_result_t resource_pipeline_result_convert_geometry(geometry_result_t result_);
 
 resource_pipeline_result_t resource_pipeline_result_convert_renderer_backend(renderer_backend_result_t result_);
 
@@ -36,9 +37,11 @@ resource_pipeline_result_t resource_pipeline_result_convert_choco_string(choco_s
 
 resource_pipeline_result_t resource_pipeline_result_convert_fs_stream(fs_stream_result_t result_);
 
-resource_pipeline_result_t resource_pipeline_result_convert_texture_gpu_resource(texture_gpu_resource_result_t result_);
+resource_pipeline_result_t resource_pipeline_result_convert_texture(texture_result_t result_);
 
 resource_pipeline_result_t resource_pipeline_result_convert_general_allocator(general_allocator_result_t result_);
+
+resource_pipeline_result_t resource_pipeline_result_convert_loader(loader_result_t result_);
 
 #ifdef __cplusplus
 }

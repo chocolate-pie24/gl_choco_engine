@@ -54,12 +54,12 @@
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 
 typedef struct untextured_mesh_geometry untextured_mesh_geometry_t;
 typedef struct aabb_3d aabb_3d_t;
 
-resource_result_t geometry_conversion_untextured_mesh_geometry_to_aabb_3d(const untextured_mesh_geometry_t* src_geometry_, aabb_3d_t* dst_geometry_);
+geometry_result_t geometry_conversion_untextured_mesh_geometry_to_aabb_3d(const untextured_mesh_geometry_t* src_geometry_, aabb_3d_t* dst_geometry_);
 
 #ifdef __cplusplus
 }

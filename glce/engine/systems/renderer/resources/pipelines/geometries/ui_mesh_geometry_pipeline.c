@@ -23,8 +23,9 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/loaders/ui_geom_config_loader.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/geometries/ui_mesh_geometry.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/resources/shaders/ui_mesh_shader.h"
@@ -36,7 +37,8 @@
 resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_shader_t* shader_, ui_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
+    loader_result_t ret_loader = LOADER_INVALID_ARGUMENT;
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
@@ -56,9 +58,9 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_sh
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "resource_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "out_geometry_id_")
 
-    ret_resource = ui_geom_config_loader_load(resource_fullpath_, &ui_geometry_config);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_loader = ui_geom_config_loader_load(resource_fullpath_, &ui_geometry_config);
+    if(LOADER_SUCCESS != ret_loader) {
+        ret = resource_pipeline_result_convert_loader(ret_loader);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=ui_geom_config_load_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
         goto cleanup;
     }
@@ -79,9 +81,9 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_sh
     ui_vertex[4].tex_coord = vec2f_initialize(1.0f, 0.0f);
     ui_vertex[5].tex_coord = vec2f_initialize(0.0f, 0.0f);
 
-    ret_resource = ui_mesh_geometry_create_from_vertices(vertex_count, ui_vertex, &geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_geometry = ui_mesh_geometry_create_from_vertices(vertex_count, ui_vertex, &geometry);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = resource_pipeline_result_convert_geometry(ret_geometry);
         ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
         goto cleanup;
     }

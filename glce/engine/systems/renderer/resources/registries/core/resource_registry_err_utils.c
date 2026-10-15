@@ -17,7 +17,6 @@
 
 #include "engine/containers/choco_string.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";                    /**< 実行結果コード(処理成功)文字列 */
@@ -72,37 +71,6 @@ resource_registry_result_t resource_registry_result_convert_subsystem_allocator(
     case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
         return RESOURCE_REGISTRY_LIMIT_EXCEEDED;
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
-        return RESOURCE_REGISTRY_UNDEFINED_ERROR;
-    default:
-        return RESOURCE_REGISTRY_UNDEFINED_ERROR;
-    }
-}
-
-resource_registry_result_t resource_registry_result_convert_resource(resource_result_t result_) {
-    switch(result_) {
-    case RESOURCE_SUCCESS:
-        return RESOURCE_REGISTRY_SUCCESS;
-    case RESOURCE_NO_MEMORY:
-        return RESOURCE_REGISTRY_NO_MEMORY;
-    case RESOURCE_RUNTIME_ERROR:
-        return RESOURCE_REGISTRY_RUNTIME_ERROR;
-    case RESOURCE_INVALID_ARGUMENT:
-        return RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    case RESOURCE_DATA_CORRUPTED:
-        return RESOURCE_REGISTRY_DATA_CORRUPTED;
-    case RESOURCE_BAD_OPERATION:
-        return RESOURCE_REGISTRY_BAD_OPERATION;
-    case RESOURCE_OVERFLOW:
-        return RESOURCE_REGISTRY_OVERFLOW;
-    case RESOURCE_LIMIT_EXCEEDED:
-        return RESOURCE_REGISTRY_LIMIT_EXCEEDED;
-    case RESOURCE_FILE_OPEN_ERROR:
-        return RESOURCE_REGISTRY_UNDEFINED_ERROR;   // registryではi/oを扱わないため、i/oエラーは起こり得ないはず
-    case RESOURCE_FILE_READ_ERROR:
-        return RESOURCE_REGISTRY_UNDEFINED_ERROR;   // registryではi/oを扱わないため、i/oエラーは起こり得ないはず
-    case RESOURCE_UNSUPPORTED_FILE:
-        return RESOURCE_REGISTRY_UNDEFINED_ERROR;   // registryではi/oを扱わないため、i/oエラーは起こり得ないはず
-    case RESOURCE_UNDEFINED_ERROR:
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;
     default:
         return RESOURCE_REGISTRY_UNDEFINED_ERROR;

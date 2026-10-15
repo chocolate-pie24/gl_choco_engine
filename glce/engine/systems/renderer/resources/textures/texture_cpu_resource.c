@@ -21,8 +21,8 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
-#include "engine/systems/renderer/resources/core/resource_err_utils.h"
+#include "engine/systems/renderer/resources/textures/core/texture_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_err_utils.h"
 
 /*
  * Module Internal Contract
@@ -48,7 +48,7 @@
  *   owned pixel storageのlifetimeを管理する。
  *
  * - resource_infoを構成する各fieldおよびfield間relationのsemantic ownershipは
- *   Resource Coreのtexture_resource_info_tに属する。
+ *   Texture Domainのtexture_resource_info_tに属する。
  * - Texture CPU Resource moduleはそれらのsemanticを独自に再定義せず、
  *   texture_resource_info_is_valid()へvalidationを委譲する。
  *
@@ -170,7 +170,7 @@ static bool is_valid_shallow(const texture_cpu_resource_t* texture_resource_);
 //   texture_resource_info_is_valid()へ委譲する。
 // - Texture CPU Resource moduleではresource_info_を構成する各fieldおよび
 //   field間relationのvalidationを重複して実装しない。
-// - resource_info_がvalidでない場合はRESOURCE_INVALID_ARGUMENTとして扱う。
+// - resource_info_がvalidでない場合はTEXTURE_INVALID_ARGUMENTとして扱う。
 //
 // - *pixels_が指すpixel storageはModule Boundary Contractを満たす
 //   trusted internal representationであることをcaller contractとして要求する。
@@ -202,29 +202,29 @@ static bool is_valid_shallow(const texture_cpu_resource_t* texture_resource_);
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t texture_cpu_resource_create(const texture_resource_info_t* resource_info_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+texture_result_t texture_cpu_resource_create(const texture_resource_info_t* resource_info_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_) {
+    texture_result_t ret = TEXTURE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     texture_cpu_resource_t* tmp_cpu_resource = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_create", "out_texture_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "texture_cpu_resource_create", "*out_texture_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_create", "pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(*pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_create", "*pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_create", "out_texture_resource_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_BAD_OPERATION, texture_result_to_str(TEXTURE_BAD_OPERATION), "texture_cpu_resource_create", "*out_texture_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_create", "pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(*pixels_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_create", "*pixels_")
     if(!texture_resource_info_is_valid(resource_info_)) {
-        ret = RESOURCE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Provided resource_info is not valid.", resource_result_to_str(ret));
+        ret = TEXTURE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Provided resource_info is not valid.", texture_result_to_str(ret));
         goto cleanup;
     }
 
     // Prepare.
     ret_general_allocator = general_allocator_allocate(sizeof(texture_cpu_resource_t), GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_cpu_resource);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = resource_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - general_allocator_allocate failed.", resource_result_to_str(ret));
+        ret = texture_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("texture_cpu_resource_create(%s) - general_allocator_allocate failed.", texture_result_to_str(ret));
         goto cleanup;
     }
 
@@ -234,8 +234,8 @@ resource_result_t texture_cpu_resource_create(const texture_resource_info_t* res
     // Commit eligibility.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_cpu_resource_is_valid(tmp_cpu_resource)) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Commit eligibility validation failed for 'tmp_cpu_resource'.", resource_result_to_str(ret));
+        ret = TEXTURE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Commit eligibility validation failed for 'tmp_cpu_resource'.", texture_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -245,10 +245,10 @@ resource_result_t texture_cpu_resource_create(const texture_resource_info_t* res
     tmp_cpu_resource = NULL;
     *pixels_ = NULL;
 
-    ret = RESOURCE_SUCCESS;
+    ret = TEXTURE_SUCCESS;
 
 cleanup:
-    if(RESOURCE_DATA_CORRUPTED != ret) {
+    if(TEXTURE_DATA_CORRUPTED != ret) {
         if(NULL != tmp_cpu_resource) {
             general_allocator_free((void**)&tmp_cpu_resource, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
         }
@@ -290,7 +290,7 @@ void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_resource_) {
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_cpu_resource_is_valid(*texture_resource_)) {
-        ERROR_MESSAGE("texture_cpu_resource_destroy(%s) - Precondition validation failed for '*texture_resource_'.", resource_result_to_str(RESOURCE_DATA_CORRUPTED));
+        ERROR_MESSAGE("texture_cpu_resource_destroy(%s) - Precondition validation failed for '*texture_resource_'.", texture_result_to_str(TEXTURE_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -314,7 +314,7 @@ void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_resource_) {
 // - DEBUG_BUILD / TEST_BUILDではoutput公開前に
 //   texture_cpu_resource_is_valid()を実行し、
 //   texture_resource_にcanonical Precondition validationを行う。
-// - canonical validationに失敗した場合はRESOURCE_DATA_CORRUPTEDを返し、
+// - canonical validationに失敗した場合はTEXTURE_DATA_CORRUPTEDを返し、
 //   borrowed pixel viewをcallerへ公開しない。
 // - RELEASE_BUILDではautomatic canonical validationを行わず、
 //   Module Internal Contractが成立していることを前提としてborrowed viewを公開する。
@@ -328,17 +328,17 @@ void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_resource_) {
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t texture_cpu_resource_pixels_get(const texture_cpu_resource_t* texture_resource_, const uint8_t** out_pixels_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+texture_result_t texture_cpu_resource_pixels_get(const texture_cpu_resource_t* texture_resource_, const uint8_t** out_pixels_) {
+    texture_result_t ret = TEXTURE_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixels_get", "texture_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_pixels_get", "out_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_BAD_OPERATION, resource_result_to_str(RESOURCE_BAD_OPERATION), "texture_cpu_resource_pixels_get", "*out_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_pixels_get", "texture_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_pixels_get", "out_pixels_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, TEXTURE_BAD_OPERATION, texture_result_to_str(TEXTURE_BAD_OPERATION), "texture_cpu_resource_pixels_get", "*out_pixels_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_cpu_resource_is_valid(texture_resource_)) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_cpu_resource_pixels_get(%s) - Precondition validation failed for 'texture_resource_'.", resource_result_to_str(ret));
+        ret = TEXTURE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_cpu_resource_pixels_get(%s) - Precondition validation failed for 'texture_resource_'.", texture_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -346,7 +346,7 @@ resource_result_t texture_cpu_resource_pixels_get(const texture_cpu_resource_t* 
     // Output.
     *out_pixels_ = texture_resource_->pixels;
 
-    ret = RESOURCE_SUCCESS;
+    ret = TEXTURE_SUCCESS;
 
 cleanup:
     return ret;
@@ -364,7 +364,7 @@ cleanup:
 // - DEBUG_BUILD / TEST_BUILDではoutput公開前にprivate shallow validatorを実行する。
 // - shallow validatorはembedded resource_infoのsemantic validityを
 //   texture_resource_info_is_valid()へ委譲して確認する。
-// - shallow validationに失敗した場合はRESOURCE_DATA_CORRUPTEDを返し、
+// - shallow validationに失敗した場合はTEXTURE_DATA_CORRUPTEDを返し、
 //   resource_infoをcallerへ公開しない。
 // - 本operationではowned pixel storageをdereferenceせず、
 //   ownership closureをconsumeしないためcanonical validationは行わない。
@@ -379,16 +379,16 @@ cleanup:
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-resource_result_t texture_cpu_resource_resource_info_get(const texture_cpu_resource_t* texture_resource_, texture_resource_info_t* out_resource_info_) {
-    resource_result_t ret = RESOURCE_INVALID_ARGUMENT;
+texture_result_t texture_cpu_resource_resource_info_get(const texture_cpu_resource_t* texture_resource_, texture_resource_info_t* out_resource_info_) {
+    texture_result_t ret = TEXTURE_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_resource_info_get", "texture_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_INVALID_ARGUMENT, resource_result_to_str(RESOURCE_INVALID_ARGUMENT), "texture_cpu_resource_resource_info_get", "out_resource_info_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_resource_info_get", "texture_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_resource_info_get", "out_resource_info_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(texture_resource_)) {
-        ret = RESOURCE_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_cpu_resource_resource_info_get(%s) - Precondition validation failed for 'texture_resource_'.", resource_result_to_str(ret));
+        ret = TEXTURE_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_cpu_resource_resource_info_get(%s) - Precondition validation failed for 'texture_resource_'.", texture_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -396,7 +396,7 @@ resource_result_t texture_cpu_resource_resource_info_get(const texture_cpu_resou
     // Output.
     *out_resource_info_ = texture_resource_->resource_info;
 
-    ret = RESOURCE_SUCCESS;
+    ret = TEXTURE_SUCCESS;
 
 cleanup:
     return ret;

@@ -21,8 +21,6 @@
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
-
 #include "application/core/application_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
@@ -168,37 +166,6 @@ application_result_t application_result_convert_renderer_backend(renderer_backen
         return APPLICATION_RUNTIME_ERROR;
     case RENDERER_BACKEND_SHADER_LINK_ERROR:
         return APPLICATION_RUNTIME_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-application_result_t application_result_convert_resource(resource_result_t result_) {
-    switch(result_) {
-    case RESOURCE_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case RESOURCE_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case RESOURCE_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case RESOURCE_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case RESOURCE_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case RESOURCE_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case RESOURCE_OVERFLOW:
-        return APPLICATION_OVERFLOW;
-    case RESOURCE_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case RESOURCE_FILE_OPEN_ERROR:
-        return APPLICATION_FILE_OPEN_ERROR;
-    case RESOURCE_FILE_READ_ERROR:
-        return APPLICATION_FILE_READ_ERROR;
-    case RESOURCE_UNSUPPORTED_FILE:
-        return APPLICATION_UNSUPPORTED_FILE;
-    case RESOURCE_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;
     }

@@ -27,8 +27,9 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/loaders/stl_ascii_loader.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/geometries/untextured_mesh_geometry.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/resources/shaders/untextured_mesh_shader.h"
@@ -40,7 +41,8 @@
 resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(untextured_mesh_shader_t* shader_, untextured_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    loader_result_t ret_loader = LOADER_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
@@ -59,16 +61,16 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(un
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_file", "resource_fullpath_")
 
-    ret_resource = stl_ascii_loader_load(resource_fullpath_, &vertex_count, &vertices);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_loader = stl_ascii_loader_load(resource_fullpath_, &vertex_count, &vertices);
+    if(LOADER_SUCCESS != ret_loader) {
+        ret = resource_pipeline_result_convert_loader(ret_loader);
         ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=stl_load_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
         goto cleanup;
     }
 
-    ret_resource = untextured_mesh_geometry_create_from_vertices(vertex_count, vertices, &geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_geometry = untextured_mesh_geometry_create_from_vertices(vertex_count, vertices, &geometry);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = resource_pipeline_result_convert_geometry(ret_geometry);
         ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
         goto cleanup;
     }

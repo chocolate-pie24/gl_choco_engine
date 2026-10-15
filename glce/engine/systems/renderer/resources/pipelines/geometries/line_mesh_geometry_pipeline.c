@@ -26,8 +26,7 @@
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
-
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/geometries/line_mesh_geometry.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
@@ -39,7 +38,7 @@
 resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
@@ -57,9 +56,9 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(line
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "vertices_")
 
     // Geometry CPUリソース生成
-    ret_resource = line_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_geometry = line_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = resource_pipeline_result_convert_geometry(ret_geometry);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
         goto cleanup;
     }
@@ -103,7 +102,7 @@ cleanup:
 resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(line_mesh_shader_t* shader_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
@@ -124,16 +123,16 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(line_mes
     IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "aabb_")
 
     // Geometry CPUリソース生成
-    ret_resource = line_mesh_geometry_create_from_aabbs(1, aabb_, &geometry);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_geometry = line_mesh_geometry_create_from_aabbs(1, aabb_, &geometry);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = resource_pipeline_result_convert_geometry(ret_geometry);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
         goto cleanup;
     }
 
-    ret_resource = line_mesh_geometry_vertices_get(geometry, &vertices, &vertex_count);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = resource_pipeline_result_convert_resource(ret_resource);
+    ret_geometry = line_mesh_geometry_vertices_get(geometry, &vertices, &vertex_count);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = resource_pipeline_result_convert_geometry(ret_geometry);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertices_get_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
         goto cleanup;
     }

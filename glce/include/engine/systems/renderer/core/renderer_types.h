@@ -29,6 +29,11 @@ typedef enum {
     BUFFER_USAGE_DYNAMIC,   /**< データ種別: 頻繁に書き換わるデータ */
 } buffer_usage_t;
 
+typedef struct draw_range {
+    size_t first_vertex_count;
+    size_t vertex_count;
+} draw_range_t;
+
 /**
  * @brief 画像を拡大表示した際の表示設定
  *
@@ -63,20 +68,15 @@ typedef enum {
     TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER,    /**< GL_CLAMP_TO_BORDER相当: 範囲外をborder colorで読む方式 */
 } texture_wrap_config_t;
 
-typedef struct draw_range {
-    size_t first_vertex_count;
-    size_t vertex_count;
-} draw_range_t;
-
 bool buffer_usage_is_valid(buffer_usage_t usage_);
+
+bool draw_range_is_valid(const draw_range_t* draw_range_);
 
 bool texture_mag_filter_config_is_valid(texture_mag_filter_config_t config_);
 
 bool texture_min_filter_config_is_valid(texture_min_filter_config_t config_);
 
 bool texture_wrap_config_is_valid(texture_wrap_config_t config_);
-
-bool draw_range_is_valid(const draw_range_t* draw_range_);
 
 #ifdef __cplusplus
 }

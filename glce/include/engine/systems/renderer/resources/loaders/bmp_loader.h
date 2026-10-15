@@ -24,7 +24,7 @@
  * - 24bit RGBおよび32bit RGBAの非圧縮BMPをサポートする。
  *
  * - load成功時に返されるtexture_resource_info_tはvalidである。
- * - texture_resource_info_tのvalidityはResource Coreの
+ * - texture_resource_info_tのvalidityはTexture Domainの
  *   texture_resource_info_is_valid()によって定義する。
  *
  * - load成功時に返されるpixel dataはBMP row paddingを含まない。
@@ -54,9 +54,10 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 
-resource_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_);
+loader_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_);
 
 #ifdef __cplusplus
 }

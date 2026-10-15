@@ -27,10 +27,10 @@
  *   直接変更または解放しない。
  *
  * - `texture_cpu_resource_t`が保持するresource_infoはvalidである。
- * - resource_infoのvalidityはResource Coreの
+ * - resource_infoのvalidityはTexture Domainの
  *   `texture_resource_info_is_valid()`によって定義する。
  * - `texture_resource_info_t`を構成する各fieldおよびfield間relationの
- *   semantic ownershipはResource Coreに属する。
+ *   semantic ownershipはTexture Domainに属する。
  * - Texture CPU Resource moduleはresource_info固有のsemanticを
  *   独自に再定義しない。
  *
@@ -68,17 +68,17 @@ extern "C" {
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_types.h"
 
 typedef struct texture_cpu_resource texture_cpu_resource_t; /**< テクスチャCPU側リソース内部状態管理構造体前方宣言 */
 
-resource_result_t texture_cpu_resource_create(const texture_resource_info_t* resource_info_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_);
+texture_result_t texture_cpu_resource_create(const texture_resource_info_t* resource_info_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_);
 
 void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_resource_);
 
-resource_result_t texture_cpu_resource_pixels_get(const texture_cpu_resource_t* texture_resource_, const uint8_t** out_pixels_);
+texture_result_t texture_cpu_resource_pixels_get(const texture_cpu_resource_t* texture_resource_, const uint8_t** out_pixels_);
 
-resource_result_t texture_cpu_resource_resource_info_get(const texture_cpu_resource_t* texture_resource_, texture_resource_info_t* out_resource_info_);
+texture_result_t texture_cpu_resource_resource_info_get(const texture_cpu_resource_t* texture_resource_, texture_resource_info_t* out_resource_info_);
 
 bool texture_cpu_resource_is_valid(const texture_cpu_resource_t* texture_resource_);
 

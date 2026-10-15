@@ -64,17 +64,17 @@ extern "C" {
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 
 typedef struct line_mesh_geometry line_mesh_geometry_t;   /**< line_mesh_geometryモジュール内部状態管理構造体 */
 
-resource_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** out_geometry_);
+geometry_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** out_geometry_);
 
-resource_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** out_geometry_);
+geometry_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** out_geometry_);
 
 void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_);
 
-resource_result_t line_mesh_geometry_vertices_get(const line_mesh_geometry_t* geometry_, const line_vertex_t** out_vertices_, size_t* out_vertex_count_);
+geometry_result_t line_mesh_geometry_vertices_get(const line_mesh_geometry_t* geometry_, const line_vertex_t** out_vertices_, size_t* out_vertex_count_);
 
 bool line_mesh_geometry_is_valid(const line_mesh_geometry_t* geometry_);
 

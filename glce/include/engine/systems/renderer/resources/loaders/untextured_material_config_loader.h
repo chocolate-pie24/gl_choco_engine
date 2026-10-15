@@ -21,8 +21,7 @@
  * - file contentのformatおよびMaterial configurationのsemantic validityを検証し、
  *   untextured_material_config_loader_load()が成功した場合にのみ、
  *   GLCE内部のtrusted representationとして受理する。
- * - RESOURCE_SUCCESS以外の場合、external representationはcaller-visible outputへ
- *   commitされない。
+ * - LOADER_SUCCESS以外の場合、external representationはcaller-visible outputへcommitされない。
  *
  * Ownership:
  * - 本moduleはpersistent module stateを持たない。
@@ -150,7 +149,7 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
-#include "engine/systems/renderer/resources/core/resource_types.h"
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 
 /**
  * @brief Untextured Material configurationを保持するvalue type
@@ -181,8 +180,8 @@ typedef struct untextured_material_config {
  * @par Public API Contract
  *
  * Output Contract:
- * - RESOURCE_SUCCESSの場合、out_config_にcanonical validityを満たす値を格納する。
- * - RESOURCE_SUCCESS以外の場合、out_config_の既存内容は変更しない。
+ * - LOADER_SUCCESSの場合、out_config_にcanonical validityを満たす値を格納する。
+ * - LOADER_SUCCESS以外の場合、out_config_の既存内容は変更しない。
  *
  * Lifetime / Ownership:
  * - config_fullpath_は呼び出し中だけ参照し、保持しない。
@@ -195,25 +194,25 @@ typedef struct untextured_material_config {
  * @param[out] out_config_
  *             生成したconfigurationの格納先。NULLは許可しない。
  *
- * @retval RESOURCE_SUCCESS
+ * @retval LOADER_SUCCESS
  *         configurationの読み込み、解析およびvalidationに成功した。
- * @retval RESOURCE_INVALID_ARGUMENT
+ * @retval LOADER_INVALID_ARGUMENT
  *         public API argumentがcontractを満たしていない。
- * @retval RESOURCE_UNSUPPORTED_FILE
+ * @retval LOADER_UNSUPPORTED_FILE
  *         file contentがConfiguration FormatまたはMaterialのsemantic条件を満たしていない。
  * @return 上記以外では、file access、temporary resource operation等に対応する
- *         Resource layer result codeを返す。
+ *         loader layer result codeを返す。
  *
  * @pre config_fullpath_は、API実行中に読み取り可能なNUL terminated stringを
  *      参照していなければならない。
  * @pre out_config_は、API実行中に書き込み可能な
  *      untextured_material_config_t storageを参照していなければならない。
  *
- * @post RESOURCE_SUCCESSの場合、
+ * @post LOADER_SUCCESSの場合、
  *       `untextured_material_config_is_valid(out_config_) == true`が成立する。
- * @post RESOURCE_SUCCESS以外の場合、out_config_の既存内容は変更されない。
+ * @post LOADER_SUCCESS以外の場合、out_config_の既存内容は変更されない。
  */
-resource_result_t untextured_material_config_loader_load(const char* config_fullpath_, untextured_material_config_t* out_config_);
+loader_result_t untextured_material_config_loader_load(const char* config_fullpath_, untextured_material_config_t* out_config_);
 
 /**
  * @brief untextured_material_config_tのcanonical validityを判定する

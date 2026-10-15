@@ -22,7 +22,7 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resources/shaders/ui_mesh_shader.h"
-#include "engine/systems/renderer/resources/textures/texture_gpu_resource_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_types.h"
 #include "engine/systems/renderer/resources/textures/texture_gpu_resource.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/registries/geometries/ui_mesh_geometry_registry.h"
@@ -428,7 +428,7 @@ render_resource_result_t ui_mesh_render_resource_draw(ui_mesh_render_resource_t*
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-    texture_gpu_resource_result_t ret_texture_gpu_resource = TEXTURE_GPU_RESOURCE_INVALID_ARGUMENT;
+    texture_result_t ret_texture = TEXTURE_INVALID_ARGUMENT;
 
     const draw_range_t* draw_range = NULL;
     const texture_gpu_resource_t* gpu_resource = NULL;
@@ -478,9 +478,9 @@ render_resource_result_t ui_mesh_render_resource_draw(ui_mesh_render_resource_t*
         goto cleanup;
     }
 
-    ret_texture_gpu_resource = texture_gpu_resource_bind(gpu_resource);
-    if(TEXTURE_GPU_RESOURCE_SUCCESS != ret_texture_gpu_resource) {
-        ret = render_resource_result_convert_texture_gpu_resource(ret_texture_gpu_resource);
+    ret_texture = texture_gpu_resource_bind(gpu_resource);
+    if(TEXTURE_SUCCESS != ret_texture) {
+        ret = render_resource_result_convert_texture(ret_texture);
         ERROR_MESSAGE("ui_mesh_render_resource_draw(%s) - texture_gpu_resource_bind failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }

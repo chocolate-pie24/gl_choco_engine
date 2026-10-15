@@ -21,6 +21,7 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/geometries/conversion/geometry_conversion.h"
 #include "engine/systems/renderer/resources/shaders/untextured_mesh_shader.h"
 #include "engine/systems/renderer/resources/materials/material_types.h"
@@ -579,7 +580,7 @@ cleanup:
 render_resource_result_t untextured_mesh_render_resource_geometry_convert_to_aabb_3d(untextured_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_) {
     render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
 
-    resource_result_t ret_resource = RESOURCE_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
 
     aabb_3d_t tmp_aabb_3d = { 0 };
     const untextured_mesh_geometry_t* tmp_geometry = NULL;
@@ -601,9 +602,9 @@ render_resource_result_t untextured_mesh_render_resource_geometry_convert_to_aab
         goto cleanup;
     }
 
-    ret_resource = geometry_conversion_untextured_mesh_geometry_to_aabb_3d(tmp_geometry, &tmp_aabb_3d);
-    if(RESOURCE_SUCCESS != ret_resource) {
-        ret = render_resource_result_convert_resource(ret_resource);
+    ret_geometry = geometry_conversion_untextured_mesh_geometry_to_aabb_3d(tmp_geometry, &tmp_aabb_3d);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = render_resource_result_convert_geometry(ret_geometry);
         ERROR_MESSAGE("untextured_mesh_render_resource_geometry_convert_to_aabb_3d(%s) - geometry_conversion_untextured_mesh_geometry_to_aabb_3d failed.", render_resource_result_to_str(ret));
         goto cleanup;
     }
