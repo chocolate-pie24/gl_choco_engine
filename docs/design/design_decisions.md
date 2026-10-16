@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-15
+最終更新: 2026-10-16
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -4149,3 +4149,381 @@ Shader別Meshを導入する際、既存`untextured_mesh_render_resource_draw()`
 
 - `glce_near_term_todo.md` — Renderer Frontend / Model / Mesh / Frame Allocator Integration
 - `design_notes.md` — Renderer Resource Domain and Frontend Migration / Material and Mesh Rendering Architecture
+
+---
+
+## Decision: Renderer Resource Directory Consolidationの実装完了とResource Core廃止に伴うResult Domain再編
+
+**Status:** Accepted / Implemented（Source配置・Result型の再編）  
+**Date:** 2026-10-15  
+**Scope:** Renderer Resource / Directory Architecture / Geometry・Loader・Texture Result / Migration History
+
+### Decision
+
+2026-10-15「Renderer専用ResourceをRenderer Domainへ統合し、Range AllocatorをMemory Domainへ移動する」の**配置判断を実装した**。加えて、実際のDirectory Consolidationで旧`Resource Core`の共通Result型の必要性を再検討し、次の追加判断を採用した。
+
+1. 旧`engine/resource/`のうちRenderer用途のGeometry、Texture CPU Resource、Loader、Geometry Conversion等を、`engine/systems/renderer/resources/`配下へ移す。旧`engine/resource/`は廃止する。
+2. 既存のResource Registry、Resource Pipeline、Shader、Material、GPU Texture、Buffer Manager等もRenderer Resource Domainの下へ整理する。
+3. GPU用VBOと組み合わせていた`range_allocator`は、GPU API / GPU BufferそのもののOwnerではなく、offset / range allocation mechanismであるため、`engine/memory/low_level_allocators/range_allocator/`へ移す。
+4. `engine/core/geometry_primitive/`のRenderer非依存なPrimitiveは、Renderer Domainへ移さない。
+5. 旧`Resource Core`を廃止し、共通`resource_result_t`を廃止する。従来の共通Resultの使用箇所を**Geometry / Loader / Texture各Domainが所有するResult型**に再編する。
+6. `resources/`自体には共通Result型を強制しない。これはRenderer用途の複数のResource関連Moduleを束ねる配置領域であって、各Module固有のError Semanticsを代行する単一のSemantic Ownerではない。
+7. `resource_pipeline_result_t`、`resource_registry_result_t`、`render_resource_result_t`など、独立した既存DomainのResult型は維持する。
+8. 今回の再編では、現行`render_resources`による長寿命Shader / Registry Ownership、Stateless PipelineのImport、RegistryへのOwnership Commit、`application_renderer`の位置付けを変更しない。Renderer Frontendへの移管は別Decision／後続R3で実施する。
+9. `texture_min_filter_config_t`、`texture_mag_filter_config_t`、`texture_wrap_config_t`およびそのValidatorは、Texture Resource固有のMetadataではなくRenderer BackendとTexture Resourceが共有する設定契約であるため、`renderer/core/renderer_types.h`および対応する`.c`に配置する。`texture_resource_info_t`のSemantic Ownerである`resources/textures/core`とは分離する。
+
+実装済みの主要な構造は次のとおり（`renderer/resources/`以下は複数形の実Directory名を表す）。
+
+```text
+engine/
+├─ core/geometry_primitive/                  # Renderer非依存Primitive
+├─ memory/low_level_allocators/
+│   └─ range_allocator/                     # logical byte range
+└─ systems/renderer/
+    ├─ core/                                # BackendとResourceが共有する型・設定契約
+    ├─ renderer_backend/
+    ├─ render_resources/                    # 現行Ownership Root。後続R3で再編
+    └─ resources/
+        ├─ buffer_managers/
+        ├─ geometries/
+        │   ├─ core/                         # geometry_result_t等
+        │   └─ conversion/
+        ├─ loaders/
+        │   └─ core/                         # loader_result_t等
+        ├─ materials/
+        ├─ pipelines/
+        ├─ registries/
+        ├─ shaders/
+        └─ textures/
+            └─ core/                         # texture_result_t、texture metadata
+```
+
+### Context — `engine/resource`と`renderer/resources`の比較から始まった
+
+#### 1. 当初の問題はCPU / GPUによるResource配置の二分だった
+
+従来のGLCEには、主にCPU側のGeometry、Loader、Texture CPU Resource等を置く`engine/resource/`と、Shader、GPU Texture、VBO Manager等を置くRenderer内部のResource領域が並存していた。ところがImport TransactionはCPUでのLoad / CreateからGPU Upload、Registry Registrationまでを横断し、ResourceのIdentity、Ownership、LifecycleもCPU / GPUの区分では完結しない。
+
+MeshとModelを新設するに当たり、このままでは「どちらのResource領域がそれらを所有するのか」を明快に説明できない。そこで単なるパスの短縮ではなく、**Resourceが何に使用され、そのLifetimeとOwnershipを誰が統括するか**を基準に配置を検討した。
+
+#### 2. 第一の候補は`engine/resource`を共通Resource領域として拡張する案だった
+
+Geometryを将来のCollision / Physics等でも使う可能性を考慮すれば、CPUデータをRendererから独立させ、Renderer側のShader / Registry / Pipelineまで含めて`engine/resource`へ集約する案には合理性がある。一般用途のAsset / Resource Domainを先に作る構想も検討できる。
+
+しかし現行のShaderやGPU Texture、VBO ManagerにはRenderer Backendへの強い依存があり、現行Resource Pipeline / RegistryもRenderer描画を成立させるための構成要素である。これらをEngine直下へ移してもRenderer依存が消えるわけではなく、**一般Resourceと名乗る層にRenderer固有の意味と依存を移すだけ**になりかねない。将来の再利用を根拠に、現在存在しない共有Authorityを先行して構築することは採用しなかった。
+
+#### 3. 第二の候補はRendererの`resources`へ集約する案だった
+
+現在のResource群の主要ConsumerはRendererである。Renderer用途のGeometry、Texture、Material、Shader、Registry、Pipelineを`renderer/resources/`にまとめれば、CPU/GPUの物理的な置き場所ではなく、**Renderer Resourceとしての目的・Lifecycle・Ownership**で境界を説明できる。
+
+Renderer外で必要な共通機能まで移すわけではない。例えば`geometry_primitive`は依然Engine基盤に残す。将来、物理・衝突判定向けの独立したGeometry Authorityや共通Asset Domainの必要性が具体化したときは、その要件に基づいて再分割を検討できる。この条件付きの設計を採用した。
+
+#### 4. Range AllocatorはResource用途ではなくMechanismで判断した
+
+Range AllocatorはVBO用に使われていても、GPU Memory Objectそのもののallocation / destructionを所有しない。実GPU Buffer操作やRangeとGPU Bufferの結合はVBO Manager／Backendの責務であり、Range Allocator自身が提供するのは論理的なbyte offset rangeのallocation / freeである。そのため、Renderer内部に残すより`engine/memory`へ移す方が機構の責務を正確に表す。
+
+#### 5. 当初はDirectory移動と機能変更を分離する予定だった
+
+当初のR0はDirectory Consolidationを先に独立して完了し、API SemanticsやOwnership再編を後続Workへ分離する計画だった。この判断は、差分が大きくなったときの回帰要因を特定しやすくするためのものだった。
+
+しかしDirectory再編に伴い、旧`engine/resource/core`に集約されていた`resource_result_t`とError Conversionをどこへ移すべきかが実問題となった。共通Coreを機械的に移設するだけでは、Geometry・Loader・Textureそれぞれの責務とError Vocabularyの不一致を固定化してしまう。そこで今回の実装では、**Directoryの移動に加えてResult Domainの切り分けを行う**方針へ拡張した。
+
+この追加変更は、Renderer Frontend / Mesh / Model実装まで同時に始めたことを意味しない。既存Ownershipと描画経路は保ち、Result型とそのConversion Boundaryだけを整合させた。
+
+### Result Domainの整理
+
+| Domain | Result型 | 主な責務 |
+|---|---|---|
+| Geometry | `geometry_result_t` | CPU Geometry生成・変換・管理等のGeometry操作 |
+| Loader | `loader_result_t` | 外部File / Formatの読み込み、Parsing、受理可否 |
+| Texture | `texture_result_t` | CPU / GPU Texture Resourceの操作 |
+| Resource Pipeline | `resource_pipeline_result_t` | Import Transaction / Orchestration |
+| Resource Registry | `resource_registry_result_t` | Identity / Registration / Release / Ownership |
+| Render Resource | `render_resource_result_t` | 現行Render Resource API / Ownership Root |
+
+Geometry Domainに一般的なFile Read Errorを背負わせる必要はなく、Loaderには`UNSUPPORTED_FILE`、File Open / Read関連のFailureが必要である。TextureにはTexture Resourceとしての操作結果がある。元の共通Result型を場所だけ変えて維持するよりも、**Result Semanticsを責務境界に局所化する**方が説明可能である。
+
+各Domainが必要な下位ResultのConversionを所有し、上位Pipeline / Render Resourceは自身のResult Domainへ明示的に変換する。Resource名を含む独立既存Domain（`RESOURCE_PIPELINE_*`、`RESOURCE_REGISTRY_*`、`RENDER_RESOURCE_*`）を、旧`RESOURCE_*`と混同しない。
+
+### Renderer共有Texture設定型のSemantic Ownershipと依存方向
+
+旧Resource Coreの廃止に際して、Textureに関係する型をすべて`resources/textures/core`へ移せばよいわけではないことも確認した。具体的には次の3型と各Validatorである。
+
+- `texture_min_filter_config_t` / `texture_min_filter_config_is_valid()`
+- `texture_mag_filter_config_t` / `texture_mag_filter_config_is_valid()`
+- `texture_wrap_config_t` / `texture_wrap_config_is_valid()`
+
+これらはPixel DataのWidth、Height、Channel Count等のTexture Resource Metadataを定義する型ではない。TextureをRendererでどのようにSampling / Filtering / Wrappingするかに関する設定値であり、現行の`renderer_backend_texture_create()`と`texture_gpu_resource_create()`の双方が使用する**Renderer内部の共有契約**である。
+
+もしこれらを`resources/textures/core`に配置すると、Renderer BackendがResource配下の設定型に依存する。一方でTexture GPU ResourceはRenderer Backendを利用するため、Backend → Texture Resource側の型参照と、Texture Resource → Backendの利用が併存し、依存方向が双方向になりやすい。実際の循環Includeの発生を待つのではなく、**共通の契約を一方のConsumerに所有させない**構造を採用した。
+
+そこでFilter / Wrapの型とValidatorは`engine/systems/renderer/core/renderer_types.h`および対応する`.c`をOwnerとし、Renderer BackendとTexture GPU Resourceの双方が同じ上位の共有契約を参照する。依存方向は次のように整理できる。
+
+```text
+renderer/core/renderer_types.h
+     ↑                      ↑
+renderer_backend/     resources/textures/
+     ↑                      │
+     └──────────────────────┘   (Texture GPU ResourceがBackendを利用)
+```
+
+これに対して`texture_resource_info_t`はGLCE内部のTexture Resource自体のMetadataであり、Texture DomainがField間RelationとValidatorを所有する。**同じ「Texture関連の型」であっても、共有Renderer設定とResource固有MetadataではSemantic Ownerが異なる**という判断である。
+
+### Considered / Rejected Alternatives
+
+- **共通`resource_result_t`を`renderer/resources/core`へそのまま移す。** Directory移動は容易だが、異なる責務のError Semanticsが共通型へ残るため採用しない。
+- **Filter / Wrap設定型を`resources/textures/core`へ集約する。** Texture関連という名称上のまとまりは得られるが、Renderer BackendがResource Domainの型へ依存することになり、Texture ResourceからBackendへの依存と合わせて双方向依存を生みやすいため採用しない。
+- **全Resource SubdomainのResult Conversionを共通Coreへ集中させる。** 一見重複を避けられるが、各Domainの依存・Failure Semanticsを把握しにくくし、共通CoreがすべてのSubdomainの依存を集めるため採用しない。
+- **`engine/resource`へRenderer Resource全体を集約する。** 将来の一般Asset利用には余地がある一方、現状のRenderer依存をEngine共通Resourceとして見せることになるため今回は採用しない。
+- **CPU側とGPU側を従来どおり分離する。** Pipeline / RegistryのTransaction・Ownershipが分割境界を横断し続けるため採用しない。
+- **Renderer外のScene / Physics / Collisionを先行実装する。** 具体的ConsumerやCoordinate Authorityが未確定であり、現行R0の前提条件にしない。
+- **今回Frontend / Mesh / Modelまでまとめて実装する。** Ownership移管・Draw Route変更とDirectory / Result変更を同時に行うと検証範囲が過大になるため、R1以降へ分離する。
+
+### Consequences
+
+- `renderer/resources/`はRenderer向けの各Resource Subdomainを束ねるが、それ自体が巨大な共通Resource型や万能Resultを提供することを要求しない。
+- `renderer/core`はBackendとResourceが共有するRenderer設定契約を保持し、`resources/textures/core`はTexture Resource固有のMetadata / Result / Validatorを保持する。所属は名称やGPU/CPU分類ではなく、どのConsumerに対してどのContractを提供するかで決める。
+- Geometry / Loader / Texture間の直接依存、LoaderとResource Metadataの境界は、実際のSemantic Ownershipに基づいて個別に判断する。必要な依存まで排除するために抽象型を機械的に追加しない。
+- Existing `render_resources`、Registry／PipelineのTransaction / Ownership Contract、Texture Lifetime、Shader・Backend Borrowは、Frontend移行まで現行のままとする。
+- 本DecisionのImplementation完了は、R1以降のMesh / Model / Frontend / Render Packet / Frame Allocatorが実装済みであることを意味しない。
+- 実装変更と文書の更新は区別する。Source内の旧`Resource Core`へのコメント参照などは、別途Source Documentation整合として検証する。
+
+### Revisit Conditions
+
+- Renderer以外の独立したAsset OwnerやGeometry / Texture Consumerが生まれ、共通Resource Domainに実利が生じた場合。
+- Physics / Collision / SimulationのAuthority・LifetimeがRendererと異なることが具体化した場合。
+- Geometry / Loader / TextureのResult型の重複が、共通Result Contractを導入するに足る実問題となった場合。ただし単純な列挙子の重複だけでは理由としない。
+- Renderer ResourceのAPI／Lifetimeが変化し、現行のSubdomain配置が責務を説明しなくなった場合。
+
+### Related Decisions / Documents
+
+- 2026-10-15「Renderer専用ResourceをRenderer Domainへ統合し、Range AllocatorをMemory Domainへ移動する」— **既存の配置判断を履歴として維持し、本Decisionが実装結果と追加変更を記録する**。
+- 2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」— Target Architectureは引き続きImplementation Pending。
+- `design_notes.md` — Renderer Resource Domain and Frontend Migration
+- `glce_near_term_todo.md` — R1以降のRenderer / Model track
+
+---
+
+## Decision: Texture Resource MetadataのSemantic OwnerをTexture Domainとし、Loaderからの直接利用を当面維持する
+
+**Status:** Accepted / Implemented（現在のTexture Metadata／BMP Loaderの責務分担）  
+**Date:** 2026-10-15  
+**Scope:** Texture Metadata / Loader / External Trust Boundary / Dependency / Validation Ownership
+
+### Decision
+
+- `texture_resource_info_t`を`engine/systems/renderer/resources/textures/core/texture_types.h`に配置する。`texture_resource_info_is_valid()`もTexture Domainが所有する。
+- Width、Height、Channel Count、Pixel Data Size等のMetadata FieldおよびField間RelationのSemantic OwnershipをTexture Domainに置く。
+- `bmp_loader`はExternal BMP representationを読み込み、BMP固有のHeader / File Range / Pixel Formatを検証し、必要なNormalizationを実行して、GLCE内部で利用するPixel Dataと`texture_resource_info_t`を生成する。
+- BMP LoaderはTexture Metadata Semanticを独自に再定義せず、受理するCandidateのFinal ValidationでTexture Domainの`texture_resource_info_is_valid()`を利用する。
+- Texture CPU Resourceは有効なMetadataとOwned Pixel StorageとのRelation、Ownership / Lifetimeを管理し、Metadata固有のSemantic Validationを重複実装しない。
+- **LoaderがTexture DomainのMetadata型およびValidatorに直接依存する構造を、当面意図的に許容する。** その依存を解消するためだけにBMP Loader固有のDecoded Typeや追加変換APIを先行導入しない。
+- Loaderは引き続きExternal Trust Boundaryである。File由来のMalformed / Unsupported RepresentationをInternal `DATA_CORRUPTED`と機械的に混同しない。Result Conversion時も故障のProvenanceを勝手に再分類しない。
+- 現行`bmp_loader`および`stl_ascii_loader`等は、汎用File DecoderではなくRenderer Resource用のLoaderとして`renderer/resources/loaders/`に置く。External FormatのParse / Decodeに加えて、現行のGLCE内部Resource表現へのNormalizationやCandidate生成を担うためである。
+- GLCEが実装・保守するResource Loaderと、外部から取り込むThird-party Decoderを区別する。`vendors/`等のThird-party Code管理領域を、GLCE固有Loaderの配置先としては採用しない。汎用Decoder層の抽出と配置は具体的な再利用需要が発生した段階で判断する。
+
+### Context — 旧Resource Coreの解体時に現れた依存の問題
+
+従来、`texture_resource_info_t`とそのValidatorは旧`engine/resource/core`に位置していた。そのためBMP LoaderとTexture CPU Resourceは、共通Coreを介して同じMetadata Semanticsを参照できた。しかし旧Resource Coreを廃止すると、Metadataの正式なOwnerを決める必要がある。
+
+Metadataの各Fieldを定義するのはBMP Formatそのものではない。BMPはExternal Source Formatの一つであり、GLCE内部のTexture Resourceが保持するNormalized Metadataを規定する主体はTexture Domainである。Loader専用の型として閉じ込めると、他のTexture生成経路（Solid Color等）から同じMetadata Semanticsを共有しにくくなる。
+
+一方で、この型をTexture Domainへ移すとBMP LoaderからTexture Domainへの直接Include Dependencyが発生する。この依存を不自然と見なし、`bmp_decoded_image_t`等の中間型とLoader→Pipeline→Texture変換を必須にする案も考えられる。しかし、現状ではBMP LoaderはGLCE内部で使用できるTexture Pixel Representationへの変換まで担っており、追加型を設けてもField Copyと二重Validationが増えるだけになる可能性がある。
+
+そのため、**現状の具体的なConsumerと責務に合う簡潔な直接依存を採用し、抽象化のためだけの抽象化を避けた**。
+
+### Resource Loaderと汎用Decoderを区別した理由
+
+「BMPやSTLのFileを読み取る」という機能だけを取り出せば、必ずしもRenderer固有ではない。この観点から、Loaderを`engine`直下の汎用入出力機能へ置く案や、Third-party Decoderと同じ領域に置く案も検討した。
+
+ただし、現行のGLCE Loaderが実際に提供する契約は、単なるByte列のDecodeにとどまらない。BMP LoaderはExternal BMPを読み込み、必要なPixel Normalizationを行い、Texture Domainが定義する`texture_resource_info_t`を組み立てる。STL ASCII Loaderも、External Geometry FormatからGLCE内部のVertex Representationを構築し、受理に必要なValidationを行う。いずれも**Renderer Resourceを構成するためのExternal Trust Boundary**として振る舞っている。
+
+責務の区別は次のとおりである。
+
+| 区分 | 主な責務 | 現時点の判断 |
+|---|---|---|
+| 汎用Decoder / Parser | 外部Formatから一般的なDecoded Representationを得る。Renderer固有ResourceへのAdmissionは前提としない | 将来の独立利用が具体化するまで独立層を設けない |
+| GLCE Renderer Resource Loader | 外部Formatを受理し、現行Renderer Resourceに適したNormalized Data / Candidateを生成する | `renderer/resources/loaders/`に配置する |
+| Resource Pipeline | Load、CPU/GPU Resourceの構築、Registry Registration等のTransactionをOrchestrateする | `renderer/resources/pipelines/`に配置し、Loaderと役割を分ける |
+| Third-party Decoder | 外部Projectから導入した実装そのもの | `vendors/`等のThird-party管理領域の対象候補。GLCE固有Loaderとは所有・保守の性質が異なる |
+
+仮に`stb_image`や`tiny_obj_loader`等を採用しても、外部ライブラリ本体と、それを呼び出してGLCEのResource Contractへ接続するLoader / Adapterは別の責務である。`vendors/`という名称はThird-party Codeの管理先を例示するものであり、本Decisionが既存の`vendors/` Directoryや特定ライブラリの採用を宣言するものではない。
+
+このため、**一般化の可能性だけで現行LoaderをRenderer外へ移したり、追加のDecoded Intermediate Typeを必須にしたりしない**。Renderer外でのDecode再利用、複数Format間の共有Normalization、Offline Asset Pipeline等の具体的な要件が成立したときに切り出しを再検討する。
+
+### Rationale
+
+- Semantic OwnerがTexture Domainであると明確にでき、BMP LoaderとTexture CPU ResourceでMetadata Conditionの別定義を作らずに済む。
+- BMP LoaderはExternal Trust BoundaryのFormat受理、Decode / Normalize、Resource Metadata Candidate生成に集中できる。
+- Texture CPU ResourceはOwned StorageのLifecycleと、成立済みMetadata Contractの保持を中心に設計できる。
+- Texture MetadataのContractをSourceごとに複製せず、将来の別Format LoaderやProcedural Texture生成でも同じValidatorを利用できる。
+- 追加の中間Representation、Conversion、Allocation / Copy、Validatorを現段階で増やさずに済む。
+
+### Considered / Rejected Alternatives
+
+- **MetadataのSemantic OwnerをLoaderへ移す。** GLCE内部ResourceのSemanticがExternal BMP Formatに従属し、別SourceのTextureで再利用しにくいため採用しない。
+- **旧`resources/core`を残し、共通Resource型としてMetadataを保管する。** 実際にはTexture固有のSemanticsであり、旧Coreを形式上温存することになるため採用しない。
+- **Loader専用のDecoded Image型を導入し、Pipeline側でTexture Metadataへ変換する。** 将来の再利用には有効だが、現状の単一利用では変換とValidationが重複するため先行導入しない。
+- **LoaderとTexture CPU Resource双方でMetadataのField間Relationを検証する。** Semantic Ownerを複数化し、変更時の整合性維持を難しくするため採用しない。
+- **Loaderの全責務をExternal Byte Parserだけに限定する。** 現行ではGLCE内部形式へのNormalizationを含むExternal Trust Boundaryとして自然に機能しており、全面再設計の実需がないため採用しない。
+- **GLCE固有のLoaderを一律にEngine直下の汎用Decoder領域へ移す。** 既存LoaderはRenderer Resource Representationを直接構築しているため、汎用と称しても現在のSemantic Dependencyは消えない。独立した利用要件が生じるまで採用しない。
+- **GLCE固有Loaderを`vendors/`等のThird-party Code管理領域へ置く。** External Libraryの原典実装と、GLCEが所有するResource Loaderの責務・保守境界を混同するため採用しない。
+
+### Consequences
+
+- `bmp_loader`はTexture Domainの型／Validatorを利用する。一方でTexture DomainはBMP File Format／Loader固有のDetailsを知る必要がない。
+- GLCE固有のLoaderは現状Renderer Resource Domainに属するが、今後汎用Decoderを利用する実装へ変更しても、Third-party CodeそのものとResource Admission／NormalizationのGLCE側契約を混同しない。
+- `stl_ascii_loader`等、Texture以外のLoaderも一律のDecoded Intermediate Typeへ強制移行しない。それぞれのExternal Formatと利用先に応じた責務を保つ。
+- `loader_result_t`と`texture_result_t`は独立し、BMP LoaderのResultとTexture ResourceのResultの変換は必要な上位Boundaryで明示的に行う。
+- Texture MetadataのValidityはTexture Domainが定義するが、File由来のCandidateをPublic Outputとして受理するTrust PromotionはLoaderの責務である。両者を混同しない。
+- Dependencyの整理だけを理由に別途「Loader Architecture Refactoring」を今すぐ実装キューへ入れない。再検討条件が成立した際に独立Work化する。
+
+### Revisit Conditions
+
+- BMP DecoderをRenderer外の用途でも再利用する必要が現れた場合。
+- 複数のLoader / Procedural Source間で、共通Decoded Image Representationや共通Conversionを設ける具体的利益が判明した場合。
+- LoaderからTexture Domainへの依存により、現実にBuild・Test・Portability等の不利益が発生した場合。
+- Decode／NormalizeとTexture Resource Admissionの責務を分離する必要が、Streaming／Offline Conversion／Asset Pipeline等の実装で具体化した場合。
+
+### Related Decisions / Documents
+
+- 2026-10-15「Renderer Resource Directory Consolidationの実装完了とResource Core廃止に伴うResult Domain再編」
+- 旧Decision「Texture resource validation responsibilityをBMP Loader / Resource Core / Texture CPU Resourceへ分離する」— **責務の基本思想は維持し、MetadataのSemantic Ownerの所属のみ今回の判断へ更新した**。旧本文は当時の履歴として保持する。
+- `glce_near_term_todo.md` — 次WorkではLoader全体の再設計を前提条件にしない
+- `design_notes.md` — Texture Resource Lifecycle and Registration
+
+
+---
+
+## Decision: Mesh / Coordinate / Modelの責務を分離し、Model所有のPointer-based Coordinate Treeを採用する
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-16  
+**Scope:** Renderer / Mesh / Model / Coordinate / Resource Reference / Tree Structure / Identity
+
+### Decision
+
+- Rendering Vertical Slice / Shader種別ごとの`line_mesh_t`、`point_mesh_t`、`ui_mesh_t`、`untextured_mesh_t`は、独立した非opaque Value Typeとする。当面はGeometry / Material / Texture等のRegistry Resourceの**IDによる非所有参照**を組み合わせる。`line_mesh_t`は描画色も保持する。Mesh自身はResourceの実体や登録IdentityのAuthority、Model Matrix / Coordinateを持たない。
+- Mesh Value Typeは、現時点で独立したConstructor / Destructor / Getter / Setterを必要としない。型自身に検証すべき追加Semantic Invariantがなければ、`xxx_mesh_is_valid()`も機械的に設けない。Resource IDに対応する登録済みResourceの有無は、Registryを利用する側のOperation Contractで確認する。
+- Mesh種別の独立性を保ち、`meshes/`配下に各`xxx_mesh.h`を配置する方向とする。対応する`.c`は処理を必要とするときだけ追加し、`meshes/core/`は共有される独立した責務が生まれるまで設けない。
+- Modelは異なるMesh種別を混在させて構成し、**Model内のMeshの識別名`mesh_name`、Mesh参照群、およびCoordinateとのBindingを管理**する。Mesh Nameを`xxx_mesh_t`へ組み込まない。
+- CoordinateはLocal Transformおよび親子関係を持つ空間的な基準点とし、**Meshを持たないCoordinateを有効とする**。一つのCoordinateへ複数Meshを関連付けられる。Coordinate NameはModel内での識別と外部からの参照に用いる。
+- **ModelがCoordinate TreeのStorage / Lifetime Ownerとなる。TreeはPointer-basedとし、World Transformの階層合成にはDepth-First Traversalを使用する。** 兄弟関係は共通のParentから導出し、独立したSibling指定をConfigurationの前提条件にはしない。
+- 当面はModel構築時にCoordinate Treeの親子構造を確定し、構築後はLocal Transformのみ変更可能とする。構築後のReparentingは未実装の将来機能とする。
+- Coordinate Treeを持つ領域は、独立した汎用Spatial Systemを先行導入せず、当面`engine/systems/renderer/resources/model/`とする。`model/coordinate`と`model/model`のModuleを設け、複数種別のMeshを扱うModelを単一の責務領域としてまとめる。
+- Camera / Light等は将来、Geometryを持たないCoordinateのWorld Transformを参照して配置を追従できる。CoordinateにCamera / Light ResourceのOwnershipを与えることは、このDecisionには含めない。
+
+### Context
+
+2026-10-15「MeshはShader別Value Typeとし、当面ModelがCoordinateを所有する」では、ModelがCoordinate配列を保持する候補とし、ID参照／Borrowed Pointer参照、MeshとCoordinateの関係、内部表現を未確定としていた。
+
+その後、PenguinのBody / Head / Wingの階層操作に加え、Geometryを持たないCamera Anchor、Light Anchor、同一Coordinateへの複数Mesh関連付け、Model内部のMesh識別を必要とすることが明らかになった。また、Coordinate構造の可読性を優先し、配列で階層関係を表す案からPointer-based Treeへ方針を変更した。
+
+Meshは描画Resourceの組合せ、Coordinateは空間的基準、Modelは両者の構成と関連付けという責務に分けることで、MeshのResource参照と空間的配置を一対一に固定しない設計とした。
+
+### Rationale
+
+- Pointerで親子関係を表現すると、Model内の階層構造とDepth-First Traversalを実装・観察しやすい。現段階では未計測のAllocation Costより構造の分かりやすさを重視する。
+- Pointer-based TreeでもNodeごとの個別Allocationは必須ではない。将来Memory Layout / Allocation Strategyを変更する余地がある。
+- 空Coordinateを許すことで、描画されない基準点もWorld Transformを持てる。Camera / Spot Lightの取り付けやロボット機構の基準点に利用できる。
+- 同じCoordinateに複数Meshを結び付けられ、MeshのResource CompositionとModel内の配置を独立して変更できる。
+- Mesh Name / Coordinate NameのAuthorityをModelへ集め、Geometry / Material / TextureのRegistration Identityを既存Registryへ残せる。
+- 特定のMesh種別に共通のLifecycle / Validator / Configを強制せず、Vertical Sliceごとの実需に応じた機能追加ができる。
+- 将来のSpatial System移管を想定した汎用Subsystemを、現在のModel構築の前提条件にしない。
+
+### Considered / Deferred Alternatives
+
+- **Array-based Coordinate Treeを最初から採用する。** Data LocalityやAllocation回数の面で利点があり得るが、現段階ではPointer-basedの構造的な明快さを採る。性能・Allocationが実問題となったら再検討する。
+- **MeshとCoordinateを一対一に対応させる。** 空Coordinateや一つのCoordinateに複数Meshを結び付ける要求を表現できない。
+- **Mesh自身にTransform / Mesh Nameを含める。** Resource CompositionとModel内のPlacement / Identityを混在させるため採用しない。
+- **Model構築後のReparentingを今回実装する。** 現在のPenguin検証には不要であり、Transform維持方式、Cycle Prevention、Ownership / Lifetimeの契約が増えるため保留する。
+- **`renderer/resources/coordinates/`をModelと同列のDomainとして設ける。** 現在のCoordinate TreeはModel-ownedであり、独立したSpatial Authorityを先行して仮定しないため、当面は`model/`に所属させる。
+- **全Meshへ共通のMesh Registryや共通Configを必須化する。** Mesh Identityは当面Modelが管理し、既存Resource Registryとは異なる新たなOwnerの必要性が確認されていない。
+
+### Consequences
+
+- 2026-10-15の旧Decisionにある「Coordinate配列」および「Resource参照方式未決定」は、**当面のTarget Architectureについて本Decisionが更新する**。旧Decision本文は当時の検討履歴として保持する。
+- Pointer-based Treeについて、Root / Parent / Child / Siblingの具体的なPointer表現、Node Storage、Construction / Destruction、World Transform Cache、TreeのCanonical Invariantは実装時に決定する。
+- Meshの`uint16_t` Resource IDが未登録・解放済み・再利用済みかどうかは、Mesh Value自体の型だけでは判定できない。参照している間のResource Lifetime / Release Orderは、当該構築・描画経路のContractとして整理する。
+- `line_mesh` / `point_mesh`は主にApplication由来の動的描画要求に用いるため、専用Mesh Configを当面設けない。`ui_mesh` / `untextured_mesh`のConfig型とValidatorはAsset利用経路の需要に応じて後から確定する。
+- Tree構造の固定は今回の実装段階に限る。ロボットのリンク再接続等の具体的要求が生じれば、Runtime Reparentingを独立Workとして設計する。
+
+### Revisit Conditions
+
+- Coordinate NodeごとのAllocation、Traversal、Cache Localityが実際の性能・Memory制約となった場合。
+- Runtimeで部位を取り外し、別の親へ接続するRobot / Assembly等のReparenting要求が具体化した場合。
+- Physics / Collision / Scene等がRendererのModelから独立したCoordinate Authorityを必要とした場合。
+- 複数Model間のMesh共有により、Modelを越えたMesh Identity / Lifetime管理が必要になった場合。
+
+### Related Decisions / Documents
+
+- 2026-10-15「MeshはShader別Value Typeとし、当面ModelがCoordinateを所有する」— CoordinateのRepresentationおよび当面のID参照方式を本Decisionで更新する。
+- 2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」
+- `design_notes.md` — Mesh / Model / Coordinate / Render Packet Architecture
+- `glce_near_term_todo.md` — R1 / R2、Coordinate ReparentingのDeferred項目
+
+---
+
+## Decision: Render PacketをShader別Draw Collectionとし、Model連携を先に検証してからOrchestrationを抽出する
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-16  
+**Scope:** Renderer / Render Packet / Model Integration / Application Prototyping / Configuration / Module Extraction
+
+### Decision
+
+- Render Packetは**Shader / Mesh種別ごとのCollection**を基本構造とし、CollectionごとにCountと連続したDraw要素群を持つ方向とする。Renderer側はShaderを有効化してから、そのShaderに対応するDraw要素を順に処理する。
+- Coordinate TreeのDepth-First TraversalによるWorld Transform導出と、Shader別のDraw順序は別責務とする。Render Packetは描画実行に必要なMesh Resource参照とModel / World Transformの対応を持てるようにするが、最終的なDraw EntryのRepresentation、Borrow / Copy、Transformの保持方法はR4で決める。
+- 当面は半透明UI等のDraw Order要求のためにRender Pass一般化や複雑なSorting Mechanismを先行導入しない。必要になった時点でRender Packet周辺の描画順序・Pass設計を再検討する。
+- Mesh / Coordinate / ModelのData Modelと連携を先に成立させ、**Application内で既存Geometry / Material / Texture Pipeline・Registryを使用してハードコーディングで構築・描画を検証**する。実際の責務・Contractを確認してから、必要な処理を適切なEngine Moduleへ抽出する。
+- 新規`xxx_mesh_pipeline`とMesh Registryは当面設けない。ModelがMesh IdentityとBindingを扱い、Geometry / Material / Textureの実体・Registration Identityは既存Registryが管理する。新規Orchestration / Mesh Registryが必要かどうかは実際の処理から再評価する。既存Resource Pipelineを廃止する判断ではない。
+- Mesh単体のConfiguration Fileは設けない。将来の**Model Configuration File**にMesh Resource参照、Mesh Name、Coordinate階層・Binding、Transform、Asset Path等を記述する構想とするが、Format / Loader / Config Value Typeの具体仕様はRuntime Modelの構築・描画検証後に決定する。
+- 完成したRenderer / Model構造をもとに、`README.md`でModel / Mesh / Geometry / Material / Coordinateの概念・連携と、Vertical Slice、Model→Render Packet→Drawの関係を説明する独立したDocumentation Workを行う。READMEは実装済みのContractを説明し、未実装のTargetを実装済みとして扱わない。
+
+### Context
+
+当初はModel Configuration Fileの各`[mesh]`から`xxx_mesh_config_t`を生成し、専用Mesh Pipelineへ渡して下位Geometry / MaterialのPipelineを呼び出す構成を想定した。またMesh単位のConfiguration Fileは作らない方針を選んだ。
+
+しかし、Line / Point Meshは外部FileのImportよりApplicationの動的要求から描画することが主用途である。さらに、Geometry / Material等のImport PipelineとRegistryは既に存在するため、Mesh Pipeline / Mesh Registryを先に設けると新しい責務を実装経験なしに固定することになる。
+
+このため、まずPointer-based Coordinate Tree、空Coordinate、複数Mesh Binding、Penguinの部位操作を実際に動かし、ModelからDraw要求を得る経路を検証する順序へ変更した。
+
+### Rationale
+
+- Configuration FormatへRuntime Data Modelを従属させず、先に内部Contractと動作を確定できる。
+- Applicationで構築手順を観察し、実際に必要なImport、Rollback、Resource再利用、Bindingの責務を発見できる。
+- 既存のStateless Resource Pipeline / RegistryのOwnership Commitと、未確定のModel構築Orchestrationを混同しない。
+- Shader別Collectionにより、Shader BindとDraw Loopをまとめられる。Treeの論理的な並びにGPU描画順を拘束されない。
+- Modelの空間的StructureとFrame単位の描画最適化Representationを別々に設計できる。
+- GLCEの中心概念が実際に成立してからREADMEへ明文化することで、理念を先行させず具体例でArchitectureを説明できる。
+
+### Considered / Deferred Alternatives
+
+- **初めから`xxx_mesh_pipeline`とMesh Registryを導入する。** Geometry / Material等の既存Resource管理との責務重複を確認できていないため保留する。
+- **初めからModel Configuration File / Loader / Mesh Config Validatorを実装する。** Tree / Binding / Transform / Importの契約が未成熟な状態で外部Formatを固定するため後回しにする。
+- **Model内のTree Traversal順をそのまま最終描画順とする。** Shader切替の集約とDraw Orderの独立性を損なうため採用しない。
+- **全Render Pass / Alpha Sorting機構を先行実装する。** 現段階の描画検証に不要であり、半透明UI等の実需要発生時にPacket周辺から再検討する。
+
+### Consequences
+
+- 既存R1〜R5の段階的なIntegration計画を維持しつつ、R1 / R2ではModel構築・描画のApplication-side試行を優先する。R3では既存`render_resources`をFrontend OwnershipとStateless Mesh Rendererへ移管し、R4でShader別Render Packet / Frame Allocatorを接続する。
+- Model構築時のResource Import順、既存Resource再利用の判断、途中Failure時のRollbackは、実装時にTransaction Boundaryを確認して設計する。
+- Shader別Render Packetに必要なWorld Transformの転送形態、Mesh ValueのCopy / Borrow、Count / Capacity / Frame Lifetime、Alpha / UI Draw Orderは未確定のままとする。
+- Asset RootのLocation Policyは既存どおりApplicationが所有し、Loader / Pipelineへ完成済みPathを渡す。Model Configuration File内のPath指定規則は後続Workで決める。
+- READMEの中心概念・Vertical Slice / Rendering Flow説明は、R4〜R5の検証後に独立して着手する。Model Configuration Fileの完成はREADME着手条件にしない。
+
+### Revisit Conditions
+
+- Mesh Importが独立したTransactionを形成し、Application内での処理重複・Rollback Complexityが顕在化した場合。
+- 複数Model間でMesh Value自身の独立登録・共有・Lifetime管理が必要になった場合。
+- 半透明UI、Alpha Blending、Pass別描画、ShaderをまたぐStrict Ordering等が具体的に必要になった場合。
+- Model / Packet間でDraw EntryのCopy Cost、Borrow Lifetime、Capacityが問題になった場合。
+
+### Related Decisions / Documents
+
+- 2026-09-12「Application↔Engineの当面の論理boundaryをapplication.h/.cとする」
+- 2026-09-12「Resource Pipelineはstateless orchestrationとして維持する」
+- 2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」
+- 2026-10-16「Mesh / Coordinate / Modelの責務を分離し、Model所有のPointer-based Coordinate Treeを採用する」
+- `design_notes.md` — Mesh / Model / Coordinate / Render Packet Architecture
+- `glce_near_term_todo.md` — R1〜R5、README Work、Deferred項目
