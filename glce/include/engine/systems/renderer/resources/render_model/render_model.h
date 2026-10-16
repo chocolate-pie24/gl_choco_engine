@@ -8,10 +8,10 @@
 extern "C" {
 #endif
 
-#include "engine/systems/renderer/resources/render_model/model_transform_tree.h"
+typedef struct model_transform_tree model_transform_tree_t;
 
 typedef struct render_model {
-    model_transform_tree_t* root;
+    model_transform_tree_t* transform_tree;
 } render_model_t;
 
 #ifdef __cplusplus
