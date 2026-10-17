@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-16
+最終更新: 2026-10-17
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -4527,3 +4527,160 @@ Meshは描画Resourceの組合せ、Coordinateは空間的基準、Modelは両�
 - 2026-10-16「Mesh / Coordinate / Modelの責務を分離し、Model所有のPointer-based Coordinate Treeを採用する」
 - `design_notes.md` — Mesh / Model / Coordinate / Render Packet Architecture
 - `glce_near_term_todo.md` — R1〜R5、README Work、Deferred項目
+
+
+---
+
+## Decision: すべてのMeshを非共有のRender Modelへ所属させ、Coordinateに描画姿勢のAuthorityを集約する
+
+**Status:** Accepted / Model Implementation Pending  
+**Date:** 2026-10-17  
+**Scope:** Renderer / Render Model / Mesh / Coordinate / Ownership / Instance / Visibility / Resource Reference
+
+### Decision
+
+- **すべての`xxx_mesh_t`は必ず一つの`render_model_t`に所属する。** Modelを経由しない独立Mesh描画を、Applicationから見た別の通常経路として設けない。`line_mesh_t`や`point_mesh_t`も例外としない。一時的なLine / Point描画が必要なら、Applicationが当該用途のRender Modelを構築・利用できる。
+- `render_model_t`は、**Model Transform Treeと0個以上のShader別Meshを持つ、独立した描画用Runtime Object**とする。Coordinateだけを持つMeshなしModelも有効であり、Coordinate TreeにはMeshを持たないNodeが存在してよい。Rootを持つTree自体の必須条件は実装済み`model_transform_tree`のContractに従う。
+- Model自身と、Modelに所属するMesh Instanceは**異なるModel間で同じ可変Objectとして共有しない**。同一の構築定義からModelを複数作る場合も、それぞれのModelが独立したCoordinate Tree / Mesh構成と表示状態を保持する。Modelを複数の利用ModuleがLifetime内でBorrowすることは、この「共有しない」の禁止対象ではない。
+- MeshはShader別の非opaque Value Typeとして、Geometry / Material / Texture等の**既存Registry Resource IDによる非所有参照**、およびModel内で所属する**Coordinate ID**を持つ。Mesh自体は頂点Data / Resource実体を所有しない。Line Meshの現行Color表現等、描画種別固有の情報は別途保持してよい。
+- Meshは`translate` / `rotation` / Model Matrixなどの独立したTransformを**持たない**。Local Translation / RotationはCoordinate Treeが唯一のAuthorityとなる。描画時のWorld Matrixは、Meshが参照するCoordinateから取得する。個別の位置や回転が必要なら別のCoordinateを設けて所属させる。
+- 一つのCoordinate IDを複数Meshから参照してよい。**Mesh側がCoordinate IDを直接保持する**ため、以前検討したModel内の別個のMesh–Coordinate Binding Collectionは、現時点では設けない。Coordinate側もMeshの存在・種類を認識しない。
+- Modelは自身が所有するMesh群とCoordinate Treeの構造的整合性（例：Meshの参照先Coordinateが存在すること）およびLifecycleを管理する。ただしGeometry / Material / Texture Resourceの登録Identityと実体Ownershipは既存Registryに残し、Modelはそれを移動・複製・解放しない。
+- **参照中ResourceのLifetime / Release OrderはApplication側の利用Contract**とする。複数Modelが同じGeometry / Material / Texture IDを参照してよいが、利用中のResourceを先にReleaseしないことはApplicationが保証する。参照カウント、Model間のReverse Reference Tracking、Generation付きHandleを、このためだけに先行導入しない。
+- Modelに必要なRuntime操作として、Coordinate Transform変更と**Meshごとの汎用的な表示／非表示の変更**を認める方向とする。AABBなど特定用途を表す専用操作をRender Modelへ追加しない。Mesh識別方式、VisibilityをMesh Field / Model-managed Stateのどちらで表すか、構築後のその他Mutation範囲は具体的APIを設計する際に決める。
+- Meshの構成・参照・所属CoordinateとCoordinate Treeの親子構造は、**当面、構築後に固定する方向**とする。Runtime Reparenting、Mesh追加・削除、Resource参照の差替えを今回の必須機能にしない。ただし変更を永続的に禁止するDecisionではない。
+
+### Context
+
+当初、Shader別MeshはGeometry / Material等をまとめる非opaqueなValue Typeとして検討され、Coordinate IDとLocal TransformはMeshから切り離してModelが別のBindingを持つ構造を想定していた。さらに同一Meshを複数Modelで共有する可能性も残していた。
+
+しかし、同じGeometry ID / Material IDを使用する別のMeshを複数Modelへ配置する場合でも、重いVertex / GPU ResourceはRegistryで共有できる。ModelをまたいでMeshの可変状態まで共有すると、所属Coordinate、表示状態、Lifetime / Mutationの意味が複雑になる。
+
+また、Line / PointだけにModel外の描画経路を認めると、ApplicationがMeshとModelのどちらを描画単位として使うべきか用途別に判断する必要が生じる。Penguinの部位、RobotのLink、LiDARのPoint Cloud、Camera / Light用の空Coordinate、診断用Line等を同じ概念で扱うことを重視し、全Meshの所属をRender Modelに統一した。
+
+一度はMeshへCoordinate IDに加えてLocal Translation / Rotationを持たせる案も検討した。しかしLocal Transformは既存`model_transform_tree`が保持しているため、Mesh Local Transformを追加するとSpatial TransformのAuthorityが二つになる。Coordinate TreeにTransformを集約する判断とした。
+
+### Rationale
+
+- Applicationにとって描画要素の所属関係を一種類の概念（Render Model）に統一できる。Temporary Line / Pointだけ別のMesh APIや別の描画Architectureを設けずに済む。
+- Geometry / Material等を共有したまま、ModelとMeshの可変状態は各描画Objectへ閉じられる。RobotやPenguinの個体ごとに異なる姿勢を表現できる。
+- ModelごとにCoordinate Treeが独立しているため、Application固有の姿勢を各Modelへ適用する際の干渉を避けられる。
+- MeshへCoordinate IDを持たせることで、別のBinding Collectionを重複管理せず、複数Meshが同じCoordinateを参照できる。
+- 空Coordinateを許すことで、描画Resourceを持たないCamera / Light AnchorをSpatial Referenceとして利用できる。ModelがCamera / Light自体を所有する必要もない。
+- TransformのAuthorityをCoordinate Treeへ集中でき、Mesh別TransformとTree Transformの重複を避けられる。
+- ResourceのOwnership AuthorityをRegistryに維持し、ModelをResource Registration / Import / ReleaseのOwnerへ変えずに済む。
+- 未計測のModel / Coordinate Allocation Costを理由として共有Definition / Instance機構やFrame専用描画経路を先行導入しない。まず実装・検証・計測する。
+
+### Considered / Rejected or Deferred Alternatives
+
+- **Modelをまたいで同一Mesh Instanceを共有する。** Meshが特定ModelのCoordinate / Visibilityを参照する以上、共有Mutable Stateの意味とOwnershipが複雑になる。Registry Resourceだけ共有する。
+- **`render_model_t`をDefinitionとInstanceの二層に分離する。** 個体ごとのCoordinate Treeを持つ独立Modelと、共通Resource参照 / 再利用可能なConstruction Configで現在の要求を表現できる。大量Instancing等の計測可能な問題が生じたら再検討する。
+- **Line / Pointの一時描画のみModel外で行う。** Applicationが描画対象種別に応じて別の概念を選ぶ必要があるため採用しない。一時Model生成・破棄のAllocation Costは実測する。
+- **MeshにCoordinateから独立したTranslation / Rotationを持たせる。** Treeが既にTransformを持つためAuthorityが二重化する。必要なら子Coordinateを追加する。
+- **Modelが別個のMesh–Coordinate Binding Collectionを所有する。** MeshがCoordinate IDを直接持てるため、現在の要件では重複Representationになる。
+- **Model自身が参照中Resourceを管理・自動延命する。** Registry OwnershipとApplicationの参照Lifetime Contractで当面成立するため、Reference CountやReverse Lookup等を先行導入しない。
+- **Runtime Reparenting / Meshの追加・削除を最初から必須にする。** 現時点の利用例は固定されたSpatial / Mesh構造と、Transform / Visibility変更で表現できるため保留する。
+
+### Consequences
+
+- `render_model_config_t`は、独立したModelを繰り返し構築可能な入力定義として設計する。各Mesh Configと所属Coordinateを対応付ける具体的Field、Coordinate Root表現、Resource Name / IDの解決Boundaryは**未確定**とする。
+- `render_model_t`がModel Transform Treeを所有するためのConstructor / Destructor / Failure Rollbackを設計する。`model_transform_tree`のStorage / Validation責務とModelのLifecycle Ownerを区別する。
+- MeshのID / Nameによる識別、各種別のStorage、Visibility Field / API、ModelのCanonical ValidationとGetter APIは実装段階で決定する。
+- 既存Shader別Render Packetの方向性は維持し、将来PacketへMesh参照と所属CoordinateのWorld Matrixを渡せるようにする。Tree Traversal OrderとShader別Draw Orderは区別する。
+- Line / Pointに関する既存のApplication→Render Resource直接描画経路は移行完了までの既存実装であり、今後のApplication-facingな通常描画Modelでは必ずRender Modelを用いる。
+- GeometryのVerticesやColor等の内容更新はGeometry Resourceの責務であり、既存Meshが同じGeometry IDを参照したまま更新できることを目指す。Geometryの動的更新APIは別の設計課題とする。
+
+### Revisit Conditions
+
+- 同じModel定義を大量配置する際のCoordinate Tree / Mesh Metadataの重複が計測可能な問題となった場合。
+- Temporary Model生成・破棄の頻度によってAllocation / Draw Performance上の問題が明確になった場合。
+- Animation / Simulation / Asset Streaming等でMeshの動的追加・削除やResource参照差替えが必要となった場合。
+- Geometry / Material等のHot ReloadやCross-owner Resource SharingによりApplication単独のLifetime Contractでは管理が困難になった場合。
+- Renderer外のPhysics / Scene等がTransform Authorityを必要とし、Spatial Ownershipの境界を再検討する場合。
+
+### Related Decisions / Documents
+
+- 2026-10-15「MeshはShader別Value Typeとし、当面ModelがCoordinateを所有する」— **MeshにCoordinate IDを持たせずModel側Bindingを検討する旧方針を変更する**。Shader別Value Type / Registry非所有参照という基本部分は維持する。
+- 2026-10-16「Mesh / Coordinate / Modelの責務を分離し、Model所有のPointer-based Coordinate Treeを採用する」— **独立Binding Collectionを必要としないようMesh–Coordinate関係の表現を更新する**。Pointer-based Tree / 空Coordinate等は維持する。
+- 2026-10-16「Render PacketをShader別Draw Collectionとし、Model連携を先に検証してからOrchestrationを抽出する」
+- `design_notes.md` — Mesh / Model / Coordinate / Render Packet Architecture
+- `glce_near_term_todo.md` — Renderer / Model Integration Work
+
+---
+
+## Decision: Application固有Modelが姿勢と診断描画の意味を管理し、Render Modelを汎用描画構成に限定する
+
+**Status:** Accepted / Application Integration Pending  
+**Date:** 2026-10-17  
+**Scope:** Application Model / Render Model / Robot Posture / AABB Visualization / Line / Point Geometry / Debug Rendering
+
+### Decision
+
+- `render_model_t`は、Penguin、Robot、LiDAR、Camera等のApplication固有のSemanticを知る必要がない。**機種固有の構造、関節角・機構寸法・姿勢状態と、各Coordinateの対応**はApplication側のModel Moduleが管理する。
+- **機種・種類によって異なるPostureのData StructureはApplication Domainに属する。** `penguin_posture_t`、建設機械のLink / Joint状態等を、汎用の`render_model_t`へ統合したり、全機種共通のPosture SchemaをRendererから要求したりしない。機構寸法のような比較的固定的なParameterと、角度等の変化するPostureは、機種固有Domainで必要に応じて区別する。
+- **Render ModelのCoordinate Treeは、Application固有Postureの型やFieldを知らずに、Local Translation / Rotationと親子関係を汎用的な描画配置情報として保持できる。** Postureと無関係な配置や空Coordinateも扱える。ApplicationからPostureを反映して座標を更新する場合も、Render Model側の表現は汎用Coordinate Transformのままであり、Posture Structureを複製・保持しない。この「独立」は、描画位置がPostureの値に影響されないという意味ではなく、**描画配置のRepresentation / APIが機種固有PostureのSchemaへ依存しない**という意味である。
+- Application側には用途 / 機種ごとのModel Module / Object（例：`penguin_model_t`）を設けてよい。`penguin_model_posture_apply(...)`相当のOperationがPenguin固有のPostureを解釈し、対象`render_model_t`のCoordinate Transformを更新する。`penguin_posture_t`やRobot PostureのFieldはRender Modelへ持ち込まない。
+- **Application固有ModelはPosture反映だけでなく、機種に意味のある操作Commandを提供する。** 例えば`link1_swing_right`等のAPIで対象Linkの動作を要求できる構成とし、対応するPosture Stateの更新とRender Modelへの反映をApplication Domainの責務に置く。操作レバー / Keyboard等の物理入力とCommandの割り当てもApplication側で扱い、EngineのRender Modelへ入力装置や機種固有動作を認識させない。Commandの引数、角速度 / 増分 / 時間の扱い、機械的制限、Posture反映のタイミングは実装時に決める。
+- 同じ機種を複数描画する場合、各個体は個別のApplication状態と個別の`render_model_t`を持ち得る。機種共通のGeometry / Material / Configは共有できる。Application固有Modelが`render_model_t`を直接所有するかBorrowするか、具体的なPublic API Signatureは実装時に決定する。
+- **AABBはApplication側の診断・可視化上の意味であり、Render ModelにAABB専用の表示状態、作成API、`aabb_enable()`等の固有Operationを導入しない。** Render Modelにとっては他のLine Meshと同じ描画要素として扱う。
+- Application固有Modelが、どのLine Mesh群がどの部位のAABBかを把握し、Render Modelの汎用Mesh Visibility操作を使って表示・非表示を切り替える。`penguin_model_body_aabb_enable(...)`等の部位別APIを設けることは許容するが、具体的な粒度・名称はApplication側の判断とする。
+- AABBの表示検証では、Geometryの**Local AABBを対応CoordinateのWorld Transformで回転・移動したBoxとして描画してよい**。必ずしも再計算されたWorld Axis-Aligned Bounding Boxを表示する必要はない。両者の意味は混同しない。
+- 点群表示でも、LiDARなどの**位置・姿勢はCoordinate**、点群の頂点数・頂点座標・頂点色情報は**Point Geometry Resource**、Point Geometry参照と所属Coordinateは**Point Mesh**として区別する。点群Dataの更新だけを理由にCoordinate TransformやMesh構成を更新しない。
+- **Line Geometryへの頂点単位Color導入は有力な将来改善案とするが、今回の確定実装仕様にはしない。** Voxel Grid等で大量の色付きLineを一様ColorのLine Meshに分割するとMesh / Draw数が増えるため、Point Geometryと同様にGeometry側にColorを置く案を別Workで検討する。現行Line MeshのColor FieldやShaderを今回直ちに変更しない。
+
+### Context
+
+Render ModelにAABB表示を一律に管理させる案や、Applicationが表示要求時にGeometryからLine Meshを都度生成する案が出た。しかし、AABBはRendererの普遍的なModel Semanticではなく、PenguinのBody / WingなどApplication側で選択する可視化対象である。Engine側へAABB専用機能を足すと、通常のLine Mesh描画と二重の描画経路・APIを持つことになる。
+
+また、Robotの姿勢状態には`link1_angle`、`link2_angle`等の機種固有情報があり、これらはRobot個体ごとに異なる。`link1_length`等は構造的・幾何的パラメータであり、実際の運動学とCoordinateの対応はApplication固有のModel Moduleだけが理解できる。機種ごとに関節数・動作方向・機構寸法・可動範囲が異なるため、共通のPosture表現をRender Modelへ組み込むことは適切でない。一方、描画用Coordinate Treeはそれらの差異に依存せず、同じTranslation / Rotation / Parent関係という汎用Representationで完成した描画配置を保持できる。
+
+さらに、建設機械等の操作を想定すると、姿勢Snapshotを`posture_apply`で反映するだけでは、操作レバーから「Link 1を右へSwingする」といった機種固有の動作を直接要求しにくい。入力装置のSignalと機種固有のCommandをApplicationで対応付け、Postureの変化をRender ModelのCoordinateへ反映できる必要がある。
+
+LiDAR Point CloudやVoxel Gridの可視化も検討した。点群のData更新をModel構造変更と同一視しないこと、Voxel毎に異なる線色を出すため大量のLine Meshが必要になる現行形式の制約を、将来のLine Geometry改善候補として把握した。
+
+### Rationale
+
+- Applicationの機種固有SemanticをRendererへ逆流させず、Render Modelを再利用可能な描画構成とする。
+- Robot PostureをApplication側のAuthorityとし、Render ModelのCoordinate Transformはその可視化結果として更新できる。意味を持つ元状態と描画表現を重複した正本にしない。
+- Render Modelが機種固有PostureのField / Typeを知らなくても配置情報を保持・照会できるため、特定機械の運動学に依存しない汎用Rendererを維持できる。
+- Posture Snapshot反映と、操作レバーなどから発生する機種固有の動作Commandを、Application側の明示的な操作として提供できる。Input Mappingと描画用Coordinate変更を直接結び付けず、機械固有の動作SemanticsをApplication Modelへ閉じられる。
+- AABBは通常のLine Meshと共通の描画経路を利用でき、専用Renderer Object / AABB Flag / 特殊Mesh Categoryを増やす必要がない。
+- 部位単位の可視化操作をApplicationに置くことで、個別Geometryの診断意図を自然なApplication APIへ閉じられる。
+- Local AABBを回転したBoxとして表示すれば、Transform Treeの動作確認を直接行える。
+- LiDARの動的Point DataとCoordinate Treeの位置姿勢を別々に変更・管理でき、Modelを再構築する理由を減らせる。
+- Voxel Gridで多数の色付きLineを扱う場合、頂点色をGeometryで保持すればMesh / Drawの過剰分割を避けられる可能性がある。まず将来のResource / Shader設計課題として分離する。
+
+### Considered / Rejected or Deferred Alternatives
+
+- **`render_model_t`へAABB専用表示Option / APIを設ける。** 特定Applicationの診断Semanticを汎用Engine Objectへ持ち込むため採用しない。
+- **ApplicationへAABB専用の新規Geometry / Mesh生成を描画切替のたびに要求する。** 利用側APIが複雑になるため、既存Line MeshのVisibility制御を利用する方向とする。ただしAABB用Resourceをいつ用意するかは実装時に決める。
+- **AABBのために必ずWorld AABBを再計算する。** 初期の姿勢検証にはLocal AABBをTransformした表示で足りる。厳密なWorld AABBが必要な用途は別途指定する。
+- **Render ModelへRobot JointやPenguin部位のSemantic、機種共通のPosture Structure、`link1_swing_right`等の機械操作Commandを持たせる。** EngineがApplication固有の運動学 / Link識別 / 操作意味を知るため採用しない。
+- **操作レバー等のInput SignalからRender ModelのCoordinateへ直接変換する。** 機種固有の動作・Postureの意味が入力処理とRender Model APIへ散在するため、Application固有ModelのCommand / Posture反映経路を利用する。
+- **LiDAR点群更新時にMeshやCoordinateを必ず作り直す。** 更新対象はGeometry Dataなので不要とする。
+- **現行のLine Mesh一様色方式をVoxel Grid用にそのまま大量Meshへ拡大する。** 性能と管理コストの懸念があり、頂点Color方式を今後比較する。
+
+### Consequences
+
+- Application側に`penguin_model`等の固有Model Moduleの導入を検討・実装する。`penguin_model_t`のField、`render_model_t`とのOwnership / Borrow、Posture / AABB API Signatureはまだ決まっていない。
+- `posture_apply`に加えて、`link1_swing_right`等の**機種固有Command API**をApplication ModelのInterface候補とする。Commandは機種固有状態の変更を意味し、描画側には汎用Coordinate操作だけを要求する。実際にPostureをどのObjectが所有するか、CommandとApplyを同時 / 分離実行するか、動作量 / 制限 / 時間積分のSemanticsは今後設計する。
+- Model Config / `render_model_t`の設計で、機種固有Postureの型・Fieldを必要条件にしない。`render_model_t`はGenericなCoordinate配置だけで有効に成立する。
+- Render ModelはMeshの汎用Visibility操作と、Coordinate Transformの取得・変更に必要なAPIを提供する方向とする。どのMeshがAABBかという意味や部位別まとめ方はApplicationが保持する。
+- AABB Geometry生成は既存の`geometry_conversion`等の責務に従い、異なるTopologyのRender Resource同士へ直接依存を設けない。AABBをどの段階でLine Geometry / Line Meshに変換するかはApplication Integration時に決める。
+- Point Geometryの動的更新、Line Geometryの頂点Color対応、Voxel Grid RepresentationおよびDraw BatchingはModel Config / Constructorの完成条件にしない。
+- Resource LifetimeのApplication Contractは、Modelが別個のResource Lifetime Authorityを作らない前提で維持する。
+
+### Revisit Conditions
+
+- AABBや他のDiagnostics描画に、Application固有Modelだけでは扱いにくい共通Operationが多数現れた場合。
+- Application固有Model間で明確に同一のPosture-to-Coordinate変換機能が複数発生した場合。
+- LiDAR / Voxel Grid等の大規模可変Geometry更新・Draw最適化要件が具体化した場合。
+- 運動学のAuthorityがApplicationから独立したPhysics / Robotics subsystemへ移行する具体的要件が生じた場合。
+
+### Related Decisions / Documents
+
+- 2026-09-12「Application↔Engineの当面の論理boundaryをapplication.h/.cとする」
+- 2026-09-12「異なるGeometry topology間の変換は独立conversion moduleへ置く」
+- 2026-10-17「すべてのMeshを非共有のRender Modelへ所属させ、Coordinateに描画姿勢のAuthorityを集約する」
+- `design_notes.md` — Mesh / Model / Coordinate / Render Packet Architecture
+- `glce_near_term_todo.md` — Renderer / Model Integrationおよび将来のPoint / Line Geometry Work
