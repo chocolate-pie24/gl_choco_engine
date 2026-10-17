@@ -1,0 +1,109 @@
+# Sample Robot Coordinate Configuration
+#
+# | Child            | Parent       | Translate (x,y,z) | Rotation (x,y,z) |
+# |------------------|--------------|-------------------|------------------|
+# | Base [1]         | Root [0]     | (0, 0, 0)         | (0, 0, 0)        |
+# | Shoulder [2]     | Base [1]     | (0, 0, 140)       | (0, 0, 0)        |
+# | Elbow [3]        | Shoulder [2] | (150, 0, 0)       | (0, 0, 0)        |
+# | Wrist [4]        | Elbow [3]    | (120, 0, 0)       | (0, 0, 0)        |
+# | Left finger [5]  | Wrist [4]    | (36, 18, 0)       | (0, 0, 0)        |
+# | Right finger [6] | Wrist [4]    | (36, -18, 0)      | (0, 0, 0)        |
+# | TCP [7]          | Wrist [4]    | (88, 0, 0)        | (0, 0, 0)        |
+
+# Base
+[coordinate]
+id = 1
+parent = 0
+translate = [0.0, 0.0, 0.0]
+rotation = [0.0, 0.0, 0.0]
+[/coordinate]
+
+# Shoulder
+[coordinate]
+id = 2
+parent = 1
+translate = [0.0, 0.0, 140.0]
+rotation = [0.0, 0.0, 0.0]
+[/coordinate]
+
+# Elbow
+[coordinate]
+id = 3
+parent = 2
+translate = [150.0, 0.0, 0.0]
+rotation = [0.0, 0.0, 0.0]
+[/coordinate]
+
+# Wrist
+[coordinate]
+id = 4
+parent = 3
+translate = [120.0, 0.0, 0.0]
+rotation = [0.0, 0.0, 0.0]
+[/coordinate]
+
+# Left finger
+[coordinate]
+id = 5
+parent = 4
+translate = [36.0, 18.0, 0.0]
+rotation = [0.0, 0.0, 0.0]
+[/coordinate]
+
+# Right finger
+[coordinate]
+id = 6
+parent = 4
+translate = [36.0, -18.0, 0.0]
+rotation = [0.0, 0.0, 0.0]
+[/coordinate]
+
+# TCP(Tool Center Point)
+[coordinate]
+id = 7
+parent = 4
+translate = [88.0, 0.0, 0.0]
+rotation = [0.0, 0.0, 0.0]
+[/coordinate]
+
+[untextured_mesh]
+name = base_rotation_joint
+geometry = base_rotation_joint
+material = base_rotation_joint_mat
+coordinate_id = 1
+[/untextured_mesh]
+
+[untextured_mesh]
+name = elbow_link
+geometry = elbow_link
+material = elbow_link_mat
+coordinate_id = 3
+[/untextured_mesh]
+
+[untextured_mesh]
+name = left_finger
+geometry = left_finger
+material = left_finger_mat
+coordinate_id = 5
+[/untextured_mesh]
+
+[untextured_mesh]
+name = right_finger
+geometry = right_finger
+material = right_finger_mat
+coordinate_id = 6
+[/untextured_mesh]
+
+[untextured_mesh]
+name = shoulder_link
+geometry = shoulder_link
+material = shoulder_link_mat
+coordinate_id = 2
+[/untextured_mesh]
+
+[untextured_mesh]
+name = wrist_gripper_base
+geometry = wrist_gripper_base
+material = wrist_gripper_base_mat
+coordinate_id = 4
+[/untextured_mesh]
