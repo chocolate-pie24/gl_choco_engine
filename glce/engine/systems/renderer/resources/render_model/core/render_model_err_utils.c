@@ -5,6 +5,8 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
+#include "engine/containers/choco_string.h"
+
 #include "engine/systems/renderer/resources/render_model/core/render_model_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";
@@ -39,6 +41,31 @@ const char* render_model_result_to_str(render_model_result_t result_) {
         return s_result_str_undefined_error;
     default:
         return s_result_str_undefined_error;
+    }
+}
+
+render_model_result_t render_model_result_convert_choco_string(choco_string_result_t result_) {
+    switch(result_) {
+    case CHOCO_STRING_SUCCESS:
+        return RENDER_MODEL_SUCCESS;
+    case CHOCO_STRING_DATA_CORRUPTED:
+        return RENDER_MODEL_DATA_CORRUPTED;
+    case CHOCO_STRING_BAD_OPERATION:
+        return RENDER_MODEL_BAD_OPERATION;
+    case CHOCO_STRING_NO_MEMORY:
+        return RENDER_MODEL_NO_MEMORY;
+    case CHOCO_STRING_INVALID_ARGUMENT:
+        return RENDER_MODEL_INVALID_ARGUMENT;
+    case CHOCO_STRING_RUNTIME_ERROR:
+        return RENDER_MODEL_RUNTIME_ERROR;
+    case CHOCO_STRING_UNDEFINED_ERROR:
+        return RENDER_MODEL_UNDEFINED_ERROR;
+    case CHOCO_STRING_OVERFLOW:
+        return RENDER_MODEL_OVERFLOW;
+    case CHOCO_STRING_LIMIT_EXCEEDED:
+        return RENDER_MODEL_LIMIT_EXCEEDED;
+    default:
+        return RENDER_MODEL_UNDEFINED_ERROR;
     }
 }
 
