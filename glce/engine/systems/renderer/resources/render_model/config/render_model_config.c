@@ -55,17 +55,21 @@ cleanup:
     return ret;
 }
 
-render_model_result_t render_model_config_untextured_mesh_initialize(const char* mesh_name_, const char* geometry_resource_name_, const char* material_resource_name_, uint16_t coordinate_id_, untextured_mesh_config_t* out_config_) {
+render_model_result_t render_model_config_untextured_mesh_initialize(const char* mesh_name_, const char* geometry_subdirectory_, const char* geometry_resource_name_, const char* material_subdirectory_, const char* material_resource_name_, uint16_t coordinate_id_, untextured_mesh_config_t* out_config_) {
     render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
 
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     choco_string_t* tmp_mesh_name = NULL;
+    choco_string_t* tmp_geometry_subdirectory = NULL;
     choco_string_t* tmp_geometry_resource_name = NULL;
+    choco_string_t* tmp_material_subdirectory = NULL;
     choco_string_t* tmp_material_resource_name = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(mesh_name_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_config_untextured_mesh_initialize", "mesh_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_subdirectory_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_config_untextured_mesh_initialize", "geometry_subdirectory_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_resource_name_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_config_untextured_mesh_initialize", "geometry_resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_subdirectory_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_config_untextured_mesh_initialize", "material_subdirectory_")
     IF_ARG_NULL_GOTO_CLEANUP(material_resource_name_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_config_untextured_mesh_initialize", "material_resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_config_untextured_mesh_initialize", "out_config_")
 
@@ -76,7 +80,21 @@ render_model_result_t render_model_config_untextured_mesh_initialize(const char*
         goto cleanup;
     }
 
+    ret_choco_string = choco_string_create_from_c_string(geometry_subdirectory_, &tmp_geometry_subdirectory);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = render_model_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("render_model_config_untextured_mesh_initialize(%s) - choco_string_create_from_c_string failed.", render_model_result_to_str(ret));
+        goto cleanup;
+    }
+
     ret_choco_string = choco_string_create_from_c_string(geometry_resource_name_, &tmp_geometry_resource_name);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = render_model_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("render_model_config_untextured_mesh_initialize(%s) - choco_string_create_from_c_string failed.", render_model_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_create_from_c_string(material_subdirectory_, &tmp_material_subdirectory);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
         ret = render_model_result_convert_choco_string(ret_choco_string);
         ERROR_MESSAGE("render_model_config_untextured_mesh_initialize(%s) - choco_string_create_from_c_string failed.", render_model_result_to_str(ret));
@@ -92,10 +110,14 @@ render_model_result_t render_model_config_untextured_mesh_initialize(const char*
 
     out_config_->coordinate_id = coordinate_id_;
     out_config_->mesh_name = tmp_mesh_name;
+    out_config_->geometry_subdirectory = tmp_geometry_subdirectory;
     out_config_->geometry_resource_name = tmp_geometry_resource_name;
+    out_config_->material_subdirectory = tmp_material_subdirectory;
     out_config_->material_resource_name = tmp_material_resource_name;
     tmp_mesh_name = NULL;
+    tmp_geometry_subdirectory = NULL;
     tmp_geometry_resource_name = NULL;
+    tmp_material_subdirectory = NULL;
     tmp_material_resource_name = NULL;
 
     ret = RENDER_MODEL_SUCCESS;
@@ -105,8 +127,14 @@ cleanup:
         if(NULL != tmp_mesh_name) {
             choco_string_destroy(&tmp_mesh_name);
         }
+        if(NULL != tmp_geometry_subdirectory) {
+            choco_string_destroy(&tmp_geometry_subdirectory);
+        }
         if(NULL != tmp_geometry_resource_name) {
             choco_string_destroy(&tmp_geometry_resource_name);
+        }
+        if(NULL != tmp_material_subdirectory) {
+            choco_string_destroy(&tmp_material_subdirectory);
         }
         if(NULL != tmp_material_resource_name) {
             choco_string_destroy(&tmp_material_resource_name);
@@ -131,7 +159,9 @@ void render_model_config_untextured_mesh_deinitialize(untextured_mesh_config_t* 
     }
     config_->coordinate_id = 0;
     choco_string_destroy(&config_->mesh_name);
+    choco_string_destroy(&config_->geometry_subdirectory);
     choco_string_destroy(&config_->geometry_resource_name);
+    choco_string_destroy(&config_->material_subdirectory);
     choco_string_destroy(&config_->material_resource_name);
 }
 

@@ -68,6 +68,10 @@ rotation = [0.0, 0.0, 0.0]
 
 [untextured_mesh]
 name = base_rotation_joint
+
+geometry_subdirectory = stl/robot_sample
+material_subdirectory = materials/robot_sample
+
 geometry = base_rotation_joint
 material = base_rotation_joint_mat
 coordinate_id = 1
@@ -75,6 +79,10 @@ coordinate_id = 1
 
 [untextured_mesh]
 name = elbow_link
+
+geometry_subdirectory = stl/robot_sample
+material_subdirectory = materials/robot_sample
+
 geometry = elbow_link
 material = elbow_link_mat
 coordinate_id = 3
@@ -82,6 +90,10 @@ coordinate_id = 3
 
 [untextured_mesh]
 name = left_finger
+
+geometry_subdirectory = stl/robot_sample
+material_subdirectory = materials/robot_sample
+
 geometry = left_finger
 material = left_finger_mat
 coordinate_id = 5
@@ -89,6 +101,10 @@ coordinate_id = 5
 
 [untextured_mesh]
 name = right_finger
+
+geometry_subdirectory = stl/robot_sample
+material_subdirectory = materials/robot_sample
+
 geometry = right_finger
 material = right_finger_mat
 coordinate_id = 6
@@ -96,6 +112,10 @@ coordinate_id = 6
 
 [untextured_mesh]
 name = shoulder_link
+
+geometry_subdirectory = stl/robot_sample
+material_subdirectory = materials/robot_sample
+
 geometry = shoulder_link
 material = shoulder_link_mat
 coordinate_id = 2
@@ -103,6 +123,10 @@ coordinate_id = 2
 
 [untextured_mesh]
 name = wrist_gripper_base
+
+geometry_subdirectory = stl/robot_sample
+material_subdirectory = materials/robot_sample
+
 geometry = wrist_gripper_base
 material = wrist_gripper_base_mat
 coordinate_id = 4

@@ -15,6 +15,7 @@ extern "C" {
 #include "application/core/application_types.h"
 
 typedef struct render_model render_model_t;
+typedef struct render_model_config render_model_config_t;
 
 typedef struct sample_robot_posture {
     float link1_angle;
@@ -29,11 +30,13 @@ typedef struct sample_robot {
     bool posture_dirty;
 } sample_robot_t;
 
-application_result_t sample_robot_create(vec3f_t root_translate_, vec3f_t root_rotation_, sample_robot_t** out_robot_);
+application_result_t sample_robot_create(const char* model_name_, vec3f_t root_translate_, vec3f_t root_rotation_, sample_robot_t** out_robot_);
 
 void sample_robot_destroy(sample_robot_t** robot_);
 
 application_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_);
+
+application_result_t sample_robot_dummy_config_loader(render_model_config_t* out_config_);
 
 #ifdef __cplusplus
 }

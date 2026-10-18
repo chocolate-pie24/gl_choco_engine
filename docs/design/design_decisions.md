@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-17
+最終更新: 2026-10-18
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -4684,3 +4684,128 @@ LiDAR Point CloudやVoxel Gridの可視化も検討した。点群のData更新�
 - 2026-10-17「すべてのMeshを非共有のRender Modelへ所属させ、Coordinateに描画姿勢のAuthorityを集約する」
 - `design_notes.md` — Mesh / Model / Coordinate / Render Packet Architecture
 - `glce_near_term_todo.md` — Renderer / Model Integrationおよび将来のPoint / Line Geometry Work
+
+---
+
+## Decision: Render Model Configを独立Moduleに集約し、具体的なInitialize APIを設ける
+
+**Status:** Accepted / Implementation In Progress  
+**Date:** 2026-10-18  
+**Scope:** Render Model Config / Config Lifetime / Module Boundary / API Simplicity
+
+### Decision
+
+- `render_model_config_t`、Coordinate Config、Shader別Mesh Config型とそれらの構築・解放APIを、`render_model/config/`配下の`render_model_config.h/.c`へまとめる。Runtime Modelの`render_model.h/.c`には、Configの具体的なStorage / Owned String操作を持ち込まない。
+- `render_model.h`のConstructor等は`render_model_config_t*`をPointerとして扱うため、必要に応じてForward Declarationで型依存を表現する。
+- Model Configにも明示的な`render_model_config_initialize()` / Deinitializeを設ける。Countと配列Pointer群を受け取るため引数は多いが、単なる引数削減のために`render_model_config_desc_t`等の追加Descriptor型は設けない。
+- Resource Name等の`choco_string_t`を持つUntextured Mesh Configには、Stringを構築・破棄する独立したInitialize / Deinitializeを提供する。一律のAPI形状を揃えることを目的に全Configへ同じ処理を強制しない。
+- `render_model_config`は外部Model Configuration Fileそのものではない。C側のOwned Config / Model構築経路を先に成立させ、File Parser / LoaderとExternal Formatは後続Workに残す。
+- Configで受理するRotationは`0〜360`度とする。External File由来浮動小数点のNaN / Infの検証責務はLoader側のExternal Trust Boundaryに置き、Config Initializerへ機械的に重複させない。
+
+### Context / Rationale
+
+Sample Robotの構築で、各Untextured Mesh Configが複数のOwned Stringを保持し、初期化途中のCleanupも必要になることが明確になった。一方、`render_model.h`へConfig / Runtime型と両者のAPIを集約し続けると、独立したOwned ConfigurationのLifecycleとRuntime ModelのLifecycleが混在する。
+
+そこでConfig Moduleを独立させる。ただし一つのConfigを構築するためにCount / PointerをまとめるだけのDescriptor Structureを別途導入すると、類似したField定義と型の往復が増えて見通しが悪くなる。GLCEでは意味を持たない新たなAbstractionを引数の数だけを理由に増やさず、Operation Contractの明確な通常の引数を採用する。
+
+### Alternatives / Consequences
+
+- `render_model_config_t`だけを`render_model.h`へ残す案は、Config自身のDeinitialize / Validation / Owned StorageのSemantic OwnerがConfig Moduleに属するため採用しない。
+- Init専用Descriptorを追加する案は、Borrowed InputとOwned Configの区別を型で表現できる利点がある一方、現時点ではField重複とAPI構造の複雑化に見合う必要性がないため採用しない。
+- Line / Point / UI Configの詳細InitializeやValidatorの実装は、まずUntextured MeshによるModel Import / Runtime確認後に進める。
+- Config Constructor / DeinitializerのOwnership Transfer / Copy、Failure Cleanup、Output Contractの詳細は各Moduleの公開Contractと実装で定める。追加の共通Validation Policyを本Decisionに導入しない。
+
+### Related Documents
+
+- `glce_near_term_todo.md` — M1 / M4 / M5
+- `design_notes.md` — Render Model Config / Model Import / Resource Lifecycle
+
+---
+
+## Decision: Model ImportをResource Dependency解決の入口とし、Model単位のReference LifecycleをRegistry Reference Countingで管理する
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-18  
+**Scope:** Model Import / Model Pipeline / Application Renderer / Geometry・Material Registry / Reference Counting / Resource Identity / Asset Location
+
+### Decision
+
+1. **Model ImportをResource Dependency解決の正式なOperationとする。** Applicationは`render_model_config_t`を用意してModel Importを要求するだけでよく、Modelが必要とするGeometry / Materialの一覧を事前に解析して個別Importする必要はない。Resource Nameを解決し、未登録のResourceのLoadを開始するのはModel Importの内部責務とする。これは登録済みResourceの組合せだけを生成する単なる`model_create`ではなく、実際に外部ResourceのImportを含むため、`import`という名称を採用する。
+2. **正式な`renderer_frontend`を今は新設しない。** 現行`application_renderer`がModel Import / Model Releaseの公開窓口と、既存`render_resources`の長寿命Ownerを暫定的に担う。将来のRenderer Frontendへ移行した後もModel単位のAPI Semanticsを維持する。2026-10-15のFrontend直接Ownership / Stateless Mesh Renderer Targetは取り消さず、後続Workで実装する。
+3. **Model PipelineをModel単位のStateless Orchestrationとして設ける。** Application Rendererから、Configに基づく各ResourceのAcquire、Model構築、途中失敗時のRollback、Model Release時の参照返却を委譲する。既存のGeometry / Material Resource Pipelineは各ResourceのLoad / Upload / Registerに引き続き使用する。Model Pipelineは長寿命RegistryやResource本体を所有しない。
+4. **RegistryへのBorrowを公開しない。** Model Pipelineは、対応するRender ResourceのAcquire / Release APIからResource IDを得る。Render Resourceは自身が所有するRegistryと既存Resource Pipelineへ処理を委譲する。Registryの内部PointerやReference CountをApplication / Modelへ公開しない。
+5. **ModelはResource実体ではなく参照権を持つ。** Mesh Valueは従来どおりGeometry / Material等のRegistry IDによる非所有参照を保持し、RegistryがResource Identityと実体Ownershipを保持する。Model Importの成功によってModel単位の参照権を確立し、Model Release時にすべて返却する。Applicationへ個別Geometry / MaterialのRelease列挙やConfigの再解析を要求しない。
+6. **Untextured Geometry / Material RegistryにReference Countingを導入する。** 既存Resourceを取得した場合は参照数を増やし、未登録ならLoad / Registerしたうえで最初の参照を確立する。参照を返却し、Countが0になったとき、RegistryのOwnership / Resource Pipelineの既存解放経路で実Resourceを解放する。Countの値を判断するのはRegistry / Render Resource側であり、Render Model自体はCountを参照して解放要否を判定しない。
+7. **Referenceの単位はModelごとの重複しないResource参照とする。** 同じModel内の複数Meshが同一Registry Resourceを使用しても、そのModelは1参照を持つ。別Modelが同じResourceを使用した場合はModelごとに1参照を持ち、最後のModelがReleaseされるまでResourceは存続する。内部の参照集合の表現・重複排除Implementationは未確定とする。
+8. **Model ImportをTransactionalに扱う。** 途中で失敗した場合はそのImportで取得済みの参照を返却し、既存Modelの参照するResourceは維持する。新規ImportしたResourceも最終参照が消えれば解放される。Failure Semanticsは`validation_policy.md`に従い、`DATA_CORRUPTED`確定後の通常Rollbackは行わない。
+9. **Resourceごとに相対Subdirectoryを指定する。** 1つのModel内で参照するGeometry / Materialが異なるSubdirectoryへ存在し得るため、Model Config全体またはModel Importへ単一のSubdirectoryを指定する方式は採用しない。Untextured Mesh ConfigではGeometryとMaterialそれぞれのResource NameとSubdirectoryを区別する。Asset Root / Deployment LocationのAuthorityは従来どおりApplicationに置く。
+10. **Registry Keyには正規化した`Subdirectory + Resource Name`の複合Stringを使用する。** Registryの2 Field Key構造への変更は行わず、現在のStringによる検索・登録機構を再利用する。同じ正規化Keyは同じRegistry Resource Identityを表し、別Subdirectoryの同名Resourceは別Identityとする。Registry KeyとLoaderに渡す完成済みFile Pathを混同しない。
+
+### Context
+
+従来のApplicationは個別のGeometryやMaterialをImportし、Resource IDを取得して描画処理へ渡していた。この段階ではApplicationがResourceの利用関係を知っていたため、Release順序を明示的なApplication Contractとして成立させ、Reference Countingを追加しない判断が合理的だった。
+
+しかし、Render ModelにCoordinate Treeと複数Meshを持たせ、Model ConfigだけをApplicationから渡してModelを構築する段階で事情が変化した。**ApplicationはModel Importの前にどのGeometry / MaterialをImportすべきかを知る必要がなく、知らないまま利用できることがModel抽象化の価値となった。** そのため、Applicationへ事前Import / 個別Releaseを要求すると、ApplicationはModelの内部Resource構成を再解析しなければならず、Config / Modelによる隠蔽が実質的に失われる。
+
+さらに、複数Modelが同じGeometry / Materialを参照する場合、個別ModelのDestroyに連動したResource解放と、他Modelの参照存続を両立する必要がある。Renderer Lifetimeまで全Resourceを保持すれば解放時の衝突を避けられるものの、Modelが不要になってもResourceを保持し続け、Application側のModel単位Lifecycleと一致しない。Applicationが手動で利用関係を数える方式も同じ利用負担を残す。
+
+また、Registryの従来のResource NameのみをKeyにすると、`sample_robot/part_a/base`と`robot_primitive/part_b/base`のような異なるLocationの同名Resourceを区別できない。反対に同一のAssetは複数Modelで重複Importせず共有したい。そこでSubdirectoryとResource Nameの組をLogical Identityとし、既存の単一String Key Registryを維持する方法を採用した。
+
+### Rationale
+
+- Applicationが必要Resourceの列挙・取得・Release手順を知る必要がなくなり、Model Import / Releaseの抽象化を保てる。
+- 同じModel Configから独立した複数Modelを生成しつつ、Geometry / Materialの実体だけを共有できる。
+- RegistryをResource Identity / Ownership / Reference CountのAuthorityとして維持し、Render ModelがRegistry内部情報やCPU / GPU解放の詳細を持たずに済む。
+- Reference Countの0到達で共有Resourceを安全に解放でき、Renderer終了まで不要Resourceを保持し続ける必要がない。
+- 既存Geometry / Material PipelineのImport Transactionと、Model単位の複数Resource Acquire / RollbackをOperationの粒度によって分離できる。
+- `application_renderer`を暫定的なFacadeとして使い、将来のRenderer Frontend移行前にModelのConstruction / Lifecycleを実装・検証できる。
+- Registry Entryと既存のName Search APIを複雑化せず、Subdirectory違いによるName Collisionを回避できる。
+- Applicationが持つAsset Rootの配置Policyと、個々のModel Configが持つ相対的なResource Locationを分離できる。
+
+### Considered / Rejected Alternatives
+
+- **Renderer Lifetimeで全Resourceを保持する。** Modelを解放してもResourceを保持し続け、Model単位の自然なResource Cleanupが成立しない。Applicationが代わりに明示ReleaseするとModelの内部構成を知る必要がある。
+- **Applicationによる明示的なResource Lifetime / Release順序の管理を続ける。** Model Configから依存Resourceを再走査して個別Releaseするような複雑な利用契約になり、Model Importの隠蔽を損なう。
+- **登録済みIDを`id_get()`で問い合わせ、未登録を`BAD_OPERATION`とみなしてImportする。** 未登録はModel Importでは正常なCache Missであり、実際のOperation Failureと分離したい。通常の検索をエラーとして扱うAPIをそのまま流用しない。
+- **`is_exist()`と`id_get()`を別々に呼ぶ。** 検索とID取得が重複するため、Reference Countを伴うAcquire Operationに統合する方が明確。Registry内の検索Helper等の実装分離は妨げない。
+- **RegistryへのPointerをBorrowしてModel Pipelineから直接操作する。** Registryの内部構成とMutation / LifetimeをModel Pipelineへ露出するため採用しない。
+- **ModelがReference Countを直接取得し、0なら個別Resourceを解放する。** Release可否のAuthorityをModelへ漏らし、Registryの参照状態を二重に管理するため採用しない。
+- **Model Config全体またはModel Importへ単一のSubdirectoryを渡す。** 同じModelでResourceごとに別Subdirectoryが必要になるケースを表現できない。
+- **Registry EntryへSubdirectoryとResource Nameを別Fieldで追加する。** 既存単一String KeyによるRegistryを変更せず、正規化Composite Keyで必要なIdentityを表現できる。
+- **File Full PathそのものをRegistry Identityとする。** Application固有のAsset RootやDeployment Locationを論理的なResource Identityへ混入させる。相対Subdirectory + Nameと、Load時の完成済みPathを分離する。
+
+### Consequences / Implementation Boundaries
+
+- **まずUntextured MeshのGeometry / Material Registryから着手する。** Texture / UI / Line / Point等に新しいCount Semanticsを機械的に要求しない。MaterialからTextureへの参照Lifetimeは、当面既存の個別Contractを維持する。
+- Render ResourceのAcquire APIは、既存Resourceの再利用と未登録時の既存PipelineによるImportを一つの正常Operationとして扱い、Resource IDを返す。ReleaseではModelが保持していた参照権を返却する。
+- 既存の個別Import / Release APIが新しいReference Countを迂回してResourceを破壊しないよう、公開契約・移行順・Direct Importで取得する参照の扱いを再設計する。従来APIの廃止や改名はこのDecisionでは確定しない。
+- Model Pipelineが同一Model内の参照を重複なくAcquire / Releaseできるよう、参照集合の格納場所、取得順、Cleanup順を実装時に決める。Model単位Release以外に`render_model_destroy()`だけを呼んで参照権が失われる経路を作らない。
+- Referenced ResourceのIDがRegistryに再利用され得る既存モデルは維持するが、Model存続中のReference CountがそのIDの解放を防止する。Generation付きHandleは今回の前提条件にしない。
+- Asset Root PolicyはApplicationに維持する。`fs_path`でのlexical path constructionと、Composite Keyの正規化規則を混同しない。`.` / `..`、空Subdirectory、区切り文字、case、Extension、Keyの衝突回避方式および入力ValidationはM1で定義する。一般用途のFilesystem Canonicalization / Symlink解決をこのDecisionで新設しない。
+- Count Overflow、Reference Count 0での登録解除が失敗した場合、Importが途中で失敗した場合のRecoverable Cleanup、`DATA_CORRUPTED`に対するFail-stop、Registry Deinitialize時の未解放参照の扱いは該当ModuleのAPI Contract / Validation Policyに従い実装時に確定する。
+- `render_model_config_t`およびUntextured Mesh Configの入力構築を先に完成させ、External Model Configuration File / Loaderは別Workに残す。Line / Point / UI Configの詳細もUntexturedでの動作確認後に扱う。
+
+### Prior Decisionsとの関係
+
+- **2026-10-17「すべてのMeshを非共有のRender Modelへ所属させ、Coordinateに描画姿勢のAuthorityを集約する」**の「参照中ResourceのLifetimeはApplication Contract」「Reference Countingを先行導入しない」を、**Model ImportでのGeometry / Material参照に関して変更する**。Model専属Mesh、Coordinate Transform Authority、RegistryのResource実体Ownershipは維持する。
+- **2026-10-17「Application固有Modelが姿勢と診断描画の意味を管理し、Render Modelを汎用描画構成に限定する」**の機種固有Semantic / Command / AABBの責務分離は維持する。末尾のApplication Resource Lifetime Contractは、Model-managed Geometry / Materialについて本Decisionで置き換える。
+- **2026-10-16「Render PacketをShader別Draw Collectionとし、Model連携を先に検証してからOrchestrationを抽出する」**の段階的導入を維持しつつ、Model Import Orchestrationの具体的必要性が判明したためModel Pipelineを導入する。汎用Mesh Pipeline / Mesh Registryを先行導入する判断ではない。
+- **2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」**の将来Targetを維持し、現段階は`application_renderer`を暫定Frontendとする。旧Decisionの「Mesh導入だけでReference Countingを追加しない」は当時の前提であり、今回Model ImportのLifecycle要件が具体化したため局所的に変更する。
+- **2026-09-12「Resource Pipelineはstateless orchestrationとして維持する」**のGeometry / Material Pipeline Contractは維持する。新Model PipelineはModel全体を扱う別粒度のOrchestrationである。
+- **2026-10-09「Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する」**のMaterial→Texture直接参照に関するContractを、今回のUntextured Geometry / Material Model Acquireと同一視しない。
+- **2026-08-31「Asset path policyはApplicationが所有し、Loaderへ完成済みpathを渡す」**と**2026-09-02「Geometry resource identityはRegistryが所有しCPU Geometryへ埋め込まない」**を維持する。
+
+### Revisit Conditions
+
+- Model内でResourceを差し替える、Streaming / Hot Reload / Shared Cache / GPU Residency管理を導入するなど、Acquire単位とRelease単位を再定義する必要が生じた場合。
+- Model単位の重複排除とRegistryのReference Countingでは、大規模動的Resource管理の性能や表現要件を満たせなくなった場合。
+- Asset Package / VFS / Archive / Mount Point等により、現在の相対Subdirectory + Resource NameというIdentityとLocationの関係を見直す必要が生じた場合。
+- 新しい具体的なMesh種別のImportがGeometry / Material以外のResourceを含み、TextureなどのReference LifetimeもModel-managedへ移管する必要が生じた場合。
+
+### Related Documents
+
+- `glce_near_term_todo.md` — M1〜M5 / R2〜R5
+- `design_notes.md` — Renderer Resource Domain and Frontend Migration / Mesh / Model / Coordinate / Render Packet Architecture
+- `validation_policy.md` — Failure classification / Fail-stop
+- `boundary_model.md` — Semantic owner / Trust Boundary / Ownership Transition
+
