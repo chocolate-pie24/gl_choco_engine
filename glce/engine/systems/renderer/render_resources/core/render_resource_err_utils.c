@@ -229,3 +229,28 @@ render_resource_result_t render_resource_result_convert_texture(texture_result_t
         return RENDER_RESOURCE_UNDEFINED_ERROR;
     }
 }
+
+render_resource_result_t render_resource_result_convert_buffer_manager(buffer_manager_result_t result_) {
+    switch(result_) {
+    case BUFFER_MANAGER_SUCCESS:
+        return RENDER_RESOURCE_SUCCESS;
+    case BUFFER_MANAGER_INVALID_ARGUMENT:
+        return RENDER_RESOURCE_INVALID_ARGUMENT;
+    case BUFFER_MANAGER_RUNTIME_ERROR:
+        return RENDER_RESOURCE_RUNTIME_ERROR;
+    case BUFFER_MANAGER_LIMIT_EXCEEDED:
+        return RENDER_RESOURCE_LIMIT_EXCEEDED;
+    case BUFFER_MANAGER_NO_MEMORY:
+        return RENDER_RESOURCE_NO_MEMORY;
+    case BUFFER_MANAGER_DATA_CORRUPTED:
+        return RENDER_RESOURCE_DATA_CORRUPTED;
+    case BUFFER_MANAGER_BAD_OPERATION:
+        return RENDER_RESOURCE_BAD_OPERATION;
+    case BUFFER_MANAGER_OVERFLOW:
+        return RENDER_RESOURCE_OVERFLOW;
+    case BUFFER_MANAGER_UNDEFINED_ERROR:
+        return RENDER_RESOURCE_UNDEFINED_ERROR;
+    default:
+        return RENDER_RESOURCE_UNDEFINED_ERROR;
+    }
+}

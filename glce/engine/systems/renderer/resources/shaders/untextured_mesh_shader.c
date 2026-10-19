@@ -26,6 +26,8 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 
+#include "engine/systems/renderer/render_resources/untextured_mesh_render_resource.h"
+
 #include "engine/systems/renderer/resources/materials/material_types.h"
 
 #include "engine/systems/renderer/config/renderer_config.h"
@@ -33,9 +35,6 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vao.h"
-
-#include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
-#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
@@ -64,18 +63,17 @@ struct untextured_mesh_shader {
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
     renderer_backend_vao_t* vao;            /** シェーダーVAO */
 
-    vbo_manager_t* vbo_manager;
+    untextured_mesh_render_resource_t* resource_manager;
 };
 
 static void destroy_unchecked(untextured_mesh_shader_t** shader_);
 static shader_result_t program_initialize(untextured_mesh_shader_t* shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_);
-static shader_result_t vbo_initialize(untextured_mesh_shader_t* shader_, const untextured_mesh_shader_config_t* config_);
 static shader_result_t vao_initialize(untextured_mesh_shader_t* shader_);
 
 // validation
 static bool is_valid_shallow(const untextured_mesh_shader_t* shader_);
 
-shader_result_t untextured_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const untextured_mesh_shader_config_t* config_, untextured_mesh_shader_t** out_shader_) {
+shader_result_t untextured_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, untextured_mesh_shader_t** out_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -87,7 +85,6 @@ shader_result_t untextured_mesh_shader_create(renderer_backend_context_t* backen
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION, shader_result_to_str(SHADER_BAD_OPERATION), "untextured_mesh_shader_create", "*out_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_create", "vertex_shader_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_create", "fragment_shader_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_create", "config_")
     if('\0' == vertex_shader_fullpath_[0]) {
         ret = SHADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_mesh_shader_create(%s) - Provided vertex_shader_fullpath_ is not valid.", shader_result_to_str(ret));
@@ -96,11 +93,6 @@ shader_result_t untextured_mesh_shader_create(renderer_backend_context_t* backen
     if('\0' == fragment_shader_fullpath_[0]) {
         ret = SHADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_mesh_shader_create(%s) - Provided fragment_shader_fullpath_ is not valid.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-    if(!untextured_mesh_shader_config_is_valid(config_)) {
-        ret = SHADER_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_mesh_shader_create(%s) - Provided config_ is not valid.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -117,12 +109,6 @@ shader_result_t untextured_mesh_shader_create(renderer_backend_context_t* backen
     ret = program_initialize(tmp_untextured_mesh_shader, vertex_shader_fullpath_, fragment_shader_fullpath_);
     if(SHADER_SUCCESS != ret) {
         ERROR_MESSAGE("untextured_mesh_shader_create(%s) - program_initialize failed.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = vbo_initialize(tmp_untextured_mesh_shader, config_);
-    if(SHADER_SUCCESS != ret) {
-        ERROR_MESSAGE("untextured_mesh_shader_create(%s) - vbo_initialize failed.", shader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -165,107 +151,8 @@ void untextured_mesh_shader_destroy(untextured_mesh_shader_t** shader_) {
         ERROR_MESSAGE("untextured_mesh_shader_destroy - Provided shader_ is corrupted.");
         return;
     }
-    if(NULL == (*shader_)->vbo_manager) {
-        ERROR_MESSAGE("untextured_mesh_shader_destroy - Provided shader_ is corrupted.");
-        return;
-    }
 
     destroy_unchecked(shader_);
-}
-
-shader_result_t untextured_mesh_shader_vbo_write(untextured_mesh_shader_t* shader_, size_t vertex_count_, const point_normal_vertex_t* vertices_, vbo_range_t* out_buffer_range_) {
-    shader_result_t ret = SHADER_INVALID_ARGUMENT;
-
-    shader_result_t ret_cleanup = SHADER_INVALID_ARGUMENT;
-    buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
-
-    range_allocation_t tmp_alloc_handle = { 0 };
-    size_t write_size = 0;
-    bool vbo_written = false;
-
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_write", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_write", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_write", "out_buffer_range_")
-    if(0 == vertex_count_ || 0 != (vertex_count_ % 3)) {
-        ret = SHADER_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - Provided vertex_count_ is not valid.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-    if(!is_valid_shallow(shader_)) {
-        ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-    if(!size_mul_checked(vertex_count_, sizeof(point_normal_vertex_t), &write_size)) {
-        ret = SHADER_OVERFLOW;
-        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - untextured_mesh_shader_vbo_write failed.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_buffer_manager = vbo_manager_write(shader_->vbo_manager, write_size, (const void*)vertices_, &tmp_alloc_handle);
-    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = shader_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - vbo write failed.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-    vbo_written = true;
-
-    if(0 != (tmp_alloc_handle.offset % sizeof(point_normal_vertex_t))) {
-        ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s) - vbo write failed.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    out_buffer_range_->allocation_info = tmp_alloc_handle;
-    out_buffer_range_->draw_range.first_vertex_count = tmp_alloc_handle.offset / sizeof(point_normal_vertex_t);
-    out_buffer_range_->draw_range.vertex_count = vertex_count_;
-
-    ret = SHADER_SUCCESS;
-
-cleanup:
-    if(SHADER_SUCCESS != ret && vbo_written) {
-        // NOTE: vbo_manager_freeが失敗した場合はvbo_managerにデータ不整合が発生しているため、
-        // untextured_mesh_shader_vbo_write失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
-        ret_buffer_manager = vbo_manager_free(shader_->vbo_manager, &tmp_alloc_handle);
-        if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-            ret_cleanup = shader_result_convert_buffer_manager(ret_buffer_manager);
-            ret = SHADER_DATA_CORRUPTED;
-            ERROR_MESSAGE("untextured_mesh_shader_vbo_write(%s, %s) - vbo free failed.", shader_result_to_str(ret), shader_result_to_str(ret_cleanup));
-        }
-    }
-    return ret;
-}
-
-shader_result_t untextured_mesh_shader_vbo_free(untextured_mesh_shader_t* shader_, const vbo_range_t* buffer_range_) {
-    shader_result_t ret = SHADER_INVALID_ARGUMENT;
-
-    buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_free", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(buffer_range_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "untextured_mesh_shader_vbo_free", "buffer_range_")
-    if(!is_valid_shallow(shader_)) {
-        ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_shader_vbo_free(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    if(!vbo_range_is_valid(buffer_range_)) {
-        ret = SHADER_BAD_OPERATION;
-        ERROR_MESSAGE("untextured_mesh_shader_vbo_free(%s) - Provided buffer_range_ is not valid.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_buffer_manager = vbo_manager_free(shader_->vbo_manager, &buffer_range_->allocation_info);
-    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = shader_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("untextured_mesh_shader_vbo_free(%s) - vbo free failed.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = SHADER_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
 shader_result_t untextured_mesh_shader_vao_bind(const untextured_mesh_shader_t* shader_) {
@@ -539,6 +426,76 @@ cleanup:
     return ret;
 }
 
+// NOTE: renderer_backend_vao_unbindを行う場合renderer_backend_contextが必要となる、ただ、実行しなくても良いので当面は実行しない
+render_resource_result_t untextured_mesh_render_resource_draw(untextured_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_) {
+    render_resource_result_t ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+
+    const draw_range_t* draw_range = NULL;
+    const untextured_material_t* material = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(render_resource_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "untextured_mesh_render_resource_draw", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "untextured_mesh_render_resource_draw", "model_matrix_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!is_valid_shallow(render_resource_)) {
+        ret = RENDER_RESOURCE_DATA_CORRUPTED;
+        ERROR_MESSAGE("untextured_mesh_render_resource_draw(%s) - Precondition validation failed for 'render_resource_'.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    material = untextured_material_registry_material_get(render_resource_->material_registry, material_id_);
+    if(NULL == material) {
+        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("untextured_mesh_render_resource_draw(%s) - untextured_material_registry_material_get failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    draw_range = untextured_mesh_geometry_registry_draw_range_get(render_resource_->geometry_registry, geometry_id_);
+    if(NULL == draw_range) {
+        ret = RENDER_RESOURCE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("untextured_mesh_render_resource_draw(%s) - untextured_mesh_geometry_registry_draw_range_get failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = untextured_mesh_shader_use(render_resource_->shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("untextured_mesh_render_resource_draw(%s) - untextured_mesh_shader_use failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = untextured_mesh_shader_material_set(render_resource_->shader, material);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("untextured_mesh_render_resource_draw(%s) - untextured_mesh_shader_material_set failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = untextured_mesh_shader_model_matrix_set(render_resource_->shader, model_matrix_, true);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("untextured_mesh_render_resource_draw(%s) - untextured_mesh_shader_model_matrix_set failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = untextured_mesh_shader_vao_bind(render_resource_->shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = render_resource_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("untextured_mesh_render_resource_draw(%s) - untextured_mesh_shader_vao_bind failed.", render_resource_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // TODO: renderer_backendにgl系APIを追加しOpenGL依存を消す
+    glDrawArrays(GL_TRIANGLES, (GLint)draw_range->first_vertex_count, (GLint)draw_range->vertex_count);
+
+    ret = RENDER_RESOURCE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 static void destroy_unchecked(untextured_mesh_shader_t** shader_) {
     if(NULL == shader_) {
         return;
@@ -708,43 +665,6 @@ cleanup:
             renderer_backend_shader_destroy(shader_->backend_context, &tmp_shader);
         }
     }
-    return ret;
-}
-
-static shader_result_t vbo_initialize(untextured_mesh_shader_t* shader_, const untextured_mesh_shader_config_t* config_) {
-    shader_result_t ret = SHADER_INVALID_ARGUMENT;
-
-    buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
-
-    vbo_manager_t* tmp_vbo_manager = NULL;
-    vbo_manager_config_t vbo_config = { 0 };
-
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vbo_initialize", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vbo_initialize", "config_")
-
-    vbo_config.base_align = alignof(float);
-    vbo_config.buffer_usage = config_->buffer_usage;
-    vbo_config.max_allocation_count = config_->max_allocation_count;
-    vbo_config.vbo_size = config_->vbo_size;
-
-    ret_buffer_manager = vbo_manager_create(shader_->backend_context, &vbo_config, &tmp_vbo_manager);
-    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = shader_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("vbo_initialize(%s) - buffer manager create failed.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    shader_->vbo_manager = tmp_vbo_manager;
-
-    ret = SHADER_SUCCESS;
-
-cleanup:
-    if(SHADER_SUCCESS != ret) {
-        if(NULL != tmp_vbo_manager) {
-            vbo_manager_destroy(&tmp_vbo_manager);
-        }
-    }
-
     return ret;
 }
 

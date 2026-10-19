@@ -64,6 +64,7 @@ typedef struct registry_entry {
     choco_string_t* resource_name;
     line_mesh_geometry_t* cpu_resource;
     vbo_range_t allocation_descriptor;
+    uint16_t reference_count;
 } registry_entry_t;
 
 /*

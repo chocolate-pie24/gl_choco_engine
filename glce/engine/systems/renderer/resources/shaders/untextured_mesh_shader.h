@@ -35,16 +35,11 @@ typedef struct renderer_backend_context renderer_backend_context_t; /**< Rendere
 
 typedef struct mat4x4f mat4x4f_t;
 typedef struct point_normal_vertex point_normal_vertex_t;
-typedef struct untextured_mesh_shader_config untextured_mesh_shader_config_t;
 typedef struct untextured_material untextured_material_t;
 
-shader_result_t untextured_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, const untextured_mesh_shader_config_t* config_, untextured_mesh_shader_t** out_shader_);
+shader_result_t untextured_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, untextured_mesh_shader_t** out_shader_);
 
 void untextured_mesh_shader_destroy(untextured_mesh_shader_t** shader_);
-
-shader_result_t untextured_mesh_shader_vbo_write(untextured_mesh_shader_t* shader_, size_t vertex_count_, const point_normal_vertex_t* vertices_, vbo_range_t* out_buffer_range_);
-
-shader_result_t untextured_mesh_shader_vbo_free(untextured_mesh_shader_t* shader_, const vbo_range_t* buffer_range_);
 
 shader_result_t untextured_mesh_shader_vao_bind(const untextured_mesh_shader_t* shader_);
 
@@ -64,6 +59,8 @@ shader_result_t untextured_mesh_shader_directional_light_color_intensity_set(con
 shader_result_t untextured_mesh_shader_ambient_light_color_intensity_set(const untextured_mesh_shader_t* shader_, vec3f_t color_, float intensity_);
 
 shader_result_t untextured_mesh_shader_material_set(const untextured_mesh_shader_t* shader_, const untextured_material_t* material_);
+
+render_resource_result_t untextured_mesh_render_resource_draw(untextured_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
 
 #ifdef __cplusplus
 }

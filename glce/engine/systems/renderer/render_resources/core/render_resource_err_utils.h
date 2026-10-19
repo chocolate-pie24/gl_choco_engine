@@ -12,6 +12,7 @@ extern "C" {
 
 #include "engine/io_utils/fs_path.h"
 
+#include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/textures/core/texture_types.h"
@@ -36,6 +37,8 @@ render_resource_result_t render_resource_result_convert_resource_pipeline(resour
 render_resource_result_t render_resource_result_convert_geometry(geometry_result_t result_);
 
 render_resource_result_t render_resource_result_convert_texture(texture_result_t result_);
+
+render_resource_result_t render_resource_result_convert_buffer_manager(buffer_manager_result_t result_);
 
 #ifdef __cplusplus
 }

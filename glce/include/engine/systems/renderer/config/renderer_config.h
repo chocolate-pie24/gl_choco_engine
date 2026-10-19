@@ -19,12 +19,6 @@ typedef struct line_mesh_shader_config {
     buffer_usage_t buffer_usage;
 } line_mesh_shader_config_t;
 
-typedef struct untextured_mesh_shader_config {
-    size_t vbo_size;
-    size_t max_allocation_count;
-    buffer_usage_t buffer_usage;
-} untextured_mesh_shader_config_t;
-
 typedef struct point_mesh_shader_config {
     size_t vbo_size;
     size_t max_allocation_count;

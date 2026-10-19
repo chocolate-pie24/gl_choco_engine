@@ -75,7 +75,7 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(un
         goto cleanup;
     }
 
-    ret_shader = untextured_mesh_shader_vbo_write(shader_, vertex_count, vertices, &tmp_buffer_range);
+    ret_shader = untextured_mesh_render_resource_vbo_write(shader_, vertex_count, vertices, &tmp_buffer_range);
     if(SHADER_SUCCESS != ret_shader) {
         ret = resource_pipeline_result_convert_shader(ret_shader);
         ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
@@ -97,9 +97,9 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(un
 
 cleanup:
     if(RESOURCE_PIPELINE_SUCCESS != ret && vbo_written) {
-        ret_shader = untextured_mesh_shader_vbo_free(shader_, &tmp_buffer_range);
+        ret_shader = untextured_mesh_render_resource_vbo_free(shader_, &tmp_buffer_range);
         if(SHADER_SUCCESS != ret_shader) {
-            // NOTE: untextured_mesh_shader_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
+            // NOTE: untextured_mesh_render_resource_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
             // untextured_mesh_geometry_pipeline_import_from_file失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
             ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
             ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - untextured mesh geometry import failed.", resource_pipeline_result_to_str(ret));

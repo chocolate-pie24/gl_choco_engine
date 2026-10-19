@@ -664,9 +664,9 @@ static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* 
         goto cleanup;
     }
 
-    if(SHADER_SUCCESS != untextured_mesh_shader_vbo_free(shader_, &entry_->allocation_descriptor)) {
+    if(SHADER_SUCCESS != untextured_mesh_render_resource_vbo_free(shader_, &entry_->allocation_descriptor)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("registry_entry_deinitialize(%s) - untextured_mesh_shader_vbo_free failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("registry_entry_deinitialize(%s) - untextured_mesh_render_resource_vbo_free failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     memset(&entry_->allocation_descriptor, 0, sizeof(vbo_range_t));
