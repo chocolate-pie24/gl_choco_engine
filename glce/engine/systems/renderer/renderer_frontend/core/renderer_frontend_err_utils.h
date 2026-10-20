@@ -19,12 +19,14 @@ extern "C" {
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
+#include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
 const char* renderer_frontend_result_to_str(renderer_frontend_result_t result_);
 
 renderer_frontend_result_t renderer_frontend_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_renderer_backend(renderer_backend_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_resource_registry(resource_registry_result_t result_);
+renderer_frontend_result_t renderer_frontend_result_convert_resource_pipeline(resource_pipeline_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_buffer_manager(buffer_manager_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_fs_path(fs_path_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_shader(shader_result_t result_);

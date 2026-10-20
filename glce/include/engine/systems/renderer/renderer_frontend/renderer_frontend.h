@@ -10,6 +10,8 @@ extern "C" {
 
 #include <stddef.h>
 
+#include "engine/base/choco_math/math_types.h"
+
 #include "engine/systems/renderer/core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
@@ -48,6 +50,35 @@ renderer_frontend_result_t renderer_frontend_create(
     renderer_frontend_t** out_renderer_frontend_);
 
 void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_);
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// for Untexture Mesh
+//////////////////////////////////////////////////////////////////////////////////////////
+renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_frontend_t* renderer_frontend_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
+
+// Geometry Import
+renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_import_from_file(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
+
+// Geometry Release
+renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_release(renderer_frontend_t* renderer_frontend_, uint16_t geometry_id_);
+
+// Material Import
+renderer_frontend_result_t renderer_frontend_untextured_mesh_material_import_from_file(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
+
+// Material Release
+renderer_frontend_result_t renderer_frontend_untextured_mesh_material_release(renderer_frontend_t* renderer_frontend_, uint16_t material_id_);
+
+// View, Projection Matrix
+renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_view_matrix_set(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, bool should_transpose_);
+
+renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_projection_matrix_set(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
+
+// Light Parameter
+renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_directional_light_direction_set(renderer_frontend_t* renderer_frontend_, vec3f_t direction_);
+
+renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_directional_light_color_intensity_set(renderer_frontend_t* renderer_frontend_, vec3f_t color_, float intensity_);
+
+renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_ambient_light_color_intensity_set(renderer_frontend_t* renderer_frontend_, vec3f_t color_, float intensity_);
 
 #ifdef __cplusplus
 }

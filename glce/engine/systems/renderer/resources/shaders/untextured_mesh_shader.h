@@ -60,8 +60,6 @@ shader_result_t untextured_mesh_shader_ambient_light_color_intensity_set(const u
 
 shader_result_t untextured_mesh_shader_material_set(const untextured_mesh_shader_t* shader_, const untextured_material_t* material_);
 
-render_resource_result_t untextured_mesh_render_resource_draw(untextured_mesh_render_resource_t* render_resource_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
-
 #ifdef __cplusplus
 }
 #endif

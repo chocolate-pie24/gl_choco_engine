@@ -109,19 +109,22 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vb
     ret = RESOURCE_PIPELINE_SUCCESS;
 
 cleanup:
+    if(RESOURCE_PIPELINE_DATA_CORRUPTED == ret) {
+        return ret;
+    }
     if(RESOURCE_PIPELINE_SUCCESS != ret && vbo_written) {
         ret_buffer_manager = vbo_manager_free(vbo_manager_, &tmp_buffer_range.allocation_info);
         if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-            // NOTE: untextured_mesh_render_resource_vbo_freeが失敗した場合はbuffer_managerにデータ不整合が発生しているため、
-            // untextured_mesh_geometry_pipeline_import_from_file失敗理由に関わらず、重大エラーのDATA_CORRUPTEDを返す
             ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - untextured mesh geometry import failed.", resource_pipeline_result_to_str(ret));
+            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - VBO rollback failed.", resource_pipeline_result_to_str(ret));
+            return ret;
         }
     }
     untextured_mesh_geometry_destroy(&geometry);
     if(NULL != vertices) {
         general_allocator_free((void**)&vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
     }
+
     return ret;
 }
 

@@ -124,6 +124,37 @@ renderer_frontend_result_t renderer_frontend_result_convert_resource_registry(re
     }
 }
 
+renderer_frontend_result_t renderer_frontend_result_convert_resource_pipeline(resource_pipeline_result_t result_) {
+    switch(result_) {
+    case RESOURCE_PIPELINE_SUCCESS:
+        return RENDERER_FRONTEND_SUCCESS;
+    case RESOURCE_PIPELINE_NO_MEMORY:
+        return RENDERER_FRONTEND_NO_MEMORY;
+    case RESOURCE_PIPELINE_RUNTIME_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case RESOURCE_PIPELINE_INVALID_ARGUMENT:
+        return RENDERER_FRONTEND_INVALID_ARGUMENT;
+    case RESOURCE_PIPELINE_DATA_CORRUPTED:
+        return RENDERER_FRONTEND_DATA_CORRUPTED;
+    case RESOURCE_PIPELINE_BAD_OPERATION:
+        return RENDERER_FRONTEND_BAD_OPERATION;
+    case RESOURCE_PIPELINE_OVERFLOW:
+        return RENDERER_FRONTEND_OVERFLOW;
+    case RESOURCE_PIPELINE_LIMIT_EXCEEDED:
+        return RENDERER_FRONTEND_LIMIT_EXCEEDED;
+    case RESOURCE_PIPELINE_FILE_OPEN_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case RESOURCE_PIPELINE_FILE_READ_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case RESOURCE_PIPELINE_UNSUPPORTED_FILE:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case RESOURCE_PIPELINE_UNDEFINED_ERROR:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    default:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    }
+}
+
 renderer_frontend_result_t renderer_frontend_result_convert_buffer_manager(buffer_manager_result_t result_) {
     switch(result_) {
     case BUFFER_MANAGER_SUCCESS:
