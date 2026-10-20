@@ -68,7 +68,7 @@ typedef struct subsystem_allocator subsystem_allocator_t;
 typedef struct untextured_mesh_geometry untextured_mesh_geometry_t;                   /**< 単色ライティング描画用ジオメトリのopaque型 */
 typedef struct vbo_range vbo_range_t;
 typedef struct draw_range draw_range_t;
-typedef struct untextured_mesh_shader untextured_mesh_shader_t;
+typedef struct vbo_manager vbo_manager_t;
 
 /**
  * @brief Untextured Mesh Geometry Registryを生成する。
@@ -98,33 +98,7 @@ typedef struct untextured_mesh_shader untextured_mesh_shader_t;
  */
 resource_registry_result_t untextured_mesh_geometry_registry_create(size_t max_geometry_count_, subsystem_allocator_t* allocator_, untextured_mesh_geometry_registry_t** out_registry_);
 
-/**
- * @brief Registryの利用可能状態を終了する。
- *
- * @par Public API Contract
- * - 登録済みEntryが所有するCPU GeometryとResource Nameを破棄する。
- * - 登録済みVBO Allocationを、対応するUntextured Mesh Shaderを使用して解放する。
- * - Registry本体とEntry配列のbacking storageは解放しない。
- * - 正常終了後、Registryは利用可能状態ではなくなり、
- *   再初期化せずに通常操作へ使用することはできない。
- * - 同じRegistryに対する再度のdeinitializeは許可しない。
- *
- * @par Failure Contract
- * - 引数不正、内部状態の異常、またはResource解放失敗を検出した場合は
- *   処理を中断する。
- * - 処理中断時は、すべての登録済みResourceの解放完了を保証しない。
- *
- * @param[in,out] registry_ 終了対象のRegistry。
- * @param[in,out] shader_ VBO Allocationの解放に使用するUntextured Mesh Shader。
- *
- * @pre registry_は利用可能状態にあるRegistryを指していること。
- * @pre shader_は登録済みVBO Allocationを管理する、利用可能な
- *      Untextured Mesh Shaderを指していること。
- * @pre shader_のlifetimeは本APIの実行完了まで維持されること。
- *
- * @post 正常終了後、registry_のlogical lifetimeは終了する。
- */
-void untextured_mesh_geometry_registry_deinitialize(untextured_mesh_geometry_registry_t* registry_, untextured_mesh_shader_t* shader_);
+void untextured_mesh_geometry_registry_deinitialize(untextured_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_);
 
 /**
  * @brief 指定名のUntextured Mesh Geometryが登録されているか判定する。
@@ -298,7 +272,7 @@ resource_registry_result_t untextured_mesh_geometry_registry_register(untextured
  * @post 成功時、指定IDに対応するEntryは未登録状態になる。
  * @post 成功時、対象Entryが所有していたResourceは解放済みとなる。
  */
-resource_registry_result_t untextured_mesh_geometry_registry_unregister(untextured_mesh_geometry_registry_t* registry_, untextured_mesh_shader_t* shader_, uint16_t geometry_id_);
+resource_registry_result_t untextured_mesh_geometry_registry_unregister(untextured_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_, uint16_t geometry_id_);
 
 /**
  * @brief Untextured Mesh Geometry Registryのcanonical validityを判定する。

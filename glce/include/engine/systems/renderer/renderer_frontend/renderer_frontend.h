@@ -10,6 +10,8 @@ extern "C" {
 
 #include <stddef.h>
 
+#include "engine/systems/renderer/core/renderer_types.h"
+
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
 typedef struct renderer_frontend renderer_frontend_t;
@@ -27,6 +29,7 @@ typedef struct renderer_frontend_vbo_config {
     buffer_usage_t buffer_usage;
 } renderer_frontend_vbo_config_t;
 
+// TODO: xxx_meshのuse / not useを選択可能にするのを検討する
 typedef struct renderer_frontend_untextured_mesh_config {
     renderer_frontend_vbo_config_t vbo;
     size_t max_geometry_count;

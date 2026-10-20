@@ -34,9 +34,8 @@ struct renderer_frontend {
     untextured_mesh_shader_t* untextured_mesh_shader;
 };
 
-static renderer_frontend_result_t frontend_untextured_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* executable_directory_, const char* shader_dir_, untextured_mesh_shader_t** out_shader_);
+static renderer_frontend_result_t frontend_untextured_mesh_shader_create(const char* executable_directory_, const char* shader_dir_, renderer_backend_context_t* backend_context_, vbo_manager_t* vbo_manager_, untextured_mesh_shader_t** out_shader_);
 
-// TODO: 全mesh以降完了後、renderer_backendの生成もここで行うように変更する
 renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_config_t* config_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, renderer_frontend_t** out_renderer_frontend_) {
 
     renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
@@ -57,6 +56,7 @@ renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_conf
     vbo_manager_t* tmp_untextured_mesh_vbo_manager = NULL;
 
     bool rollback_point_created = false;
+    vbo_manager_config_t vbo_manager_config = { 0 };
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_create", "config_")
@@ -89,17 +89,21 @@ renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_conf
         goto cleanup;
     }
 
-    ret_buffer_manager = vbo_manager_create(tmp_renderer_backend_context, &config_->untextured_mesh.vbo, &tmp_untextured_mesh_vbo_manager);
+    // untextured_mesh生成
+    vbo_manager_config.base_align = config_->untextured_mesh.vbo.base_align;
+    vbo_manager_config.buffer_usage = config_->untextured_mesh.vbo.buffer_usage;
+    vbo_manager_config.max_allocation_count = config_->untextured_mesh.vbo.max_allocation_count;
+    vbo_manager_config.vbo_size = config_->untextured_mesh.vbo.vbo_size;
+    ret_buffer_manager = vbo_manager_create(tmp_renderer_backend_context, &vbo_manager_config, &tmp_untextured_mesh_vbo_manager);
     if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = render_resource_result_convert_resource_registry(ret_buffer_manager);
+        ret = renderer_frontend_result_convert_resource_registry(ret_buffer_manager);
         ERROR_MESSAGE("renderer_frontend_create(%s) - buffer manager create failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
 
-    // untextured_mesh生成
     ret_resource_registry = untextured_material_registry_create(config_->untextured_mesh.max_material_count, allocator_, &tmp_untextured_material_registry);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
-        ret = render_resource_result_convert_resource_registry(ret_resource_registry);
+        ret = renderer_frontend_result_convert_resource_registry(ret_resource_registry);
         ERROR_MESSAGE("renderer_frontend_create(%s) - untextured_material_registry_create failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
@@ -111,7 +115,7 @@ renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_conf
         goto cleanup;
     }
 
-    ret = frontend_untextured_mesh_shader_create(tmp_renderer_backend_context, executable_directory_, shader_dir_, &tmp_untextured_mesh_shader);
+    ret = frontend_untextured_mesh_shader_create(executable_directory_, shader_dir_, tmp_renderer_backend_context, tmp_untextured_mesh_vbo_manager, &tmp_untextured_mesh_shader);
     if(RENDERER_FRONTEND_SUCCESS != ret) {
         ERROR_MESSAGE("renderer_frontend_create(%s) - frontend_untextured_mesh_shader_create failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
@@ -185,7 +189,7 @@ void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_) {
     }
 }
 
-static renderer_frontend_result_t frontend_untextured_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* executable_directory_, const char* shader_dir_, untextured_mesh_shader_t** out_shader_) {
+static renderer_frontend_result_t frontend_untextured_mesh_shader_create(const char* executable_directory_, const char* shader_dir_, renderer_backend_context_t* backend_context_, vbo_manager_t* vbo_manager_, untextured_mesh_shader_t** out_shader_) {
     renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
@@ -196,29 +200,30 @@ static renderer_frontend_result_t frontend_untextured_mesh_shader_create(rendere
 
     untextured_mesh_shader_t* tmp_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "frontend_untextured_mesh_shader_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "frontend_untextured_mesh_shader_create", "executable_directory_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "frontend_untextured_mesh_shader_create", "shader_dir_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "frontend_untextured_mesh_shader_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "frontend_untextured_mesh_shader_create", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "frontend_untextured_mesh_shader_create", "out_shader_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, RENDERER_FRONTEND_BAD_OPERATION, renderer_frontend_result_to_str(RENDERER_FRONTEND_BAD_OPERATION), "frontend_untextured_mesh_shader_create", "*out_shader_")
 
     ret_fs_path = fs_path_create(&vertex_shader_path, executable_directory_, shader_dir_, "untextured_mesh_shader", "vert");
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = render_resource_result_convert_fs_path(ret_fs_path);
+        ret = renderer_frontend_result_convert_fs_path(ret_fs_path);
         ERROR_MESSAGE("frontend_untextured_mesh_shader_create(%s) - fs_path_create failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
 
     ret_fs_path = fs_path_create(&fragment_shader_path, executable_directory_, shader_dir_, "untextured_mesh_shader", "frag");
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = render_resource_result_convert_fs_path(ret_fs_path);
+        ret = renderer_frontend_result_convert_fs_path(ret_fs_path);
         ERROR_MESSAGE("frontend_untextured_mesh_shader_create(%s) - fs_path_create failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_shader = untextured_mesh_shader_create(backend_context_, fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), &tmp_shader);
+    ret_shader = untextured_mesh_shader_create(fs_path_fullpath_get(vertex_shader_path), fs_path_fullpath_get(fragment_shader_path), backend_context_, vbo_manager_, &tmp_shader);
     if(SHADER_SUCCESS != ret_shader) {
-        ret = render_resource_result_convert_shader(ret_shader);
+        ret = renderer_frontend_result_convert_shader(ret_shader);
         ERROR_MESSAGE("frontend_untextured_mesh_shader_create(%s) - Failed to create textured mesh shader.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }

@@ -25,16 +25,16 @@ extern "C" {
 
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
-typedef struct untextured_mesh_shader untextured_mesh_shader_t;                       /**< 単色ライティング描画用シェーダーリソースのopaque型 */
+typedef struct vbo_manager vbo_manager_t;
 typedef struct untextured_mesh_geometry_registry untextured_mesh_geometry_registry_t; /**< 単色ライティング描画用ジオメトリレジストリのopaque型 */
 
-resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(untextured_mesh_shader_t* shader_, untextured_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
+resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vbo_manager_t* vbo_manager_, untextured_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 
 // TODO: 実装後にdoxygenコメントを追加する
 // resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_vertices();
 
 // TODO: 実装後にdoxygenコメントを追加する
-resource_pipeline_result_t untextured_mesh_geometry_pipeline_release(untextured_mesh_shader_t* shader_, untextured_mesh_geometry_registry_t* geometry_registry_, uint16_t geometry_id_);
+resource_pipeline_result_t untextured_mesh_geometry_pipeline_release(vbo_manager_t* vbo_manager_, untextured_mesh_geometry_registry_t* geometry_registry_, uint16_t geometry_id_);
 
 #ifdef __cplusplus
 }

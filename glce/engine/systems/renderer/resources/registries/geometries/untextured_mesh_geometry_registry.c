@@ -16,6 +16,7 @@
 
 #include "engine/containers/choco_string.h"
 
+#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 #include "engine/systems/renderer/resources/geometries/untextured_mesh_geometry.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/resources/shaders/untextured_mesh_shader.h"
@@ -85,7 +86,7 @@ struct untextured_mesh_geometry_registry {
 // Private Function Declarations
 // ============================================================
 // Lifecycle
-static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, untextured_mesh_shader_t* shader_);
+static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, vbo_manager_t* vbo_manager_);
 
 // State Queries
 static bool geometry_id_is_in_range(const untextured_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
@@ -208,32 +209,9 @@ cleanup:
     return ret;
 }
 
-/*
- * API-specific Validation Policy
- *
- * Preconditions:
- * - registry_とshader_のNULLを全Build Modeで検査する。
- * - DEBUG / TESTでは、登録済みEntryのowned resourceを安全に
- *   解放できることを確認するため、Registry全体を
- *   canonical validationする。
- * - RELEASEでは、成立済みのRegistry internal contractを信頼し、
- *   canonical validationを省略する。
- * - Shaderの内部整合性およびVBO Allocationの解放条件は、
- *   Untextured Mesh Shader側のAPI contractとvalidationに委ねる。
- *
- * Failure:
- * - VBO Allocationの解放に失敗した場合は、
- *   Registryの内部所有関係を維持できない可能性があるため
- *   DATA_CORRUPTED相当として処理を中断する。
- * - DATA_CORRUPTED確定後は、残りのEntryの通常解放を継続しない。
- *
- * Postconditions:
- * - 正常終了後のRegistryは利用可能なstable object modelから
- *   外れるため、通常のcanonical validationを実行しない。
- */
-void untextured_mesh_geometry_registry_deinitialize(untextured_mesh_geometry_registry_t* registry_, untextured_mesh_shader_t* shader_) {
-    if(NULL == registry_ || NULL == shader_) {
-        ERROR_MESSAGE("untextured_mesh_geometry_registry_deinitialize(%s) - provided registry_ or shader_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+void untextured_mesh_geometry_registry_deinitialize(untextured_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_) {
+    if(NULL == registry_ || NULL == vbo_manager_) {
+        ERROR_MESSAGE("untextured_mesh_geometry_registry_deinitialize(%s) - provided registry_ or vbo_manager_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -244,7 +222,7 @@ void untextured_mesh_geometry_registry_deinitialize(untextured_mesh_geometry_reg
 #endif
     for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
         if(!registry_entry_is_empty(&registry_->entries[i])) {
-            if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[i], shader_)) {
+            if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[i], vbo_manager_)) {
                 ERROR_MESSAGE("untextured_mesh_geometry_registry_deinitialize(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
                 return;
             }
@@ -548,41 +526,12 @@ cleanup:
     return ret;
 }
 
-/*
- * API-specific Validation Policy
- *
- * Preconditions:
- * - registry_とshader_のNULLを全Build Modeで検査する。
- * - DEBUG / TESTでは、登録済みEntryのowned resourceを安全に
- *   解放できることを確認するため、Registry全体を
- *   canonical validationする。
- * - RELEASEでは、成立済みのRegistry internal contractを信頼し、
- *   canonical validationを省略する。
- * - Geometry IDの範囲と対象Entryの登録状態は、
- *   誤ったEntryの参照や登録解除を防ぐため、
- *   全Build Modeで直接検査する。
- * - Shaderの内部整合性とVBO Allocationの解放条件は、
- *   Untextured Mesh Shader側のAPI contractとvalidationに委ねる。
- *
- * Failure:
- * - VBO Allocationの解放に失敗した場合は、
- *   対象Entryの正常な登録解除を完了できないため、
- *   DATA_CORRUPTEDとして処理を中断する。
- * - 解放失敗後の対象Entryについて、
- *   通常の状態復元や残りのResource破棄は試みない。
- *
- * Postconditions:
- * - 正常終了時、対象EntryはResourceのlifecycle contractに従って
- *   Empty Stateへ遷移する。
- * - 解放完了後のEntryを同じ条件で再検証する必要はないため、
- *   Registry全体のPostconditions validationは行わない。
- */
-resource_registry_result_t untextured_mesh_geometry_registry_unregister(untextured_mesh_geometry_registry_t* registry_, untextured_mesh_shader_t* shader_, uint16_t geometry_id_) {
+resource_registry_result_t untextured_mesh_geometry_registry_unregister(untextured_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_, uint16_t geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_unregister", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_unregister", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_unregister", "vbo_manager_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!untextured_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
@@ -602,7 +551,7 @@ resource_registry_result_t untextured_mesh_geometry_registry_unregister(untextur
     }
 
     // Commit.
-    if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[geometry_id_], shader_)) {
+    if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[geometry_id_], vbo_manager_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
         ERROR_MESSAGE("untextured_mesh_geometry_registry_unregister(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(ret));
         goto cleanup;
@@ -656,17 +605,20 @@ bool untextured_mesh_geometry_registry_is_valid(const untextured_mesh_geometry_r
 // ============================================================
 // Lifecycle
 // ============================================================
-static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, untextured_mesh_shader_t* shader_) {
+static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, vbo_manager_t* vbo_manager_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    if(NULL == entry_ || NULL == shader_) {
+    buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
+
+    if(NULL == entry_ || NULL == vbo_manager_) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
         goto cleanup;
     }
 
-    if(SHADER_SUCCESS != untextured_mesh_render_resource_vbo_free(shader_, &entry_->allocation_descriptor)) {
+    ret_buffer_manager = vbo_manager_free(vbo_manager_, &entry_->allocation_descriptor.allocation_info);
+    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("registry_entry_deinitialize(%s) - untextured_mesh_render_resource_vbo_free failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("registry_entry_deinitialize(%s) - vbo_manager_free failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     memset(&entry_->allocation_descriptor, 0, sizeof(vbo_range_t));

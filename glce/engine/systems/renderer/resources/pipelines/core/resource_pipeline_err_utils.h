@@ -16,6 +16,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
+#include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/textures/core/texture_types.h"
@@ -42,6 +43,8 @@ resource_pipeline_result_t resource_pipeline_result_convert_texture(texture_resu
 resource_pipeline_result_t resource_pipeline_result_convert_general_allocator(general_allocator_result_t result_);
 
 resource_pipeline_result_t resource_pipeline_result_convert_loader(loader_result_t result_);
+
+resource_pipeline_result_t resource_pipeline_result_convert_buffer_manager(buffer_manager_result_t result_);
 
 #ifdef __cplusplus
 }

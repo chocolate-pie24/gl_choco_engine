@@ -297,3 +297,28 @@ resource_pipeline_result_t resource_pipeline_result_convert_loader(loader_result
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     }
 }
+
+resource_pipeline_result_t resource_pipeline_result_convert_buffer_manager(buffer_manager_result_t result_) {
+    switch(result_) {
+    case BUFFER_MANAGER_SUCCESS:
+        return RESOURCE_PIPELINE_SUCCESS;
+    case BUFFER_MANAGER_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    case BUFFER_MANAGER_RUNTIME_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR;
+    case BUFFER_MANAGER_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
+    case BUFFER_MANAGER_NO_MEMORY:
+        return RESOURCE_PIPELINE_NO_MEMORY;
+    case BUFFER_MANAGER_DATA_CORRUPTED:
+        return RESOURCE_PIPELINE_DATA_CORRUPTED;
+    case BUFFER_MANAGER_BAD_OPERATION:
+        return RESOURCE_PIPELINE_BAD_OPERATION;
+    case BUFFER_MANAGER_OVERFLOW:
+        return RESOURCE_PIPELINE_OVERFLOW;
+    case BUFFER_MANAGER_UNDEFINED_ERROR:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    }
+}

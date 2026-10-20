@@ -99,7 +99,7 @@ renderer_frontend_result_t renderer_frontend_result_convert_renderer_backend(ren
     }
 }
 
-renderer_frontend_result_t render_resource_result_convert_resource_registry(buffer_manager_result_t result_) {
+renderer_frontend_result_t renderer_frontend_result_convert_resource_registry(resource_registry_result_t result_) {
     switch(result_) {
     case RESOURCE_REGISTRY_SUCCESS:
         return RENDERER_FRONTEND_SUCCESS;
@@ -118,6 +118,85 @@ renderer_frontend_result_t render_resource_result_convert_resource_registry(buff
     case RESOURCE_REGISTRY_LIMIT_EXCEEDED:
         return RENDERER_FRONTEND_LIMIT_EXCEEDED;
     case RESOURCE_REGISTRY_UNDEFINED_ERROR:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    default:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    }
+}
+
+renderer_frontend_result_t renderer_frontend_result_convert_buffer_manager(buffer_manager_result_t result_) {
+    switch(result_) {
+    case BUFFER_MANAGER_SUCCESS:
+        return RENDERER_FRONTEND_SUCCESS;
+    case BUFFER_MANAGER_INVALID_ARGUMENT:
+        return RENDERER_FRONTEND_INVALID_ARGUMENT;
+    case BUFFER_MANAGER_RUNTIME_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case BUFFER_MANAGER_LIMIT_EXCEEDED:
+        return RENDERER_FRONTEND_LIMIT_EXCEEDED;
+    case BUFFER_MANAGER_NO_MEMORY:
+        return RENDERER_FRONTEND_NO_MEMORY;
+    case BUFFER_MANAGER_DATA_CORRUPTED:
+        return RENDERER_FRONTEND_DATA_CORRUPTED;
+    case BUFFER_MANAGER_BAD_OPERATION:
+        return RENDERER_FRONTEND_BAD_OPERATION;
+    case BUFFER_MANAGER_OVERFLOW:
+        return RENDERER_FRONTEND_OVERFLOW;
+    case BUFFER_MANAGER_UNDEFINED_ERROR:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    default:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    }
+}
+
+renderer_frontend_result_t renderer_frontend_result_convert_fs_path(fs_path_result_t result_) {
+    switch(result_) {
+    case FS_PATH_SUCCESS:
+        return RENDERER_FRONTEND_SUCCESS;
+    case FS_PATH_INVALID_ARGUMENT:
+        return RENDERER_FRONTEND_INVALID_ARGUMENT;
+    case FS_PATH_BAD_OPERATION:
+        return RENDERER_FRONTEND_BAD_OPERATION;
+    case FS_PATH_DATA_CORRUPTED:
+        return RENDERER_FRONTEND_DATA_CORRUPTED;
+    case FS_PATH_NO_MEMORY:
+        return RENDERER_FRONTEND_NO_MEMORY;
+    case FS_PATH_LIMIT_EXCEEDED:
+        return RENDERER_FRONTEND_LIMIT_EXCEEDED;
+    case FS_PATH_OVERFLOW:
+        return RENDERER_FRONTEND_OVERFLOW;
+    case FS_PATH_RUNTIME_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case FS_PATH_UNDEFINED_ERROR:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    default:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    }
+}
+
+renderer_frontend_result_t renderer_frontend_result_convert_shader(shader_result_t result_) {
+    switch(result_) {
+    case SHADER_SUCCESS:
+        return RENDERER_FRONTEND_SUCCESS;
+    case SHADER_INVALID_ARGUMENT:
+        return RENDERER_FRONTEND_INVALID_ARGUMENT;
+    case SHADER_RUNTIME_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case SHADER_NO_MEMORY:
+        return RENDERER_FRONTEND_NO_MEMORY;
+    case SHADER_COMPILE_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case SHADER_LINK_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case SHADER_LIMIT_EXCEEDED:
+        return RENDERER_FRONTEND_LIMIT_EXCEEDED;
+    case SHADER_BAD_OPERATION:
+        return RENDERER_FRONTEND_BAD_OPERATION;
+    case SHADER_DATA_CORRUPTED:
+        return RENDERER_FRONTEND_DATA_CORRUPTED;
+    case SHADER_OVERFLOW:
+        return RENDERER_FRONTEND_OVERFLOW;
+    case SHADER_UNDEFINED_ERROR:
         return RENDERER_FRONTEND_UNDEFINED_ERROR;
     default:
         return RENDERER_FRONTEND_UNDEFINED_ERROR;

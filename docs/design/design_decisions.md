@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-18
+最終更新: 2026-10-19
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -561,7 +561,7 @@ Camera redesignでは、Camera objectへresource identity、active selection、�
 ## Decision: TopologyごとのRender ResourceをRenderer resource ownership rootとする
 
 **Status:** Superseded（target architecture。旧実装は移行完了まで存続）  
-**Superseded by:** 2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」  
+**Superseded by:** 2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」。その後、2026-10-19「Renderer Resource LifecycleをResource Manager / Shader / Mesh Renderer / Import Pipelineへ再編する」で長寿命Owner構造を再改訂  
 **Date:** 2026-09-12  
 **Scope:** Renderer / Resource Ownership
 
@@ -617,7 +617,7 @@ Camera redesignでは、Camera objectへresource identity、active selection、�
 
 ## Decision: Backend ContextはRender Resourceがborrowする
 
-**Status:** Accepted  
+**Status:** Accepted（Backend Contextの上位所有・下位Borrow原則を維持。Borrow元・対象は2026-10-19のRenderer再編Decisionで更新）  
 **Date:** 2026-09-12  
 **Scope:** Renderer / Backend Lifetime
 
@@ -679,7 +679,7 @@ Renderer固有の設計として、Backend Contextを各operationの一時引数
 
 ## Decision: Resource Pipelineはstateless orchestrationとして維持する
 
-**Status:** Accepted  
+**Status:** Accepted（Stateless / Temporary Transactionという基本方針を維持。Import専用の命名・配置・Release分離は2026-10-19のRenderer再編Decisionで更新）  
 **Date:** 2026-09-12  
 **Scope:** Renderer / Resource Pipeline
 
@@ -4022,7 +4022,8 @@ Material Configurationの`ambient`省略時のデフォルト`diffuse * 0.1f`、
 
 ## Decision: Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする
 
-**Status:** Accepted / Implementation Pending  
+**Status:** Superseded（FrontendによるShader / Registryの直接所有とRender Resource全面廃止という構造を変更。Frontend全体Owner / Stateless Mesh Rendererは維持）  
+**Superseded by:** 2026-10-19「Renderer Resource LifecycleをResource Manager / Shader / Mesh Renderer / Import Pipelineへ再編する」  
 **Date:** 2026-10-15  
 **Scope:** Renderer Frontend / Ownership / Mesh Renderer / Resource Pipeline / API Boundary
 
@@ -4724,7 +4725,7 @@ Sample Robotの構築で、各Untextured Mesh Configが複数のOwned Stringを�
 
 ## Decision: Model ImportをResource Dependency解決の入口とし、Model単位のReference LifecycleをRegistry Reference Countingで管理する
 
-**Status:** Accepted / Implementation Pending  
+**Status:** Accepted / Implementation Pending（Model単位のReference Lifecycleは維持。Resource Managerを介するAcquire / Release、4種Geometryへの横展開と実装順序は2026-10-19 Decisionで更新）  
 **Date:** 2026-10-18  
 **Scope:** Model Import / Model Pipeline / Application Renderer / Geometry・Material Registry / Reference Counting / Resource Identity / Asset Location
 
@@ -4809,3 +4810,648 @@ Sample Robotの構築で、各Untextured Mesh Configが複数のOwned Stringを�
 - `validation_policy.md` — Failure classification / Fail-stop
 - `boundary_model.md` — Semantic owner / Trust Boundary / Ownership Transition
 
+
+---
+
+## Decision: Renderer Resource LifecycleをResource Manager / Shader / Mesh Renderer / Import Pipelineへ再編する
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-19（設計議論: 2026-10-18〜19）  
+**Scope:** Renderer Frontend / Resource Manager / Shader / VBO Manager / VAO / Mesh Renderer / Import Pipeline / Geometry・Material Registry / Model Resource Lifecycle / Ownership / Directory Architecture
+
+### Decision
+
+Model ImportとRegistry Reference Countingを実装するにあたり、既存の`*_render_resource`によるResource Ownership・Import / Release・Draw・Uniform設定の混在を解消し、以下の構造へ再編する。
+
+1. **`*_render_resource`を`*_resource_manager`へ改名し、その役割をResourceの取得・解放およびResource Storageの管理に限定する。** Geometry / Material等の`acquire` / `release`はResource Managerを入口とする。Cache Hit / Missの判定、新規ResourceのImport依頼、Registryへの参照取得・返却、最終解放に必要な調整はResource Managerが統括する。ただしReference Count値のAuthorityはRegistryに置く。
+2. **`renderer_frontend`をRenderer全体の長寿命Ownerとし、Backend Context、描画種別ごとのShaderおよびResource Managerを所有させる。** Frontendは個々のGeometry RegistryやVBO Managerまで直接所有する構成へはしない。Resource ManagerはShader別Vertical SliceのResource Ownership Domainである。
+3. **VBO ManagerはShaderではなく、対応するResource Managerが所有する。** Resource Managerが自身のRegistryとVBO Managerを所有することで、GeometryのGPU Allocation / Upload / FreeがShaderを経由しなくても完結できるようにする。
+4. **ShaderはShader Program、VAO、Uniform関連State / Operationを所有・提供し、VBO ManagerのOwnerにはならない。** VAOを構築するときはResource Managerが管理するVBOをBorrowして利用する。ShaderからResource Manager側への必要な依存を許容し、**Resource ManagerからShaderへの逆依存は設けない**。BorrowをObject内に保持するかConstructor時だけ使用するか、具体的Interfaceは実装時に定める。
+5. **`*_mesh_renderer`はStatelessな描画専用Moduleとする。** ShaderおよびResource Managerを必要な描画Operationの間Borrowする。Draw RangeやMaterial等のResource解決はResource Managerから行い、Shader Program / VAO Bind、必要なUniform適用、Backend Drawを組み合わせる。長寿命Resourceを所有せず、Resource Acquire / Releaseを担当しない。
+6. **Draw操作をResource Managerへ持ち込まない。** 旧`*_render_resource_draw()`はMesh Rendererへ移す。旧`view_matrix_set()`、`projection_matrix_set()`、Lighting関連の`xxx_set()`はResource Managerの役割ではない。Frame / View / Projection / Lighting等の上位設定窓口はRenderer Frontendに配置する方向とし、個々のUniform SetterはShaderへ残す。最終的なState保存場所、更新タイミング、Drawとの関係は実装時に確定する。
+7. **既存Resource PipelineをImport目的に限定した`Import Pipeline`として維持し、Resource Managerの下位に配置する。** Geometry / Material等の新規Resourceについて、File Load、CPU Resource構築、GPU Upload、RegistryへのOwnership Commitに至る短命なImport Transactionを組み立てる、**Stateを持たないOperation Module**である。Import PipelineはShader / Registry / Resource Manager等の長寿命Objectを所有しない。現行PipelineのRelease操作はResource Manager側のRelease経路へ移す方向とする。
+8. **Resource ManagerのAcquireは、新規Importと既存Resourceの参照取得を同一の上位Operationとして扱う。** RegistryはResource Identity、実Resourceの長寿命Ownership、およびReference Countの唯一のAuthorityである。新規登録時は最初の参照を成立させ、既存取得時は参照数を増やし、Releaseで0になれば実Resourceを解放する。具体的な内部API SignatureとCommit / Rollback順序は未確定とする。
+9. **Geometry RegistryのReference Countingは4種類（Line / Point / UI / Untextured）すべてへ適用する。** Untextured Material RegistryもModel Importに必要な対象とする。これは「Model単位のReference Right」を導入する上位判断の具体化であり、Texture Registryへの同時導入は自動的には要求しない。
+10. **Model PipelineはResource Managerの下位へ移動させない。** Model単位のResource Dependency解決、同一Model内での重複排除、Acquire済みReferenceのRollback、Model構築、Release調整を行う別粒度のStateless Coordinatorとする。Application / ModelからGeometry RegistryのPointerを直接利用する構造にはしない。
+11. **本DecisionはTarget Architectureであり、2026-10-19時点で実装完了したという意味ではない。** 既存`application_renderer` / `*_render_resource` / Shader / Pipeline / Registryの変更は段階的に行い、各WorkでOwnership / Borrow / Result / Validation / 既存Drawの動作を確認する。
+
+#### Target Ownership / Dependency（Untextured Meshの例）
+
+```text
+Renderer Frontend                         [Owner of renderer-lifetime objects]
+│
+├── Renderer Backend Context              [Owned]
+│
+├── Untextured Mesh Resource Manager      [Owned]
+│   ├── VBO Manager                       [Owned]
+│   ├── Geometry Registry                 [Owned]
+│   └── Material Registry                 [Owned]
+│       
+│   Import Pipelines                      [Stateless subordinate operations]
+│       ├── Geometry Import Pipeline
+│       └── Material Import Pipeline
+│
+└── Untextured Mesh Shader                [Owned]
+    ├── Shader Program                    [Owned]
+    ├── VAO                               [Owned]
+    └── Uniform-related state
+          │
+          └── Resource ManagerのVBOへアクセス [Borrow / operation dependency]
+
+Untextured Mesh Renderer                  [Stateless]
+    ├── Shader                            [Borrow]
+    └── Resource Manager                  [Borrow]
+
+Model Pipeline                            [Stateless model-level coordinator]
+    └── Resource ManagerのAcquire / Releaseを使用
+```
+
+図のImport Pipelineは長寿命Owned Fieldではなく、**Resource Managerの下位に属するStatelessな処理Module**を示す。`Import Pipeline`がRegistryへ直接Registerするか、Resource ManagerにCandidateを返してRegisterを委譲するかは、Ownership TransferのAPI設計時に判断する。
+
+この構造での基本的な依存方向は以下となる。
+
+```text
+Renderer Frontend → Resource Manager → Registry / VBO Manager / Import Pipeline
+                  → Shader → (Resource Managerが管理するVBOへの限定的Borrow)
+
+Mesh Renderer → Shader + Resource Manager
+Model Pipeline → Resource Manager
+
+Resource Manager -X→ Shader
+Registry         -X→ Shader
+Import Pipeline  -X→ 長寿命StateのOwnership
+```
+
+このため、**ShaderがResource Managerを利用することや、Mesh RendererがResource Managerを利用すること自体は不自然な依存ではない**。不適切なのは、Resource ManagerにDraw / Shader Bind / VAO Bindのような描画Operationまで混入させることである。
+
+### Context / 議論の経緯
+
+本Decisionは初めから一度で決まった構成ではない。Model Importに対応するResource Lifetimeを検討する過程で、RegistryのAPI、Pipelineの役割、Render ResourceのOwnership、ShaderとVBO / VAOの関係を順に再評価した。以下は、その議論で採用・修正・却下された考えを時系列で記録する。
+
+#### 1. 出発点: Model Importによって、Resourceの参照取得と実体登録を分ける必要が生じた
+
+従来、ApplicationはGeometry / Materialを個別にImportし、必要な間保持し、不要になったら個別Releaseできた。この構造なら、利用側がResource Lifetimeを直接管理できる。
+
+しかしRender Modelは複数のMeshとCoordinate Treeを所有し、Model Configから依存するGeometry / Materialが決まる。Modelの利用者が毎回Configの内部Resourceを列挙して事前Importしたり、Model Releaseの際に個別解放したりする方式では、Model Importの抽象化が成立しない。
+
+そこで、同一Modelが同じResourceを複数Meshから参照しても1つのReference Rightを持ち、別Modelはそれぞれ独立のRightを持つ方式を採用した。RegistryがReference Countを管理する方向は、2026-10-18「Model ImportをResource Dependency解決の入口とし、Model単位のReference LifecycleをRegistry Reference Countingで管理する」で先行して確定している。
+
+この時点では、Render ResourceとGeometry / Material PipelineおよびRegistryに`acquire` / `release`を追加する方法を検討していた。
+
+#### 2. Registry `register/unregister`をPrivate化し、`acquire/release`へ統一する案
+
+最初は、`acquire_existing`と`acquire_new`を分けて呼び出す案も検討した。しかし、この設計では上位Callerが「既存か新規か」を判定する必要があり、`acquire_new`が実質的に`register`の改名となる危険があった。
+
+これに対して、Geometry PipelineとGeometry Registryでは`register` / `unregister`をPrivateまたはInternal Operationとし、上位からは`acquire` / `release`で利用する方が分かりやすい、という提案が出た。
+
+この議論で得た重要な判断は、**Resourceの利用者にCache Hit / Missを判断させないこと**である。一方で、Registry内部には「既存Entryへの参照追加」と「未登録ResourceのOwnership Transfer」という異なる内部操作が残る。これらをどのFunction Signatureで表すかは別問題であり、上位APIを一つにするためにすべての内部操作を無理に一関数へ統合することは要求しない。
+
+また、別Translation UnitのImport Pipelineから呼ぶ`register`はCの`static`なPrivate Helperにできない場合がある。**Applicationから公開しないことと、Module内部専用APIとして利用できることは区別する**。最終的なInternal Header / Function Scopeは後続Workで決める。
+
+#### 3. 「Geometry Pipelineは実は不要ではないか」という疑問
+
+`render_resource`は既にShaderとRegistryを所有していた。Geometry Pipelineが行っている処理の多くは、その2つのObjectを受け取り、LoaderでGeometryを作り、Shader経由でVBOへUploadし、Registryへ登録するものであった。
+
+したがって一度は、Geometry Pipelineを廃止してImport TransactionをRender Resourceへ内包する案が有力になった。実際に、独立したModuleが必要かどうかは、処理量よりも責務と依存関係で決まる。
+
+しかし検討を進めると、Geometry Pipelineは単なるForwarderではないことが確認された。
+
+```text
+Load
+  ↓
+CPU Geometry Construct
+  ↓
+GPU Upload
+  ↓
+Registry Ownership Commit
+  ↓
+Failure時のTemporary Resource Cleanup / Rollback
+```
+
+Import完了前のTemporary Owner、GPU Uploadの失敗、RegistryへのOwnership Transfer等を扱う**短命なTransaction**としての責務は存在する。このため、Pipelineを廃止することだけを目的とした統合は行わず、最終的にImport専用Moduleとして存続させる方向になった。
+
+ここでの判断は「すべてのPipelineを永久に独立Moduleとして維持する」ことではない。現在のResource Importでは、独立したTransactionを持つだけの意味があるということである。今後、実処理が消えて単なるForwarderになった場合は見直し得る。
+
+#### 4. 問題はPipelineの有無だけではなく、Render Resource内で異なるOperationが混在していることだった
+
+既存`untextured_mesh_render_resource`は概ね次のOwned Fieldを持っていた。
+
+```c
+struct untextured_mesh_render_resource {
+    untextured_mesh_shader_t* shader;
+    untextured_mesh_geometry_registry_t* geometry_registry;
+    untextured_material_registry_t* material_registry;
+};
+```
+
+一方、API群はImport / Release、Draw、`view_matrix_set` / `projection_matrix_set` / Lighting関連Setters、Create / Deinitialize / Validation等の異なる責務を含んでいた。
+
+ShaderとRegistryを同一Objectが所有することは当時のVertical Sliceとして合理的だった。しかし、Model単位のAcquire / Releaseを増やしていくと、Storage管理と描画Operationが同一Moduleに置かれている違和感がより明確になった。
+
+ここで**Render Resourceをただ廃止してFrontendへすべての処理を移すのではなく、Resourceの管理責務を独立させる**案が出た。
+
+#### 5. Render ResourceをResource Managerとして残す案
+
+`render_resource`が現にGeometry RegistryとMaterial Registryを所有しているなら、同一DomainのResource Acquire / Releaseを担当させることは自然である。
+
+そこで、旧`*_render_resource`を廃止するのではなく、**`*_resource_manager`へ役割を再定義して残す**方針を採用した。これは旧Objectを名前だけ変えるという意味ではない。
+
+```text
+旧 Render Resource:
+    Shader Ownership
+    Geometry / Material Registry Ownership
+    Import / Release
+    Draw
+    View / Projection / Lighting Set
+
+新 Resource Manager:
+    Geometry / Material Registry Ownership
+    VBO Manager Ownership
+    Resource Acquire / Release
+    Resource Lookup / Storage Operation
+    Import Pipeline Orchestration
+
+別のOwner:
+    Renderer Frontend → Shader Ownership / Frame-level Orchestration
+    Mesh Renderer    → Stateless Draw
+    Shader           → Program / VAO / Uniform
+```
+
+これにより、2026-10-15の「Renderer FrontendがShader / Registryをすべて直接所有し、中間の長寿命Ownerを持たない」という方針を修正することになった。
+
+#### 6. ShaderをFrontendが直接所有し、Resource ManagerがShaderをBorrowする初期案
+
+Resource ManagerからShader Ownershipを外し、FrontendがShaderを所有する案をまず検討した。既存ではVBO ManagerがShaderにあるため、Resource ManagerはGeometryのUpload / FreeにShaderを必要とする。
+
+この段階では、次の依存関係を想定していた。
+
+```text
+Frontend
+    ├── Shader [Owned]
+    └── Resource Manager [Owned]
+           ├── Shader [Borrowed]
+           ├── Geometry Registry [Owned]
+           └── Material Registry [Owned]
+```
+
+この方式も成立する。LifetimeはFrontendが統括すればよく、Resource ManagerがShaderをBorrowしてVBO操作を行える。しかし、**Resource Storageの管理がShaderの存在に依存する**という本質は残る。Geometry Registryが最終解放時にShaderを必要とする従来の依存も残る。
+
+このため、VBO Managerそのものをどこが所有すべきかを再検討した。
+
+#### 7. VBO ManagerとVAOを両方Resource Managerへ移す案
+
+VBO ManagerはGPU Bufferの確保・Upload・解放に関わり、Geometry Resource StorageのManagerとして自然である。ならばVBO Managerだけでなく、密接に関係するVAOもResource Managerへ移すことができるのではないかと考えた。
+
+この案にはShader ProgramとGeometry Storageを分離できる利点がある。しかし、**`shader_vao_bind()`がResource Manager側へ移る**ことが問題になった。
+
+VAOはVertex Attribute / VBO Bindingの情報を管理するが、VAO BindはResourceのImportやReleaseで使うだけの操作ではない。実際にはDraw時のGPU State切替に直接使用する。
+
+Resource Managerを「Resourceを取得・解放・操作する管理Module」と定義したのに、そこへ描画のための`vao_bind()`だけが残るのは責務として異質だった。
+
+この観察から、**GPUに関係するObjectをすべてResource Managerへ入れることが正しいわけではない**と判明した。Owned Objectの分類は、実際にそれを利用するOperationの意味に従わせるべきである。
+
+#### 8. VBO ManagerだけResource Managerへ移し、VAOはShaderに残す最終案
+
+次に、VBO ManagerをResource Managerに所有させ、ShaderからはVBO ManagerのOwner Fieldを除き、VAO / Program / Uniformを残す案を検討した。
+
+これはVBO ManagerとVAOの間に依存があるから所有者も同じでなければならない、という前提を外したものである。
+
+VAO初期化では、対象VBOをBindした状態でVertex Attributeの設定を行う必要がある。OpenGL 3.3の現在のBackendでは、`glVertexAttribPointer()`がその時点のArray Buffer BindingをVAOのAttribute Stateへ取り込む。そのため、ShaderがVAOを構築するときにResource ManagerのVBOを一時Borrowすれば、ShaderがVBO Managerを所有しなくても成立する。
+
+```text
+Resource Manager create
+    └── VBO Manager create
+              ↓
+Shader create
+    ├── Shader Program create
+    └── VAO create
+          ├── VAO Bind
+          ├── Resource ManagerのVBOをBind
+          ├── Vertex Attribute Setup
+          └── Unbind
+```
+
+その後のDrawではShaderが保持するVAOをBindすればよく、Resource Managerへ`vao_bind()`を押し込む必要がない。
+
+一方、Resource Managerは自ら所有するVBO Managerを使ってUpload / Freeを実施できる。**Resource ManagerがShaderをBorrowしなければならない理由がなくなり、依存方向が単純になる**。
+
+この時点で「ShaderがResource Managerに依存する」「Mesh RendererもResource Managerを利用する」という構造を採用した。Resource ManagerはResourceへの正規アクセス窓口であるため、それを描画側が利用すること自体は自然と判断した。
+
+#### 9. Geometry Pipelineを`Import Pipeline`と呼び、Resource Manager配下へ移設する案
+
+最後に、Pipelineの位置付けを再検討した。従来の`resource_pipelines`はGeometry / Material / TextureのResource構築を行っていたが、その名前だけでは、どの長寿命Ownerの下でどのOperationを担当するのかが分かりにくい。
+
+新しい分割では、Resource Managerに外から見えるAcquire / Releaseの入口があり、RegistryにResource Identity / Reference CountのAuthorityがあり、Import Pipelineは未登録Resourceの構築だけを担当する。したがって、**Pipelineを`Import Pipeline`へ改名し、Resource Managerの下位へ配置する**のが自然であると判断した。
+
+```text
+Resource Manager.acquire()
+    │
+    ├── Registryに存在する
+    │     └── Reference Count増加、既存ID返却
+    │
+    └── Registryに存在しない
+          └── Import Pipeline
+                ├── Load / Generate
+                ├── CPU Resource Construct
+                ├── GPU Upload（必要な場合）
+                └── RegistryへのOwnership Commitに必要な結果を成立させる
+```
+
+このときImportは「Fileから読み込む」という狭い意味だけには限定しない。Vertices、AABB、Solid Color等から新しいResourceを構築し、Resource Manager管理Domainへ取り込むOperationも含み得る。各Import Methodの正確な対象はModuleごとに決める。
+
+Import Pipelineに既存Release経路を残してAcquire / Releaseの入口を分散させず、上位からのReleaseはResource Managerで受け付ける。Registryによる実体解放とTemporary Import CandidateのCleanupは別Operationである。
+
+**Directory配置とOwnershipは同じ意味ではない。** Import PipelineはResource Managerの下位Moduleとして配置するが、長寿命Ownerとして保持されるObjectではなくStatelessなFunction群のまま扱う。
+
+### Rationale
+
+#### Resource ManagerをShader別Resource Domainの管理単位とする
+
+- Shader別Vertical SliceごとのRegistry / VBO Managerを一つの管理Domainへまとめられる。
+- Renderer FrontendがすべてのRegistry / VBO Manager / Import処理の具体構造を直接知る必要がなくなる。
+- Resource Acquire / Releaseの正常なCache Hit / Missと参照の管理を、Application / Modelから隠蔽できる。
+- Model Importが個別Registry Pointerや内部Reference Countを知らずにResource参照権を取得・返却できる。
+
+#### VBO ManagerのOwnershipをShaderから分離する
+
+- VBO AllocationはGeometry Storageの一部であり、Resource ManagerがLifecycleを管理するResourceと整合する。
+- Registryの最終解放にShader Pointerを要求しない構造を実現できる。
+- ShaderのCreate / Destroy、Program / Uniform設定と、GeometryをUpload / FreeするOperationを分離できる。
+- ShaderにはVAOを残し、Draw時のVertex Input State Bindingを自然なAPIへ配置できる。
+- OwnershipとBorrowを区別することで、VBOとVAOに関係があっても一方が他方を所有する必要はない。
+
+#### Resourceの使用とLifecycleを別Moduleへ置く
+
+- Resource ManagerはResource Lifecycle、Mesh RendererはDraw、ShaderはProgram / VAO / Uniform、Frontendは全体のCompositionという責務をそれぞれ持てる。
+- `resource_manager_vao_bind()`のような、管理Moduleの意味と異質なAPIを生まずに済む。
+- Resource ManagerからShaderへの循環・逆依存を避けられる。
+- Mesh Rendererは描画に必要なResource LookupをRMから受け、実体Ownershipを持たない。
+
+#### Import Pipelineを下位のStateless Transactionとする
+
+- Load / CPU Resource生成 / GPU Upload / Failure Cleanupという独立したTransactionを残せる。
+- Pipelineを削除しただけで同じTransactionをResource Managerの大きな関数へ埋め戻すことを避けられる。
+- ImportとReleaseの意味を分離し、PipelineをResourceの取得・解放の公開窓口にしなくて済む。
+- 将来Import方法が増えても、Resource Managerの長寿命StateとImporterの一時作業を分けられる。
+
+### Considered / Rejected or Revised Alternatives
+
+#### A. RegistryとPipelineの両方へ一律に`acquire/release`を設ける
+
+初期案として、PipelineとRegistryの双方に`acquire` / `release`を追加し、`register` / `unregister`を内部化する方法を検討した。Reference CountをRegistryに置く点は適切だったが、上位のAcquire / Releaseを誰が統括するかを先に決めないと、複数の公開入口ができ、Resourceの存在判定やLifetime Authorityを利用者が意識することになる。
+
+採用したのは**Resource Managerが上位Operationの入口となり、RegistryがCountを管理する**という役割分担である。Registry内部にどの補助関数を設けるかは別判断とする。
+
+#### B. Geometry Pipelineを廃止してRender Resourceへ全面統合する
+
+Import Transactionには独立した処理責務があり、すべてをOwner Moduleへ集約することは必ずしも単純化にならない。最終的にImport専用Pipelineとして残す方針とした。
+
+#### C. FrontendがShader / Registry / VBO Managerをすべて直接所有する
+
+2026-10-15には、余計な長寿命Wrapperを増やさないことを重視していた。しかしModel単位のReference Lifecycleが具体化すると、Geometry / MaterialのAcquire / Releaseを担う管理Domainに意味が生まれた。`Resource Manager`は単なるWrapperではなく、RegistryとVBO ManagerのOwnerでありLifecycle Operationの入口であるため、Frontendが直接すべてを所有する構造は修正する。
+
+#### D. Resource ManagerがShaderをBorrowし、ShaderがVBO Managerを所有し続ける
+
+OwnershipだけFrontendへ移し、GPU Storage管理のためにRMがShaderを借用する案も成立する。しかしGPU GeometryのUpload / FreeがShaderに依存し、Registryの解放処理もShaderと結びついたままになるため、今回のTargetとしては採用しない。
+
+#### E. VBO ManagerとVAOを両方Resource Managerへ移す
+
+VAO BindがDrawに属するため、管理Moduleへ描画State Operationが混入する。VBOとVAOの物理的な関係だけでOwnerを一致させる必要はなく、VBOはRM、VAOはShaderに分ける方針とした。
+
+#### F. VBO ManagerをShaderへ残す
+
+ShaderがVAO / VBOの両方を所有する構造は局所的で、依存関係がModule内に閉じるメリットがある。しかしReference Countに伴うVBO Allocationの最終解放をRMで管理するにはShaderへ依存する必要が残る。Shader→RMの限定依存を受け入れてStorage Ownerを揃える方が、今回の責務分担と一致する。
+
+#### G. Mesh RendererをStateful Objectにする、またはAcquire / Releaseを担当させる
+
+描画中に借用できるShader / Resource Managerがあれば、現時点のDraw Operationは長寿命Stateを持たずに成立させられる。Resourceの取得・解放を加えると描画とStorage Lifetimeが混在するため採用しない。
+
+#### H. Model PipelineをResource Manager内部へ取り込む
+
+Model Pipelineは複数Resourceの依存解決とModel全体のRollbackを担当するため、Geometry / Material単位のImport PipelineとはOperation粒度が異なる。一つのRMに属するImport処理ではないため採用しない。
+
+### Consequences / Migration Contract
+
+#### 1. Create / DestroyとBorrow Lifetime
+
+概念的な生成順序:
+
+```text
+Renderer Backend Context create
+       ↓
+Resource Manager create
+       └── VBO Manager / Registry create
+       ↓
+Shader create
+       └── Resource ManagerのVBOを利用してVAO構築
+       ↓
+Renderer Frontendとして利用可能な状態を成立させる
+```
+
+概念的な破棄順序:
+
+```text
+Shader / VAO destroy
+       ↓
+Resource Manager deinitialize
+       ├── Registry内のOwned Resource解放
+       └── VBO Manager destroy
+       ↓
+Renderer Backend Context destroy
+```
+
+Resource ManagerはShaderがVAOを保持する間、必要なVBOのBackend Object IdentityとBorrow Contractを維持する。GPU BufferのRecreate / Hot Reload時にVAOを再構築するか、Buffer Bindingがいつ無効になるか等の詳細は今回の決定に含めない。
+
+Shaderが`resource_manager_t*`を長期Borrowするか、VAO初期化中にVBO Manager等へ一時的にアクセスするかは未決とする。**ShaderがVBO Managerを所有しないこと、Resource ManagerがShaderへ依存しないこと**が確定要件である。
+
+#### 2. Resource ManagerのAPI責務
+
+- `geometry_acquire` / `geometry_release`、必要なMaterialの`acquire` / `release`に相当する上位APIを提供する。
+- 既存ResourceではCountを増やして同じResource IDを返す。未登録ならImport Pipeline等によって新規Resourceを作り登録する。
+- Resource IDに対するGeometry Draw Range / Material等のGetterを描画用に提供する。ただしRegistry Pointerそのものを上位へ露出しない。
+- Import Pipelineが内部的にRegistryへ直接登録する方式と、RMが登録を実行する方式は引数・Ownership Contractと合わせて決める。
+- `register` / `unregister`のPrivate / Internal Scopeは実際のTranslation Unit構成と一致させる。
+- 旧`render_resource`のDraw / View / Projection / Lighting SetterをそのままResource Managerに残さない。
+
+#### 3. Reference Countingの適用範囲
+
+- **Line / Point / UI / Untextured Geometry Registryの4種類**にReference Countingを導入する。
+- **Untextured Material Registry**にもReference Countingを導入する。
+- Reference CountのAuthorityはRegistry。Modelは自身が保持するResourceごとの参照権を管理するが、Registry内Count値を複製しない。
+- 参照中のResourceをFinal Releaseで破壊しないため、ReleaseはCounterとResource RegistrationのState Transitionとして設計する。
+- Texture Registry、将来のTextured Materialに同じCountを直ちに要求しない。必要になったとき、参照関係ごと判断する。
+
+#### 4. Import PipelineのDirectory / API
+
+- `Import Pipeline`をResource Managerの下位として表現できるDirectory構成へ移す。
+- Geometry / Material / Texture等のPipelineは、実際にそれを所有・管理するVertical Sliceとの対応に従って配置する。UIのTexture Pipeline等で複数の管理Domainから利用される具体的関係があれば、Source Auditで確認して配置を決める。
+- PipelineはStatelessであり、Object Create / Destroyを持つ長寿命Ownerにはしない。
+- `import_from_file`、`import_from_vertices`、`import_from_aabb`等、入力方式ごとのMethod差は維持してよい。ImportをFile Parsingだけに限定しない。
+- `release`は上位RMに集約する。Import完了前Temporary CandidateのRollbackと、登録後ResourceのFinal Releaseは明確に区別する。
+
+#### 5. 描画Operationの移設
+
+- 旧`*_render_resource_draw()`は対応するStateless Mesh Rendererへ移す。
+- Mesh RendererはShader / RMをBorrowし、Geometry Draw Range、Material等を解決してDrawする。
+- Shader Program / VAOのBindと個別Uniform SetterはShader側で提供する。
+- FrontendはView / Projection / Lighting等の上位操作の入口となる方向。ただしUniformの更新時点・Frame Stateの具体的Owner・FrontendとMesh Renderer間のInput Contractは後続設計で確定する。
+- Geometry→AABBのようなGeometry ConversionはDrawでもResource Lifetimeでもないため、責務の所有先を個別検討する。単純にRMへ移設しない。
+
+#### 6. 段階的実装と既存Decisionの扱い
+
+- 既存`application_renderer`や`*_render_resource`が現に所有しているResourceを移行途中で二重所有しない。
+- Frontend / Resource Manager / ShaderのOwner移管、VBO Manager移動、Draw / Setter分離、Refcount追加、Model Import接続は、レビュー可能な小さなWorkに分割する。
+- 4種類のGeometryは対象とするが、一つのCommitで4種類を無条件に同時変更することまでは要求しない。
+- 各WorkでCreate / Destroy、Error Conversion、Partial Failure Cleanup、Validation、既存描画の回帰を確認する。
+- 参照Countの更新、Registry登録時のOwnership Commit、VBO AllocationのFinal Free、Model ImportのRollback等は`validation_policy.md`と既存のFunction Phase Contractに従って詳細化する。
+- Renderer Frontend導入の前倒しによって、2026-10-18の旧Model Import Decisionにある「Frontendは今は新設せず`application_renderer`を暫定Ownerとする」「Untexturedから先にRefcountを入れる」という作業順の判断を更新する。Model単位の参照権と自動Resource解決という本質的Semanticsは維持する。
+
+### Prior Decisionsとの関係
+
+#### 2026-09-12「TopologyごとのRender ResourceをRenderer resource ownership rootとする」
+
+この当時は、Topology / Shader単位にShaderとRegistryをまとめ、Applicationから内部Resource Managementを隠すことが主目的だった。**Shader別Vertical Sliceの局所性は維持する**が、当時の`render_resource`をImport / Release / Drawの混在したObjectとして維持することはしない。2026-10-15の再編を経て、今回の`resource_manager`として責務を再定義する。
+
+#### 2026-09-12「Backend ContextはRender Resourceがborrowする」
+
+Backend Contextの長寿命Ownerを上位に置き、下位がBorrowする原則は維持する。Borrowする具体的Objectが旧Render ResourceからFrontend / Shader / Resource Manager等へ変わるため、旧Class名に依存したContractは読み替える。
+
+#### 2026-09-12「Resource Pipelineはstateless orchestrationとして維持する」
+
+Pipelineが長寿命Stateを持たず、Import Transaction中のTemporary Ownerとなる原則は維持する。一方、**名前をImport Pipelineへ変更しResource Manager下位へ配置、ReleaseをRMへ集約する**ことで、旧PipelineのOperation Scopeを更新する。
+
+#### 2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」
+
+FrontendがRenderer全体のOwnerであり、Mesh RendererがStateless Draw Moduleである基本は維持する。一方、**FrontendがRegistryを直接所有し中間Ownerを置かない方針はSuperseded**とする。Frontendは各Resource Managerと各Shaderを所有し、Resource ManagerがRegistry / VBO Managerを所有する。
+
+#### 2026-10-15「Renderer専用ResourceをRenderer Domainへ統合し、Range AllocatorをMemory Domainへ移動する」
+
+RendererのResource Domainを一つにまとめ、CPU / GPUという区別だけでResourceを分割しないDecisionは維持する。今回のImport Pipeline / Resource Managerの配置は、その内部Module構成を明確にする追加の再編である。Range Allocatorは引き続きMemory Domainのlow-level mechanismとする。
+
+#### 2026-10-09「Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する」
+
+Untextured / Textured Materialの区別、Material Value、Vertical Sliceの独立性は維持する。旧Decisionに書かれた「Render ResourceがShaderとRegistryを所有する」という実装前提だけを新Targetに合わせて更新する。TextureのReference Model全体を今回のGeometry / MaterialのRefcount導入と同一視しない。
+
+#### 2026-10-17「すべてのMeshを非共有のRender Modelへ所属させ、Coordinateに描画姿勢のAuthorityを集約する」
+
+MeshのModel所属、Coordinate TransformのAuthority、Resource IDを非所有参照とする判断は維持する。Applicationが参照Resourceをすべて個別に延命する旧判断は、2026-10-18のModel Import Decisionですでに更新されている。今回のResource Manager再編は、そのReference Rightを受け渡す正式な窓口を具体化する。
+
+#### 2026-10-18「Model ImportをResource Dependency解決の入口とし、Model単位のReference LifecycleをRegistry Reference Countingで管理する」
+
+Model ImportによるDependency解決、Model単位の重複排除、RegistryのReference Count、失敗時Rollback、Composite Resource Keyの決定は維持する。**Resource Acquire / Releaseの上位OwnerをRender ResourceからResource Managerに変更し、Reference Countingの実装対象を4種類のGeometryに拡張し、FrontendへのOwner移管をModel Import完成より前に進める**点を更新する。
+
+### Revisit Conditions
+
+- Shader側にVAOを保持したままResource ManagerのVBOをBorrowする方式が、別のRenderer Backendで成立しない、またはVertex Input StateのOwnerを再定義する必要が生じた場合。
+- Renderer Backend / Shader / Resource Managerの生成・破棄、GPU Bufferの再生成、Context Loss、Hot Reload等で現行Borrow Lifetime Contractでは不十分となった場合。
+- Resource ManagerがDraw・Frame Policy・Shader Stateまで扱い始め、Resource Lifecycle Moduleとしての責務境界が崩れた場合。
+- Import Pipelineが実処理をほとんど持たないForwarding Layerになった場合、またはImportが長寿命State / Async Streaming / Residency管理を必要とするようになった場合。
+- Geometry / Materialの参照単位がModel単位だけでは表現できない、Runtime差替え・Streaming・跨Domain共有等の具体的要件が生じた場合。
+- Resource Managerが保持するRegistry / VBO Managerが大規模化し、Shader別Vertical Sliceの境界より別のLifetime / Ownership Domainが自然と判明した場合。
+- Textured MeshやTexture Registryへの参照管理導入で、現在の「Geometry / MaterialはRM、Textureは既存独立Contract」という分担を再評価する必要が生じた場合。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md` — 本Decisionの具体的移行Work（長期Project管理文書）
+- `design_notes.md` — Renderer Resource Domain / Model / Frontend移行の設計メモ
+- `glce_near_term_todo.md` — 全体の直近Queue、Renderer / Model Integrationの位置付け
+- `validation_policy.md` — 参照更新・Ownership Commit・Cleanup / Fail-stop
+- `boundary_model.md` — Registry / RM / FrontendのOwnership・Authority / Borrow関係
+- `coding_style.md` — Public / Internal APIと命名・Lifetime・Result Conversion
+
+---
+
+## Decision: VBO ManagerをRenderer Frontendの共通基盤とし、Shader / Resource Managerから引数でBorrowする
+
+**Status:** Accepted  
+**Date:** 2026-10-19  
+**Scope:** Renderer / VBO Manager / Shader / Resource Manager / Ownership / Borrow / Transitional Migration
+
+### Decision
+
+Renderer Frontendの完成後、**各Mesh種別のVBO Managerの長寿命OwnerをRenderer Frontendとする**。
+
+Renderer Frontendは、対応するResource ManagerおよびShaderも所有する。Resource ManagerとShaderは相互に依存せず、それぞれVBO Managerを必要なOperationの引数で一時Borrowする。
+
+```text
+Renderer Frontend [long-lived owner]
+│
+├── Renderer Backend Context [Owned]
+│
+├── Untextured Mesh VBO Manager [Owned]
+│
+├── Untextured Mesh Resource Manager [Owned]
+│    ├── Geometry Registry [Owned]
+│    ├── Material Registry [Owned]
+│    └── Import Pipeline [Stateless / Operation module]
+│
+└── Untextured Mesh Shader [Owned]
+     ├── Shader Program [Owned]
+     ├── VAO [Owned]
+     └── Uniform Locations / Setters
+
+Resource Manager / Registry  ──(Operation parameter)──> VBO Manager [Borrow]
+Shader / VAO initialization ──(Constructor parameter)─> VBO Manager [Borrow]
+
+Untextured Mesh Renderer [Stateless]
+    ├── Shader [Borrow]
+    └── Resource Manager [Borrow]
+```
+
+上図はUntextured Meshの例である。Line / Point / UIも各Vertical Slice固有のVBO ManagerをFrontendが所有する構成を基本とする。**共通基盤とはShaderとResource Managerの双方が利用できる基盤であるという意味であり、全Mesh種別で一つのVBO Manager instanceを共有するという意味ではない。**
+
+Borrowは必要なAPIの引数によって行い、ShaderやResource ManagerのObject fieldにVBO Manager Pointerを恒久的に保存する設計は、今回のTargetでは採用しない。全APIに機械的に渡すのではなく、VBOへアクセスするOperationだけに明示する。
+
+**暫定実装:** Renderer Frontendがまだ存在しないため、現在の`*_render_resource`（将来の`*_resource_manager`）が、対応するVBO Managerを一時的に所有することを許容する。**FrontendがVBO Managerの正式なOwnerとなる段階で、Resource Managerから当該Ownershipを移管する。** この暫定配置を最終Architectureとして固定しない。
+
+Registryは登録ResourceのIdentity、CPU Geometry、VBO Allocation DescriptorとReference CountのAuthorityを持ち続ける。VBO ManagerはGPU Bufferとその内部Allocation操作のAuthorityを持つ。Resource ManagerはAcquire / ReleaseとResource Domainの統括を担当し、Backing Storage全体のOwnerである必要はない。
+
+`vbo_range_t` / `draw_range_t`の定義位置の変更は別Workへ送る。型の移動を本Decisionの導入条件にしない。
+
+### Context — 今回の再検討に至った経緯
+
+2026-10-19の先行Decision「Renderer Resource LifecycleをResource Manager / Shader / Mesh Renderer / Import Pipelineへ再編する」では、VBO ManagerをResource Managerが所有し、ShaderはVBOをBorrowしてVAOを構築する方針を採用していた。これはShaderがVBOを所有するとRegistryのVBO解放にShaderへの依存が残ること、およびResource ManagerとShaderを分離したいことから導いた構造だった。
+
+API移動・Constructor / Deinitializerの整理を始める中で、Geometry Registryの`deinitialize()`、`unregister()`等がShaderではなくVBO Managerを受け取る方針を検討した。VBO ManagerからRegistryへの依存はなく、RegistryからVBO ManagerへのBorrowで循環Dependencyは生じないことを確認した。このとき、VBO ManagerはRegistryにとってもShaderのVAO構築にとっても必要なResourceである点が改めて明確になった。
+
+その後、VBO Managerの所属を決めるため、ShaderとResource ManagerのOwnership自体を再検討した。
+
+### Discussion History — 検討したOwnership構造
+
+#### 1. ShaderをFrontendが所有する案
+
+Shader Program、VAO、Uniformの管理は描画側の責務であり、Renderer FrontendがShaderのLifetimeを統括する構造は自然である。ShaderをResource Managerから分離すれば、Geometry / Materialの管理DomainがShader Stateを直接所有しなくて済む。
+
+ただし、VAO初期化にはVBO Managerが必要であり、VBO ManagerをResource Managerが所有した場合はShaderがResource Manager側のResourceを参照する。この依存は成立するが、VBO Managerが両者にまたがる立ち位置であることは残る。
+
+#### 2. ShaderもResource Managerへ所有させる案
+
+ShaderとVBO ManagerをResource Manager配下へまとめると、VAO構築に必要なVBOとの関係を同一Ownership Boundary内に閉じられる。既存Render ResourceもShaderとRegistryをまとめていたため、この構成自体が不自然というわけではない。
+
+一方、Resource ManagerはGeometry / MaterialのAcquire / ReleaseとRegistry管理に加え、Shader Program、VAOのLifetimeまで統括することになる。Shader実装を別Moduleへ置いたままでも、Resource Managerの論理責務が拡大する。またShaderだけを再生成する場合の窓口やLifetime ContractもResource Manager側で扱うことになる。
+
+**ShaderをResource Managerへ戻す案を最終採用する理由はない**と判断した。ShaderがResource Managerに所有されなくても、必要なVBOを安全にBorrowできればよい。
+
+#### 3. VBO ManagerをShaderが所有し続ける案
+
+VAOとVBOの使用関係をShader側に閉じられる反面、Registry / Resource ManagerがGeometry Upload / Final Freeを実行するためにShaderへ依存する構造が残る。GPU StorageとShader ProgramのLifetimeも不必要に結びつくため、今回の再編目的に合わない。
+
+#### 4. VBO ManagerをResource Managerが所有する案（直前までの採用案）
+
+Resource ManagerがGeometry RegistryとVBO Managerを所有すれば、Geometry Resourceの取得・解放とそのBacking Storageを同じ管理Domainに収められる。ShaderはResource Managerが保有するVBOを借用してVAOを構築できるため、ShaderからResource Managerへの片方向Dependencyとして成立する。
+
+しかしVBO Managerの役割は、ResourceのUpload / FreeだけでなくShaderのVAO初期化に必要なBuffer Bindにも及ぶ。実際のOperation責務から見ると、VBO ManagerはResource Manager固有の内部部品というより、**ShaderとResource Managerの双方から利用される共通基盤**である。
+
+この認識により、Resource ManagerをVBO Managerの恒久Ownerとする前提を再検討した。
+
+#### 5. VBO ManagerをRenderer Frontendが所有する案（採用）
+
+Renderer FrontendはShaderとResource Managerをともに所有する上位Composition Rootである。VBO Managerも同じFrontendが所有すれば、三者のLifetime関係を上位で保証しつつ、下位では対等な兄弟Moduleが相互に依存せずにVBO Managerを利用できる。
+
+```text
+Frontend owns: Backend Context / VBO Manager / Resource Manager / Shader
+
+Resource Manager ─┐
+                  ├──> VBO Manager [Operation-scoped Borrow]
+Shader           ─┘
+
+Resource Manager ─X─> Shader
+Shader           ─X─> Resource Manager
+VBO Manager      ─X─> Geometry Registry / Shader
+```
+
+これを採用した。
+
+#### 6. Borrow方法としてPointer保持と引数渡しを比較
+
+ShaderとResource Managerの双方がVBO Managerを利用することを理由に、長寿命ObjectへBorrowed Pointerを保存する必要はない。利用が必要となるConstructor / Deinitializer / Import / ReleaseなどのOperationで明示的に引数として渡せば成立する。
+
+このため、**VBO ManagerのBorrowは原則としてOperationの引数で渡し、下位Objectに長期保持しない**ことを採用した。
+
+なお、Shaderが生成したVAOにはOpenGLのBuffer Binding関係が保持され得る。これは`vbo_manager_t*`というC側Object Pointerを保持することとは区別する。VBO Backend ObjectのLifetime / IdentityとVAOとの整合性は引き続き保証が必要である。
+
+#### 7. 直ちにFrontend所有へ移行せず、Resource Managerを暫定Ownerとする案（採用）
+
+議論時点で正式なRenderer Frontendは未完成であり、VBO Managerを最終Ownerへ直接移す場所がない。これを理由にFrontendの実装を拙速に開始したり、既存OwnerからVBO Managerを取り除いたまま所在不明にしたりすることは避ける。
+
+まずResource Manager（移行中は旧名`render_resource`）がVBO Managerを一意に所有し、既存APIの移動、RegistryのShader非依存化、ShaderからVBO操作責務の除去を段階的に進める。Frontendが完成した時点でVBO ManagerのCreate / DestroyおよびOwned FieldをFrontendへ移す。
+
+この際、一時的にResource ManagerとFrontendが同じVBO Managerを二重所有する状態を作らない。移管に伴って必要なConstructor / Cleanup / Validation / Call Site / VAO初期化を同一Workで整合させる。
+
+### Rationale
+
+- **Semantic Ownerに沿った配置:** VBO ManagerはGPU Buffer / Allocationを管理する共通基盤であり、Shader ProgramにもGeometry Registryにも専属ではない。
+- **一方向のDependency:** FrontendがOwnerとなり、ShaderとResource Managerは同じVBO Managerだけを必要時に利用する。Shader / Resource Manager間の相互参照が不要になる。
+- **最小の長期State:** Operation引数で借りられるVBO Manager Pointerを各ModuleのFieldへ重複保持しない。
+- **OwnershipとResource Referenceの分離:** FrontendがVBO Managerを所有しても、個々のGeometryの参照数やFinal ReleaseをFrontendへ移さず、Registry / Resource ManagerのAuthorityを維持できる。
+- **Vertical Sliceの維持:** VBO Managerの一般的な役割を共通基盤と捉えながら、各Mesh種別の異なるVertex Format / Buffer Configurationを一つのInstanceへ強制統合しない。
+- **安全な段階移行:** Renderer Frontend完成までの暫定Ownerを明示することで、Ownershipが未定の期間や二重Ownerを作らず、作業を小規模なWorkに分割できる。
+
+### Consequences / Implementation Contract
+
+#### 最終OwnershipとDependency
+
+- Renderer FrontendはBackend Context、各Mesh種別のVBO Manager、Resource Manager、ShaderのLifetimeを統括する。
+- Resource ManagerはGeometry / Material等のRegistryとResourceのAcquire / Releaseを担う。VBO Managerの長寿命Ownershipを持たない。
+- Geometry RegistryはVBO Allocation Descriptorを保持し、個別Resourceの最終解放時に、該当Allocationを発行したVBO Managerを引数でBorrowしてFreeする。RegistryがVBO Managerを所有するわけではない。
+- ShaderはProgram / VAO / Uniformを所有し、VAO構築に必要なVBO ManagerをConstructor / Initialization Operationの引数でBorrowする。
+- ShaderとResource Managerの間には互いへの直接Dependencyを設けない。Mesh Rendererは描画中だけ両者をBorrowする。
+- VBO ManagerのBackend Buffer Identityは、VAOがそのBufferを参照している間に無断で破棄・差し替えない。詳細なRebuild / Hot Reload Policyは将来の検討対象とする。
+
+#### Lifecycle
+
+```text
+[Target Create]
+  Renderer Backend Context
+      ↓
+  VBO Manager(s)
+      ↓
+  Resource Manager(s) / Registry(s)
+      ↓
+  Shader(s) / VAO(s)  (VBO Managerを一時Borrow)
+      ↓
+  Frontendを公開
+
+[Target Destroy]
+  Shader(s) / VAO(s)
+      ↓
+  Resource Manager(s) / Registry(s)
+      └── RegistryのVBO Allocation解放時にVBO Managerを借用
+      ↓
+  VBO Manager(s)
+      ↓
+  Renderer Backend Context
+```
+
+Resource ManagerとShaderの相互の厳密な生成順は、FrontendのComplete Constructor / Borrow条件を満たすよう実装時に定義する。ただし、ShaderによるVAO生成より前に対応するVBO Managerが利用可能であり、VBO Managerの破棄より前にそれを参照するVAOおよびAllocationのLifetimeが終わることを保証する。
+
+#### 暫定Ownerの解消条件
+
+- Frontend未実装の間はResource ManagerにVBO ManagerのOwned Field、Create / Destroyが存在してよい。
+- Frontend導入時に、対応するVBO ManagerのOwnerをFrontendへ移し、Resource Managerに残るOwned FieldとCreate / Destroyを削除する。
+- Resource Manager、Import Pipeline、Geometry Registry、Shaderへは必要なOperation引数で同じVBO Managerを渡す。全APIに機械的に追加するわけではない。
+- 途中の移行が完了した時点で、VBO ManagerのOwnerを二重化していないこと、登録済みAllocationの解放元が正しいこと、VAOが有効なVBOを参照することを確認する。
+- Reference CountingのAcquire / Releaseがまだ未実装の段階では、既存VBO Write / Free APIを暫定的に公開してよい。Acquire / Release完成後にその公開範囲を再検討する。
+- `vbo_range_t` / `draw_range_t`の型所属とHeader移動は独立した後続Taskとし、Ownership移管に混ぜない。
+
+#### 既存のDesign Decisionとの関係
+
+- **2026-10-19「Renderer Resource LifecycleをResource Manager / Shader / Mesh Renderer / Import Pipelineへ再編する」**: Resource Manager / Shader / Stateless Mesh Renderer / Import Pipelineの責務分離とRegistry Reference CountのAuthorityは維持する。一方、**VBO Managerの恒久OwnerをResource Managerとした部分、およびShader→Resource ManagerのBorrow前提は本Decisionにより置き換える**。旧判断の議論経緯は削除せず、その後の再検討として本Decisionを追記する。
+- **2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」**: Frontendが上位Ownership / Composition Rootとなる原則は維持する。FrontendがRegistryを直接所有する構成へ戻すのではなく、Resource ManagerがRegistryのOwnerとなる。
+- **2026-09-12「Resource Pipelineはstateless orchestrationとして維持する」**: Import Pipelineは引き続きStatelessなOperation Moduleとし、長寿命VBO Manager PointerのOwnerにはしない。
+
+### Revisit Conditions
+
+- ShaderとResource Managerの双方が同じVBO Managerを必要とするという前提が変わり、別のLifetime Domainが自然になった場合。
+- VBO ManagerのPer-Slice分離が、実測性能や具体的な跨Slice共有要件を満たせなくなった場合。
+- VAO / VBOのRebuild、Backend切替、Context Loss、Hot Reload等により、Operation引数だけのBorrow / Lifetime Contractでは安全性が不足する場合。
+- Renderer FrontendのComposition責務が肥大化し、VBO Manager群の専用上位Ownerを設けた方が合理的となった場合。
+- GPU Buffer StorageのLifetimeとGeometry Reference Lifecycleが将来のStreaming / Residency管理等によって分離され、現在のRegistry / VBO Manager境界を変更する必要が生じた場合。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md` — 暫定Resource Manager OwnerからFrontend最終Ownerへの段階的移管
+- `design_notes.md` — Renderer Domain / VBO Managerの位置付け
+- `validation_policy.md` — Ownership移管、解放とFail-stop
+- `boundary_model.md` — Lifetime Authority / Borrow Boundary
+- `coding_style.md` — Create / Destroy、Operation Parameter、Public / Internal API
