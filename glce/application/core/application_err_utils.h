@@ -34,9 +34,11 @@ extern "C" {
 
 #include "engine/systems/event_system/core/event_system_types.h"
 
-#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"   // TODO: remove this.
 
-#include "engine/systems/renderer/render_resources/core/render_resource_types.h"
+#include "engine/systems/renderer/render_resources/core/render_resource_types.h"    // TODO: remove this.
+
+#include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
 // NOTE: engine/systems/renderer/resources/shaders/core/shader_resource_types.hのincludeについて
 // Applicationからengine内部headerを直接includeするのは本来layering違反であるが暫定的に許可する。
@@ -80,6 +82,8 @@ application_result_t application_result_convert_render_resource(render_resource_
 application_result_t application_result_convert_event_system(event_system_result_t result_);
 
 application_result_t application_result_convert_general_allocator(general_allocator_result_t result_);
+
+application_result_t application_result_convert_renderer_frontend(renderer_frontend_result_t result_);
 
 #ifdef __cplusplus
 }

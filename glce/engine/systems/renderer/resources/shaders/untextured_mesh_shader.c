@@ -63,8 +63,6 @@ struct untextured_mesh_shader {
     renderer_backend_context_t* backend_context;
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
     renderer_backend_vao_t* vao;            /** シェーダーVAO */
-
-    untextured_mesh_render_resource_t* resource_manager;
 };
 
 static void destroy_unchecked(untextured_mesh_shader_t** shader_);

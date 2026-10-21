@@ -10,78 +10,78 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
+// #include <stdbool.h>
+// #include <stdint.h>
+// #include <stddef.h>
 
-#include "application/core/application_types.h"
+// #include "application/core/application_types.h"
 
-typedef struct subsystem_allocator subsystem_allocator_t;
-typedef struct renderer_config renderer_config_t;
-typedef struct application_renderer application_renderer_t;
-typedef struct mat4x4f mat4x4f_t;
-typedef struct line_vertex line_vertex_t;
-typedef struct aabb_3d aabb_3d_t;
-typedef struct point_vertex point_vertex_t;
-typedef struct application_frame_state application_frame_state_t;
-typedef struct directional_light directional_light_t;
-typedef struct untextured_material untextured_material_t;
-typedef struct ambient_light ambient_light_t;
+// typedef struct subsystem_allocator subsystem_allocator_t;
+// typedef struct renderer_config renderer_config_t;
+// typedef struct application_renderer application_renderer_t;
+// typedef struct mat4x4f mat4x4f_t;
+// typedef struct line_vertex line_vertex_t;
+// typedef struct aabb_3d aabb_3d_t;
+// typedef struct point_vertex point_vertex_t;
+// typedef struct application_frame_state application_frame_state_t;
+// typedef struct directional_light directional_light_t;
+// typedef struct untextured_material untextured_material_t;
+// typedef struct ambient_light ambient_light_t;
 
-application_result_t application_renderer_create(const renderer_config_t* config_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_renderer_);
+// application_result_t application_renderer_create(const renderer_config_t* config_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, application_renderer_t** out_renderer_);
 
-void application_renderer_deinitialize(application_renderer_t* renderer_);
+// void application_renderer_deinitialize(application_renderer_t* renderer_);
 
-// TODO: 全shader一括更新ではなく、個別に更新できるようにAPIを分割する
-application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_, application_frame_state_t* frame_state_);
+// // TODO: 全shader一括更新ではなく、個別に更新できるようにAPIを分割する
+// application_result_t application_renderer_update(application_renderer_t* renderer_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_, application_frame_state_t* frame_state_);
 
-// Geometry Import
-application_result_t application_renderer_line_mesh_geometry_import_from_vertices(application_renderer_t* renderer_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
+// // Geometry Import
+// application_result_t application_renderer_line_mesh_geometry_import_from_vertices(application_renderer_t* renderer_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
 
-application_result_t application_renderer_line_mesh_geometry_import_from_aabb(application_renderer_t* renderer_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_);
+// application_result_t application_renderer_line_mesh_geometry_import_from_aabb(application_renderer_t* renderer_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_);
 
-application_result_t application_renderer_untextured_mesh_geometry_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
+// application_result_t application_renderer_untextured_mesh_geometry_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 
-application_result_t application_renderer_point_mesh_geometry_import_from_vertices(application_renderer_t* renderer_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
+// application_result_t application_renderer_point_mesh_geometry_import_from_vertices(application_renderer_t* renderer_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
 
-application_result_t application_renderer_ui_mesh_geometry_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
+// application_result_t application_renderer_ui_mesh_geometry_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 
-// Geometry Release
-application_result_t application_renderer_line_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
+// // Geometry Release
+// application_result_t application_renderer_line_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
 
-application_result_t application_renderer_untextured_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
+// application_result_t application_renderer_untextured_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
 
-application_result_t application_renderer_point_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
+// application_result_t application_renderer_point_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
 
-application_result_t application_renderer_ui_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
+// application_result_t application_renderer_ui_mesh_geometry_release(application_renderer_t* renderer_, uint16_t geometry_id_);
 
-// Material Import
-application_result_t application_renderer_untextured_material_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
+// // Material Import
+// application_result_t application_renderer_untextured_material_import_from_file(application_renderer_t* renderer_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
 
-// Material Release
-application_result_t application_renderer_untextured_material_release(application_renderer_t* renderer_, uint16_t material_id_);
+// // Material Release
+// application_result_t application_renderer_untextured_material_release(application_renderer_t* renderer_, uint16_t material_id_);
 
-// Texture Import
-application_result_t application_renderer_ui_mesh_texture_import_from_bmp(application_renderer_t* renderer_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_);
+// // Texture Import
+// application_result_t application_renderer_ui_mesh_texture_import_from_bmp(application_renderer_t* renderer_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_);
 
-application_result_t application_renderer_ui_mesh_texture_import_from_solid_color(application_renderer_t* renderer_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_);
+// application_result_t application_renderer_ui_mesh_texture_import_from_solid_color(application_renderer_t* renderer_, int32_t texture_unit_index_, const char* resource_name_, uint8_t red_, uint8_t green_, uint8_t blue_, uint16_t* out_texture_id_);
 
-// Texture Release
-application_result_t application_renderer_ui_mesh_texture_release(application_renderer_t* renderer_, uint16_t texture_id_);
+// // Texture Release
+// application_result_t application_renderer_ui_mesh_texture_release(application_renderer_t* renderer_, uint16_t texture_id_);
 
-// Mesh Draw
-application_result_t application_renderer_line_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_, const uint8_t color_[4]);
+// // Mesh Draw
+// application_result_t application_renderer_line_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_, const uint8_t color_[4]);
 
-application_result_t application_renderer_untextured_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
+// application_result_t application_renderer_untextured_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
 
-application_result_t application_renderer_point_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);
+// application_result_t application_renderer_point_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, const mat4x4f_t* model_matrix_);
 
-application_result_t application_renderer_ui_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t texture_id_, const mat4x4f_t* model_matrix_);
+// application_result_t application_renderer_ui_mesh_draw(application_renderer_t* renderer_, uint16_t geometry_id_, uint16_t texture_id_, const mat4x4f_t* model_matrix_);
 
-// Utility(これらはそのうち適切な場所に移す)
-application_result_t application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(application_renderer_t* renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
+// // Utility(これらはそのうち適切な場所に移す)
+// application_result_t application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(application_renderer_t* renderer_, uint16_t geometry_id_, aabb_3d_t* out_aabb_3d_);
 
-bool application_renderer_is_valid(const application_renderer_t* renderer_);
+// bool application_renderer_is_valid(const application_renderer_t* renderer_);
 
 #ifdef __cplusplus
 }

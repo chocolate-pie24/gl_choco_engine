@@ -345,3 +345,28 @@ application_result_t application_result_convert_general_allocator(general_alloca
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
+
+application_result_t application_result_convert_renderer_frontend(renderer_frontend_result_t result_) {
+    switch(result_) {
+    case RENDERER_FRONTEND_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case RENDERER_FRONTEND_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case RENDERER_FRONTEND_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_FRONTEND_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case RENDERER_FRONTEND_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case RENDERER_FRONTEND_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case RENDERER_FRONTEND_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case RENDERER_FRONTEND_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case RENDERER_FRONTEND_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}

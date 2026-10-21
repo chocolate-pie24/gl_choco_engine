@@ -22,6 +22,8 @@ typedef struct renderer_config renderer_config_t;
 typedef struct vbo_manager_config vbo_manager_config_t;
 typedef struct subsystem_allocator subsystem_allocator_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
+typedef struct directional_light directional_light_t;
+typedef struct ambient_light ambient_light_t;
 
 // TODO: 各種config validator
 typedef struct renderer_frontend_vbo_config {
@@ -56,6 +58,8 @@ void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_);
 //////////////////////////////////////////////////////////////////////////////////////////
 renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_frontend_t* renderer_frontend_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
 
+renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_);
+
 // Geometry Import
 renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_import_from_file(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 
@@ -67,18 +71,6 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_material_import_fro
 
 // Material Release
 renderer_frontend_result_t renderer_frontend_untextured_mesh_material_release(renderer_frontend_t* renderer_frontend_, uint16_t material_id_);
-
-// View, Projection Matrix
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_view_matrix_set(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, bool should_transpose_);
-
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_projection_matrix_set(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
-
-// Light Parameter
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_directional_light_direction_set(renderer_frontend_t* renderer_frontend_, vec3f_t direction_);
-
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_directional_light_color_intensity_set(renderer_frontend_t* renderer_frontend_, vec3f_t color_, float intensity_);
-
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_ambient_light_color_intensity_set(renderer_frontend_t* renderer_frontend_, vec3f_t color_, float intensity_);
 
 #ifdef __cplusplus
 }

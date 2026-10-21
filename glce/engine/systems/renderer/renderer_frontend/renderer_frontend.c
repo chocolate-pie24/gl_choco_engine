@@ -9,10 +9,14 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
+
+#include "engine/light/directional_light.h"
+#include "engine/light/ambient_light.h"
 
 #include "engine/systems/renderer/config/renderer_config.h" // TODO: remove this.
 
@@ -202,7 +206,7 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_front
     const draw_range_t* draw_range = NULL;
     const untextured_material_t* material = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_draw", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_draw", "renderer_frontend_")
     IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_draw", "model_matrix_")
 
     material = untextured_material_registry_material_get(renderer_frontend_->untextured_mesh_material_registry, material_id_);
@@ -258,7 +262,73 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_front
     }
     glDrawArrays(GL_TRIANGLES, (GLint)draw_range->first_vertex_count, (GLsizei)draw_range->vertex_count);
 
-    ret = RENDERER_FRONTEND_SUCCESS;;
+    ret = RENDERER_FRONTEND_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_) {
+    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
+    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+
+    vec4f_t world_light_direction = { 0 };
+    vec4f_t view_light_direction4 = { 0 };
+    vec3f_t view_light_direction3 = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "view_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(directional_light_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "directional_light_")
+    IF_ARG_NULL_GOTO_CLEANUP(ambient_light_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "ambient_light_")
+
+    ret_shader = untextured_mesh_shader_use(renderer_frontend_->untextured_mesh_shader);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = renderer_frontend_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_render_update(%s) - untextured_mesh_shader_use failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = untextured_mesh_shader_projection_matrix_set(renderer_frontend_->untextured_mesh_shader, projection_matrix_, true);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = renderer_frontend_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_render_update(%s) - untextured_mesh_shader_projection_matrix_set failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = untextured_mesh_shader_view_matrix_set(renderer_frontend_->untextured_mesh_shader, view_matrix_, true);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = renderer_frontend_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_render_update(%s) - untextured_mesh_shader_view_matrix_set failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    world_light_direction = vec4f_initialize(directional_light_->direction.elem[0], directional_light_->direction.elem[1], directional_light_->direction.elem[2], 0.0f);
+    view_light_direction4 = mat4f_vec4f_mul(view_matrix_, world_light_direction);
+    view_light_direction3 = vec3f_initialize(view_light_direction4.elem[0], view_light_direction4.elem[1], view_light_direction4.elem[2]);
+    ret_shader = untextured_mesh_shader_directional_light_direction_set(renderer_frontend_->untextured_mesh_shader, view_light_direction3);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = renderer_frontend_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_render_update(%s) - untextured_mesh_shader_directional_light_direction_set failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = untextured_mesh_shader_directional_light_color_intensity_set(renderer_frontend_->untextured_mesh_shader, directional_light_->color, directional_light_->intensity);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = renderer_frontend_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_render_update(%s) - untextured_mesh_shader_directional_light_color_intensity_set failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_shader = untextured_mesh_shader_ambient_light_color_intensity_set(renderer_frontend_->untextured_mesh_shader, ambient_light_->color, ambient_light_->intensity);
+    if(SHADER_SUCCESS != ret_shader) {
+        ret = renderer_frontend_result_convert_shader(ret_shader);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_render_update(%s) - untextured_mesh_shader_ambient_light_color_intensity_set failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = RENDERER_FRONTEND_SUCCESS;
 
 cleanup:
     return ret;
@@ -296,7 +366,7 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_release(re
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_geometry_release", "render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_geometry_release", "renderer_frontend_")
 
     ret_resource_pipeline = untextured_mesh_geometry_pipeline_release(renderer_frontend_->untextured_mesh_vbo_manager, renderer_frontend_->untextured_mesh_geometry_registry, geometry_id_);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
@@ -349,108 +419,6 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_material_release(re
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = renderer_frontend_result_convert_resource_pipeline(ret_resource_pipeline);
         ERROR_MESSAGE("renderer_frontend_untextured_mesh_material_release(%s) - untextured_material_pipeline_release failed.", renderer_frontend_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = RENDERER_FRONTEND_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_view_matrix_set(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, bool should_transpose_) {
-    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_shader_view_matrix_set", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_shader_view_matrix_set", "view_matrix_")
-
-    ret_shader = untextured_mesh_shader_view_matrix_set(renderer_frontend_->untextured_mesh_shader, view_matrix_, should_transpose_);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = renderer_frontend_result_convert_shader(ret_shader);
-        ERROR_MESSAGE("renderer_frontend_untextured_mesh_shader_view_matrix_set(%s) - untextured_mesh_shader_view_matrix_set failed.", renderer_frontend_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = RENDERER_FRONTEND_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_projection_matrix_set(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* projection_matrix_, bool should_transpose_) {
-    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_shader_projection_matrix_set", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_shader_projection_matrix_set", "projection_matrix_")
-
-    ret_shader = untextured_mesh_shader_projection_matrix_set(renderer_frontend_->untextured_mesh_shader, projection_matrix_, should_transpose_);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = renderer_frontend_result_convert_shader(ret_shader);
-        ERROR_MESSAGE("renderer_frontend_untextured_mesh_shader_projection_matrix_set(%s) - untextured_mesh_shader_projection_matrix_set failed.", renderer_frontend_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = RENDERER_FRONTEND_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_directional_light_direction_set(renderer_frontend_t* renderer_frontend_, vec3f_t direction_) {
-    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_shader_directional_light_direction_set", "renderer_frontend_")
-
-    ret_shader = untextured_mesh_shader_directional_light_direction_set(renderer_frontend_->untextured_mesh_shader, direction_);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = renderer_frontend_result_convert_shader(ret_shader);
-        ERROR_MESSAGE("renderer_frontend_untextured_mesh_shader_directional_light_direction_set(%s) - untextured_mesh_shader_directional_light_direction_set failed.", renderer_frontend_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = RENDERER_FRONTEND_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_directional_light_color_intensity_set(renderer_frontend_t* renderer_frontend_, vec3f_t color_, float intensity_) {
-    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_shader_directional_light_color_intensity_set", "renderer_frontend_")
-
-    ret_shader = untextured_mesh_shader_directional_light_color_intensity_set(renderer_frontend_->untextured_mesh_shader, color_, intensity_);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = renderer_frontend_result_convert_shader(ret_shader);
-        ERROR_MESSAGE("renderer_frontend_untextured_mesh_shader_directional_light_color_intensity_set(%s) - untextured_mesh_shader_directional_light_color_intensity_set failed.", renderer_frontend_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = RENDERER_FRONTEND_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-renderer_frontend_result_t renderer_frontend_untextured_mesh_shader_ambient_light_color_intensity_set(renderer_frontend_t* renderer_frontend_, vec3f_t color_, float intensity_) {
-    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
-
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_shader_ambient_light_color_intensity_set", "renderer_frontend_")
-
-    ret_shader = untextured_mesh_shader_ambient_light_color_intensity_set(renderer_frontend_->untextured_mesh_shader, color_, intensity_);
-    if(SHADER_SUCCESS != ret_shader) {
-        ret = renderer_frontend_result_convert_shader(ret_shader);
-        ERROR_MESSAGE("renderer_frontend_untextured_mesh_shader_ambient_light_color_intensity_set(%s) - untextured_mesh_shader_ambient_light_color_intensity_set failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
 

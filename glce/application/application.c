@@ -17,6 +17,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdalign.h>
 
 #include <time.h>   // for nanosleep TODO: remove this!!
 
@@ -53,7 +54,10 @@
 
 // Renderer System
 #include "engine/systems/renderer/core/renderer_types.h"
-#include "engine/systems/renderer/config/renderer_config.h"
+#include "engine/systems/renderer/config/renderer_config.h" // TODO: remove this.
+
+#include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
+#include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
 
 // Application Layer
 #include "application/core/application_types.h"
@@ -70,7 +74,6 @@
  */
 typedef struct application_state {
     // SubSystem Configuration
-    renderer_config_t renderer_config;
     platform_system_config_t platform_system_config;
     event_system_config_t event_system_config;
     application_diagnostics_config_t diag_config;
@@ -102,7 +105,8 @@ typedef struct application_state {
     ambient_light_t ambient_light;
 
     // Renderer System
-    application_renderer_t* renderer;
+    renderer_frontend_config_t renderer_config;
+    renderer_frontend_t* renderer_frontend;
 
     // Frame State
     application_frame_state_t frame_state;
@@ -112,29 +116,29 @@ typedef struct application_state {
     mat4x4f_t penguin_model_matrix;
 
     // Texture ID
-    uint16_t tex_id_rabbit;
-    uint16_t tex_id_frog;
-    uint16_t tex_id_green;
+    // uint16_t tex_id_rabbit;
+    // uint16_t tex_id_frog;
+    // uint16_t tex_id_green;
 
     // Material ID
     uint16_t material_id_penguin;
 
     // Geometry ID
-    bool should_draw_penguin_aabb;
-    uint16_t geometry_id_test_points;
+    // bool should_draw_penguin_aabb;
+    // uint16_t geometry_id_test_points;
     uint16_t geometry_id_penguin;
-    uint16_t geometry_id_small_icon;
-    uint16_t geometry_id_large_icon;
-    uint16_t geometry_id_penguin_aabb;
-    uint16_t geometry_id_test_line;
+    // uint16_t geometry_id_small_icon;
+    // uint16_t geometry_id_large_icon;
+    // uint16_t geometry_id_penguin_aabb;
+    // uint16_t geometry_id_test_line;
 
     // Line Material
-    vec4u8_t penguin_aabb_color;
-    vec4u8_t test_line_color;
+    // vec4u8_t penguin_aabb_color;
+    // vec4u8_t test_line_color;
 
-    mat4x4f_t rabbit_mesh_model_mat;
-    mat4x4f_t frog_mesh_model_mat;
-    mat4x4f_t green_mesh_model_mat;
+    // mat4x4f_t rabbit_mesh_model_mat;
+    // mat4x4f_t frog_mesh_model_mat;
+    // mat4x4f_t green_mesh_model_mat;
     // end temporary
 } application_state_t;
 
@@ -146,12 +150,12 @@ static void app_state_begin_frame(void);
 // subsystem configuration
 static void platform_system_config_initialize(platform_system_config_t* config_);
 static void event_system_config_initialize(event_system_config_t* config_);
-static void renderer_config_initialize(renderer_config_t* config_);
+static void renderer_config_initialize(renderer_frontend_config_t* config_);
 
-static application_result_t point_mesh_geometry_import(application_state_t* state_);        // TODO: remove this!!
-static application_result_t ui_mesh_geometry_import(application_state_t* state_);
+// static application_result_t point_mesh_geometry_import(application_state_t* state_);        // TODO: remove this!!
+// static application_result_t ui_mesh_geometry_import(application_state_t* state_);
 static application_result_t untextured_mesh_import(application_state_t* state_);
-static application_result_t ui_mesh_textures_import(application_state_t* state_);
+// static application_result_t ui_mesh_textures_import(application_state_t* state_);
 
 static application_result_t executable_directory_get(application_state_t* state_);
 
@@ -162,6 +166,7 @@ application_result_t application_create(void) {
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
 
@@ -254,14 +259,15 @@ application_result_t application_create(void) {
     }
 
     // application renderer
-    INFO_MESSAGE("Creating renderer system...");
+    INFO_MESSAGE("Creating renderer frontend...");
     renderer_config_initialize(&tmp_state->renderer_config);
-    ret = application_renderer_create(&tmp_state->renderer_config, tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_state->renderer);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - application_renderer_create failed.", application_result_to_str(ret));
+    ret_renderer_frontend = renderer_frontend_create(&tmp_state->renderer_config, tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_state->renderer_frontend);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("application_create(%s) - renderer_frontend_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("renderer system created successfully.");
+    INFO_MESSAGE("renderer frontend created successfully.");
 
     // diagnostic config
     tmp_state->diag_config.runtime_status_report = KEY_1;
@@ -278,8 +284,8 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret) {
         if(NULL != tmp_state) {
-            if(NULL != tmp_state->renderer) {
-                application_renderer_deinitialize(tmp_state->renderer);
+            if(NULL != tmp_state->renderer_frontend) {
+                renderer_frontend_deinitialize(tmp_state->renderer_frontend);
             }
             if(NULL != tmp_state->flight_camera) {
                 application_flight_camera_deinitialize(tmp_state->flight_camera);
@@ -309,8 +315,8 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
-    if(NULL != s_application_state->renderer) {
-        application_renderer_deinitialize(s_application_state->renderer);
+    if(NULL != s_application_state->renderer_frontend) {
+        renderer_frontend_deinitialize(s_application_state->renderer_frontend);
     }
     if(NULL != s_application_state->flight_camera) {
         application_flight_camera_deinitialize(s_application_state->flight_camera);
@@ -340,6 +346,8 @@ cleanup:
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
 
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
     // penguin AABB
     aabb_3d_t penguin_aabb = { 0 };
 
@@ -364,13 +372,13 @@ application_result_t application_run(void) {
     // MVP Matrix
     mat4f_identity(&s_application_state->model_matrix);
     mat4f_rot_x(CHOCO_DEG_TO_RAD(-90.0f), &penguin_orientation);
-    mat4f_identity(&s_application_state->rabbit_mesh_model_mat);
-    mat4f_identity(&s_application_state->frog_mesh_model_mat);
-    mat4f_identity(&s_application_state->green_mesh_model_mat);
+    // mat4f_identity(&s_application_state->rabbit_mesh_model_mat);
+    // mat4f_identity(&s_application_state->frog_mesh_model_mat);
+    // mat4f_identity(&s_application_state->green_mesh_model_mat);
     mat4f_identity(&s_application_state->projection_matrix);
     mat4f_identity(&s_application_state->view_matrix);
-    mat4f_translation(vec3f_initialize(2.5f, 0.0f, 0.0f), &s_application_state->green_mesh_model_mat);
-    mat4f_translation(vec3f_initialize(0.0f, -2.5f, 0.0f), &s_application_state->frog_mesh_model_mat);
+    // mat4f_translation(vec3f_initialize(2.5f, 0.0f, 0.0f), &s_application_state->green_mesh_model_mat);
+    // mat4f_translation(vec3f_initialize(0.0f, -2.5f, 0.0f), &s_application_state->frog_mesh_model_mat);
 
     ret = application_flight_camera_perspective_matrix_get(s_application_state->flight_camera, &s_application_state->projection_matrix);
     if(APPLICATION_SUCCESS != ret) {
@@ -388,18 +396,19 @@ application_result_t application_run(void) {
     s_application_state->frame_state.projection_dirty = true;
     s_application_state->frame_state.view_dirty = true;
     s_application_state->frame_state.window_resized = true;
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light, &s_application_state->frame_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - application_renderer_update failed.", application_result_to_str(ret));
+    ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_render_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = ui_mesh_textures_import(s_application_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run - ui_mesh_textures_import failed.");
-        goto cleanup;
-    }
+    // ret = ui_mesh_textures_import(s_application_state);
+    // if(APPLICATION_SUCCESS != ret) {
+    //     ret = APPLICATION_RUNTIME_ERROR;
+    //     ERROR_MESSAGE("application_run - ui_mesh_textures_import failed.");
+    //     goto cleanup;
+    // }
 
     ret = untextured_mesh_import(s_application_state);
     if(APPLICATION_SUCCESS != ret) {
@@ -408,46 +417,46 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    ret = point_mesh_geometry_import(s_application_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - Failed to import point mesh geometry.", application_result_to_str(ret));
-        goto cleanup;
-    }
+    // ret = point_mesh_geometry_import(s_application_state);
+    // if(APPLICATION_SUCCESS != ret) {
+    //     ERROR_MESSAGE("application_run(%s) - Failed to import point mesh geometry.", application_result_to_str(ret));
+    //     goto cleanup;
+    // }
 
     // ペンギンAABB pipeline import
-    s_application_state->should_draw_penguin_aabb = true;
-    s_application_state->penguin_aabb_color = vec4u8_initialize(255, 0, 0, 255);
-    if(s_application_state->should_draw_penguin_aabb) {
-        ret = application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(s_application_state->renderer, s_application_state->geometry_id_penguin, &penguin_aabb);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_untextured_mesh_geometry_convert_to_aabb_3d failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret = application_renderer_line_mesh_geometry_import_from_aabb(s_application_state->renderer, "penguin_aabb", &penguin_aabb, &s_application_state->geometry_id_penguin_aabb);
-        if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_geometry_import_from_aabb failed.", application_result_to_str(ret));
-        goto cleanup;
-        }
-    }
+    // s_application_state->should_draw_penguin_aabb = true;
+    // s_application_state->penguin_aabb_color = vec4u8_initialize(255, 0, 0, 255);
+    // if(s_application_state->should_draw_penguin_aabb) {
+    //     ret = application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(s_application_state->renderer, s_application_state->geometry_id_penguin, &penguin_aabb);
+    //     if(APPLICATION_SUCCESS != ret) {
+    //         ERROR_MESSAGE("application_run(%s) - application_renderer_untextured_mesh_geometry_convert_to_aabb_3d failed.", application_result_to_str(ret));
+    //         goto cleanup;
+    //     }
+    //     ret = application_renderer_line_mesh_geometry_import_from_aabb(s_application_state->renderer, "penguin_aabb", &penguin_aabb, &s_application_state->geometry_id_penguin_aabb);
+    //     if(APPLICATION_SUCCESS != ret) {
+    //     ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_geometry_import_from_aabb failed.", application_result_to_str(ret));
+    //     goto cleanup;
+    //     }
+    // }
 
     // テスト線分 pipeline import
-    tmp_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
-    tmp_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
-    s_application_state->test_line_color = vec4u8_initialize(0, 255, 0, 255);
-    ret = application_renderer_line_mesh_geometry_import_from_vertices(s_application_state->renderer, "test_line", tmp_vertices, 2, &s_application_state->geometry_id_test_line);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_geometry_import_from_vertices failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+    // tmp_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
+    // tmp_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
+    // s_application_state->test_line_color = vec4u8_initialize(0, 255, 0, 255);
+    // ret = application_renderer_line_mesh_geometry_import_from_vertices(s_application_state->renderer, "test_line", tmp_vertices, 2, &s_application_state->geometry_id_test_line);
+    // if(APPLICATION_SUCCESS != ret) {
+    //     ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_geometry_import_from_vertices failed.", application_result_to_str(ret));
+    //     goto cleanup;
+    // }
 
     // UI pipeline import
     // アイコンサイズはUI描画用projection, viewができたら整える
-    ret = ui_mesh_geometry_import(s_application_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry.");
-        goto cleanup;
-    }
+    // ret = ui_mesh_geometry_import(s_application_state);
+    // if(APPLICATION_SUCCESS != ret) {
+    //     ret = APPLICATION_RUNTIME_ERROR;
+    //     ERROR_MESSAGE("application_run - Failed to import ui mesh geometry.");
+    //     goto cleanup;
+    // }
 
     // TODO: window NULLチェック
     // end temporary
@@ -480,48 +489,49 @@ application_result_t application_run(void) {
         glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
 
         // UI描画
-        ret = application_renderer_ui_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_small_icon, s_application_state->tex_id_rabbit, &s_application_state->rabbit_mesh_model_mat);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_ui_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
+        // ret = application_renderer_ui_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_small_icon, s_application_state->tex_id_rabbit, &s_application_state->rabbit_mesh_model_mat);
+        // if(APPLICATION_SUCCESS != ret) {
+        //     ERROR_MESSAGE("application_run(%s) - application_renderer_ui_mesh_draw failed.", application_result_to_str(ret));
+        //     goto cleanup;
+        // }
 
-        ret = application_renderer_ui_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_large_icon, s_application_state->tex_id_frog, &s_application_state->frog_mesh_model_mat);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_ui_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
+        // ret = application_renderer_ui_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_large_icon, s_application_state->tex_id_frog, &s_application_state->frog_mesh_model_mat);
+        // if(APPLICATION_SUCCESS != ret) {
+        //     ERROR_MESSAGE("application_run(%s) - application_renderer_ui_mesh_draw failed.", application_result_to_str(ret));
+        //     goto cleanup;
+        // }
 
-        ret = application_renderer_ui_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_small_icon, s_application_state->tex_id_green, &s_application_state->green_mesh_model_mat);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_ui_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
+        // ret = application_renderer_ui_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_small_icon, s_application_state->tex_id_green, &s_application_state->green_mesh_model_mat);
+        // if(APPLICATION_SUCCESS != ret) {
+        //     ERROR_MESSAGE("application_run(%s) - application_renderer_ui_mesh_draw failed.", application_result_to_str(ret));
+        //     goto cleanup;
+        // }
 
         // 線分描画
-        ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin_aabb, &s_application_state->penguin_model_matrix, s_application_state->penguin_aabb_color.elem);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
+        // ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin_aabb, &s_application_state->penguin_model_matrix, s_application_state->penguin_aabb_color.elem);
+        // if(APPLICATION_SUCCESS != ret) {
+        //     ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_draw failed.", application_result_to_str(ret));
+        //     goto cleanup;
+        // }
 
-        ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_test_line, &s_application_state->model_matrix, s_application_state->test_line_color.elem);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
+        // ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_test_line, &s_application_state->model_matrix, s_application_state->test_line_color.elem);
+        // if(APPLICATION_SUCCESS != ret) {
+        //     ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_draw failed.", application_result_to_str(ret));
+        //     goto cleanup;
+        // }
 
         // ポイント描画
-        ret = application_renderer_point_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_test_points, &s_application_state->model_matrix);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_point_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
+        // ret = application_renderer_point_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_test_points, &s_application_state->model_matrix);
+        // if(APPLICATION_SUCCESS != ret) {
+        //     ERROR_MESSAGE("application_run(%s) - application_renderer_point_mesh_draw failed.", application_result_to_str(ret));
+        //     goto cleanup;
+        // }
 
         // STL描画
-        ret = application_renderer_untextured_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_untextured_mesh_draw failed.", application_result_to_str(ret));
+        ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
+        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+            ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+            ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
@@ -538,6 +548,7 @@ static application_result_t app_state_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     if(NULL == s_application_state) {
         ret = APPLICATION_BAD_OPERATION;
@@ -571,8 +582,9 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light, &s_application_state->frame_state);
-    if(APPLICATION_SUCCESS != ret) {
+    ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
@@ -620,115 +632,107 @@ static void event_system_config_initialize(event_system_config_t* config_) {
     config_->max_window_event_count = 8;
 }
 
-static void renderer_config_initialize(renderer_config_t* config_) {
-    config_->ui_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    config_->ui_mesh_shader_config.max_allocation_count = 512;
-    config_->ui_mesh_shader_config.vbo_size = 1024;
-
-    config_->line_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    config_->line_mesh_shader_config.max_allocation_count = 512;
-    config_->line_mesh_shader_config.vbo_size = 1024;
-
-    config_->point_mesh_shader_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
-    config_->point_mesh_shader_config.max_allocation_count = 128;
-    config_->point_mesh_shader_config.vbo_size = 1 * KIB;
-
-    config_->untextured_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    config_->untextured_mesh_shader_config.max_allocation_count = 512;
-    config_->untextured_mesh_shader_config.vbo_size = 1 * GIB;
+static void renderer_config_initialize(renderer_frontend_config_t* config_) {
+    config_->untextured_mesh.max_geometry_count = 128;
+    config_->untextured_mesh.max_material_count = 128;
+    config_->untextured_mesh.vbo.base_align = alignof(max_align_t);
+    config_->untextured_mesh.vbo.buffer_usage = BUFFER_USAGE_STATIC;
+    config_->untextured_mesh.vbo.max_allocation_count = 512;
+    config_->untextured_mesh.vbo.vbo_size = 1 * GIB;
 }
 
 // TODO: remove this!!
-static application_result_t point_mesh_geometry_import(application_state_t* state_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+// static application_result_t point_mesh_geometry_import(application_state_t* state_) {
+//     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    point_vertex_t tmp_vertices[8] = { 0 };
+//     point_vertex_t tmp_vertices[8] = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "point_mesh_geometry_import", "state_")
+//     IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "point_mesh_geometry_import", "state_")
 
-    tmp_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
-    tmp_vertices[1].position = vec3f_initialize(-0.4f, -0.4f, -3.0f);
-    tmp_vertices[2].position = vec3f_initialize(-0.3f, -0.3f, -3.0f);
-    tmp_vertices[3].position = vec3f_initialize(-0.2f, -0.2f, -3.0f);
-    tmp_vertices[4].position = vec3f_initialize(-0.1f, -0.1f, -3.0f);
-    tmp_vertices[5].position = vec3f_initialize(0.1f, 0.1f, -3.0f);
-    tmp_vertices[6].position = vec3f_initialize(0.2f, 0.2f, -3.0f);
-    tmp_vertices[7].position = vec3f_initialize(0.3f, 0.3f, -3.0f);
+//     tmp_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
+//     tmp_vertices[1].position = vec3f_initialize(-0.4f, -0.4f, -3.0f);
+//     tmp_vertices[2].position = vec3f_initialize(-0.3f, -0.3f, -3.0f);
+//     tmp_vertices[3].position = vec3f_initialize(-0.2f, -0.2f, -3.0f);
+//     tmp_vertices[4].position = vec3f_initialize(-0.1f, -0.1f, -3.0f);
+//     tmp_vertices[5].position = vec3f_initialize(0.1f, 0.1f, -3.0f);
+//     tmp_vertices[6].position = vec3f_initialize(0.2f, 0.2f, -3.0f);
+//     tmp_vertices[7].position = vec3f_initialize(0.3f, 0.3f, -3.0f);
 
-    tmp_vertices[0].color = vec4u8_initialize(255, 0, 0, 255);
-    tmp_vertices[1].color = vec4u8_initialize(255, 255, 0, 255);
-    tmp_vertices[2].color = vec4u8_initialize(255, 0, 255, 255);
-    tmp_vertices[3].color = vec4u8_initialize(0, 255, 0, 255);
-    tmp_vertices[4].color = vec4u8_initialize(255, 255, 0, 255);
-    tmp_vertices[5].color = vec4u8_initialize(255, 255, 0, 255);
-    tmp_vertices[6].color = vec4u8_initialize(255, 255, 0, 255);
-    tmp_vertices[7].color = vec4u8_initialize(255, 255, 0, 255);
+//     tmp_vertices[0].color = vec4u8_initialize(255, 0, 0, 255);
+//     tmp_vertices[1].color = vec4u8_initialize(255, 255, 0, 255);
+//     tmp_vertices[2].color = vec4u8_initialize(255, 0, 255, 255);
+//     tmp_vertices[3].color = vec4u8_initialize(0, 255, 0, 255);
+//     tmp_vertices[4].color = vec4u8_initialize(255, 255, 0, 255);
+//     tmp_vertices[5].color = vec4u8_initialize(255, 255, 0, 255);
+//     tmp_vertices[6].color = vec4u8_initialize(255, 255, 0, 255);
+//     tmp_vertices[7].color = vec4u8_initialize(255, 255, 0, 255);
 
-    ret = application_renderer_point_mesh_geometry_import_from_vertices(state_->renderer, "test_points", tmp_vertices, 8, &state_->geometry_id_test_points);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("point_mesh_geometry_import(%s) - application_renderer_point_mesh_geometry_import_from_vertices failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+//     ret = application_renderer_point_mesh_geometry_import_from_vertices(state_->renderer, "test_points", tmp_vertices, 8, &state_->geometry_id_test_points);
+//     if(APPLICATION_SUCCESS != ret) {
+//         ERROR_MESSAGE("point_mesh_geometry_import(%s) - application_renderer_point_mesh_geometry_import_from_vertices failed.", application_result_to_str(ret));
+//         goto cleanup;
+//     }
 
-    ret = APPLICATION_SUCCESS;
+//     ret = APPLICATION_SUCCESS;
 
-cleanup:
-    return ret;
-}
+// cleanup:
+//     return ret;
+// }
 
-static application_result_t ui_mesh_geometry_import(application_state_t* state_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+// static application_result_t ui_mesh_geometry_import(application_state_t* state_) {
+//     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+//     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
 
-    fs_path_t* small_icon_path = NULL;
-    fs_path_t* large_icon_path = NULL;
+//     fs_path_t* small_icon_path = NULL;
+//     fs_path_t* large_icon_path = NULL;
 
-    static const char* const small_icon_name = "small_icon";
-    static const char* const large_icon_name = "large_icon";
+//     static const char* const small_icon_name = "small_icon";
+//     static const char* const large_icon_name = "large_icon";
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_geometry_import", "state_")
+//     IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_geometry_import", "state_")
 
-    ret_fs_path = fs_path_create(&small_icon_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/geometries/", small_icon_name, "ui_geom");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
-        ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+//     ret_fs_path = fs_path_create(&small_icon_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/geometries/", small_icon_name, "ui_geom");
+//     if(FS_PATH_SUCCESS != ret_fs_path) {
+//         ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+//         ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+//         goto cleanup;
+//     }
 
-    ret = application_renderer_ui_mesh_geometry_import_from_file(state_->renderer, small_icon_name, fs_path_fullpath_get(small_icon_path), &state_->geometry_id_small_icon);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_geometry_import - application_renderer_ui_mesh_geometry_import_from_file failed.");
-        goto cleanup;
-    }
+//     ret = application_renderer_ui_mesh_geometry_import_from_file(state_->renderer, small_icon_name, fs_path_fullpath_get(small_icon_path), &state_->geometry_id_small_icon);
+//     if(APPLICATION_SUCCESS != ret) {
+//         ERROR_MESSAGE("ui_mesh_geometry_import - application_renderer_ui_mesh_geometry_import_from_file failed.");
+//         goto cleanup;
+//     }
 
-    ret_fs_path = fs_path_create(&large_icon_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/geometries/", large_icon_name, "ui_geom");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
-        ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+//     ret_fs_path = fs_path_create(&large_icon_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/geometries/", large_icon_name, "ui_geom");
+//     if(FS_PATH_SUCCESS != ret_fs_path) {
+//         ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+//         ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+//         goto cleanup;
+//     }
 
-    ret = application_renderer_ui_mesh_geometry_import_from_file(state_->renderer, large_icon_name, fs_path_fullpath_get(large_icon_path), &state_->geometry_id_large_icon);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_geometry_import - application_renderer_ui_mesh_geometry_import_from_file failed.");
-        goto cleanup;
-    }
+//     ret = application_renderer_ui_mesh_geometry_import_from_file(state_->renderer, large_icon_name, fs_path_fullpath_get(large_icon_path), &state_->geometry_id_large_icon);
+//     if(APPLICATION_SUCCESS != ret) {
+//         ERROR_MESSAGE("ui_mesh_geometry_import - application_renderer_ui_mesh_geometry_import_from_file failed.");
+//         goto cleanup;
+//     }
 
-    ret = APPLICATION_SUCCESS;
+//     ret = APPLICATION_SUCCESS;
 
-cleanup:
-    fs_path_destroy(&small_icon_path);
-    fs_path_destroy(&large_icon_path);
+// cleanup:
+//     fs_path_destroy(&small_icon_path);
+//     fs_path_destroy(&large_icon_path);
 
-    return ret;
-}
+//     return ret;
+// }
 
 static application_result_t untextured_mesh_import(application_state_t* state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     application_result_t ret_cleanup = APPLICATION_INVALID_ARGUMENT;
     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     fs_path_t* penguin_material_path = NULL;
     fs_path_t* penguin_geometry_path = NULL;
@@ -754,16 +758,18 @@ static application_result_t untextured_mesh_import(application_state_t* state_) 
         goto cleanup;
     }
 
-    ret = application_renderer_untextured_material_import_from_file(state_->renderer, penguin_material_name, fs_path_fullpath_get(penguin_material_path), &state_->material_id_penguin);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("untextured_mesh_import(%s) - application_renderer_untextured_material_import_from_file failed.", application_result_to_str(ret));
+    ret_renderer_frontend = renderer_frontend_untextured_mesh_material_import_from_file(state_->renderer_frontend, penguin_material_name, fs_path_fullpath_get(penguin_material_path), &state_->material_id_penguin);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("untextured_mesh_import(%s) - renderer_frontend_untextured_mesh_material_import_from_file failed.", application_result_to_str(ret));
         goto cleanup;
     }
     material_imported = true;
 
-    ret = application_renderer_untextured_mesh_geometry_import_from_file(state_->renderer, penguin_geometry_name, fs_path_fullpath_get(penguin_geometry_path), &state_->geometry_id_penguin);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("untextured_mesh_import(%s) - application_renderer_untextured_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
+    ret_renderer_frontend = renderer_frontend_untextured_mesh_geometry_import_from_file(state_->renderer_frontend, penguin_geometry_name, fs_path_fullpath_get(penguin_geometry_path), &state_->geometry_id_penguin);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("untextured_mesh_import(%s) - renderer_frontend_untextured_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -774,10 +780,11 @@ cleanup:
         fs_path_destroy(&penguin_material_path);
         fs_path_destroy(&penguin_geometry_path);
         if(material_imported && APPLICATION_SUCCESS != ret) {
-            ret_cleanup = application_renderer_untextured_material_release(state_->renderer, state_->material_id_penguin);
-            if(APPLICATION_SUCCESS != ret_cleanup) {
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_material_release(state_->renderer_frontend, state_->material_id_penguin);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret_cleanup = application_result_convert_renderer_frontend(ret_renderer_frontend);
                 ret = APPLICATION_DATA_CORRUPTED;   // importに成功しているのにreleaseに失敗するのはDATA_CORRUPTED
-                ERROR_MESSAGE("untextured_mesh_import(%s) - application_renderer_untextured_material_release failed.", application_result_to_str(ret_cleanup));
+                ERROR_MESSAGE("untextured_mesh_import(%s) - renderer_frontend_untextured_mesh_material_release failed. reason = '%s'", application_result_to_str(ret), application_result_to_str(ret_cleanup));
             }
         }
     }
@@ -785,56 +792,56 @@ cleanup:
     return ret;
 }
 
-static application_result_t ui_mesh_textures_import(application_state_t* state_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+// static application_result_t ui_mesh_textures_import(application_state_t* state_) {
+//     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+//     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
 
-    fs_path_t* rabbit_path = NULL;
-    fs_path_t* frog_path = NULL;
+//     fs_path_t* rabbit_path = NULL;
+//     fs_path_t* frog_path = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_textures_import", "state_")
+//     IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_textures_import", "state_")
 
-    ret_fs_path = fs_path_create(&rabbit_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/textures/", "rabbit_512", "bmp");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+//     ret_fs_path = fs_path_create(&rabbit_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/textures/", "rabbit_512", "bmp");
+//     if(FS_PATH_SUCCESS != ret_fs_path) {
+//         ret = APPLICATION_RUNTIME_ERROR;
+//         ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+//         goto cleanup;
+//     }
 
-    ret = application_renderer_ui_mesh_texture_import_from_bmp(state_->renderer, 0, "rabbit_512", fs_path_fullpath_get(rabbit_path), &state_->tex_id_rabbit);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+//     ret = application_renderer_ui_mesh_texture_import_from_bmp(state_->renderer, 0, "rabbit_512", fs_path_fullpath_get(rabbit_path), &state_->tex_id_rabbit);
+//     if(APPLICATION_SUCCESS != ret) {
+//         ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", application_result_to_str(ret));
+//         goto cleanup;
+//     }
 
-    ret_fs_path = fs_path_create(&frog_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/textures/", "frog_512", "bmp");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+//     ret_fs_path = fs_path_create(&frog_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/textures/", "frog_512", "bmp");
+//     if(FS_PATH_SUCCESS != ret_fs_path) {
+//         ret = APPLICATION_RUNTIME_ERROR;
+//         ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+//         goto cleanup;
+//     }
 
-    ret = application_renderer_ui_mesh_texture_import_from_bmp(state_->renderer, 0, "frog_512", fs_path_fullpath_get(frog_path), &state_->tex_id_frog);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+//     ret = application_renderer_ui_mesh_texture_import_from_bmp(state_->renderer, 0, "frog_512", fs_path_fullpath_get(frog_path), &state_->tex_id_frog);
+//     if(APPLICATION_SUCCESS != ret) {
+//         ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", application_result_to_str(ret));
+//         goto cleanup;
+//     }
 
-    ret = application_renderer_ui_mesh_texture_import_from_solid_color(state_->renderer, 0, "test_texture_green", 0, 255, 0, &state_->tex_id_green);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_solid_color failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+//     ret = application_renderer_ui_mesh_texture_import_from_solid_color(state_->renderer, 0, "test_texture_green", 0, 255, 0, &state_->tex_id_green);
+//     if(APPLICATION_SUCCESS != ret) {
+//         ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_solid_color failed.", application_result_to_str(ret));
+//         goto cleanup;
+//     }
 
-    ret = APPLICATION_SUCCESS;
+//     ret = APPLICATION_SUCCESS;
 
-cleanup:
-    fs_path_destroy(&frog_path);
-    fs_path_destroy(&rabbit_path);
+// cleanup:
+//     fs_path_destroy(&frog_path);
+//     fs_path_destroy(&rabbit_path);
 
-    return ret;
-}
+//     return ret;
+// }
 
 static application_result_t executable_directory_get(application_state_t* state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
