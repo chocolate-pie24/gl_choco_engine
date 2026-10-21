@@ -5455,3 +5455,72 @@ Resource ManagerとShaderの相互の厳密な生成順は、FrontendのComplete
 - `validation_policy.md` — Ownership移管、解放とFail-stop
 - `boundary_model.md` — Lifetime Authority / Borrow Boundary
 - `coding_style.md` — Create / Destroy、Operation Parameter、Public / Internal API
+
+---
+
+## Decision: Renderer Frontendを先行確立し、Untextured Meshの描画経路をFrontendへ直接集約する
+
+**決定日:** 2026-10-20〜21  
+**Status:** 採用・Untextured Meshの描画動作を確認済み（2026-10-21時点）。関連Cleanupと追加Validationは未完了。  
+**関連する過去Decision:** 2026-10-15「Renderer FrontendをResource Ownership Rootとし、Mesh RendererをStateless Draw Moduleとする」、2026-10-19「Renderer Resource LifecycleをResource Manager / Shader / Mesh Renderer / Import Pipelineへ再編する」、2026-10-19「VBO ManagerをRenderer Frontendの共通基盤とし、Shader / Resource Managerから引数でBorrowする」。これらは検討当時の履歴として保持し、本Decisionが**実装方式に関して後から更新した部分**を優先する。
+
+### Context / Background
+
+旧`application_renderer`はBackend Contextと各`*_render_resource`を所有し、Render Resource側ではShader / Registry / Draw / Import・Releaseの操作が集まっていた。Model単位のResource参照権、将来のAcquire / Release、GeometryとShaderの独立したLifetimeを整えるため、Ownership RootとしてのRenderer Frontendが必要だった。
+
+当初は旧Render ResourceをResource Managerへ移す方式や、Frontendと独立したStateless Mesh Rendererを新設する方式を検討した。しかし、Resource Managerの独立責務はReference Counting / Acquire・Releaseの実装前には確定できず、一時的なOwnerを作ってから移管することは二重作業になり得た。また、Draw操作をFrontendから単にMesh RendererへForwardするだけなら、実質的な抽象化が一段増えるだけになる。
+
+そこで、Frontendを先に構築して直接最終Ownerにする方針に変更した。Untextured MeshのSource移行中に、Drawの責務とPublic APIを実際に検討し、独立Mesh Rendererを取り下げた。
+
+### Accepted Decisions
+
+1. **Frontend先行 / Resource Manager導入保留。** `renderer_frontend_t`はRenderer Backend Context、Untextured Mesh用VBO Manager、Geometry Registry、Material Registry、Shaderを直接所有する。`resource_manager`という新Objectを前提にしない。Acquire / ReleaseやModel Pipelineの実装で独立責務が明らかになった場合に改めて検討する。
+2. **BorrowをOperationへ限定。** Geometry Pipeline・Geometry Registryの解放処理・ShaderのVAO構築などは、必要なOperationの引数で該当VBO ManagerをBorrowする。ShaderはVBO ManagerやGeometry Registryを所有しない。RegistryもShaderへ依存しない。複数Sliceを一つのVBO Manager Instanceへ強制統合しない。
+3. **Untextured MeshのDrawはFrontend Public APIへ直接実装。** `renderer_frontend_untextured_mesh_draw()`がGeometry ID / Material IDからResourceを解決し、ShaderにMaterial・Model Matrixを設定し、VAOをBindして描画する。中間の`untextured_mesh_renderer`専用Moduleや独自Result Domainは作らない。
+4. **ShaderはShaderの仕事に限定。** `untextured_mesh_shader`はProgram / VAO / Uniform Operationを担当する。過去の`untextured_mesh_render_resource_draw()`をShader Sourceへ移した暫定実装は不適切であり、Frontend Drawへ移す。Raw OpenGL Draw CallをRenderer Backendへ移す作業は別Trackとする。
+5. **Import / Releaseの入口をFrontendへ置く。** Geometry / MaterialのImport / ReleaseはFrontendから既存のStateless Pipelineへ直接委譲し、Pipeline / Registryの責務を再実装しない。Resource IDの取得・解放とRegistry内部のStorage / Transactionを混同しない。現行のImport / Releaseは将来のReference Countingを備えたAcquire / Releaseと同義ではない。
+6. **移行では動作優先の局所的な切替を採用。** ApplicationのUntextured Drawは新Frontend経由へ切替済み。旧`application_renderer`と`render_resources`のSourceは、後続のLine / Point / UI移行の参照基準として残す。現時点で無理に削除しない。
+
+### Renderer Updateと個別Setterの再評価
+
+FrontendにView、Projection、Directional Light、Ambient Lightの個別Public Setterを追加したが、描画に必要なUniformを一括更新する`renderer_frontend_untextured_mesh_render_update()`を実装した結果、**Frontend側の個別Setterは不要**と判断して撤去した。Shader Module内の低位SetterはUpdate内部で必要なため維持する。
+
+Updateは対象Shader ProgramをBindしてからProjection / ViewとLighting Uniformを設定する。Directional LightのDirectionはWorld Spaceの方向ベクトルを`w = 0`としてView Matrixで変換し、View SpaceでShaderへ渡す。DrawはGeometry / Material / Model Transformの描画対象ごとの処理を担当する。この分担により、ApplicationはShaderの個々のUniform APIを呼び分けずに済む。
+
+UpdateとDrawにより描画機能が明確になったため、`renderer_frontend_t`の構造体定義を`renderer_frontend_internal.h`に移し、Geometry / Material APIとShader Operationを別Translation Unitへ分割する案も**採用必須とせず保留**した。現時点ではOpaqueなFrontendの内部構造体を`renderer_frontend.c`だけで管理し、今後Line / Point / UIの追加により実際に肥大化・変更干渉が生じたときに再検討する。
+
+### Error / Validation / GPU Boundaryで確認した事項
+
+- `size_t`で保持するDraw RangeをOpenGL `GLint` / `GLsizei`へ変換する前に、各値が`INT32_MAX`以下であることを確認する。`size_t`の加算が必要な箇所では`SIZE_MAX`に基づくOverflow検証を別目的として扱う。Draw Rangeの実際の有効領域検証は、Registry / VBO Managerの既存Contractとの重複に注意して検討する。
+- Import Pipelineで`DATA_CORRUPTED`が確定したときは、通常Rollback / Cleanupを続行しない。`untextured_mesh_geometry_pipeline_import_from_file()`ではCleanup冒頭およびVBO Rollback失敗時のEarly ReturnでFail-stopを明示する。これを全Moduleへ機械的に広げること自体は今回のDecisionではない。
+- Result Domainを増やすことが目的ではない。Frontendは`renderer_frontend_result_t`を返し、Pipeline / Shader等からのResult Conversionは必要な境界に限る。不要になったConversion・Include・中間Helperは移行が安定した後にAuditする。
+- OpenGL State（Program / VAO / Draw、Framebuffer Clear、Depth / Viewport、Swap）の操作順序を区別する。Application側に残るRaw `gl*`操作をFrontend / Backendへ統合するかは、独立したBackend Boundary Cleanupで扱う。
+
+### Current Evidence / Completion Boundary
+
+2026-10-20 23:58のSource Snapshot `glce_source_context(20261020-235854).txt`では、ApplicationがFrontendをCreate / Deinitializeし、Untextured Geometry / MaterialをFrontend APIでImportし、Update / Drawを呼び出している。2026-10-21、ユーザーにより**ペンギンの描画成功（初回の実行で成功）**が報告された。これはRuntime描画の成立を裏付けるが、異常系、Release単体、Canonical Validation、TEST_BUILD・Sanitizerの網羅的完了を意味しない。
+
+次Chatでは描画経路の局所的なBug Auditと不要コード整理を実施する。ただし、旧`application_renderer`と`render_resources`のSourceは保存する。移行完了扱いを旧実装全撤去と同義にしない。Line / Point / UI、Reference Counting、Model Pipeline、Sample Robot End-to-Endは後続Workの対象である。
+
+### Rejected / Deferred Alternatives
+
+- **先にResource ManagerをOwnerとして作る:** 独立責務が未確定で二度のOwnership移管になり得るため、今回の手順では採用しない。
+- **専用`untextured_mesh_renderer` ModuleとResult Domain:** Frontend APIとの一対一Forwardingが増え、現行Draw規模で意味のある境界を作らないため採用しない。
+- **Frontend側の個別Uniform Setter群を維持:** Render Updateへ集約できるため採用しない。Shader自体のSetterは維持する。
+- **Internal Headerを先行新設:** 分割理由がまだ小さく、内部状態の共有範囲を広げるため保留する。
+- **旧Renderer / Render Resourceをすぐ削除:** 他Sliceの移植元を失うため保留する。
+
+### Revisit Conditions
+
+- Frontendに複数Sliceを移行した結果、Source分割なしでは責務把握・レビュー・変更が困難になったとき。
+- Import / Release / Acquire・Release / Model Pipelineの実装から、独立したStateless Resource OperationまたはStateful Resource Managerが実質的な責務を持つと判明したとき。
+- Render Packet / Frame Allocator・複数Shader・Passを導入し、個別DrawとUpdateの適用タイミングが変化したとき。
+- Mesh / Model側の構造によってGeometry ID / Material ID / Model Matrixを個別に渡す暫定Draw Signatureを変更すべきとき。
+
+### Related Documents
+
+- `design_notes.md` — Renderer FrontendのCurrent Architectureと保留事項
+- `glce_near_term_todo.md` — 直近Cleanupと後続Workの依存順
+- `glce_renderer_resource_model_workplan.md` — 長期Migration / Registry Refcount / Model Integration計画
+- `validation_policy.md` / `boundary_model.md` — Fail-stop / Ownership / Borrow Contract
+

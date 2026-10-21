@@ -5,7 +5,7 @@
  *
  * @file untextured_mesh_shader.c
  * @author chocolate-pie24
- * @brief 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるuntextured_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIの実装
+ * @brief 光源・法線・材質色などを使って陰影付きMeshを描画するUntextured Mesh Shader Resourceの生成・破棄、VAO管理、Uniform設定APIの実装
  *
  * @date 2026-06-03
  *
@@ -15,7 +15,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdalign.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -26,12 +25,8 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/systems/renderer/render_resources/untextured_mesh_render_resource.h"
-
 #include "engine/systems/renderer/resources/materials/material_types.h"
 #include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
-
-#include "engine/systems/renderer/config/renderer_config.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
@@ -41,8 +36,6 @@
 #include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_program_builder.h"
 
-// TODO: テスト(untextured_mesh_shaderは今後も拡張されるため、テストはまだ行わない)
-// TODO: DYNAMIC / STATICでそれぞれVBOを作る
 struct untextured_mesh_shader {
     int32_t model_matrix_location;          /**< モデル行列のユニフォーム変数Location */
     int32_t view_matrix_location;           /**< ビュー行列のユニフォーム変数Location */
@@ -96,7 +89,7 @@ shader_result_t untextured_mesh_shader_create(const char* vertex_shader_fullpath
         goto cleanup;
     }
 
-    // textured mesh shader構造体インスタンス生成
+    // untextured mesh shader構造体インスタンス生成
     ret_general_allocator = general_allocator_allocate(sizeof(untextured_mesh_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_untextured_mesh_shader);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = shader_result_convert_general_allocator(ret_general_allocator);
@@ -124,9 +117,12 @@ shader_result_t untextured_mesh_shader_create(const char* vertex_shader_fullpath
     ret = SHADER_SUCCESS;
 
 cleanup:
-    if(NULL != tmp_untextured_mesh_shader) {
-        destroy_unchecked(&tmp_untextured_mesh_shader);
+    if(SHADER_DATA_CORRUPTED != ret) {
+        if(NULL != tmp_untextured_mesh_shader) {
+            destroy_unchecked(&tmp_untextured_mesh_shader);
+        }
     }
+
     return ret;
 }
 

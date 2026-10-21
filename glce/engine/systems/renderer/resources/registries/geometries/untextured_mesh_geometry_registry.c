@@ -17,9 +17,8 @@
 #include "engine/containers/choco_string.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
-#include "engine/systems/renderer/resources/geometries/untextured_mesh_geometry.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/resources/shaders/untextured_mesh_shader.h"
+#include "engine/systems/renderer/resources/geometries/untextured_mesh_geometry.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_err_utils.h"
 
@@ -74,7 +73,7 @@ typedef struct registry_entry {
  * - entriesはGeometry IDによって直接参照するEntry配列である。
  * - 正常な利用可能状態では、max_geometry_countは
  *   1以上UINT16_MAX以下、entriesはNULL以外となる。
- * - deinitialize後はmax_geometry_countが0となり、
+ * - deinitializeが正常に完了するとmax_geometry_countが0となり、
  *   Registryのlogical lifetimeが終了する。
  */
 struct untextured_mesh_geometry_registry {

@@ -4,6 +4,7 @@
 #include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include <GL/glew.h>    // TODO: remove this.
 
@@ -18,8 +19,6 @@
 #include "engine/light/directional_light.h"
 #include "engine/light/ambient_light.h"
 
-#include "engine/systems/renderer/config/renderer_config.h" // TODO: remove this.
-
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
@@ -32,6 +31,7 @@
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_err_utils.h"
 
+// TODO: DYNAMIC / STATICでそれぞれVBOを作る
 struct renderer_frontend {
     renderer_backend_context_t* renderer_backend_context;
 

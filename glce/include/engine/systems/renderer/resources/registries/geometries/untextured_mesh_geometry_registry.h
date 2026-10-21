@@ -18,19 +18,15 @@
  * - Registryは登録済みUntextured Mesh GeometryのCPU Resourceを所有する。
  * - Registryは登録名の文字列Resourceを所有する。
  * - Registryは登録済みGeometryに対応するVBO Allocationの解放責務を持つ。
- * - VBO本体はUntextured Mesh Shader側が所有し、Registryは所有しない。
  * - 登録成功時、CPU GeometryおよびVBO Allocationの解放責務は
  *   callerからRegistryへ移転する。
  *
  * @par Storage / Lifetime
- * - Registry本体およびEntry配列のstorageは、
- *   callerから提供されたSubsystem Allocatorによって管理される。
+ * - Registry本体およびEntry配列のstorageは、callerから提供されたSubsystem Allocatorによって管理される。
  * - Registryはこれらのbacking storageを個別に解放しない。
  * - callerはRegistryの利用期間中、Allocatorのlifetimeを保証する。
- * - VBO Allocationの解放には、対象Allocationを管理する
- *   Untextured Mesh Shaderを使用する。
- * - callerは登録済みVBO Allocationの解放が完了するまで、
- *   対応するUntextured Mesh Shaderのlifetimeを保証する。
+ * - VBO Allocationの解放には、対象Allocationを管理するVBO Managerを使用する。
+ * - callerは登録済みVBO Allocationの解放が完了するまで、対応するVBO Managerのlifetimeを保証する。
  *
  * @par Resource Identity
  * - Geometry IDはRegistry内でのみ意味を持つ。
@@ -98,6 +94,33 @@ typedef struct vbo_manager vbo_manager_t;
  */
 resource_registry_result_t untextured_mesh_geometry_registry_create(size_t max_geometry_count_, subsystem_allocator_t* allocator_, untextured_mesh_geometry_registry_t** out_registry_);
 
+/**
+ * @brief Untextured Mesh Geometry Registryの終了処理を行う。
+ *
+ * @par Public API Contract
+ * - 登録済みの全Entryを走査し、各EntryのVBO Allocationを
+ *   指定されたVBO Managerから解放する。
+ * - VBO Allocationの解放後、対応するCPU GeometryとResource Nameを破棄する。
+ * - 全Entryの終了処理が成功した場合、最大登録数を0に設定する。
+ * - Registry本体およびEntry配列のbacking storageは解放しない。
+ * - VBO Manager自体の所有権は取得せず、破棄しない。
+ * - NULL引数、Registryの整合性異常、またはEntryの終了処理失敗を
+ *   検出した場合は、その時点で終了処理を打ち切る。
+ * - 途中で終了処理に失敗した場合、それ以前に解放したEntryの状態は
+ *   復元せず、残りのEntryの解放完了は保証しない。
+ * - 終了処理の失敗はResultとして返さない。
+ *
+ * @param[in,out] registry_ 終了処理対象のRegistry。
+ * @param[in,out] vbo_manager_ VBO Allocationの解放に使用するVBO Manager。
+ *
+ * @pre registry_は利用可能なRegistryを指していること。
+ * @pre vbo_manager_は登録済みVBO Allocationを管理する、
+ *      利用可能なVBO Managerを指していること。
+ *
+ * @post 全Entryの終了処理が成功した場合、
+ *       登録済みCPU Geometry、Resource NameおよびVBO Allocationは解放され、
+ *       Registryの最大登録数は0になる。
+ */
 void untextured_mesh_geometry_registry_deinitialize(untextured_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_);
 
 /**
@@ -242,7 +265,7 @@ resource_registry_result_t untextured_mesh_geometry_registry_register(untextured
  * @par Public API Contract
  * - 指定IDはRegistryの有効範囲内である必要がある。
  * - 未登録のIDを指定した場合はBAD_OPERATIONを返す。
- * - 成功時には対象EntryのVBO Allocationを対応するShaderから解放し、
+ * - 成功時には対象EntryのVBO AllocationをVBO Managerから解放し、
  *   CPU GeometryとResource Nameを破棄する。
  * - 成功時には対象Entryを未登録状態に戻す。
  * - 登録解除後、そのIDは再登録時に再利用される場合がある。
@@ -256,7 +279,7 @@ resource_registry_result_t untextured_mesh_geometry_registry_register(untextured
  *   Registryの状態復元を保証しない。
  *
  * @param[in,out] registry_ 登録解除対象のRegistry。
- * @param[in,out] shader_ VBO Allocationの解放に使用するUntextured Mesh Shader。
+ * @param[in,out] vbo_manager_ VBO Allocationの解放に使用するVBO Manager。
  * @param[in] geometry_id_ 登録解除するGeometry ID。
  *
  * @retval RESOURCE_REGISTRY_SUCCESS 登録解除成功。
@@ -265,8 +288,8 @@ resource_registry_result_t untextured_mesh_geometry_registry_register(untextured
  * @retval RESOURCE_REGISTRY_DATA_CORRUPTED Registryの整合性検証またはResource解放に失敗。
  *
  * @pre registry_は利用可能状態にあるRegistryを指していること。
- * @pre shader_は対象VBO Allocationを管理する、利用可能な
- *      Untextured Mesh Shaderを指していること。
+ * @pre vbo_manager_は対象VBO Allocationを管理する、利用可能な
+ *      VBO Managerを指していること。
  * @pre 登録解除するGeometryに対するborrowの利用が終了していること。
  *
  * @post 成功時、指定IDに対応するEntryは未登録状態になる。

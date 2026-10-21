@@ -142,64 +142,6 @@ application_result_t application_result_convert_ring_queue(ring_queue_result_t r
     }
 }
 
-application_result_t application_result_convert_renderer_backend(renderer_backend_result_t result_) {
-    switch(result_) {
-    case RENDERER_BACKEND_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case RENDERER_BACKEND_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case RENDERER_BACKEND_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case RENDERER_BACKEND_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case RENDERER_BACKEND_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case RENDERER_BACKEND_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case RENDERER_BACKEND_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case RENDERER_BACKEND_OVERFLOW:
-        return APPLICATION_OVERFLOW;
-    case RENDERER_BACKEND_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    case RENDERER_BACKEND_SHADER_COMPILE_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case RENDERER_BACKEND_SHADER_LINK_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-application_result_t application_result_convert_shader(shader_result_t result_) {
-    switch(result_) {
-    case SHADER_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case SHADER_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case SHADER_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case SHADER_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case SHADER_COMPILE_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;   // Applicationではシェーダーのコンパイル, リンクを行わないのでUNDEFINED_ERRORに変換
-    case SHADER_LINK_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;   // Applicationではシェーダーのコンパイル, リンクを行わないのでUNDEFINED_ERRORに変換
-    case SHADER_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case SHADER_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case SHADER_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case SHADER_OVERFLOW:
-        return APPLICATION_OVERFLOW;
-    case SHADER_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
 application_result_t application_result_convert_camera_registry(camera_registry_result_t result_) {
     switch(result_) {
     case CAMERA_REGISTRY_SUCCESS:
@@ -267,31 +209,6 @@ application_result_t application_result_convert_fs_path(fs_path_result_t result_
     case FS_PATH_RUNTIME_ERROR:
         return APPLICATION_RUNTIME_ERROR;
     case FS_PATH_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-application_result_t application_result_convert_render_resource(render_resource_result_t result_) {
-    switch(result_) {
-    case RENDER_RESOURCE_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case RENDER_RESOURCE_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case RENDER_RESOURCE_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case RENDER_RESOURCE_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case RENDER_RESOURCE_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case RENDER_RESOURCE_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case RENDER_RESOURCE_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case RENDER_RESOURCE_OVERFLOW:
-        return APPLICATION_OVERFLOW;
-    case RENDER_RESOURCE_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

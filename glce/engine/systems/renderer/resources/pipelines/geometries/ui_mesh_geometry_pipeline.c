@@ -49,7 +49,6 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_sh
     bool vbo_written = false;
 
     const size_t vertex_count = 6;
-    size_t vertex_offset = 0;
     uint16_t tmp_geometry_id = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "ui_mesh_geometry_pipeline_import_from_file", "shader_")
@@ -99,7 +98,7 @@ resource_pipeline_result_t ui_mesh_geometry_pipeline_import_from_file(ui_mesh_sh
     ret_resource_registry = ui_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_offset, vertex_count);
+        ERROR_MESSAGE("ui_mesh_geometry_pipeline_import_from_file(%s) - Failed to import ui mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
         goto cleanup;
     }
 

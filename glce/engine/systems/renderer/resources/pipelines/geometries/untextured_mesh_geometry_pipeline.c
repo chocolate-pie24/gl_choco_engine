@@ -8,8 +8,7 @@
  *
  * @brief 単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装
  *
- * @note 本pipelineはCPU側ジオメトリリソース生成、shader resourceへの頂点転送、geometry registryへの登録を一連の手順として実行する
- * @note GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有しない
+ * @note 本pipelineはCPU側ジオメトリリソース生成、VBO Managerへの頂点データ転送、Geometry Registryへの登録を一連の手順として実行する
  *
  * @date 2026-06-30
  *
@@ -49,7 +48,6 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vb
 
     point_normal_vertex_t* vertices = NULL;
     size_t vertex_count = 0;
-    size_t vertex_offset = 0;
     size_t write_size = 0;
     uint16_t tmp_geometry_id = 0;
     vbo_range_t tmp_buffer_range = { 0 };
@@ -100,7 +98,7 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vb
     ret_resource_registry = untextured_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_offset=%zu, vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_offset, vertex_count);
+        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
         goto cleanup;
     }
 
@@ -136,7 +134,6 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_release(vbo_manager
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_release", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_release", "geometry_registry_")
 
-    // unregisterに失敗した場合はgeometry_registry_は不変となる。そのため、vbo_freeの後でunregisterに失敗するとgeometry_registry_に解放済みallocationへの参照が残る。よってvbo_freeの前で実行する
     ret_resource_registry = untextured_mesh_geometry_registry_unregister(geometry_registry_, vbo_manager_, geometry_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);

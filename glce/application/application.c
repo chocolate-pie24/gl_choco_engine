@@ -80,14 +80,11 @@ typedef struct application_state {
 
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
-    int window_width;           /**< ウィンドウ幅 */
-    int window_height;          /**< ウィンドウ高さ */
 
     // 実行ファイルパス
     fs_path_t* executable_directory;
 
     // Subsystem Allocator
-    size_t subsystem_memory_pool_size;
     subsystem_allocator_t* subsystem_allocator;
 
     // Platform System
@@ -167,8 +164,9 @@ application_result_t application_create(void) {
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
-
     light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
+
+    size_t subsystem_memory_pool_size = 0;
 
     application_state_t* tmp_state = NULL;
 
@@ -189,8 +187,8 @@ application_result_t application_create(void) {
     }
 
     // Subsystem Allocator
-    tmp_state->subsystem_memory_pool_size = 128 * KIB;
-    ret_subsystem_allocator = subsystem_allocator_create(tmp_state->subsystem_memory_pool_size, &tmp_state->subsystem_allocator);
+    subsystem_memory_pool_size = 128 * KIB;
+    ret_subsystem_allocator = subsystem_allocator_create(subsystem_memory_pool_size, &tmp_state->subsystem_allocator);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = application_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for subsystem allocator.", application_result_to_str(ret));
@@ -207,9 +205,6 @@ application_result_t application_create(void) {
     // Platform System
     INFO_MESSAGE("Creating platform system...");
     platform_system_config_initialize(&tmp_state->platform_system_config);
-
-    tmp_state->window_width = 1024;
-    tmp_state->window_height = 768;
 
     ret_platform_system = platform_system_create(&tmp_state->platform_system_config, tmp_state->subsystem_allocator, &tmp_state->frame_state.framebuffer_width, &tmp_state->frame_state.framebuffer_height, &tmp_state->platform_system);
     if(PLATFORM_SYSTEM_SUCCESS != ret_platform_system) {
@@ -282,7 +277,7 @@ application_result_t application_create(void) {
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    if(APPLICATION_SUCCESS != ret) {
+    if(APPLICATION_SUCCESS != ret && APPLICATION_DATA_CORRUPTED != ret) {
         if(NULL != tmp_state) {
             if(NULL != tmp_state->renderer_frontend) {
                 renderer_frontend_deinitialize(tmp_state->renderer_frontend);
@@ -349,9 +344,9 @@ application_result_t application_run(void) {
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     // penguin AABB
-    aabb_3d_t penguin_aabb = { 0 };
+    // aabb_3d_t penguin_aabb = { 0 };
 
-    line_vertex_t tmp_vertices[2] = { 0 };
+    // line_vertex_t tmp_vertices[2] = { 0 };
 
     struct timespec  req = {0, 1000000};
 
@@ -412,8 +407,7 @@ application_result_t application_run(void) {
 
     ret = untextured_mesh_import(s_application_state);
     if(APPLICATION_SUCCESS != ret) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run - Failed to import untextured mesh.");
+        ERROR_MESSAGE("application_run(%s) - Failed to import untextured mesh.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -694,7 +688,7 @@ static void renderer_config_initialize(renderer_frontend_config_t* config_) {
 
 //     ret_fs_path = fs_path_create(&small_icon_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/geometries/", small_icon_name, "ui_geom");
 //     if(FS_PATH_SUCCESS != ret_fs_path) {
-//         ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+//         ret = application_result_convert_fs_path(ret_fs_path);
 //         ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
 //         goto cleanup;
 //     }
@@ -707,7 +701,7 @@ static void renderer_config_initialize(renderer_frontend_config_t* config_) {
 
 //     ret_fs_path = fs_path_create(&large_icon_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/geometries/", large_icon_name, "ui_geom");
 //     if(FS_PATH_SUCCESS != ret_fs_path) {
-//         ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+//         ret = application_result_convert_fs_path(ret_fs_path);
 //         ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
 //         goto cleanup;
 //     }
@@ -746,14 +740,14 @@ static application_result_t untextured_mesh_import(application_state_t* state_) 
 
     ret_fs_path = fs_path_create(&penguin_material_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/materials/", penguin_material_name, "untextured_mat");
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ret = application_result_convert_fs_path(ret_fs_path);
         ERROR_MESSAGE("untextured_mesh_import(%s) - fs_path_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
     ret_fs_path = fs_path_create(&penguin_geometry_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_geometry_name, "stl");
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
+        ret = application_result_convert_fs_path(ret_fs_path);
         ERROR_MESSAGE("untextured_mesh_import(%s) - fs_path_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
@@ -804,7 +798,7 @@ cleanup:
 
 //     ret_fs_path = fs_path_create(&rabbit_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/textures/", "rabbit_512", "bmp");
 //     if(FS_PATH_SUCCESS != ret_fs_path) {
-//         ret = APPLICATION_RUNTIME_ERROR;
+//         ret = application_result_convert_fs_path(ret_fs_path);
 //         ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", application_result_to_str(ret));
 //         goto cleanup;
 //     }
@@ -817,7 +811,7 @@ cleanup:
 
 //     ret_fs_path = fs_path_create(&frog_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/textures/", "frog_512", "bmp");
 //     if(FS_PATH_SUCCESS != ret_fs_path) {
-//         ret = APPLICATION_RUNTIME_ERROR;
+//         ret = application_result_convert_fs_path(ret_fs_path);
 //         ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", application_result_to_str(ret));
 //         goto cleanup;
 //     }
@@ -852,7 +846,7 @@ static application_result_t executable_directory_get(application_state_t* state_
 
     ret_fs_path = fs_path_create_from_executable_directory(&state_->executable_directory);
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
+        ret = application_result_convert_fs_path(ret_fs_path);
         ERROR_MESSAGE("executable_directory_get(%s) - fs_path_create_from_executable_directory failed.", application_result_to_str(ret));
         goto cleanup;
     }

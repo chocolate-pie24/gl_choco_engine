@@ -5,12 +5,17 @@
  *
  * @file untextured_mesh_shader.h
  * @author chocolate-pie24
- * @brief 光源・法線・材質色などを使って、陰影付きでmeshを描画するためのシェーダーであるuntextured_meshシェーダーリソースの生成・破棄、VAO/VBO管理、uniform送信APIを提供する
+ * @brief 法線・光源・材質を使用するUntextured Mesh描画用Shader ResourceのAPIを提供する
  *
- * @note ライティング等がまだ未実装なので、当面は単色描画となる
- * @todo ライティング等の実装後、以下をメンテナンスする
- * - docs/layer.md
- * - docs/architecture/systems/renderer_system/renderer_system_ja(en).md
+ * @details
+ * Shader ProgramとVAOを所有し、Model / View / Projection Matrix、
+ * LightおよびMaterialのUniform設定機能を提供する。
+ *
+ * Module Boundary Contract:
+ * - Shader ResourceはShader ProgramとVAOを所有する。
+ * - VAOは生成時に指定されたVBOとのBinding関係を保持するため、
+ *   Shaderを使用した描画中は対応するVBOが有効である必要がある。
+ * - Shaderの破棄はShader Program、VAOおよびShader Resource自身を解放する。
  *
  * @date 2026-06-03
  *
@@ -23,7 +28,6 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include <stddef.h>
 
 #include "engine/base/choco_math/math_types.h"
 
@@ -34,7 +38,6 @@ typedef struct untextured_mesh_shader untextured_mesh_shader_t;                 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 typedef struct vbo_manager vbo_manager_t;
 typedef struct mat4x4f mat4x4f_t;
-typedef struct point_normal_vertex point_normal_vertex_t;
 typedef struct untextured_material untextured_material_t;
 
 shader_result_t untextured_mesh_shader_create(const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, renderer_backend_context_t* backend_context_, vbo_manager_t* vbo_manager_, untextured_mesh_shader_t** out_shader_);

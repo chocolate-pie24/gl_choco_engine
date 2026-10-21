@@ -8,8 +8,7 @@
  *
  * @brief 単色ライティング描画用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIを提供する
  *
- * @note 本pipelineはCPU側ジオメトリリソース生成、shader resourceへの頂点転送、geometry registryへの登録を一連の手順として実行する
- * @note GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有しない
+ * @note 本pipelineはCPU側ジオメトリリソース生成、VBO Managerへの頂点データ転送、Geometry Registryへの登録を一連の手順として実行する
  *
  * @date 2026-06-30
  *
