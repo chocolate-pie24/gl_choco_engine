@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-19
+最終更新: 2026-10-21
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -5524,3 +5524,217 @@ UpdateとDrawにより描画機能が明確になったため、`renderer_fronte
 - `glce_renderer_resource_model_workplan.md` — 長期Migration / Registry Refcount / Model Integration計画
 - `validation_policy.md` / `boundary_model.md` — Fail-stop / Ownership / Borrow Contract
 
+---
+
+## Decision: Untextured MeshのVBOとGeometry ResourceのLifecycleをShaderから分離する
+
+**Status:** Accepted（Untextured Meshに実装済み。Runtime正常描画を確認済み。異常系・全Build構成の検証完了を意味しない）  
+**Date:** 2026-10-21  
+**Scope:** Renderer / Untextured Mesh / VBO Manager / Geometry Registry / Geometry Pipeline / Resource Lifetime
+
+### Decision
+
+Untextured Meshでは、GPU頂点Bufferの所有、Geometry Resourceの所有、ShaderのGPU State管理を次の責務へ分離する。
+
+```text
+Renderer Frontend [Composition / Lifetime Owner]
+    ├── VBO Manager [GPU VBO本体とAllocation操作のAuthority]
+    ├── Geometry Registry [Resource Name / CPU Geometry / Allocation DescriptorのOwner]
+    ├── Material Registry
+    └── Untextured Mesh Shader [Shader Program / VAOのOwner]
+
+Geometry Import Pipeline [Stateless]
+    CPU Geometry生成 → VBO ManagerへのUpload → Geometry Registryへの登録
+
+Geometry Release
+    Registry → VBO Managerから該当AllocationをFree
+             → CPU Geometry / Resource Nameを解放
+```
+
+VBO Managerを使用する際は必要なOperationの引数でBorrowする。Geometry Registryの`unregister` / `deinitialize`は、Shader Objectを経由せず、渡されたVBO Managerを使用してAllocationを解放する。RegistryはVBO本体を所有しない。
+
+Shaderの責務はShader Program、VAOおよびUniform Operationに限定する。VAOが保持するGPU Buffer Bindingと、Cの`vbo_manager_t*`への長期Borrowは区別する。
+
+### Context
+
+旧Untextured Mesh構造では、ShaderがVBOを所有・操作することを前提とした説明やAPI関係が残っていた。これではGeometry Resourceの解放がShaderのLifetimeやInterfaceに結び付き、Shader、Geometry Registry、GPU Storageの責務を独立に扱いにくい。
+
+2026-10-19の「VBO ManagerをRenderer Frontendの共通基盤とし、Shader / Resource Managerから引数でBorrowする」と、2026-10-20〜21の「Renderer Frontendを先行確立し、Untextured Meshの描画経路をFrontendへ直接集約する」で最終OwnerとDependency Directionは決定済みだった。本Decisionはそれらを改めて置き換えるものではなく、Untextured Meshへ適用した結果を具体的なResource Lifecycleとして確定する。
+
+### Rationale
+
+- GPU StorageのAuthorityをShader Program / VAOのAuthorityから分離できる。
+- Geometry Registryは自身が所有するAllocation Descriptorを基に、Shaderに依存せず登録済みGeometryを解放できる。
+- Import Pipelineを一時的な構築・転送・登録Transactionのまま維持できる。
+- Frontendが各ObjectのLifetimeを一元管理しながら、Registry内部のResource Identityや解放処理まで所有する必要がない。
+- Source内のOwnership説明、Release API Contract、コメントを同じLifecycleに一致させられる。
+
+### Consequences / Implementation Contract
+
+- Shaderの破棄はShader ProgramとVAOを解放する。登録済みGeometryのCPU ResourceやVBO AllocationはShaderの破棄責務ではない。
+- Geometry RegistryはResource Name、CPU Geometry、VBO Allocation Descriptorを管理し、登録済みResourceの解放を調整する。VBOそのもののOwnerにはならない。
+- Geometry PipelineはVBO ManagerへのWriteを行い、Registry登録成功後の長期Resource Ownershipを保持しない。
+- Registryの`deinitialize`は登録済みEntryの終了処理とLogical Lifetimeの終了を担当するが、Subsystem Allocatorから得たRegistry本体・Entry配列のBacking Storageを個別にFreeするものではない。
+- VBO ManagerおよびBackend Contextの破棄は、それらを使用するShader / Registry等の終了後とする。
+- 既存Doxygen / コメントについては旧Shader-owned VBOや旧Release順序を前提とする記述を整合させる。これは既存Contractの修正であり、新しいDocumentation Policyの導入ではない。
+- Geometry / MaterialのReference CountingおよびAcquire / Releaseは未実装の後続Workとし、今回の`unregister`をReference Count付きの最終Releaseと同一視しない。
+
+### Related Decisions / Revisit Conditions
+
+2026-10-19のVBO Manager共通基盤Decisionと、2026-10-20〜21のFrontend先行Decisionを優先して参照する。VBOの再生成、VAOのBuffer Binding更新、Context Loss、Streaming / Residencyなどで現在のLifetime関係を維持できなくなった場合は再検討する。
+
+### Related Documents
+
+- `design_notes.md`
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+
+---
+
+## Decision: Untextured Mesh ShaderのBackend ContextはOperation単位でBorrowし、長期保持しない
+
+**Status:** Accepted（Untextured Mesh Shaderに実装済み。他のShaderには未展開）  
+**Date:** 2026-10-21  
+**Scope:** Renderer / Shader / Backend Context / Borrow / API Boundary
+
+### Decision
+
+`untextured_mesh_shader_t`は`renderer_backend_context_t*`を内部Fieldとして保持しない。
+
+Shader Program / VAOの生成、破棄、Bind、Uniform設定など、Backend Contextを必要とするAPIは、実行するOperationの引数としてBackend ContextをBorrowする。Private Helperも必要な場合に引数を受け取り、長寿命ObjectへPointerを保存しない。
+
+Backend ContextのOwnerはRenderer Frontendのままとし、ShaderがContextを生成・破棄したりOwnershipを取得したりすることはない。
+
+```text
+Renderer Frontend
+    ├── Backend Context [Owned / unique within current GLCE Renderer]
+    └── Untextured Mesh Shader [Owned]
+            └── Shader Program / VAO [Owned]
+
+Renderer Frontend Operation
+    └── Untextured Mesh Shader API
+            ├── Shader Resource [Borrow]
+            └── Backend Context [Operation-scoped Borrow]
+```
+
+### Context / 旧Decisionの位置付け
+
+2026-09-12の「Backend ContextはRender Resourceがborrowする」では、各Render ResourceのConstructorでBackend Contextへの長期依存を確立し、各OperationでContextを渡し直さない構造を採用した。
+
+この判断には、Backend Contextを上位で一元所有することに加え、CallerへBackend Contextを意識させず、Render Resource単位でAPIを完結させる狙いがあった。当時はRenderer Frontendが現在のようにShaderとBackend Contextを直接所有・統括する構造ではなかったため、長期Borrowは合理的だった。
+
+その後、Renderer FrontendがBackend ContextとUntextured Mesh Shaderをともに所有し、ApplicationにはFrontendの高位APIだけを公開する構造が成立した。Frontend内部で必要なContextをShader Operationへ渡しても、Application側へBackend Contextを露出させずに済む。
+
+また、VBO ManagerはすでにVAO初期化等のOperationで引数Borrowする方式を採用している。Backend Contextについても、Shader Object自身に非所有Pointerを保持する必要性を再評価した。
+
+### Rationale
+
+- Backend Contextへの依存が、Shader Objectの隠れた長期Fieldではなく、実際にBackendを使用するOperationの引数として明示される。
+- Contextを渡す責務はRenderer Frontend内部に閉じるため、Application向けFrontend APIの抽象化境界は変わらない。
+- Shaderの長寿命StateをShader Program / VAO / Uniform関連情報へ限定できる。
+- Frontendが唯一のBackend Contextを所有・管理する現在のGLCEでは、異なるContextのIdentityを照合する仕組みを今回新設する必要はない。
+- VBO ManagerのOperation-scoped Borrowと同じLifecycleの考え方で下位Resourceを扱える。
+
+### Rejected / Superseded Alternatives
+
+- **ShaderがBackend Contextへの長期Borrow PointerをFieldとして保持する:** 旧Render Resource境界を前提としたAPI簡素化の利点はあったが、現在はFrontendからOperation引数として渡せるため採用しない。
+- **各ShaderがBackend Contextを所有する:** Backend ContextはSystem-level Resourceであり、ShaderごとのOwnerへ分散させない。
+- **Global SingletonをShader内部から暗黙参照する:** OperationのDependencyがAPIから見えなくなるため採用しない。
+- **複数Backend Contextを取り違えた際のIdentity照合を追加する:** 現行GLCEは唯一のBackend Contextを扱う設計であり、今回の変更の要件とはしない。
+
+### Consequences / Implementation Contract
+
+- `untextured_mesh_shader_create()`では従来どおりBackend Contextを受け取り、初期化時にのみ使用する。作成後のShader Instanceには保存しない。
+- `destroy`、`use`、`vao_bind`、Matrix / Lighting / Material Uniform Setterは、必要なBackend Contextを引数で受け取る。
+- Renderer Frontendは生成、通常破棄、Constructor失敗時のRollback、Render Update、Drawの各経路から同じOwned Contextを渡す。
+- Shaderが利用するBackend Contextは、Shader Program / VAOの生成から破棄まで有効である必要がある。Renderer FrontendはShaderの終了後にContextを終了させる。
+- この変更はObject Ownershipそのものを変更するのではなく、**長期BorrowをOperation-scoped Borrowへ変更する**ものである。
+- `line_mesh_shader`、`point_mesh_shader`、`ui_mesh_shader`の同種変更は未実施であり、後続のSlice移行時にそれぞれの実装・API Contractと併せて検討・適用する。Untexturedの完了をもって全Shaderが対応済みとは扱わない。
+- Backend Contextの一意性という現行前提が将来変わった場合は、その時点で適切なIdentity / Capability Contractを別途検討する。
+
+### Supersession / Related Decisions
+
+2026-09-12の「Backend ContextはRender Resourceがborrowする」は**上位によるContext所有と下位非所有Borrowの原則を維持する**。一方、Untextured Mesh Shaderに対する「生成時にContextへの長期依存を固定し、各Operationでは渡し直さない」という部分は、本Decisionにより更新する。旧Decisionの検討経緯はそのまま残す。
+
+2026-10-20〜21の「Renderer Frontendを先行確立し、Untextured Meshの描画経路をFrontendへ直接集約する」と併せて適用する。
+
+### Related Documents
+
+- `design_notes.md`
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+- `boundary_model.md`
+
+---
+
+## Decision: Untextured ModelのEnd-to-End完成を他Mesh Sliceへの横展開より優先する
+
+**Status:** Accepted（作業順序の決定。Model End-to-Endの実装完了ではない）  
+**Date:** 2026-10-21  
+**Scope:** Renderer Migration / Model Lifecycle / Resource Acquire・Release / Work Sequencing
+
+### Decision
+
+Untextured MeshのFrontend単独描画が成立した後、ただちにLine / Point / UIのFrontend移行へ進まず、**Untextured ModelのResource Lifecycleと描画経路を縦方向にEnd-to-Endで完成**させる。
+
+直近のUntextured Frontend Cleanupが完了した後の作業順序は次のとおりとする。
+
+```text
+Untextured FrontendのBug Audit / Cleanup / 検証
+    ↓
+Untextured Geometry Registry Reference Counting
+    ↓
+Untextured Material Registry Reference Counting
+    ↓
+Untextured Geometry / Material Acquire・Release
+    ↓
+Untextured Model Config / Model Pipeline
+    ↓
+Sample Robot End-to-End / Sharing / Rollback
+    ↓
+実装結果に基づくRenderer / Model / Resource Boundary Review
+    ↓
+Line / Point / UIをSliceごとに移行
+```
+
+既存Work Planの識別子では、`C1–C3 → W6 → W7 → W8 → W9 → W10 → W5 → W4`の順である。W番号は履歴参照のため再採番しない。
+
+### Context
+
+Untextured MeshのFrontend経由の正常描画は、Backend Context / VBO Manager / Registry / ShaderのOwnershipと描画連携を一定程度確認できる。しかしModelを導入したときに必要な、ResourceのCache Hit / Miss、Reference Count、Model単位のReference Right、複数Modelでの共有、Coordinate Tree、Posture、失敗時Rollbackまで成立したことは意味しない。
+
+ここでLine / Point / UIへ同じOwnership形状だけを先に複製すると、Untextured Modelの実装で新たに判明したResource Boundaryの変更を、複数Sliceへ再適用する可能性がある。
+
+### Rationale
+
+- 一つのVertical SliceでImportからModel単位の最終Releaseまで検証してから、他Sliceへ設計を展開できる。
+- Reference Counting、Acquire / Release、Model PipelineとのDependencyが実装によって具体化するため、Resource Managerを先行して固定する必要がない。
+- 複数Sliceへ広げた後の大規模なAPI / Ownership再変更を抑えられる。
+- 各Slice固有のGPU StateやTexture Lifecycleを、未確認の共通化へ強制せずに済む。
+- Sample Robotを使い、複数Geometry、階層Transform、Resource Sharing、Rollbackという実際の利用形態で検証できる。
+
+### Rejected Alternative
+
+Untexturedの単独Drawが成功した時点でLine / Point / UIを一括してFrontendへ横展開し、その後で全SliceのReference Counting / Model連携を追加する方式は採用しない。初期段階の描画成功だけではModel境界の設計を十分に検証できず、同じ変更が複数Sliceへ波及するためである。
+
+### Consequences / Completion Boundary
+
+- `W6`および`W7`はまずUntextured Geometry / Material Registryを対象とする。他3種類のGeometry RegistryのReference Countingは、それぞれのSliceを移行する`W4`で必要に応じて扱う。
+- `W8`ではResource Managerの新設を必須としない。実際に必要なAcquire / Release境界から、Frontend内Operation、Stateless Module、独立Resource Manager等を比較する。
+- `W9`のModel PipelineではFrontendへの循環依存を作らず、Modelが取得・保持するResource Reference Rightを明示する。
+- `W10`では同一Model内の重複Acquire抑制、複数Modelの共有、一方だけのRelease、最後のRelease、Posture反映、失敗時Rollbackを検証する。
+- `W5`のArchitecture Reviewは、Model利用実績が得られた後に行う。
+- `W4`でLine / Point / UIを一種類ずつ移行する際、ShaderのBackend Context長期Borrow廃止を含むUntexturedで得た知見を適用対象として確認する。
+- 旧`application_renderer`と`render_resources`のSourceは、後続Sliceの移植元として当面保持する。Untextured Modelの完成とLegacy Sourceの全撤去を同義にしない。
+- 最新の進捗、未完了項目、詳細Done条件はWork PlanとNear Term TODOを正本とし、このDecisionでは採用した**順序と理由**を固定する。
+
+### Revisit Conditions
+
+- Untextured Modelを完成させる前に他Sliceの移行が必要となる、具体的で優先度の高い要件が生じた場合。
+- Model Pipelineの実装から、他Sliceの共通基盤を先に導入した方が依存関係や検証を明確に改善できることが判明した場合。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+- `design_notes.md`
