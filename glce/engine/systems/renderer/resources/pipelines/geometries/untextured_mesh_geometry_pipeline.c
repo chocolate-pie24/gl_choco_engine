@@ -134,10 +134,10 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_release(vbo_manager
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_release", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_release", "geometry_registry_")
 
-    ret_resource_registry = untextured_mesh_geometry_registry_unregister(geometry_registry_, vbo_manager_, geometry_id_);
+    ret_resource_registry = untextured_mesh_geometry_registry_release(geometry_registry_, vbo_manager_, geometry_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_release(%s) - untextured_mesh_geometry_registry_unregister failed.", resource_pipeline_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_release(%s) - untextured_mesh_geometry_registry_release failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
 
