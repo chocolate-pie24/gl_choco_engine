@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "engine/systems/renderer/resources/loaders/untextured_material_config_loader.h"
+#include "engine/systems/renderer/resources/loaders/untextured_mesh_material_config_loader.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -26,7 +26,7 @@
 // Private Type Definitions
 // ============================================================
 /**
- * @brief Untextured Material configurationの一時収集state
+ * @brief Untextured Mesh Material configurationの一時収集state
  *
  * @details
  * 各fieldはexternal fileから取得したvalue tokenを
@@ -43,12 +43,12 @@
  *   NUL terminated value tokenを保持する。
  * - 一度収集したfieldは再設定しない。
  */
-typedef struct untextured_material_config_state {
+typedef struct untextured_mesh_material_config_state {
     char ambient[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE];
     char diffuse[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE];
     char specular[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE];
     char shininess[GLCE_CONFIG_UTILITY_TOKEN_BUFFER_SIZE];
-} untextured_material_config_state_t;
+} untextured_mesh_material_config_state_t;
 
 // ============================================================
 // Private Constants
@@ -65,13 +65,13 @@ static const char* const s_float_scan_format = "%f%n";
 // Private Function Declarations
 // ============================================================
 // Collection helpers
-static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, untextured_material_config_state_t* out_state_);
-static loader_result_t line_collect(untextured_material_config_state_t* state_, const choco_string_t* line_);
-static loader_result_t key_value_collect(untextured_material_config_state_t* state_, const char* line_, size_t line_length_);
+static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, untextured_mesh_material_config_state_t* out_state_);
+static loader_result_t line_collect(untextured_mesh_material_config_state_t* state_, const choco_string_t* line_);
+static loader_result_t key_value_collect(untextured_mesh_material_config_state_t* state_, const char* line_, size_t line_length_);
 static loader_result_t value_store(char* dst_, size_t dst_buffer_size_, const char* value_);
 
 // Parsing helpers
-static loader_result_t config_state_parse(const untextured_material_config_state_t* state_, untextured_material_config_t* out_config_);
+static loader_result_t config_state_parse(const untextured_mesh_material_config_state_t* state_, untextured_mesh_material_config_t* out_config_);
 
 // Validators
 static bool diffuse_is_valid(vec3f_t value_);
@@ -111,7 +111,7 @@ static bool shininess_is_valid(float value_);
  *
  * Result validation:
  * - temporary configurationをcaller-visible outputへ公開する前に、
- *   untextured_material_config_is_valid()でcanonical validationする。
+ *   untextured_mesh_material_config_is_valid()でcanonical validationする。
  * - このvalidationは、numeric syntaxが成立したcandidateについて
  *   Material固有のsemantic validityを確認し、
  *   trusted representationとして受理するために行う。
@@ -133,7 +133,7 @@ static bool shininess_is_valid(float value_);
  *   corrupted stateへ追加accessすることを避けるため、
  *   temporary resourceの通常destroy処理を実行しない。
  */
-loader_result_t untextured_material_config_loader_load(const char* config_fullpath_, untextured_material_config_t* out_config_) {
+loader_result_t untextured_mesh_material_config_loader_load(const char* config_fullpath_, untextured_mesh_material_config_t* out_config_) {
     loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
@@ -142,15 +142,15 @@ loader_result_t untextured_material_config_loader_load(const char* config_fullpa
     fs_stream_t* fs_stream = NULL;
     choco_string_t* line_string = NULL;
 
-    untextured_material_config_state_t tmp_state = { 0 };
-    untextured_material_config_t tmp_config = { 0 };
+    untextured_mesh_material_config_state_t tmp_state = { 0 };
+    untextured_mesh_material_config_t tmp_config = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "untextured_material_config_loader_load", "config_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "untextured_material_config_loader_load", "out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "untextured_mesh_material_config_loader_load", "config_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "untextured_mesh_material_config_loader_load", "out_config_")
     if('\0' == config_fullpath_[0]) {
         ret = LOADER_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Provided config_fullpath_ is not valid.", loader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_material_config_loader_load(%s) - Provided config_fullpath_ is not valid.", loader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -159,33 +159,33 @@ loader_result_t untextured_material_config_loader_load(const char* config_fullpa
     ret_fs_stream = fs_stream_create(&fs_stream, config_fullpath_, FS_OPEN_MODE_READ);
     if(FS_STREAM_SUCCESS != ret_fs_stream) {
         ret = loader_result_convert_fs_stream(ret_fs_stream);
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Failed to load untextured material config. reason=fs_stream_create, config_path='%s'", loader_result_to_str(ret), config_fullpath_);
+        ERROR_MESSAGE("untextured_mesh_material_config_loader_load(%s) - Failed to load untextured mesh material config. reason=fs_stream_create, config_path='%s'", loader_result_to_str(ret), config_fullpath_);
         goto cleanup;
     }
     ret_choco_string = choco_string_default_create(&line_string);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
         ret = loader_result_convert_choco_string(ret_choco_string);
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Failed to load untextured material config. reason=choco_string_default_create_failed(line_string).", loader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_material_config_loader_load(%s) - Failed to load untextured mesh material config. reason=choco_string_default_create_failed(line_string).", loader_result_to_str(ret));
         goto cleanup;
     }
 
     // 設定値文字列の収集
     ret = config_state_collect(fs_stream, line_string, &tmp_state);
     if(LOADER_SUCCESS != ret) {
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - config_state_collect failed.", loader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_material_config_loader_load(%s) - config_state_collect failed.", loader_result_to_str(ret));
         goto cleanup;
     }
     // 設定値文字列のパース
     ret = config_state_parse(&tmp_state, &tmp_config);
     if(LOADER_SUCCESS != ret) {
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - config_state_parse failed.", loader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_material_config_loader_load(%s) - config_state_parse failed.", loader_result_to_str(ret));
         goto cleanup;
     }
 
     // Result validation.
-    if(!untextured_material_config_is_valid(&tmp_config)) {
+    if(!untextured_mesh_material_config_is_valid(&tmp_config)) {
         ret = LOADER_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("untextured_material_config_loader_load(%s) - Invalid config.", loader_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_material_config_loader_load(%s) - Invalid config.", loader_result_to_str(ret));
         goto cleanup;
     }
 
@@ -209,19 +209,19 @@ cleanup:
 /*
  * API-specific Validation Policy
  *
- * - 本API自身がuntextured_material_config_tのexplicit canonical validatorであるため、
+ * - 本API自身がuntextured_mesh_material_config_tのexplicit canonical validatorであるため、
  *   別のcanonical validationは実行しない。
  * - config_ == NULLはinvalid representationとしてfalseを返す。
  * - 各Material propertyのprivate validatorを使用し、
  *   finite性およびMaterial固有のnumeric rangeを検査する。
  * - explicit validatorであるため、
  *   BUILD_MODEによってvalidation scopeを変更しない。
- * - 本validatorはtypedなuntextured_material_config_tを対象とし、
+ * - 本validatorはtypedなuntextured_mesh_material_config_tを対象とし、
  *   external fileのsyntax、required key、duplicate key等は検査しない。
  * - 対象stateのmutationやresult candidateの構築を行わないため、
  *   Result validationおよびPostcondition validationは必要としない。
  */
-bool untextured_material_config_is_valid(const untextured_material_config_t* config_) {
+bool untextured_mesh_material_config_is_valid(const untextured_mesh_material_config_t* config_) {
     if(NULL == config_) {
         return false;
     }
@@ -261,7 +261,7 @@ bool untextured_material_config_is_valid(const untextured_material_config_t* con
  * - file読み取りのfailureをLoader resultへ変換して返す。
  * - line contentのformat validationはline_collect()以下へ委譲する。
  */
-static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, untextured_material_config_state_t* out_state_) {
+static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_string_t* line_string_, untextured_mesh_material_config_state_t* out_state_) {
     loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     fs_stream_result_t ret_fs_stream = FS_STREAM_INVALID_ARGUMENT;
@@ -285,13 +285,13 @@ static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_stri
             } else {
                 ret = loader_result_convert_fs_stream(ret_fs_stream);
             }
-            ERROR_MESSAGE("config_state_collect(%s) - Failed to load untextured material config. reason=fs_stream_text_file_line_read_failed, next_line=%zu", loader_result_to_str(ret), line_count + 1);
+            ERROR_MESSAGE("config_state_collect(%s) - Failed to load untextured mesh material config. reason=fs_stream_text_file_line_read_failed, next_line=%zu", loader_result_to_str(ret), line_count + 1);
             goto cleanup;
         }
 
         if((SIZE_MAX - 1) < line_count) {
             ret = LOADER_OVERFLOW;
-            ERROR_MESSAGE("config_state_collect(%s) - Failed to load untextured material config. reason=line_count_overflow, line_count=%zu", loader_result_to_str(ret), line_count);
+            ERROR_MESSAGE("config_state_collect(%s) - Failed to load untextured mesh material config. reason=line_count_overflow, line_count=%zu", loader_result_to_str(ret), line_count);
             goto cleanup;
         }
         line_count++;
@@ -334,7 +334,7 @@ cleanup:
  * - key/value syntaxおよびMaterial固有のkey validationは
  *   key_value_collect()へ委譲する。
  */
-static loader_result_t line_collect(untextured_material_config_state_t* state_, const choco_string_t* line_) {
+static loader_result_t line_collect(untextured_mesh_material_config_state_t* state_, const choco_string_t* line_) {
     loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     glce_config_utility_line_type_t line_type = GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID;
@@ -377,7 +377,7 @@ cleanup:
  *
  * Responsibility:
  * - key/value lineをGLCE Config Utilityによってparseする。
- * - parsed keyをUntextured Material Configuration Formatの
+ * - parsed keyをUntextured Mesh Material Configuration Formatの
  *   supported keyと照合する。
  * - 対応するfieldへvalue tokenを収集する。
  *
@@ -397,7 +397,7 @@ cleanup:
  * - numeric parsingはconfig_state_parse()へ、
  *   Material固有のsemantic validationはPublic Validatorへ委譲する。
  */
-static loader_result_t key_value_collect(untextured_material_config_state_t* state_, const char* line_, size_t line_length_) {
+static loader_result_t key_value_collect(untextured_mesh_material_config_state_t* state_, const char* line_, size_t line_length_) {
     loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     glce_config_utility_result_t ret_glce_config_utility = GLCE_CONFIG_UTILITY_INVALID_ARGUMENT;
@@ -527,11 +527,11 @@ cleanup:
  *   temporary configuration stateである。
  * - 各fieldはbuffer capacity内のNUL terminated stringであり、
  *   未収集fieldはempty stringとして表現される。
- * - out_config_は書き込み可能なuntextured_material_config_t storageである。
+ * - out_config_は書き込み可能なuntextured_mesh_material_config_t storageである。
  *
  * Responsibility:
  * - temporary stateに収集されたvalue tokenを解析し、
- *   untextured_material_config_tのcandidateを構築する。
+ *   untextured_mesh_material_config_tのcandidateを構築する。
  * - required fieldであるdiffuseをparseする。
  * - Optional Fieldは指定されていればparseし、
  *   未指定の場合は規定のデフォルト値を適用する。
@@ -554,9 +554,9 @@ cleanup:
  * - 現行のsscanf("%f")はfloatの表現範囲外入力を安全にrejectしない。
  *   その制約はheaderのTemporary Numeric Input Contractに従う。
  * - 構築されたcandidateのsemantic validationは、
- *   上位のuntextured_material_config_loader_load()が所有する。
+ *   上位のuntextured_mesh_material_config_loader_load()が所有する。
  */
-static loader_result_t config_state_parse(const untextured_material_config_state_t* state_, untextured_material_config_t* out_config_) {
+static loader_result_t config_state_parse(const untextured_mesh_material_config_state_t* state_, untextured_mesh_material_config_t* out_config_) {
     loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     int consumed = -1;  // sscanf()の%nより前に読み取った文字数
@@ -638,7 +638,7 @@ cleanup:
  * diffuse_is_valid() Validation
  *
  * Purpose:
- * - diffuse反射係数が、Untextured Materialの
+ * - diffuse反射係数が、Untextured Mesh Materialの
  *   canonical semantic validityを満たすことを確認する。
  *
  * Validation Scope:
@@ -663,7 +663,7 @@ static bool diffuse_is_valid(vec3f_t value_) {
  * ambient_is_valid() Validation
  *
  * Purpose:
- * - ambient反射係数が、Untextured Materialの
+ * - ambient反射係数が、Untextured Mesh Materialの
  *   canonical semantic validityを満たすことを確認する。
  *
  * Validation Scope:
@@ -688,7 +688,7 @@ static bool ambient_is_valid(vec3f_t value_) {
  * specular_is_valid() Validation
  *
  * Purpose:
- * - specular反射係数が、Untextured Materialの
+ * - specular反射係数が、Untextured Mesh Materialの
  *   canonical semantic validityを満たすことを確認する。
  *
  * Validation Scope:
@@ -713,7 +713,7 @@ static bool specular_is_valid(vec3f_t value_) {
  * shininess_is_valid() Validation
  *
  * Purpose:
- * - shininessが、Untextured Materialの
+ * - shininessが、Untextured Mesh Materialの
  *   canonical semantic validityを満たすことを確認する。
  *
  * Validation Scope:

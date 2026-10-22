@@ -15,7 +15,7 @@
   * @section material_types_boundary_contract Module Boundary Contract
   *
   * @par Representation / Ownership
-  * - `untextured_material_t`、`texture_map_t`、`textured_material_t`は、
+  * - `untextured_mesh_material_t`、`texture_map_t`、`textured_material_t`は、
   *   callerが値として生成・コピーできる非opaqueのデータ型である。
   * - Texture IDは別のRegistryが管理するResourceへの参照情報であり、
   *   値のコピーによってTextureの所有権は移動・複製されない。
@@ -23,9 +23,9 @@
   *   Materialを使用するApplication側のcontractに委ねる。
   *
  * @par Validity
- * - `untextured_material_t`は、各反射係数が0.0以上1.0以下、
+ * - `untextured_mesh_material_t`は、各反射係数が0.0以上1.0以下、
  *   `shininess`が0.0以上の有限値であることを要求する。
- * - `untextured_material_is_valid()`は、上記のsemantic validityを検証する。
+ * - `untextured_mesh_material_is_valid()`は、上記のsemantic validityを検証する。
  * - `texture_map_t`および`textured_material_t`のsemantic validity、
  *   Texture IDの未使用状態の表現については、最終的な検証規則が未実装である。
  * - `texture_map_is_valid()`および`textured_material_is_valid()`は
@@ -53,12 +53,12 @@ extern "C" {
   *
   * この値は`textured_material_t`の基本反射特性としても利用する。
   */
-typedef struct untextured_material {
+typedef struct untextured_mesh_material {
     vec3f_t ambient;        /**< 環境光の反射特性 */
     vec3f_t diffuse;        /**< 拡散反射特性 */
     vec3f_t specular;       /**< 鏡面反射特性 */
     float shininess;        /**< 鏡面反射の光沢指数 */
-} untextured_material_t;
+} untextured_mesh_material_t;
 
  /**
   * @brief Diffuse / Specular / Normal用Texture ResourceのIDを保持する。
@@ -79,12 +79,12 @@ typedef struct texture_map {
   * 自身ではTexture Resourceの所有権やlifetimeを管理しない。
   */
 typedef struct textured_material {
-    untextured_material_t untextured_material;  /**< 基本反射特性 */
-    texture_map_t texture_map;                  /**< 使用するTexture Mapの参照情報 */
+    untextured_mesh_material_t untextured_mesh_material;  /**< 基本反射特性 */
+    texture_map_t texture_map;                            /**< 使用するTexture Mapの参照情報 */
 } textured_material_t;
 
 /**
- * @brief Untextured Materialのcanonical validityを判定する。
+ * @brief Untextured Mesh Materialのcanonical validityを判定する。
  *
  * @par Validation Scope
  * 以下の条件を検証する。
@@ -93,12 +93,12 @@ typedef struct textured_material {
  * - 各反射係数が0.0以上1.0以下である。
  * - `shininess`が有限値かつ0.0以上である。
  *
- * @param[in] material_ 検証対象のUntextured Material。
+ * @param[in] material_ 検証対象のUntextured Mesh Material。
  *
  * @return true 全てのcanonical invariantを満たす。
  * @return false いずれかのcanonical invariantを満たさない。
  */
-bool untextured_material_is_valid(const untextured_material_t* material_);
+bool untextured_mesh_material_is_valid(const untextured_mesh_material_t* material_);
 
  /**
   * @brief Texture Mapのvalidityを判定するための暫定API。

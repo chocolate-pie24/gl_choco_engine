@@ -39,7 +39,7 @@ typedef struct untextured_mesh_shader untextured_mesh_shader_t;                 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 typedef struct vbo_manager vbo_manager_t;
 typedef struct mat4x4f mat4x4f_t;
-typedef struct untextured_material untextured_material_t;
+typedef struct untextured_mesh_material untextured_mesh_material_t;
 
 shader_result_t untextured_mesh_shader_create(const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, renderer_backend_context_t* backend_context_, vbo_manager_t* vbo_manager_, untextured_mesh_shader_t** out_shader_);
 
@@ -62,7 +62,7 @@ shader_result_t untextured_mesh_shader_directional_light_color_intensity_set(con
 
 shader_result_t untextured_mesh_shader_ambient_light_color_intensity_set(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_, vec3f_t color_, float intensity_);
 
-shader_result_t untextured_mesh_shader_material_set(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_, const untextured_material_t* material_);
+shader_result_t untextured_mesh_shader_material_set(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_, const untextured_mesh_material_t* material_);
 
 #ifdef __cplusplus
 }

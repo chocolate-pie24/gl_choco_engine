@@ -31,17 +31,17 @@
 #include "engine/systems/renderer/resources/materials/material_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/registries/geometries/untextured_mesh_geometry_registry.h"
-#include "engine/systems/renderer/resources/registries/materials/untextured_material_registry.h"
+#include "engine/systems/renderer/resources/registries/materials/untextured_mesh_material_registry.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resources/pipelines/geometries/untextured_mesh_geometry_pipeline.h"
-#include "engine/systems/renderer/resources/pipelines/materials/untextured_material_pipeline.h"
+#include "engine/systems/renderer/resources/pipelines/materials/untextured_mesh_material_pipeline.h"
 
 #include "engine/systems/renderer/render_resources/core/render_resource_types.h"
 #include "engine/systems/renderer/render_resources/core/render_resource_err_utils.h"
 
 // struct untextured_mesh_render_resource {
 //     untextured_mesh_geometry_registry_t* geometry_registry;
-//     untextured_material_registry_t* material_registry;
+//     untextured_mesh_material_registry_t* material_registry;
 
 //     vbo_manager_t* vbo_manager;
 // };
@@ -58,7 +58,7 @@
 
 //     untextured_mesh_render_resource_t* tmp_render_resource = NULL;
 //     untextured_mesh_geometry_registry_t* tmp_geometry_registry = NULL;
-//     untextured_material_registry_t* tmp_material_registry = NULL;
+//     untextured_mesh_material_registry_t* tmp_material_registry = NULL;
 //     vbo_manager_t* tmp_vbo_manager = NULL;
 
 //     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDER_RESOURCE_INVALID_ARGUMENT, render_resource_result_to_str(RENDER_RESOURCE_INVALID_ARGUMENT), "untextured_mesh_render_resource_create", "backend_context_")

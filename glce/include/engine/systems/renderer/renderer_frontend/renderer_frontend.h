@@ -168,7 +168,7 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_release(re
 
 // Material Import
 /**
- * @brief FileからUntextured Materialを読み込み、登録する
+ * @brief FileからUntextured Mesh Materialを読み込み、登録する
  *
  * @details
  * Material Import Pipelineを使用してFileを読み込み、
@@ -191,7 +191,7 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_material_import_fro
 
 // Material Release
 /**
- * @brief 登録済みUntextured MaterialをReleaseする
+ * @brief 登録済みUntextured Mesh MaterialをReleaseする
  *
  * @details
  * Material Release Pipelineを使用して、

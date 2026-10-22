@@ -2,24 +2,24 @@
 // Copyright (c) 2026 chocolate-pie24
 
 /**
- * @file untextured_material_config_loader.h
+ * @file untextured_mesh_material_config_loader.h
  * @author chocolate-pie24
- * @brief Untextured Material configuration fileを読み込み、Material設定値を生成する
+ * @brief Untextured Mesh Material configuration fileを読み込み、Material設定値を生成する
  *
  * @details
- * Untextured Material Config Loader moduleは、外部configuration fileを読み込み、
- * configuration textを解析してuntextured_material_config_tへ変換する。
+ * Untextured Mesh Material Config Loader moduleは、外部configuration fileを読み込み、
+ * configuration textを解析してuntextured_mesh_material_config_tへ変換する。
  *
- * 本moduleはUntextured Material Configuration Formatを所有し、
+ * 本moduleはUntextured Mesh Material Configuration Formatを所有し、
  * supported key、value representationおよびMaterial固有のsemanticを定義する。
  *
- * @section untextured_material_config_loader_boundary_contract Module Boundary Contract
+ * @section untextured_mesh_material_config_loader_boundary_contract Module Boundary Contract
  *
  * Trust Boundary:
  * - 本moduleはExternal Trust Boundaryを所有する。
  * - configuration fileの内容はexternal / untrusted representationとして扱う。
  * - file contentのformatおよびMaterial configurationのsemantic validityを検証し、
- *   untextured_material_config_loader_load()が成功した場合にのみ、
+ *   untextured_mesh_material_config_loader_load()が成功した場合にのみ、
  *   GLCE内部のtrusted representationとして受理する。
  * - LOADER_SUCCESS以外の場合、external representationはcaller-visible outputへcommitされない。
  *
@@ -27,9 +27,9 @@
  * - 本moduleはpersistent module stateを持たない。
  * - file読み込みに使用するtemporary resourceは本moduleが管理する。
  * - callerが所有するpathおよびoutput storageのownershipを取得しない。
- * - outputのuntextured_material_config_tは、owned resourceを持たないvalue typeである。
+ * - outputのuntextured_mesh_material_config_tは、owned resourceを持たないvalue typeである。
  *
- * @section untextured_material_config_format Untextured Material Configuration Format
+ * @section untextured_mesh_material_config_format Untextured Mesh Material Configuration Format
  *
  * Line Format:
  * - fileはlogical line単位で解析する。
@@ -77,7 +77,7 @@
  *   明示的なゼロ値はvalidな指定として扱い、デフォルト値で上書きしない。
  * - `specular`と`shininess`は独立して指定・省略できる。
  * - デフォルト値の補完は本Loaderが担い、成功時には4 fieldすべてが確定する。
- *   untextured_material_config_t自体に未設定状態を導入しない。
+ *   untextured_mesh_material_config_t自体に未設定状態を導入しない。
  *
  * Default Value Rationale:
  * - AmbientをDiffuseの10%とするのは、基本色との関係を維持した
@@ -113,7 +113,7 @@
  *
  * Example (Diffuse only / defaults applied):
  * @code
- * # Matte untextured material
+ * # Matte untextured mesh material
  * diffuse = [0.8, 0.5, 0.3]
  * @endcode
  *
@@ -132,14 +132,14 @@
  *
  * File Validity:
  * - 上記syntax、supported keyおよびrequired fieldの条件を満たし、
- *   validなuntextured_material_config_tを構築できるfileのみを受理する。
+ *   validなuntextured_mesh_material_config_tを構築できるfileのみを受理する。
  *
  * @par AI支援:
  * - 本DocumentationはChatGPTによる草案である。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_LOADERS_UNTEXTURED_MATERIAL_CONFIG_LOADER_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_LOADERS_UNTEXTURED_MATERIAL_CONFIG_LOADER_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_LOADERS_UNTEXTURED_MESH_MATERIAL_CONFIG_LOADER_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_LOADERS_UNTEXTURED_MESH_MATERIAL_CONFIG_LOADER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -152,7 +152,7 @@ extern "C" {
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 
 /**
- * @brief Untextured Material configurationを保持するvalue type
+ * @brief Untextured Mesh Material configurationを保持するvalue type
  *
  * @details
  * ambient、diffuse、specularの反射係数と、shininessを保持する。
@@ -161,21 +161,21 @@ extern "C" {
  * - ambient、diffuse、specularのすべての成分はfiniteかつ[0.0f, 1.0f]内である。
  * - shininessはfiniteかつ0.0f以上である。
  *
- * `untextured_material_config_is_valid()`が本typeのcanonical validityを定義する。
+ * `untextured_mesh_material_config_is_valid()`が本typeのcanonical validityを定義する。
  */
-typedef struct untextured_material_config {
+typedef struct untextured_mesh_material_config {
     vec3f_t ambient;    /**< Ambient反射係数 */
     vec3f_t diffuse;    /**< Diffuse反射係数 */
     vec3f_t specular;   /**< Specular反射係数 */
     float shininess;    /**< 鏡面反射の光沢指数 */
-} untextured_material_config_t;
+} untextured_mesh_material_config_t;
 
 /**
- * @brief Configuration fileを読み込み、Untextured Material設定値を生成する
+ * @brief Configuration fileを読み込み、Untextured Mesh Material設定値を生成する
  *
  * @details
- * config_fullpath_で指定されたfileを、Untextured Material Configuration Formatに
- * 従って解析し、validなuntextured_material_config_tを生成する。
+ * config_fullpath_で指定されたfileを、Untextured Mesh Material Configuration Formatに
+ * 従って解析し、validなuntextured_mesh_material_config_tを生成する。
  *
  * @par Public API Contract
  *
@@ -206,16 +206,16 @@ typedef struct untextured_material_config {
  * @pre config_fullpath_は、API実行中に読み取り可能なNUL terminated stringを
  *      参照していなければならない。
  * @pre out_config_は、API実行中に書き込み可能な
- *      untextured_material_config_t storageを参照していなければならない。
+ *      untextured_mesh_material_config_t storageを参照していなければならない。
  *
  * @post LOADER_SUCCESSの場合、
- *       `untextured_material_config_is_valid(out_config_) == true`が成立する。
+ *       `untextured_mesh_material_config_is_valid(out_config_) == true`が成立する。
  * @post LOADER_SUCCESS以外の場合、out_config_の既存内容は変更されない。
  */
-loader_result_t untextured_material_config_loader_load(const char* config_fullpath_, untextured_material_config_t* out_config_);
+loader_result_t untextured_mesh_material_config_loader_load(const char* config_fullpath_, untextured_mesh_material_config_t* out_config_);
 
 /**
- * @brief untextured_material_config_tのcanonical validityを判定する
+ * @brief untextured_mesh_material_config_tのcanonical validityを判定する
  *
  * @details
  * Material configuration valueがGLCE内部で使用可能なsemantic representationかを判定する。
@@ -230,16 +230,16 @@ loader_result_t untextured_material_config_loader_load(const char* config_fullpa
  *   file-level validityは検査しない。
  * - storageのlifetimeやaddressabilityは検査しない。
  *
- * @param[in] config_ 判定対象のUntextured Material configuration
+ * @param[in] config_ 判定対象のUntextured Mesh Material configuration
  *
- * @retval true  validなuntextured_material_config_tである。
- * @retval false invalidなuntextured_material_config_tである、またはconfig_がNULL。
+ * @retval true  validなuntextured_mesh_material_config_tである。
+ * @retval false invalidなuntextured_mesh_material_config_tである、またはconfig_がNULL。
  *
  * @pre config_が非NULLの場合、読み取り可能かつlifetime内の
- *      untextured_material_config_t storageを参照していなければならない。
+ *      untextured_mesh_material_config_t storageを参照していなければならない。
  * @post config_の内容を変更しない。
  */
-bool untextured_material_config_is_valid(const untextured_material_config_t* config_);
+bool untextured_mesh_material_config_is_valid(const untextured_mesh_material_config_t* config_);
 
 #ifdef __cplusplus
 }

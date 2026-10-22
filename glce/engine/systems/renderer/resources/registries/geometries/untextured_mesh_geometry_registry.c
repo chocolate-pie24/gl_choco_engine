@@ -12,6 +12,7 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
 
+#include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
@@ -931,6 +932,9 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
     }
 
     // Resource Name.
+    if(!general_allocator_ptr_is_allocated(entry_->resource_name)) {
+        return false;
+    }
     if(!choco_string_is_valid(entry_->resource_name)) {
         return false;
     }
