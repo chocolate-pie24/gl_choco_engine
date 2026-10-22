@@ -59,6 +59,7 @@ typedef struct registry_entry {
     choco_string_t* resource_name;
     texture_gpu_resource_t* gpu_resource;
     texture_cpu_resource_t* cpu_resource;
+    uint16_t reference_count;
 } registry_entry_t;
 
 /*
@@ -80,6 +81,8 @@ static void registry_entry_deinitialize(registry_entry_t* entry_);
 
 // State Queries
 static bool texture_id_is_in_range(const texture_registry_t* registry_, uint16_t texture_id_);
+static bool registry_entry_is_empty(const registry_entry_t* entry_);
+static bool registry_entry_is_registered(const registry_entry_t* entry_);
 
 // Validation
 static bool registry_entry_is_valid(const registry_entry_t* entry_);
@@ -228,58 +231,36 @@ void texture_registry_deinitialize(texture_registry_t* registry_) {
  * - Registryの状態を変更せず、独立したResult Candidateも生成しないため、
  *   追加のValidationは行わない。
  */
-bool texture_registry_exists(const texture_registry_t* registry_, const char* name_) {
-    size_t tmp_id = 0;
+resource_registry_result_t texture_registry_exists(const texture_registry_t* registry_, const char* resource_name_, bool* out_exists_) {
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    if(NULL == registry_ || NULL == name_) {
-        return false;
-    }
-    if('\0' == name_[0]) {
-        ERROR_MESSAGE("texture_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
-        return false;
+    size_t tmp_id = 0;
+    bool exists = false;
+
+    // Preconditions.
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_exists", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_exists", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_exists_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_exists", "out_exists_")
+    if('\0' == resource_name_[0]) {
+        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+        ERROR_MESSAGE("texture_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
+        goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("texture_registry_exists(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
-        return false;
+        ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_registry_exists(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        goto cleanup;
     }
 #endif
 
-    return find_by_name(registry_, name_, &tmp_id);
-}
+    exists = find_by_name(registry_, resource_name_, &tmp_id);
+    *out_exists_ = exists;
 
-/*
- * API-specific Validation Policy
- *
- * Preconditions:
- * - RegistryのNULL、Texture IDの範囲、対象Entryの
- *   Resource Nameが非NULLであることを全Buildで確認する。
- * - Resource Nameの文字列Bufferへのborrow取得は
- *   choco_string_c_str()へ委譲する。
- * - 本Operationでは文字列内容のSemanticをConsumeしないため、
- *   Resource NameのCanonical Validationは行わない。
- * - 文字列内容を実際にConsumeするOperationが、
- *   必要なValidation Responsibilityを持つ。
- *
- * Result validation / Postconditions:
- * - Registryの状態を変更せず、既存Resource Nameへのborrowを返すため、
- *   追加のValidationは行わない。
- */
-const char* texture_registry_name_get(const texture_registry_t* registry_, uint16_t texture_id_) {
-    if(NULL == registry_) {
-        ERROR_MESSAGE("texture_registry_name_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
-        return NULL;
-    }
-    if(!texture_id_is_in_range(registry_, texture_id_)) {
-        ERROR_MESSAGE("texture_registry_name_get(%s) - provided texture_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
-        return NULL;
-    }
-    if(NULL == registry_->entries[texture_id_].resource_name) {
-        ERROR_MESSAGE("texture_registry_name_get(%s) - provided texture_id_ is not registered.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
-        return NULL;
-    }
+    ret = RESOURCE_REGISTRY_SUCCESS;
 
-    return choco_string_c_str(registry_->entries[texture_id_].resource_name);
+cleanup:
+    return ret;
 }
 
 /*
@@ -306,7 +287,7 @@ const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_re
         ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided texture_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
-    if(NULL == registry_->entries[texture_id_].gpu_resource) {
+    if(!registry_entry_is_registered(&registry_->entries[texture_id_])) {
         ERROR_MESSAGE("texture_registry_gpu_resource_get(%s) - provided texture_id_ is not registered.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
@@ -338,7 +319,7 @@ const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_re
         ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided texture_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
-    if(NULL == registry_->entries[texture_id_].cpu_resource) {
+    if(!registry_entry_is_registered(&registry_->entries[texture_id_])) {
         ERROR_MESSAGE("texture_registry_cpu_resource_get(%s) - provided texture_id_ is not registered.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
@@ -346,53 +327,45 @@ const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_re
     return registry_->entries[texture_id_].cpu_resource;
 }
 
-/*
- * API-specific Validation Policy
- *
- * Preconditions:
- * - Registry、Resource Name、出力PointerのNULL、および
- *   Resource Nameが空文字列でないことを全Buildで確認する。
- * - find_by_name()によって全EntryのResource Nameを走査するため、
- *   DEBUG / TESTでは事前にRegistryの整合性を検証する。
- * - Resource Nameに限定したValidationでも検索処理の安全性に必要な
- *   条件は確認できるが、既存Canonical Validatorとの検証処理の
- *   重複や保守負担を避けるため、Registry全体のCanonical Validatorを使用する。
- *
- * Result validation / Postconditions:
- * - Registryの状態を変更せず、既存EntryのIndexを出力するだけなので、
- *   追加のValidationは行わない。
- */
-resource_registry_result_t texture_registry_id_get(const texture_registry_t* registry_, const char* name_, uint16_t* out_texture_id_) {
+resource_registry_result_t texture_registry_acquire(texture_registry_t* registry_, const char* resource_name_, uint16_t* out_texture_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    size_t tmp_id = 0;
+    size_t tmp_index = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_id_get", "out_texture_id_")
-    if('\0' == name_[0]) {
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_acquire", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_acquire", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_acquire", "out_texture_id_")
+    if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_registry_id_get(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("texture_registry_acquire(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("texture_registry_id_get(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("texture_registry_acquire(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
-
-    // Prepare.
-    if(!find_by_name(registry_, name_, &tmp_id)) {
+    if(!find_by_name(registry_, resource_name_, &tmp_index)) {   // リソースの登録状態確認
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("texture_registry_id_get(%s) - find_by_name failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("texture_registry_acquire(%s) - Provided resource name is not registered.", resource_registry_result_to_str(ret));
+        goto cleanup;
+    }
+    if(UINT16_MAX < tmp_index) {
+        ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
+        ERROR_MESSAGE("texture_registry_acquire(%s) - Resource registry is corrupted.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
-    // Output.
-    *out_texture_id_ = (uint16_t)tmp_id;
+    if(registry_->entries[tmp_index].reference_count == UINT16_MAX) {
+        ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("texture_registry_acquire(%s) - Reference count overflow.", resource_registry_result_to_str(ret));
+        goto cleanup;
+    }
+    registry_->entries[tmp_index].reference_count++;
+    *out_texture_id_ = (uint16_t)tmp_index;
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
@@ -465,7 +438,7 @@ resource_registry_result_t texture_registry_register(texture_registry_t* registr
 
     // Preflight.
     for(size_t i = 0; i != registry_->max_texture_count; ++i) {
-        if(NULL == registry_->entries[i].cpu_resource && NULL == registry_->entries[i].gpu_resource && NULL == registry_->entries[i].resource_name) {
+        if(registry_entry_is_empty(&registry_->entries[i])) {
             found_free_slot = true;
             tmp_index = i;
             break;
@@ -490,6 +463,7 @@ resource_registry_result_t texture_registry_register(texture_registry_t* registr
     registry_->entries[tmp_index].cpu_resource = *cpu_resource_;
     registry_->entries[tmp_index].gpu_resource = *gpu_resource_;
     registry_->entries[tmp_index].resource_name = tmp_name;
+    registry_->entries[tmp_index].reference_count = 1;
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -539,16 +513,11 @@ cleanup:
  * - 登録解除は検証済みの対象Entryを破棄するOperationであり、
  *   追加のCanonical Validationは行わない。
  */
-resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, uint16_t texture_id_) {
+resource_registry_result_t texture_registry_release(texture_registry_t* registry_, uint16_t texture_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "texture_registry_unregister", "registry_")
-    if(!texture_id_is_in_range(registry_, texture_id_)) {
-        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_registry_unregister(%s) - Provided texture_id_ is not valid.", resource_registry_result_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!registry_entry_is_valid(&registry_->entries[texture_id_])) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
@@ -556,14 +525,23 @@ resource_registry_result_t texture_registry_unregister(texture_registry_t* regis
         goto cleanup;
     }
 #endif
-    if(NULL == registry_->entries[texture_id_].cpu_resource || NULL == registry_->entries[texture_id_].gpu_resource || NULL == registry_->entries[texture_id_].resource_name) {
+    if(!texture_id_is_in_range(registry_, texture_id_)) {
+        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+        ERROR_MESSAGE("texture_registry_unregister(%s) - Provided texture_id_ is not valid.", resource_registry_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!registry_entry_is_registered(&registry_->entries[texture_id_])) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("texture_registry_unregister(%s) - provided texture_id_ entry is empty.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("texture_registry_unregister(%s) - provided texture id entry is empty.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // Commit.
-    registry_entry_deinitialize(&registry_->entries[texture_id_]);
+    if(1 == registry_->entries[texture_id_].reference_count) {
+        registry_entry_deinitialize(&registry_->entries[texture_id_]);
+    } else {
+        registry_->entries[texture_id_].reference_count--;
+    }
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
@@ -614,6 +592,7 @@ static void registry_entry_deinitialize(registry_entry_t* entry_) {
     choco_string_destroy(&entry_->resource_name);
     texture_cpu_resource_destroy(&entry_->cpu_resource);
     texture_gpu_resource_destroy(&entry_->gpu_resource);
+    entry_->reference_count = 0;
 }
 
 // ============================================================
@@ -624,6 +603,44 @@ static bool texture_id_is_in_range(const texture_registry_t* registry_, uint16_t
         return false;
     }
     if(registry_->max_texture_count <= (size_t)texture_id_) {
+        return false;
+    }
+    return true;
+}
+
+static bool registry_entry_is_empty(const registry_entry_t* entry_) {
+    if(NULL == entry_) {
+        return false;
+    }
+    if(NULL != entry_->resource_name) {
+        return false;
+    }
+    if(NULL != entry_->cpu_resource) {
+        return false;
+    }
+    if(NULL != entry_->gpu_resource) {
+        return false;
+    }
+    if(0 != entry_->reference_count) {
+        return false;
+    }
+    return true;
+}
+
+static bool registry_entry_is_registered(const registry_entry_t* entry_) {
+    if(NULL == entry_) {
+        return false;
+    }
+    if(NULL == entry_->resource_name) {
+        return false;
+    }
+    if(NULL == entry_->cpu_resource) {
+        return false;
+    }
+    if(NULL == entry_->gpu_resource) {
+        return false;
+    }
+    if(0 == entry_->reference_count) {
         return false;
     }
     return true;
@@ -660,13 +677,10 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
         return false;
     }
 
-    // 初期化直後の未使用entryは正常
-    if(NULL == entry_->cpu_resource && NULL == entry_->gpu_resource && NULL == entry_->resource_name) {
+    if(registry_entry_is_empty(entry_)) {
         return true;
     }
-
-    // 中途半端な初期化状態は異常(全NULL判定済みなので、いずれかがNULLの場合は部分初期化状態)
-    if(NULL == entry_->cpu_resource || NULL == entry_->gpu_resource || NULL == entry_->resource_name) {
+    if(!registry_entry_is_registered(entry_)) {
         return false;
     }
 
@@ -708,7 +722,7 @@ static bool find_by_name(const texture_registry_t* registry_, const char* name_,
     }
 
     for(size_t i = 0; i != registry_->max_texture_count; ++i) {
-        if(NULL != registry_->entries[i].resource_name && choco_string_is_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
+        if(registry_entry_is_registered(&registry_->entries[i]) && choco_string_is_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
             tmp_slot = i;
             found = true;
             break;

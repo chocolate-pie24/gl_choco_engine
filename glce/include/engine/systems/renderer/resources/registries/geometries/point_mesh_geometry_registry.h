@@ -68,7 +68,7 @@ typedef struct subsystem_allocator subsystem_allocator_t;
 typedef struct point_mesh_geometry point_mesh_geometry_t;                   /**< 点描画用ジオメトリのopaque型 */
 typedef struct vbo_range vbo_range_t;
 typedef struct draw_range draw_range_t;
-typedef struct point_mesh_shader point_mesh_shader_t;
+typedef struct vbo_manager vbo_manager_t;
 
 /**
  * @brief Point Mesh Geometry Registryを生成する。
@@ -125,7 +125,7 @@ resource_registry_result_t point_mesh_geometry_registry_create(size_t max_geomet
  *
  * @post 正常終了後、registry_のlogical lifetimeは終了する。
  */
-void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* registry_, point_mesh_shader_t* shader_);
+void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_);
 
 /**
  * @brief 指定名のPoint Mesh Geometryが登録されているか判定する。
@@ -145,7 +145,7 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  * @pre name_は読み取り可能なNUL終端文字列を指していること。
  */
-bool point_mesh_geometry_registry_exists(const point_mesh_geometry_registry_t* registry_, const char* name_);
+resource_registry_result_t point_mesh_geometry_registry_exists(const point_mesh_geometry_registry_t* registry_, const char* resource_name_, bool* out_exists_);
 
 /**
  * @brief Geometry IDに対応するPoint Mesh Geometryを取得する。
@@ -169,32 +169,6 @@ bool point_mesh_geometry_registry_exists(const point_mesh_geometry_registry_t* r
 const point_mesh_geometry_t* point_mesh_geometry_registry_geometry_get(const point_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 
 /**
- * @brief Resource Nameに対応するGeometry IDを取得する。
- *
- * @par Public API Contract
- * - Resource Nameは空文字列ではないNUL終端文字列とする。
- * - 指定名のGeometryが登録されている場合、そのIDを出力する。
- * - 指定名が未登録の場合はBAD_OPERATIONを返す。
- * - 失敗時、出力先の値は変更しない。
- * - Registryの登録状態は変更しない。
- *
- * @param[in] registry_ 検索対象のRegistry。
- * @param[in] name_ 検索するResource Name。
- * @param[out] out_geometry_id_ 取得したGeometry IDの出力先。
- *
- * @retval RESOURCE_REGISTRY_SUCCESS 取得成功。
- * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 引数が不正。
- * @retval RESOURCE_REGISTRY_BAD_OPERATION 指定名のGeometryが未登録。
- * @retval RESOURCE_REGISTRY_DATA_CORRUPTED Registryの整合性検証に失敗。
- *
- * @pre registry_は利用可能状態にあるRegistryを指していること。
- * @pre name_は読み取り可能なNUL終端文字列を指していること。
- *
- * @post 成功時、出力したIDは指定名の登録済みGeometryを識別する。
- */
-resource_registry_result_t point_mesh_geometry_registry_id_get(const point_mesh_geometry_registry_t* registry_, const char* name_, uint16_t* out_geometry_id_);
-
-/**
  * @brief Geometry IDに対応するDraw Rangeを取得する。
  *
  * @par Public API Contract
@@ -214,6 +188,8 @@ resource_registry_result_t point_mesh_geometry_registry_id_get(const point_mesh_
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  */
 const draw_range_t* point_mesh_geometry_registry_draw_range_get(const point_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
+
+resource_registry_result_t point_mesh_geometry_registry_acquire(point_mesh_geometry_registry_t* registry_, const char* resource_name_, uint16_t* out_geometry_id_);
 
 /**
  * @brief Point Mesh Geometryを指定名でRegistryへ登録する。
@@ -299,7 +275,7 @@ resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geom
  * @post 成功時、指定IDに対応するEntryは未登録状態になる。
  * @post 成功時、対象Entryが所有していたResourceは解放済みとなる。
  */
-resource_registry_result_t point_mesh_geometry_registry_unregister(point_mesh_geometry_registry_t* registry_, point_mesh_shader_t* shader_, uint16_t geometry_id_);
+resource_registry_result_t point_mesh_geometry_registry_release(point_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_, uint16_t geometry_id_);
 
 /**
  * @brief Point Mesh Geometry Registryのcanonical validityを判定する。

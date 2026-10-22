@@ -179,7 +179,7 @@ resource_pipeline_result_t texture_pipeline_release(texture_registry_t* registry
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_release", "registry_")
 
-    ret_resource_registry = texture_registry_unregister(registry_, texture_id_);
+    ret_resource_registry = texture_registry_release(registry_, texture_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
         ERROR_MESSAGE("texture_pipeline_release(%s) - texture_registry_unregister failed.", resource_pipeline_result_to_str(ret));

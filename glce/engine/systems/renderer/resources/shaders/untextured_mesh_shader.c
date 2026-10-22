@@ -114,10 +114,11 @@ shader_result_t untextured_mesh_shader_create(const char* vertex_shader_fullpath
     ret = SHADER_SUCCESS;
 
 cleanup:
-    if(SHADER_DATA_CORRUPTED != ret) {
-        if(NULL != tmp_untextured_mesh_shader) {
-            destroy_unchecked(backend_context_, &tmp_untextured_mesh_shader);
-        }
+    if(SHADER_DATA_CORRUPTED == ret) {
+        return ret;
+    }
+    if(NULL != tmp_untextured_mesh_shader) {
+        destroy_unchecked(backend_context_, &tmp_untextured_mesh_shader);
     }
 
     return ret;
@@ -586,6 +587,9 @@ static shader_result_t program_initialize(renderer_backend_context_t* backend_co
     ret = SHADER_SUCCESS;
 
 cleanup:
+    if(SHADER_DATA_CORRUPTED == ret) {
+        return ret;
+    }
     if(SHADER_SUCCESS != ret && NULL != tmp_shader) {
         if(NULL != shader_ && NULL != backend_context_) {
             renderer_backend_shader_destroy(backend_context_, &tmp_shader);

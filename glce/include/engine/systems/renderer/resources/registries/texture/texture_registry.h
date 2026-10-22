@@ -119,23 +119,7 @@ void texture_registry_deinitialize(texture_registry_t* registry_);
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  * @pre name_は読み取り可能なNUL終端文字列を指していること。
  */
-bool texture_registry_exists(const texture_registry_t* registry_, const char* name_);
-
-/**
- * @brief Texture IDに対応するResource Nameを取得する。
- *
- * @details
- * 成功時はRegistryが所有するResource Nameへのconst borrowを返す。
- * IDが範囲外、または対象Entryが未登録の場合はNULLを返す。
- *
- * @param[in] registry_ 検索対象のRegistry。
- * @param[in] texture_id_ Resource Nameを取得するTexture ID。
- *
- * @return 成功時はResource Nameへのconstポインタ。失敗時はNULL。
- *
- * @pre registry_は利用可能状態にあるRegistryを指していること。
- */
-const char* texture_registry_name_get(const texture_registry_t* registry_, uint16_t texture_id_);
+resource_registry_result_t texture_registry_exists(const texture_registry_t* registry_, const char* name_, bool* out_exists_);
 
 /**
  * @brief Texture IDに対応するGPU Resourceを取得する。
@@ -169,32 +153,7 @@ const texture_gpu_resource_t* texture_registry_gpu_resource_get(const texture_re
  */
 const texture_cpu_resource_t* texture_registry_cpu_resource_get(const texture_registry_t* registry_, uint16_t texture_id_);
 
-/**
- * @brief Resource Nameに対応するTexture IDを取得する。
- *
- * @par Public API Contract
- * - name_は空文字列ではないNUL終端文字列とする。
- * - 指定名が登録済みの場合、対応するTexture IDを出力する。
- * - 指定名が未登録の場合はBAD_OPERATIONを返す。
- * - 失敗時は出力先の値を変更しない。
- * - Registryの登録状態は変更しない。
- *
- * @param[in] registry_ 検索対象のRegistry。
- * @param[in] name_ 検索するResource Name。
- * @param[out] out_texture_id_ Texture IDを受け取る出力先。
- *
- * @retval RESOURCE_REGISTRY_SUCCESS 取得成功。
- * @retval RESOURCE_REGISTRY_INVALID_ARGUMENT 引数が不正。
- * @retval RESOURCE_REGISTRY_BAD_OPERATION 指定名のTextureが未登録。
- * @retval RESOURCE_REGISTRY_DATA_CORRUPTED Registryの整合性検証に失敗。
- *
- * @pre registry_は利用可能状態にあるRegistryを指していること。
- * @pre name_は読み取り可能なNUL終端文字列を指していること。
- * @pre out_texture_id_が非NULLの場合、書き込み可能なuint16_tオブジェクトを指していること。
- *
- * @post 成功時、出力IDは指定名の登録済みTextureを識別する。
- */
-resource_registry_result_t texture_registry_id_get(const texture_registry_t* registry_, const char* name_, uint16_t* out_texture_id_);
+resource_registry_result_t texture_registry_acquire(texture_registry_t* registry_, const char* resource_name_, uint16_t* out_texture_id_);
 
 /**
  * @brief Texture CPU / GPU ResourceをRegistryへ登録する。
@@ -258,7 +217,7 @@ resource_registry_result_t texture_registry_register(texture_registry_t* registr
  * @post 成功時、対象Entryは未登録状態となる。
  * @post 成功時、対象Entryに属していたResource NameとCPU / GPU Resourceは破棄済みとなる。
  */
-resource_registry_result_t texture_registry_unregister(texture_registry_t* registry_, uint16_t texture_id_);
+resource_registry_result_t texture_registry_release(texture_registry_t* registry_, uint16_t texture_id_);
 
 /**
  * @brief Texture RegistryのCanonical Validityを判定する。

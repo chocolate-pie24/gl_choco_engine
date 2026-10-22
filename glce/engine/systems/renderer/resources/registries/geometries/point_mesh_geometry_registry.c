@@ -11,13 +11,14 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
+#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 #include "engine/systems/renderer/resources/geometries/point_mesh_geometry.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
-#include "engine/systems/renderer/resources/shaders/point_mesh_shader.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_err_utils.h"
 
@@ -63,6 +64,7 @@ typedef struct registry_entry {
     choco_string_t* resource_name;
     point_mesh_geometry_t* cpu_resource;
     vbo_range_t allocation_descriptor;
+    uint16_t reference_count;
 } registry_entry_t;
 
 /*
@@ -84,11 +86,12 @@ struct point_mesh_geometry_registry {
 // Private Function Declarations
 // ============================================================
 // Lifecycle
-static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, point_mesh_shader_t* shader_);
+static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, vbo_manager_t* vbo_manager_);
 
 // State Queries
 static bool geometry_id_is_in_range(const point_mesh_geometry_registry_t* registry_, uint16_t geometry_id_);
 static bool registry_entry_is_empty(const registry_entry_t* entry_);
+static bool registry_entry_is_registered(const registry_entry_t* entry_);
 
 // Validation
 static bool registry_entry_is_valid(const registry_entry_t* entry_);
@@ -231,9 +234,9 @@ cleanup:
  * - 正常終了後のRegistryは利用可能なstable object modelから
  *   外れるため、通常のcanonical validationを実行しない。
  */
-void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* registry_, point_mesh_shader_t* shader_) {
-    if(NULL == registry_ || NULL == shader_) {
-        ERROR_MESSAGE("point_mesh_geometry_registry_deinitialize(%s) - provided registry_ or shader_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_) {
+    if(NULL == registry_ || NULL == vbo_manager_) {
+        ERROR_MESSAGE("point_mesh_geometry_registry_deinitialize(%s) - provided registry_ or vbo_manager_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -244,7 +247,7 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
 #endif
     for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
         if(!registry_entry_is_empty(&registry_->entries[i])) {
-            if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[i], shader_)) {
+            if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[i], vbo_manager_)) {
                 ERROR_MESSAGE("point_mesh_geometry_registry_deinitialize(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
                 return;
             }
@@ -267,24 +270,36 @@ void point_mesh_geometry_registry_deinitialize(point_mesh_geometry_registry_t* r
  * - このAPIは登録状態を変更せず、検索結果のみを返すため、
  *   Result validationとPostconditions validationは行わない。
  */
-bool point_mesh_geometry_registry_exists(const point_mesh_geometry_registry_t* registry_, const char* name_) {
-    size_t tmp_id = 0;
+resource_registry_result_t point_mesh_geometry_registry_exists(const point_mesh_geometry_registry_t* registry_, const char* resource_name_, bool* out_exists_) {
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    if(NULL == registry_ || NULL == name_) {
-        return false;
-    }
-    if('\0' == name_[0]) {
-        ERROR_MESSAGE("point_mesh_geometry_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
-        return false;
+    size_t tmp_id = 0;
+    bool exists = false;
+
+    // Preconditions.
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_exists", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_exists", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_exists_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_exists", "out_exists_")
+    if('\0' == resource_name_[0]) {
+        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+        ERROR_MESSAGE("point_mesh_geometry_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
+        goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!point_mesh_geometry_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("point_mesh_geometry_registry_exists(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
-        return false;
+        ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
+        ERROR_MESSAGE("point_mesh_geometry_registry_exists(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        goto cleanup;
     }
 #endif
 
-    return find_by_name(registry_, name_, &tmp_id);
+    exists = find_by_name(registry_, resource_name_, &tmp_id);
+    *out_exists_ = exists;
+
+    ret = RESOURCE_REGISTRY_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
 /*
@@ -312,71 +327,12 @@ const point_mesh_geometry_t* point_mesh_geometry_registry_geometry_get(const poi
         ERROR_MESSAGE("point_mesh_geometry_registry_geometry_get(%s) - provided geometry_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
-    if(registry_entry_is_empty(&registry_->entries[geometry_id_])) {
+    if(!registry_entry_is_registered(&registry_->entries[geometry_id_])) {
         ERROR_MESSAGE("point_mesh_geometry_registry_geometry_get(%s) - provided geometry_id_ is not registered.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
 
     return registry_->entries[geometry_id_].cpu_resource;
-}
-
-/*
- * API-specific Validation Policy
- *
- * Preconditions:
- * - registry_、name_、out_geometry_id_のNULL、
- *   および空のResource Nameを検査する。
- * - Resource Nameによる検索ではEntry配列全体を走査するため、
- *   DEBUG / TESTでは検索前にRegistry全体をcanonical validationし、
- *   Entry配列と登録名の内部表現の整合性を確認する。
- * - RELEASEでは、成立済みのRegistry internal contractを信頼し、
- *   canonical validationを省略する。
- *
- * Result validation:
- * - 検索結果のIDはRegistryのEntry配列のindexから導出され、
- *   成立済みの容量contractによってuint16_tの範囲内に収まるため、
- *   追加のcanonical validationを行わない。
- *
- * Postconditions:
- * - Registryの登録状態は変更せず、確定したIDを出力するだけなので、
- *   Postconditions validationは行わない。
- */
-resource_registry_result_t point_mesh_geometry_registry_id_get(const point_mesh_geometry_registry_t* registry_, const char* name_, uint16_t* out_geometry_id_) {
-    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-
-    size_t tmp_id = 0;
-
-    // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_id_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_id_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_id_get", "out_geometry_id_")
-    if('\0' == name_[0]) {
-        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("point_mesh_geometry_registry_id_get(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
-        goto cleanup;
-    }
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!point_mesh_geometry_registry_is_valid(registry_)) {
-        ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("point_mesh_geometry_registry_id_get(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
-        goto cleanup;
-    }
-#endif
-
-    // Prepare.
-    if(!find_by_name(registry_, name_, &tmp_id)) {
-        ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("point_mesh_geometry_registry_id_get(%s) - find_by_name failed.", resource_registry_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // Output.
-    *out_geometry_id_ = (uint16_t)tmp_id;
-
-    ret = RESOURCE_REGISTRY_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
 /*
@@ -404,12 +360,58 @@ const draw_range_t* point_mesh_geometry_registry_draw_range_get(const point_mesh
         ERROR_MESSAGE("point_mesh_geometry_registry_draw_range_get(%s) - provided geometry_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
-    if(registry_entry_is_empty(&registry_->entries[geometry_id_])) {
+    if(!registry_entry_is_registered(&registry_->entries[geometry_id_])) {
         ERROR_MESSAGE("point_mesh_geometry_registry_draw_range_get(%s) - no allocation.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
 
     return &registry_->entries[geometry_id_].allocation_descriptor.draw_range;
+}
+
+resource_registry_result_t point_mesh_geometry_registry_acquire(point_mesh_geometry_registry_t* registry_, const char* resource_name_, uint16_t* out_geometry_id_) {
+    resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+
+    size_t tmp_index = 0;
+
+    // Preconditions.
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_acquire", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_acquire", "resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_acquire", "out_geometry_id_")
+    if('\0' == resource_name_[0]) {
+        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
+        ERROR_MESSAGE("point_mesh_geometry_registry_acquire(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
+        goto cleanup;
+    }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!point_mesh_geometry_registry_is_valid(registry_)) {
+        ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
+        ERROR_MESSAGE("point_mesh_geometry_registry_acquire(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+    if(!find_by_name(registry_, resource_name_, &tmp_index)) {   // リソースの登録状態確認
+        ret = RESOURCE_REGISTRY_BAD_OPERATION;
+        ERROR_MESSAGE("point_mesh_geometry_registry_acquire(%s) - Provided resource name is not registered.", resource_registry_result_to_str(ret));
+        goto cleanup;
+    }
+    if(UINT16_MAX < tmp_index) {
+        ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
+        ERROR_MESSAGE("point_mesh_geometry_registry_acquire(%s) - Resource registry is corrupted.", resource_registry_result_to_str(ret));
+        goto cleanup;
+    }
+
+    if(registry_->entries[tmp_index].reference_count == UINT16_MAX) {
+        ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("point_mesh_geometry_registry_acquire(%s) - Reference count overflow.", resource_registry_result_to_str(ret));
+        goto cleanup;
+    }
+    registry_->entries[tmp_index].reference_count++;
+    *out_geometry_id_ = (uint16_t)tmp_index;
+
+    ret = RESOURCE_REGISTRY_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
 /*
@@ -521,6 +523,7 @@ resource_registry_result_t point_mesh_geometry_registry_register(point_mesh_geom
     registry_->entries[tmp_index].cpu_resource = *geometry_;
     registry_->entries[tmp_index].allocation_descriptor = *vbo_range_;
     registry_->entries[tmp_index].resource_name = tmp_name;
+    registry_->entries[tmp_index].reference_count = 1;
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -577,12 +580,12 @@ cleanup:
  * - 解放完了後のEntryを同じ条件で再検証する必要はないため、
  *   Registry全体のPostconditions validationは行わない。
  */
-resource_registry_result_t point_mesh_geometry_registry_unregister(point_mesh_geometry_registry_t* registry_, point_mesh_shader_t* shader_, uint16_t geometry_id_) {
+resource_registry_result_t point_mesh_geometry_registry_release(point_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_, uint16_t geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_unregister", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_unregister", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "point_mesh_geometry_registry_unregister", "vbo_manager_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!point_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
@@ -595,17 +598,21 @@ resource_registry_result_t point_mesh_geometry_registry_unregister(point_mesh_ge
         ERROR_MESSAGE("point_mesh_geometry_registry_unregister(%s) - Provided geometry_id_ is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
-    if(registry_entry_is_empty(&registry_->entries[geometry_id_])) {
+    if(!registry_entry_is_registered(&registry_->entries[geometry_id_])) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
         ERROR_MESSAGE("point_mesh_geometry_registry_unregister(%s) - provided geometry_id_ entry is empty.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     // Commit.
-    if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[geometry_id_], shader_)) {
-        ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("point_mesh_geometry_registry_unregister(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(ret));
-        goto cleanup;
+    if(1 == registry_->entries[geometry_id_].reference_count) {
+        if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[geometry_id_], vbo_manager_)) {
+            ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
+            ERROR_MESSAGE("point_mesh_geometry_registry_unregister(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        registry_->entries[geometry_id_].reference_count--;
     }
 
     ret = RESOURCE_REGISTRY_SUCCESS;
@@ -656,23 +663,27 @@ bool point_mesh_geometry_registry_is_valid(const point_mesh_geometry_registry_t*
 // ============================================================
 // Lifecycle
 // ============================================================
-static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, point_mesh_shader_t* shader_) {
+static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, vbo_manager_t* vbo_manager_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    if(NULL == entry_ || NULL == shader_) {
+    buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
+
+    if(NULL == entry_ || NULL == vbo_manager_) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
         goto cleanup;
     }
 
-    if(SHADER_SUCCESS != point_mesh_shader_vbo_free(shader_, &entry_->allocation_descriptor)) {
+    ret_buffer_manager = vbo_manager_free(vbo_manager_, &entry_->allocation_descriptor.allocation_info);
+    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("registry_entry_deinitialize(%s) - point_mesh_shader_vbo_free failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("registry_entry_deinitialize(%s) - vbo_manager_free failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     memset(&entry_->allocation_descriptor, 0, sizeof(vbo_range_t));
 
     point_mesh_geometry_destroy(&entry_->cpu_resource);
     choco_string_destroy(&entry_->resource_name);
+    entry_->reference_count = 0;
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
@@ -718,6 +729,31 @@ static bool registry_entry_is_empty(const registry_entry_t* entry_) {
     if(0 != entry_->allocation_descriptor.draw_range.vertex_count) {
         return false;
     }
+    if(0 != entry_->reference_count) {
+        return false;
+    }
+    return true;
+}
+
+static bool registry_entry_is_registered(const registry_entry_t* entry_) {
+    if(NULL == entry_) {
+        return false;
+    }
+    if(NULL == entry_->resource_name || NULL == entry_->cpu_resource) {
+        return false;
+    }
+    if(0 == entry_->allocation_descriptor.allocation_info.allocated_size) {
+        return false;
+    }
+    if(NULL == entry_->allocation_descriptor.allocation_info.owner) {
+        return false;
+    }
+    if(0 == entry_->allocation_descriptor.draw_range.vertex_count) {
+        return false;
+    }
+    if(0 == entry_->reference_count) {
+        return false;
+    }
     return true;
 }
 
@@ -733,9 +769,15 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
     if(registry_entry_is_empty(entry_)) {
         return true;
     }
+    if(!registry_entry_is_registered(entry_)) {
+        return false;
+    }
 
     // Registered State.
     if(NULL == entry_->resource_name || NULL == entry_->cpu_resource) {
+        return false;
+    }
+    if(!general_allocator_ptr_is_allocated(entry_->resource_name)) {
         return false;
     }
     if(!choco_string_is_valid(entry_->resource_name)) {
@@ -766,7 +808,7 @@ static bool find_by_name(const point_mesh_geometry_registry_t* registry_, const 
     }
 
     for(size_t i = 0; i != registry_->max_geometry_count; ++i) {
-        if(NULL != registry_->entries[i].resource_name && choco_string_is_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
+        if(registry_entry_is_registered(&registry_->entries[i]) && choco_string_is_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
             tmp_slot = i;
             found = true;
             break;
