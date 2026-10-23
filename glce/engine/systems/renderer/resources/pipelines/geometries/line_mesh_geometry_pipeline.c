@@ -1,19 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-/** @ingroup renderer
- *
- * @file line_mesh_geometry_pipeline.c
- * @author chocolate-pie24
- *
- * @brief line_mesh用ジオメトリ入力をGPU頂点バッファへ転送し、描画範囲をレジストリへ登録するpipeline APIの実装
- *
- * @note 本pipelineはCPU側ジオメトリリソース生成、shader resourceへの頂点転送、geometry registryへの登録を一連の手順として実行する
- * @note GPU頂点バッファ自体はshader resourceが所有し、本pipelineは所有しない
- *
- * @date 2026-06-30
- *
- */
 #include "engine/systems/renderer/resources/pipelines/geometries/line_mesh_geometry_pipeline.h"
 
 #include <stdint.h>
@@ -25,7 +12,6 @@
 #include "engine/base/choco_math/choco_math.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
-#include "engine/core/geometry_primitive/aabb_3d.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
@@ -36,12 +22,145 @@
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_err_utils.h"
 
+/*
+ * Module Internal Contract
+ *
+ * Module State:
+ * - 本Moduleは永続的な内部状態を保持しない。
+ * - VBO ManagerとGeometry Registryはcallerからborrowする。
+ * - Resourceの生成、転送、登録、解放を一連のOperationとして調整する。
+ *
+ * Resource Construction:
+ * - CPU Geometryの生成はLine Mesh Geometry Moduleへ委譲する。
+ * - 入力頂点配列またはAABBのOwnershipは取得しない。
+ * - AABBから生成したCPU Geometryの頂点配列は、
+ *   CPU GeometryからborrowしてVBOへ転送する。
+ * - VBO Allocationの確保と頂点データの転送は
+ *   VBO Managerへ委譲する。
+ * - Resource Nameの複製と登録状態の管理は
+ *   Geometry Registryへ委譲する。
+ *
+ * Temporary Ownership:
+ * - CPU Geometry生成後、Registry登録までは
+ *   本OperationがCPU Geometryを一時的に所有する。
+ * - VBO書込成功後、Registry登録までは
+ *   本OperationがVBO Allocationの解放責務を持つ。
+ * - VBO書込成功状態はvbo_writtenによって管理する。
+ * - Registry登録成功時、CPU GeometryとVBO Allocationの
+ *   解放責務はGeometry Registryへ移転する。
+ * - Registry登録成功後、本OperationはResourceを解放しない。
+ *
+ * Draw Range:
+ * - VBO書込サイズはVertex CountとVertex Strideから計算する。
+ * - size_mul_checked()によって書込サイズのoverflowを検査する。
+ * - VBO Allocation Offsetはsizeof(line_vertex_t)の
+ *   倍数である必要がある。
+ * - Offsetの整合性を確認した後、Draw Rangeを構築する。
+ * - first_vertex_countはAllocation Offsetを
+ *   sizeof(line_vertex_t)で除算して求める。
+ * - vertex_countにはCPU Geometryの頂点数を使用する。
+ *
+ * Commit:
+ * - CPU GeometryとVBO Allocation Descriptorを
+ *   Geometry Registryへ渡す。
+ * - Registry登録成功がOwnership TransferのCommit境界となる。
+ * - Registryは登録ResourceのReference Countを1に初期化する。
+ * - Geometry IDは登録成功後にcallerへ出力する。
+ *
+ * Failure / Rollback:
+ * - Commit前の回復可能な失敗では、
+ *   確保済みVBO Allocationを先に解放する。
+ * - VBO Allocationの解放成功後、CPU Geometryを破棄する。
+ * - VBO Allocationのrollbackに失敗した場合は
+ *   DATA_CORRUPTEDとして処理を中断する。
+ * - DATA_CORRUPTEDの場合は通常のcleanupを行わない。
+ * - 特にRegistry登録後の整合性異常では、
+ *   Ownership Transferの完了状態を保証できないため、
+ *   Pipeline側からResourceを解放しない。
+ * - 回復可能な失敗ではGeometry IDの出力先を変更しない。
+ *
+ * Validation Responsibility:
+ * - 頂点配列とAABBのsemantic validityは
+ *   Line Mesh Geometry Moduleへ委譲する。
+ * - VBO Allocationと書込条件の検証はVBO Managerへ委譲する。
+ * - Resource Name、登録状態、Reference Countの検証は
+ *   Geometry Registryへ委譲する。
+ * - 本Moduleは書込サイズのoverflowと、
+ *   Allocation Offset / Vertex Strideの整合性を検証する。
+ * - 下位Moduleのcanonical validationを重複して実行しない。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
+
+/*
+ * API-specific Validation Policy
+ *
+ * Preconditions:
+ * - vbo_manager_、geometry_registry_、resource_name_、
+ *   vertices_、out_geometry_id_のNULLを全Build Modeで検査する。
+ * - Vertex Countの正値・偶数条件と頂点データのsemantic validityは、
+ *   line_mesh_geometry_create_from_vertices()へ委譲する。
+ * - Resource Nameの空文字列条件と重複登録の判定は、
+ *   Geometry Registryのregister()へ委譲する。
+ * - VBO ManagerとGeometry Registryの内部整合性は、
+ *   各ModuleのAPI contractとvalidationに委ねる。
+ * - 本Pipelineでは入力Resource全体の
+ *   canonical validationを重複して実行しない。
+ *
+ * Resource Construction:
+ * - 入力頂点配列からCPU Geometryを生成する。
+ * - size_mul_checked()によってVBO書込サイズのoverflowを検査する。
+ * - vbo_manager_write()によってVBO Allocationを確保し、
+ *   入力頂点データを転送する。
+ * - 書込成功後、vbo_writtenをtrueに設定し、
+ *   VBO Allocationの一時的な解放責務を保持する。
+ *
+ * Draw Range Validation:
+ * - VBO Allocation Offsetがsizeof(line_vertex_t)の
+ *   倍数であることを直接検査する。
+ * - 不整合を検出した場合はDATA_CORRUPTEDとする。
+ * - 条件成立後、Allocation Offsetからfirst_vertex_countを、
+ *   入力Vertex Countからvertex_countを設定する。
+ * - VBO ManagerのAllocation Offsetに対するこの検証は、
+ *   Registryのcanonical validationへ委譲しない。
+ *
+ * Commit:
+ * - CPU GeometryとVBO Allocation Descriptorを
+ *   line_mesh_geometry_registry_register()へ渡す。
+ * - 登録成功によって両Resourceの解放責務はRegistryへ移転する。
+ * - RegistryがReference Countを1に初期化し、
+ *   callerに最初の利用権を付与する。
+ * - 登録成功後にGeometry IDを出力する。
+ *
+ * Failure / Cleanup:
+ * - Registryへの登録前の回復可能な失敗では、
+ *   VBO Allocationの確保が成功していればrollbackする。
+ * - VBO Allocationのrollbackが成功した場合、
+ *   一時的に所有しているCPU Geometryをdestroyする。
+ * - VBO Allocationのrollbackに失敗した場合は
+ *   DATA_CORRUPTEDを返し、以降のcleanupを中断する。
+ * - DATA_CORRUPTEDの場合は通常のcleanupを行わない。
+ * - この場合、確保済みResourceの解放完了は保証しない。
+ * - Registryのregister()がDATA_CORRUPTEDを返した場合も、
+ *   所有権移転状態を安全に判断できないためcleanupを行わない。
+ * - 回復可能な失敗ではout_geometry_id_を変更しない。
+ *
+ * Postconditions:
+ * - 登録成功時にはGeometry Registry側で
+ *   Registered Stateの成立を保証する。
+ * - Pipeline側ではRegistryのcanonical validationを
+ *   重複して実行しない。
+ * - 成功時、一時的なCPU Geometryの所有ポインタは
+ *   RegistryへのOwnership TransferによってNULLとなる。
+ */
 resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(vbo_manager_t* vbo_manager_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
     buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     uint16_t tmp_geometry_id = 0;
@@ -113,12 +232,76 @@ cleanup:
     return ret;
 }
 
+/*
+ * API-specific Validation Policy
+ *
+ * Preconditions:
+ * - vbo_manager_、geometry_registry_、resource_name_、
+ *   aabb_、out_geometry_id_のNULLを全Build Modeで検査する。
+ * - AABBのsemantic validityは、
+ *   line_mesh_geometry_create_from_aabbs()へ委譲する。
+ * - Resource Nameの空文字列条件と重複登録の判定は、
+ *   Geometry Registryのregister()へ委譲する。
+ * - VBO ManagerとGeometry Registryの内部整合性は、
+ *   各ModuleのAPI contractとvalidationに委ねる。
+ * - 本Pipelineでは入力Resource全体の
+ *   canonical validationを重複して実行しない。
+ *
+ * Resource Construction:
+ * - line_mesh_geometry_create_from_aabbs()によって、
+ *   1個のAABBからCPU Geometryを生成する。
+ * - 生成されたGeometryから頂点配列とVertex Countを取得する。
+ * - 取得した頂点配列はCPU Geometryへのborrowであり、
+ *   Pipelineが個別に解放することはない。
+ * - 頂点配列の取得条件はLine Mesh Geometry Moduleに委譲する。
+ * - size_mul_checked()によってVBO書込サイズのoverflowを検査する。
+ * - vbo_manager_write()によってVBO Allocationを確保し、
+ *   生成された頂点データを転送する。
+ * - 書込成功後、vbo_writtenをtrueに設定する。
+ *
+ * Draw Range Validation:
+ * - VBO Allocation Offsetがsizeof(line_vertex_t)の
+ *   倍数であることを直接検査する。
+ * - 不整合を検出した場合はDATA_CORRUPTEDとする。
+ * - 条件成立後、Allocation Offsetからfirst_vertex_countを、
+ *   取得したVertex Countからvertex_countを設定する。
+ * - VBO ManagerのAllocation Offsetに対するこの検証は、
+ *   Registryのcanonical validationへ委譲しない。
+ *
+ * Commit:
+ * - CPU GeometryとVBO Allocation Descriptorを
+ *   line_mesh_geometry_registry_register()へ渡す。
+ * - 登録成功によって両Resourceの解放責務はRegistryへ移転する。
+ * - RegistryがReference Countを1に初期化し、
+ *   callerに最初の利用権を付与する。
+ * - 登録成功後にGeometry IDを出力する。
+ *
+ * Failure / Cleanup:
+ * - Registryへの登録前の回復可能な失敗では、
+ *   VBO Allocationの確保が成功していればrollbackする。
+ * - VBO Allocationのrollbackが成功した場合、
+ *   一時的に所有しているCPU Geometryをdestroyする。
+ * - VBO Allocationのrollbackに失敗した場合は
+ *   DATA_CORRUPTEDを返し、以降のcleanupを中断する。
+ * - DATA_CORRUPTEDの場合は通常のcleanupを行わない。
+ * - この場合、確保済みResourceの解放完了は保証しない。
+ * - Registryのregister()がDATA_CORRUPTEDを返した場合も、
+ *   所有権移転状態を安全に判断できないためcleanupを行わない。
+ * - 回復可能な失敗ではout_geometry_id_を変更しない。
+ *
+ * Postconditions:
+ * - 登録成功時にはGeometry Registry側で
+ *   Registered Stateの成立を保証する。
+ * - Pipeline側ではRegistryのcanonical validationを
+ *   重複して実行しない。
+ * - 成功時、一時的なCPU Geometryの所有ポインタは
+ *   RegistryへのOwnership TransferによってNULLとなる。
+ */
 resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(vbo_manager_t* vbo_manager_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-    shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
     buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     size_t vertex_count = 0;
@@ -199,6 +382,49 @@ cleanup:
     return ret;
 }
 
+/*
+ * API-specific Validation Policy
+ *
+ * Preconditions:
+ * - vbo_manager_とgeometry_registry_のNULLを
+ *   全Build Modeで検査する。
+ * - Geometry IDの範囲、対象EntryのRegistered State、
+ *   およびRegistryのcanonical validityは、
+ *   line_mesh_geometry_registry_release()へ委譲する。
+ * - VBO Managerの内部整合性とAllocationの解放条件は、
+ *   Registryを経由してVBO Manager自身のAPIに委譲する。
+ * - Pipeline側ではこれらのValidationを重複して実行しない。
+ *
+ * Commit:
+ * - Geometry Registryのrelease()を呼び出し、
+ *   指定Geometryの利用権を1つ返却する。
+ * - Reference Countが2以上の場合、RegistryはCountを
+ *   1減少させ、Resourceの登録状態を維持する。
+ * - Reference Countが1の場合、Registryは対応する
+ *   VBO AllocationとCPU Geometryを解放し、
+ *   対象EntryをEmpty Stateへ戻す。
+ * - 本PipelineはReference CountやEntryを直接変更しない。
+ *
+ * Result:
+ * - Registryのrelease()が返したResultを
+ *   Resource PipelineのResult Codeへ変換する。
+ * - Registryのrelease()が成功した場合は
+ *   RESOURCE_PIPELINE_SUCCESSを返す。
+ * - 下位Operationの失敗は変換後のResult Codeとして返す。
+ *
+ * Postconditions:
+ * - Registryのstable state成立はRegistry側の
+ *   release() contractに委譲する。
+ * - Pipeline側ではCommit後のcanonical validationを
+ *   重複して実行しない。
+ *
+ * Failure:
+ * - Pipeline自身によるResourceの確保やOwnership Transferは
+ *   発生しないため、独立したrollback処理を持たない。
+ * - Commit前の引数不正ではResourceを変更しない。
+ * - 下位RegistryがDATA_CORRUPTEDを返した場合、
+ *   Resourceの解放完了および内部状態の復元を保証しない。
+ */
 resource_pipeline_result_t line_mesh_geometry_pipeline_release(vbo_manager_t* vbo_manager_, line_mesh_geometry_registry_t* geometry_registry_, uint16_t geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 

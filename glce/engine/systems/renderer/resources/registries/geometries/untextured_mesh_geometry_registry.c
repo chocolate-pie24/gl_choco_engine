@@ -656,6 +656,8 @@ resource_registry_result_t untextured_mesh_geometry_registry_release(untextured_
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_release", "registry_")
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_geometry_registry_release", "vbo_manager_")
+    // releaseはregistryの中身を変化させるため、念のため全体をvalidationする。
+    // ただ、releaseは単一entryのみの変更であるため、パフォーマンスに問題が出る場合はvalidationの範囲を狭めてもよい
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!untextured_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
@@ -913,8 +915,11 @@ static bool registry_entry_is_registered(const registry_entry_t* entry_) {
  *
  * - Empty / Registeredのどちらにも該当しないEntryはinvalidとする。
  * - Reference CountとResourceの登録状態の矛盾を検出する。
- * - Owned Pointerのallocation-level validityや、
- *   CPU GeometryとVBO Range間の相互整合性は検証しない。
+ * - Resource NameとCPU GeometryがGeneral Allocator管理下の
+ *   current live allocationであることを確認する。
+ * - Owned Pointerのallocation-level validityを確認してから、
+ *   対応するResourceのcanonical validatorを呼び出す。
+ * - CPU GeometryとVBO Range間の相互整合性は検証しない。
  *
  * - 本ValidatorはEntryの状態を変更しない。
  */
@@ -943,6 +948,9 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
     }
 
     // CPU Geometry.
+    if(!general_allocator_ptr_is_allocated(entry_->cpu_resource)) {
+        return false;
+    }
     if(!untextured_mesh_geometry_is_valid(entry_->cpu_resource)) {
         return false;
     }

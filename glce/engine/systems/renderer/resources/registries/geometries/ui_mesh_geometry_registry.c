@@ -29,14 +29,37 @@
  * Resource Identity:
  * - Geometry IDはEntry配列のindexに対応する。
  * - IDとEntryの対応を管理する独立したmappingは持たない。
+ * - 解放済みEntryのindexは、後の新規登録で再利用できる。
  *
- * Registration State:
- * - EntryはEmpty StateまたはRegistered Stateを持つ。
- * - Empty StateのEntryは新規登録に利用できる。
- * - Registered StateのEntryは、Resource Name、CPU Geometry、
- *   VBO Allocation Descriptorを一組の登録Resourceとして扱う。
- * - 登録解除後のEntryはEmpty Stateへ戻り、再利用できる。
- * - 各Stateのcanonical validityはregistry_entry_is_valid()が定義する。
+ * Entry State:
+ * - Entryの正常なstable stateはEmpty StateとRegistered Stateである。
+ * - Empty Stateでは、所有ResourceとVBO Allocation Descriptorが
+ *   空状態であり、Reference Countは0となる。
+ * - Registered Stateでは、Resource Name、CPU Geometry、
+ *   VBO Allocation Descriptorを一組のResourceとして保持し、
+ *   Reference Countは1以上となる。
+ * - Entryは正常なstate transitionの途中を除き、
+ *   Empty StateまたはRegistered Stateのいずれかを満たす。
+ * - 両Stateの構造的条件は各State Predicateが判定し、
+ *   canonical validityはregistry_entry_is_valid()が判定する。
+ *
+ * Reference Count:
+ * - 新規登録によってEmpty StateからRegistered Stateへ遷移し、
+ *   Reference Countを1に初期化する。
+ * - 既存ResourceのAcquireではReference Countのみを増加させる。
+ * - Release後もReference Countが残る場合、Resourceを維持する。
+ * - 最後の利用権の返却では所有Resourceを解放し、
+ *   EntryをEmpty Stateへ戻す。
+ * - Registry全体のdeinitializeではReference Countを消費せず、
+ *   各登録Resourceを一度だけ解放する。
+ *
+ * Resource Ownership:
+ * - RegistryはResource NameとCPU Geometryを所有する。
+ * - 対応するVBO Allocationの解放責務を持つ。
+ * - VBO Manager本体は所有せず、解放操作時にborrowする。
+ * - VBO Allocationの解放にはvbo_manager_free()を使用する。
+ * - CPU GeometryとResource Nameの解放には、それぞれの
+ *   Resource Moduleが提供するdestroy APIを使用する。
  *
  * Initialization:
  * - Subsystem Allocatorが返すzero-initialized storageを使用する。
@@ -58,8 +81,12 @@
  * - cpu_resourceはRegistryが所有するCPU Geometryを指す。
  * - allocation_descriptorは対応するVBO Allocationの
  *   Descriptorを値として保持する。
- * - EntryはEmpty StateまたはRegistered Stateを取り、
- *   各状態の成立条件はregistry_entry_is_valid()が定義する。
+ * - reference_countは、このEntryのResourceに対して
+ *   保持されている利用権の数を表す。
+ * - Empty Stateではreference_countは0となる。
+ * - Registered Stateではreference_countは1以上となる。
+ * - 各Stateの構造的成立条件およびcanonical validityは、
+ *   対応するState PredicateとValidatorが定義する。
  */
 typedef struct registry_entry {
     choco_string_t* resource_name;
@@ -75,7 +102,8 @@ typedef struct registry_entry {
  * - entriesはGeometry IDによって直接参照するEntry配列である。
  * - 正常な利用可能状態では、max_geometry_countは
  *   1以上UINT16_MAX以下、entriesはNULL以外となる。
- * - deinitialize後はmax_geometry_countが0となり、
+ * - Registryの利用期間中、Entry配列のstorageは変更しない。
+ * - deinitializeが正常に完了するとmax_geometry_countが0となり、
  *   Registryのlogical lifetimeが終了する。
  */
 struct ui_mesh_geometry_registry {
@@ -114,17 +142,16 @@ static bool find_by_name(const ui_mesh_geometry_registry_t* registry_, const cha
  * - allocator_の内部整合性とallocationの成立条件は、
  *   Subsystem Allocator側のAPI contractとvalidationに委ねる。
  *
- * Result validation:
+ * Result Validation:
  * - DEBUG / TESTでは、構築したRegistry全体をcanonical validationし、
- *   callerへ公開する前にEmpty Stateからなるstable object modelの
- *   成立を確認する。
+ *   全EntryがReference Count = 0のEmpty Stateであることを確認する。
  * - RELEASEでは、zero-initialized storageと構築処理のcontractを
  *   信頼し、canonical validationを省略する。
  *
  * Failure:
  * - 回復可能な構築失敗ではAllocatorをrollbackし、
  *   構築前のallocation stateを復元する。
- * - DATA_CORRUPTEDでは、内部状態の安全性を信頼できないため
+ * - DATA_CORRUPTEDでは、内部状態の安全性を信頼できないため、
  *   rollbackを行わない。
  *
  * Postconditions:
@@ -215,20 +242,30 @@ cleanup:
  * API-specific Validation Policy
  *
  * Preconditions:
- * - registry_とshader_のNULLを全Build Modeで検査する。
+ * - registry_とvbo_manager_のNULLを全Build Modeで検査する。
  * - DEBUG / TESTでは、登録済みEntryのowned resourceを安全に
  *   解放できることを確認するため、Registry全体を
  *   canonical validationする。
  * - RELEASEでは、成立済みのRegistry internal contractを信頼し、
  *   canonical validationを省略する。
- * - Shaderの内部整合性およびVBO Allocationの解放条件は、
- *   UI Mesh Shader側のAPI contractとvalidationに委ねる。
+ * - VBO Managerの内部整合性とVBO Allocationの解放条件は、
+ *   VBO Manager側のAPI contractとvalidationに委ねる。
+ *
+ * Deinitialization:
+ * - Empty StateでないEntryに対して
+ *   registry_entry_deinitialize()を実行する。
+ * - Reference Countの値によって解放処理を切り替えない。
+ * - 各登録ResourceのVBO Allocation、CPU Geometry、
+ *   Resource Nameを一度だけ解放する。
+ * - 全Entryの終了処理が成功した後、
+ *   max_geometry_countを0に設定する。
  *
  * Failure:
  * - VBO Allocationの解放に失敗した場合は、
- *   Registryの内部所有関係を維持できない可能性があるため
+ *   Registryの内部所有関係を維持できない可能性があるため、
  *   DATA_CORRUPTED相当として処理を中断する。
- * - DATA_CORRUPTED確定後は、残りのEntryの通常解放を継続しない。
+ * - 解放失敗後は、残りのEntryの通常解放を継続しない。
+ * - 本APIはvoidであり、失敗をResultとして返さない。
  *
  * Postconditions:
  * - 正常終了後のRegistryは利用可能なstable object modelから
@@ -260,15 +297,23 @@ void ui_mesh_geometry_registry_deinitialize(ui_mesh_geometry_registry_t* registr
  * API-specific Validation Policy
  *
  * Preconditions:
- * - registry_とname_のNULL、および空のResource Nameを検査する。
+ * - registry_、resource_name_、out_exists_のNULLと、
+ *   Resource Nameの空文字列を検査する。
  * - DEBUG / TESTでは、Entry配列と登録名を走査する前に
- *   Registry全体のcanonical validationを行い、
- *   内部表現の整合性を確認する。
+ *   Registry全体をcanonical validationする。
  * - RELEASEでは、成立済みのRegistry internal contractを信頼し、
  *   canonical validationを省略する。
  *
- * - このAPIは登録状態を変更せず、検索結果のみを返すため、
- *   Result validationとPostconditions validationは行わない。
+ * Lookup:
+ * - Resource Nameの検索はfind_by_name()に委譲する。
+ * - 未登録は正常な検索結果として扱う。
+ * - 検索によってReference Countを変更しない。
+ *
+ * Result:
+ * - 検索完了後にout_exists_へ結果を出力する。
+ * - 失敗時はout_exists_を変更しない。
+ * - Registryのstate mutationを伴わないため、
+ *   Postconditions validationは行わない。
  */
 resource_registry_result_t ui_mesh_geometry_registry_exists(const ui_mesh_geometry_registry_t* registry_, const char* resource_name_, bool* out_exists_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
@@ -307,15 +352,18 @@ cleanup:
  *
  * Preconditions:
  * - registry_のNULL、Geometry IDの範囲、
- *   および対象Entryの登録状態を直接検査する。
+ *   および対象EntryのRegistered Stateを直接検査する。
  * - 指定IDによって対象Entryへ直接アクセスし、
  *   Entry配列全体を走査しないため、
  *   Registry全体のcanonical validationは実行しない。
  * - CPU Geometry自体のcanonical validationも実行せず、
  *   登録時に確立されたinternal contractを信頼する。
  *
- * - 戻り値は既存CPU Geometryへの読み取り専用borrowであり、
- *   新しいstateを構築・変更しないため、
+ * Result:
+ * - 戻り値はRegistryが所有するCPU Geometryへの
+ *   読み取り専用borrowである。
+ * - Reference Countを変更せず、利用権を新たに取得しない。
+ * - 新しいstateを構築・変更しないため、
  *   Result validationとPostconditions validationは行わない。
  */
 const ui_mesh_geometry_t* ui_mesh_geometry_registry_geometry_get(const ui_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
@@ -340,15 +388,18 @@ const ui_mesh_geometry_t* ui_mesh_geometry_registry_geometry_get(const ui_mesh_g
  *
  * Preconditions:
  * - registry_のNULL、Geometry IDの範囲、
- *   および対象Entryの登録状態を直接検査する。
+ *   および対象EntryのRegistered Stateを直接検査する。
  * - 指定IDによって対象Entryへ直接アクセスし、
  *   Entry配列全体を走査しないため、
  *   Registry全体のcanonical validationは実行しない。
  * - VBO Range自体のcanonical validationも実行せず、
  *   登録時に確立されたinternal contractを信頼する。
  *
- * - 戻り値は既存VBO Allocation Descriptor内のDraw Rangeへの
- *   読み取り専用borrowであり、新しいstateを構築・変更しないため、
+ * Result:
+ * - 戻り値はRegistry内部のVBO Allocation Descriptorに
+ *   格納されたDraw Rangeへの読み取り専用borrowである。
+ * - Reference Countを変更せず、利用権を新たに取得しない。
+ * - 新しいstateを構築・変更しないため、
  *   Result validationとPostconditions validationは行わない。
  */
 const draw_range_t* ui_mesh_geometry_registry_draw_range_get(const ui_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
@@ -368,6 +419,39 @@ const draw_range_t* ui_mesh_geometry_registry_draw_range_get(const ui_mesh_geome
     return &registry_->entries[geometry_id_].allocation_descriptor.draw_range;
 }
 
+/*
+ * API-specific Validation Policy
+ *
+ * Preconditions:
+ * - registry_、resource_name_、out_geometry_id_のNULLと、
+ *   Resource Nameの空文字列を検査する。
+ * - DEBUG / TESTでは、Resource NameによってEntry配列を
+ *   検索するため、Registry全体をcanonical validationする。
+ * - RELEASEでは、成立済みのRegistry internal contractを信頼する。
+ *
+ * Preflight:
+ * - find_by_name()によって対象Resourceが登録済みであることを確認する。
+ * - 未登録の場合はBAD_OPERATIONとして扱う。
+ * - 対象Entryのindexがuint16_tの表現範囲内であることを確認する。
+ * - 対象EntryのReference CountがUINT16_MAXに達していないことを
+ *   確認する。
+ * - これらの条件が成立するまでReference Countを変更しない。
+ *
+ * Commit:
+ * - 対象EntryのReference Countを1増加させる。
+ * - Resource Name、CPU Geometry、VBO Allocation Descriptor、
+ *   およびGeometry IDとの対応は変更しない。
+ *
+ * Postconditions:
+ * - Commitは検証済みのReference Countに対する単一の加算であり、
+ *   Registered Stateの構造を維持する。
+ * - Commit後のcanonical validationは行わない。
+ * - Commit後にGeometry IDを出力する。
+ *
+ * Failure:
+ * - Commit前の失敗ではRegistryと出力先を変更しない。
+ * - DATA_CORRUPTEDではRegistryの内部整合性を保証しない。
+ */
 resource_registry_result_t ui_mesh_geometry_registry_acquire(ui_mesh_geometry_registry_t* registry_, const char* resource_name_, uint16_t* out_geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
@@ -431,17 +515,24 @@ cleanup:
  *   Registryのcanonical validationを省略する。
  *
  * Preflight:
- * - Resource Nameが未登録であり、Empty StateのEntryが
- *   存在することを確認する。
- * - 登録可能なslotが確定するまで、Registryの状態を変更しない。
+ * - Resource Nameが未登録であることを確認する。
+ * - registry_entry_is_empty()によって登録可能なEntryを探索する。
+ * - 登録可能なslotが確定するまでRegistryの状態を変更しない。
+ * - Resource Nameの生成に成功してからCommitへ進む。
+ *
+ * Commit:
+ * - CPU Geometryの所有ポインタを対象Entryに格納する。
+ * - VBO Allocation Descriptorを対象Entryに値コピーする。
+ * - Resource Nameを対象Entryに格納する。
+ * - Reference Countを1に初期化する。
+ * - Empty StateからRegistered Stateへの遷移を成立させる。
  *
  * Postconditions:
- * - DEBUG / TESTでは、CPU Geometry、VBO Range、Resource Nameを
- *   Entryへ登録した後にRegistry全体をcanonical validationし、
+ * - DEBUG / TESTでは、登録後にRegistry全体をcanonical validationし、
  *   Commit後のstable stateが成立していることを確認する。
  * - RELEASEでは、PreconditionsおよびCommitのcontractを信頼し、
  *   canonical validationを省略する。
- * - caller側の所有ポインタとDescriptorの初期化、およびID出力は
+ * - caller側の所有ポインタとDescriptorの初期化、およびID出力は、
  *   Postconditions validationの成功後に行う。
  *
  * Failure:
@@ -555,52 +646,67 @@ cleanup:
  * API-specific Validation Policy
  *
  * Preconditions:
- * - registry_とshader_のNULLを全Build Modeで検査する。
- * - DEBUG / TESTでは、登録済みEntryのowned resourceを安全に
- *   解放できることを確認するため、Registry全体を
- *   canonical validationする。
- * - RELEASEでは、成立済みのRegistry internal contractを信頼し、
- *   canonical validationを省略する。
- * - Geometry IDの範囲と対象Entryの登録状態は、
- *   誤ったEntryの参照や登録解除を防ぐため、
+ * - registry_とvbo_manager_のNULLを全Build Modeで検査する。
+ * - DEBUG / TESTでは、Registry全体をcanonical validationする。
+ * - RELEASEでは、成立済みのRegistry internal contractを信頼する。
+ * - Geometry IDの範囲と対象EntryのRegistered Stateを
  *   全Build Modeで直接検査する。
- * - Shaderの内部整合性とVBO Allocationの解放条件は、
- *   UI Mesh Shader側のAPI contractとvalidationに委ねる。
+ * - 未登録EntryへのReleaseはBAD_OPERATIONとして扱う。
+ * - VBO Managerの内部整合性とVBO Allocationの解放条件は、
+ *   VBO Manager側のAPI contractとvalidationに委ねる。
  *
- * Failure:
- * - VBO Allocationの解放に失敗した場合は、
- *   対象Entryの正常な登録解除を完了できないため、
- *   DATA_CORRUPTEDとして処理を中断する。
- * - 解放失敗後の対象Entryについて、
- *   通常の状態復元や残りのResource破棄は試みない。
+ * Validation Scope:
+ * - ReleaseはRegistryの状態を変更するため、DEBUG / TESTでは
+ *   診断範囲を広げてRegistry全体をcanonical validationする。
+ * - Operationの対象は単一Entryであるため、
+ *   Registry全体の検査は実行上必須の条件ではない。
+ * - Validation Costが問題となる場合は、対象Entryのみの
+ *   canonical validationへ変更する選択肢がある。
+ *
+ * Commit:
+ * - Reference Countが2以上の場合は、Reference Countを
+ *   1減少させ、Resourceの登録状態を維持する。
+ * - Reference Countが1の場合はregistry_entry_deinitialize()へ委譲し、
+ *   所有Resourceを解放してEntryをEmpty Stateへ戻す。
+ * - VBO Allocationの解放をCPU Geometryおよび
+ *   Resource Nameの破棄より先に実行する。
  *
  * Postconditions:
- * - 正常終了時、対象EntryはResourceのlifecycle contractに従って
- *   Empty Stateへ遷移する。
- * - 解放完了後のEntryを同じ条件で再検証する必要はないため、
- *   Registry全体のPostconditions validationは行わない。
+ * - Reference Countの減算のみの場合、Registered Stateを維持する。
+ * - 最後の利用権の返却では、下位helperのcontractによって
+ *   Empty Stateが成立することを信頼する。
+ * - Commit後のcanonical validationは行わない。
+ *
+ * Failure:
+ * - Commit前の失敗ではRegistryを変更しない。
+ * - VBO Allocationの解放に失敗した場合は、
+ *   対象Entryの正常な終了処理を完了できないため、
+ *   DATA_CORRUPTEDとして処理を中断する。
+ * - DATA_CORRUPTEDでは対象Entryの状態復元を保証しない。
  */
 resource_registry_result_t ui_mesh_geometry_registry_release(ui_mesh_geometry_registry_t* registry_, vbo_manager_t* vbo_manager_, uint16_t geometry_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "ui_mesh_geometry_registry_unregister", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "ui_mesh_geometry_registry_unregister", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "ui_mesh_geometry_registry_release", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "ui_mesh_geometry_registry_release", "vbo_manager_")
+    // releaseはregistryの中身を変化させるため、念のため全体をvalidationする。
+    // ただ、releaseは単一entryのみの変更であるため、パフォーマンスに問題が出る場合はvalidationの範囲を狭めてもよい
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_geometry_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("ui_mesh_geometry_registry_unregister(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_geometry_registry_release(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
     if(!geometry_id_is_in_range(registry_, geometry_id_)) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("ui_mesh_geometry_registry_unregister(%s) - Provided geometry_id_ is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_geometry_registry_release(%s) - Provided geometry_id_ is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(!registry_entry_is_registered(&registry_->entries[geometry_id_])) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("ui_mesh_geometry_registry_unregister(%s) - provided geometry_id_ entry is empty.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("ui_mesh_geometry_registry_release(%s) - provided geometry_id_ entry is empty.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -608,7 +714,7 @@ resource_registry_result_t ui_mesh_geometry_registry_release(ui_mesh_geometry_re
     if(1 == registry_->entries[geometry_id_].reference_count) {
         if(RESOURCE_REGISTRY_SUCCESS != registry_entry_deinitialize(&registry_->entries[geometry_id_], vbo_manager_)) {
             ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-            ERROR_MESSAGE("ui_mesh_geometry_registry_unregister(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(ret));
+            ERROR_MESSAGE("ui_mesh_geometry_registry_release(%s) - registry_entry_deinitialize failed.", resource_registry_result_to_str(ret));
             goto cleanup;
         }
     } else {
@@ -622,25 +728,27 @@ cleanup:
 }
 
 /*
- * API-specific Validation Policy
+ * Canonical Validation Policy
  *
  * - Registryのcanonical validityを診断する公開Validatorであり、
  *   Build Modeによって検査内容を変更しない。
  * - RegistryのNULL、最大登録数の範囲、Entry配列ポインタを
  *   先に検査し、明らかに不正な構造を走査しない。
- * - 最大登録数を走査上限として、全Entryのcanonical validityを
- *   確認する。
- * - 各Entryについて、Empty StateまたはRegistered Stateの
- *   いずれかが成立していることを要求する。
- * - 登録済みEntryではResource Name、CPU Geometry、
- *   VBO Rangeのcanonical validityを確認する。
- * - Resource Nameの一意性、CPU GeometryとVBO Range間の
+ * - 最大登録数を走査上限として、
+ *   全Entryのcanonical validityを確認する。
+ * - Entryごとの検証はregistry_entry_is_valid()に委譲する。
+ * - 各EntryはReference Countを含めて、
+ *   Empty StateまたはRegistered Stateのいずれかを満たす必要がある。
+ * - Registered Stateでは、Resource NameとCPU Geometryの
+ *   allocation-level validity、各Resourceのcanonical validity、
+ *   およびVBO Rangeのcanonical validityを確認する。
+ * - Resource Nameの一意性、CPU GeometryとVBO Rangeの
  *   相互整合性、VBO Allocationの実在性、
- *   backing storageのallocation-level validityは
- *   検査対象に含めない。
+ *   Registry本体とEntry配列のallocation-level validity、
+ *   およびAllocatorの内部状態は検査対象に含めない。
  *
- * - Validator自体はRegistryを変更せず、Result validationや
- *   Postconditions validationは行わない。
+ * - Validator自体はRegistryを変更しない。
+ * - Result validationやPostconditions validationは行わない。
  */
 bool ui_mesh_geometry_registry_is_valid(const ui_mesh_geometry_registry_t* registry_) {
     if(NULL == registry_) {
@@ -663,6 +771,40 @@ bool ui_mesh_geometry_registry_is_valid(const ui_mesh_geometry_registry_t* regis
 // ============================================================
 // Lifecycle
 // ============================================================
+/*
+ * Private Helper Contract
+ *
+ * - Registered StateのEntryが所有するResourceを解放する。
+ * - VBO Allocation、CPU Geometry、Resource Nameの順で解放する。
+ * - VBO Allocationの解放はvbo_manager_free()へ委譲する。
+ * - VBO Allocationの解放に成功した後、
+ *   Allocation Descriptorをゼロ初期化する。
+ * - CPU GeometryとResource Nameをそれぞれdestroyし、
+ *   Reference Countを0に設定する。
+ * - 正常終了時にはEntryがEmpty Stateとなる。
+ *
+ * Preconditions:
+ * - entry_とvbo_manager_のNULLを検査する。
+ * - 対象EntryはRegistered Stateであり、
+ *   所有Resourceのinternal contractが成立していることを
+ *   callerが保証する。
+ * - VBO Managerは対象Allocationを管理する有効なobjectであることを
+ *   callerが保証する。
+ * - 本HelperはEntryのcanonical validationを実行せず、
+ *   callerが成立済みのcontractを信頼する。
+ *
+ * Failure:
+ * - vbo_manager_free()が失敗した場合、
+ *   DATA_CORRUPTEDを返して処理を中断する。
+ * - VBO Allocationの解放失敗後は、CPU Geometryと
+ *   Resource Nameの破棄を行わない。
+ * - 本Helperはrollbackを行わない。
+ *
+ * Postconditions:
+ * - 成功時にはEntryの所有Resourceが解放され、
+ *   Empty Stateが成立する。
+ * - 成功後のcanonical validationは行わない。
+ */
 static resource_registry_result_t registry_entry_deinitialize(registry_entry_t* entry_, vbo_manager_t* vbo_manager_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
@@ -694,6 +836,15 @@ cleanup:
 // ============================================================
 // State Queries
 // ============================================================
+/*
+ * Geometry IDがRegistryのEntry配列の範囲内にあることを判定する。
+ *
+ * - registry_がNULLの場合はfalseを返す。
+ * - geometry_id_がmax_geometry_count未満であることを確認する。
+ * - 対象Entryの登録状態やcanonical validityは検査しない。
+ * - Geometry ID = 0も有効なindexとして扱う。
+ * - RegistryおよびEntryの状態を変更しない。
+ */
 static bool geometry_id_is_in_range(const ui_mesh_geometry_registry_t* registry_, uint16_t geometry_id_) {
     if(NULL == registry_) {
         return false;
@@ -704,6 +855,24 @@ static bool geometry_id_is_in_range(const ui_mesh_geometry_registry_t* registry_
     return true;
 }
 
+/*
+ * EntryがEmpty Stateの構造的条件を満たすことを判定する。
+ *
+ * Empty State:
+ * - Resource NameとCPU GeometryのポインタがNULLである。
+ * - VBO Allocation Descriptorのallocation_infoと
+ *   draw_rangeの各Fieldがゼロ状態である。
+ * - Reference Countが0である。
+ *
+ * - NULL EntryはEmpty Stateとして扱わない。
+ * - いずれかの条件が成立しない場合はfalseを返す。
+ * - Resource Name、CPU Geometry、VBO Rangeの
+ *   canonical validityは検査しない。
+ * - 本Predicateは新規登録可能なEntryの判定にも使用する。
+ *
+ * - !registry_entry_is_registered()と同義ではない。
+ *   Corrupted Entryは両Predicateでfalseとなる場合がある。
+ */
 static bool registry_entry_is_empty(const registry_entry_t* entry_) {
     if(NULL == entry_) {
         return false;
@@ -735,6 +904,26 @@ static bool registry_entry_is_empty(const registry_entry_t* entry_) {
     return true;
 }
 
+/*
+ * EntryがRegistered Stateの構造的条件を満たすことを判定する。
+ *
+ * Registered State:
+ * - Resource NameとCPU GeometryのポインタがNULLではない。
+ * - VBO Allocation Sizeが0ではない。
+ * - VBO AllocationのownerがNULLではない。
+ * - Draw RangeのVertex Countが0ではない。
+ * - Reference Countが1以上である。
+ *
+ * - NULL EntryはRegistered Stateとして扱わない。
+ * - いずれかの条件が成立しない場合はfalseを返す。
+ * - Resource Name、CPU Geometry、VBO Rangeの
+ *   canonical validityは本Predicateの検証対象に含まない。
+ * - Registered Stateの完全な整合性は
+ *   registry_entry_is_valid()が検証する。
+ *
+ * - !registry_entry_is_empty()と同義ではない。
+ *   Corrupted Entryは両Predicateでfalseとなる場合がある。
+ */
 static bool registry_entry_is_registered(const registry_entry_t* entry_) {
     if(NULL == entry_) {
         return false;
@@ -760,6 +949,33 @@ static bool registry_entry_is_registered(const registry_entry_t* entry_) {
 // ============================================================
 // Validation
 // ============================================================
+/*
+ * Entryのcanonical validityを判定する。
+ *
+ * Validation Scope:
+ * - NULL Entryはinvalidとする。
+ * - Empty Stateの構造的条件を満たすEntryはvalidとする。
+ * - Empty StateでないEntryはRegistered Stateの
+ *   構造的条件を満たす必要がある。
+ * - Registered Stateでは、Resource NameがGeneral Allocator管理下の
+ *   current live allocationであることを確認する。
+ * - Resource NameがvalidなChoco Stringであり、
+ *   空文字列ではないことを確認する。
+ * - CPU GeometryがGeneral Allocator管理下の
+ *   current live allocationであることを確認する。
+ * - CPU GeometryとVBO Rangeのcanonical validityを検証する。
+ *
+ * - Empty / Registeredのどちらにも該当しないEntryはinvalidとする。
+ * - Reference CountとResourceの登録状態の矛盾を検出する。
+ * - Resource Nameの内部bufferの整合性は
+ *   Choco Stringのcanonical validatorに委譲する。
+ * - CPU Geometryの内部整合性は
+ *   UI Mesh Geometryのcanonical validatorに委譲する。
+ * - VBO Allocation Descriptorの内部整合性は
+ *   vbo_range_is_valid()に委譲する。
+ *
+ * - 本ValidatorはEntryの状態を変更しない。
+ */
 static bool registry_entry_is_valid(const registry_entry_t* entry_) {
     if(NULL == entry_) {
         return false;
@@ -786,9 +1002,14 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
     if(0 == choco_string_length(entry_->resource_name)) {
         return false;
     }
+
+    if(!general_allocator_ptr_is_allocated(entry_->cpu_resource)) {
+        return false;
+    }
     if(!ui_mesh_geometry_is_valid(entry_->cpu_resource)) {
         return false;
     }
+
     if(!vbo_range_is_valid(&entry_->allocation_descriptor)) {
         return false;
     }
@@ -799,6 +1020,25 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
 // ============================================================
 // Lookup
 // ============================================================
+/*
+ * Resource Nameに対応するRegistered Entryを検索する。
+ *
+ * - Entry配列を先頭から走査し、
+ *   Registered Stateの構造的条件を満たすEntryのみ検索する。
+ * - Resource Nameの比較はChoco Stringへ委譲する。
+ * - 発見した場合、対応するEntry indexをout_index_へ出力する。
+ * - 未発見の場合はfalseを返し、out_index_を変更しない。
+ * - NULL引数の場合もfalseを返す。
+ *
+ * Validation:
+ * - 本HelperはRegistry全体やEntryのcanonical validationを行わない。
+ * - 検索対象のRegistryと登録済みResourceについては、
+ *   callerが成立済みのinternal contractを保証する。
+ * - Entryのcorruptionを診断することは本Helperの責務ではない。
+ * - Registered Stateを満たさないEntryは検索対象から除外する。
+ *
+ * - RegistryおよびReference Countを変更しない。
+ */
 static bool find_by_name(const ui_mesh_geometry_registry_t* registry_, const char* name_, size_t* out_index_) {
     size_t tmp_slot = 0;
     bool found = false;

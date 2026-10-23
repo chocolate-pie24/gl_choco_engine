@@ -8,7 +8,7 @@
  * @brief point_meshシェーダーが描画する形状データのCPU側リソースを操作するモジュールAPIの実装
  *
  * @note point_mesh_shader: 複数の点を描画する
- * @note point_mesh_geometryは点群の幾何情報のみを保持し、色情報はpoint_mesh_geometryを保持する親構造体で扱う
+ * @note point_mesh_geometryは各点の頂点座標と色情報をpoint_vertex_tの配列として保持する
  *
  * @todo TODO: pcdファイル等の点群ファイルからの初期化はそのうちやる
  *

@@ -602,6 +602,8 @@ resource_registry_result_t untextured_mesh_material_registry_release(untextured_
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_release", "registry_")
+    // releaseはregistryの中身を変化させるため、念のため全体をvalidationする。
+    // ただ、releaseは単一entryのみの変更であるため、パフォーマンスに問題が出る場合はvalidationの範囲を狭めてもよい
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!untextured_mesh_material_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;

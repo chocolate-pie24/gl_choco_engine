@@ -633,6 +633,11 @@ static void renderer_config_initialize(renderer_frontend_config_t* config_) {
     config_->untextured_mesh.vbo.buffer_usage = BUFFER_USAGE_STATIC;
     config_->untextured_mesh.vbo.max_allocation_count = 512;
     config_->untextured_mesh.vbo.vbo_size = 1 * GIB;
+
+    // TODO: base_alignについてはrenderer_frontend_config_tからは外し、renderer_frontendで設定することを検討する
+    // TODO: line_mesh base_align = alignof(float)
+    // TODO: point_mesh base_align = 16
+    // TODO: ui_mesh base_align = 16
 }
 
 // TODO: remove this!!

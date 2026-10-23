@@ -405,6 +405,8 @@ resource_registry_result_t untextured_mesh_geometry_registry_release(untextured_
  * - Resource NameがvalidなChoco Stringであり、空文字列ではない。
  * - CPU Geometryがcanonical validityを満たす。
  * - VBO Rangeがcanonical validityを満たす。
+ * - Resource NameとCPU GeometryがGeneral Allocator管理下の
+ *   current live allocationである。
  *
  * Reference CountとResourceの登録状態に矛盾があるEntry、
  * またはEmpty / Registeredのどちらにも該当しないEntryは
