@@ -4,14 +4,14 @@
 /**
  * @file untextured_mesh_geometry.h
  * @author chocolate-pie24
- * @brief textured mesh描画に使用するCPU側geometry resourceを扱うopaque objectと操作を提供する
+ * @brief untextured mesh描画に使用するCPU側geometry resourceを扱うopaque objectと操作を提供する
  *
  * @details
  * Untextured Mesh Geometry moduleは、三角形meshを構成する頂点座標および法線情報をCPU側で保持する
  * `untextured_mesh_geometry_t`と、そのlifetime管理およびgeometry data参照機能を提供する。
  *
  * `untextured_mesh_geometry_t`は内部表現を公開しないopaque objectであり、
- * create成功後はtextured mesh描画に使用可能な完成済みCPU geometry resourceとして扱う。
+ * create成功後はuntextured mesh描画に使用可能な完成済みCPU geometry resourceとして扱う。
  *
  * Untextured Mesh Geometryはmeshの幾何情報を扱い、
  * materialやその他のrendering stateは所有しない。
@@ -26,7 +26,7 @@
  *   Untextured Mesh Geometry moduleによって生成され、lifetime中にあるobjectを参照するものとする。
  *
  * - create成功時に公開される`untextured_mesh_geometry_t`は、
- *   textured mesh geometryとして通常利用可能な完成済みresourceを表す。
+ *   untextured mesh geometryとして通常利用可能な完成済みresourceを表す。
  * - publicなpartial initialization stateは持たない。
  * - create失敗時には`untextured_mesh_geometry_t`のownershipをcallerへ移転しない。
  *
