@@ -82,6 +82,7 @@ extern "C" {
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 
 typedef struct range_allocation range_allocation_t;
+typedef struct renderer_backend_vbo renderer_backend_vbo_t;
 
 /**
  * @brief VBO Managerの生成設定
@@ -775,6 +776,8 @@ buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_);
  * プロジェクト作成者が内容を確認・修正した。
  */
 buffer_manager_result_t vbo_manager_unbind(const vbo_manager_t* vbo_manager_);
+
+const renderer_backend_vbo_t* vbo_manager_vbo_get(const vbo_manager_t* vbo_manager_);
 
 /**
  * @brief VBO Manager生成設定の基本的な有効性を検証する

@@ -104,79 +104,11 @@ extern "C" {
 typedef struct untextured_mesh_shader untextured_mesh_shader_t;                   /**< 単色ライティング描画用シェーダーリソースのopaque型 */
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
-typedef struct vbo_manager vbo_manager_t;
 typedef struct mat4x4f mat4x4f_t;
 typedef struct untextured_mesh_material untextured_mesh_material_t;
+typedef struct renderer_backend_vbo renderer_backend_vbo_t;
 
-/**
- * @brief Untextured Mesh描画用Shader Resourceを生成する。
- *
- * @par Public API Contract
- * - 指定されたVertex ShaderとFragment Shaderから
- *   Shader Programを生成する。
- * - Shader Programの構築はShader Program Builderへ委譲する。
- * - Model / View / Projection Matrix、Light、
- *   MaterialのUniform Locationを取得する。
- * - VBO Managerを使用してUntextured Mesh用VAOを生成する。
- * - VAOにはpoint_normal_vertex_tのposition属性と
- *   normal属性を設定する。
- * - positionは3成分のfloat型とする。
- * - normalは3成分のsigned byte型とし、正規化を有効にする。
- * - Shader Resource本体はGeneral Allocatorから確保する。
- * - 全Resourceの構築が成功した場合、
- *   完成したShader Resourceをcallerへ出力する。
- *
- * @par Ownership
- * - 成功時、callerは生成されたShader Resourceの所有権を取得する。
- * - Shader ResourceはShader ProgramとVAOを所有する。
- * - Renderer Backend ContextとVBO Managerの所有権は取得しない。
- * - Shader File Pathのownershipは取得しない。
- * - callerは不要になったShader Resourceをdestroy()で破棄する。
- *
- * @par Failure Contract
- * - 回復可能な構築失敗では、生成済みのShader Program、
- *   VAOおよびShader Resource本体の解放を行う。
- * - 回復可能な失敗ではout_shader_の値を変更しない。
- * - DATA_CORRUPTEDの場合は通常のcleanupを行わず、
- *   構築途中のResourceの解放完了を保証しない。
- *
- * @param[in] vertex_shader_fullpath_
- *            Vertex Shader FileのFull Path。
- * @param[in] fragment_shader_fullpath_
- *            Fragment Shader FileのFull Path。
- * @param[in,out] backend_context_
- *                Shader ProgramとVAOの生成に使用する
- *                Renderer Backend Context。
- * @param[in,out] vbo_manager_
- *                VAO構築時に使用するVBO Manager。
- * @param[out] out_shader_
- *             生成したShader Resourceの所有ポインタ出力先。
- *
- * @retval SHADER_SUCCESS 生成成功。
- * @retval SHADER_INVALID_ARGUMENT NULL引数または空のShader File Path。
- * @retval SHADER_BAD_OPERATION 出力先がNULLでない、
- *         または下位Operationの実行条件が成立しない。
- * @retval SHADER_NO_MEMORY Shader Resource等のメモリ確保に失敗。
- * @retval SHADER_COMPILE_ERROR Shaderのコンパイルに失敗。
- * @retval SHADER_LINK_ERROR Shader Programのリンクに失敗。
- * @retval SHADER_LIMIT_EXCEEDED 下位Resourceの制限を超過。
- * @retval SHADER_RUNTIME_ERROR 下位処理で実行時エラーが発生。
- * @retval SHADER_OVERFLOW 下位処理でサイズ計算等のoverflowが発生。
- * @retval SHADER_DATA_CORRUPTED 内部状態の整合性異常、
- *         またはVAO構築時のrollback失敗。
- * @retval SHADER_UNDEFINED_ERROR 下位処理で未分類のエラーが発生。
- *
- * @pre backend_context_とvbo_manager_は利用可能であること。
- * @pre Shader File Pathは空文字列ではない
- *      読み取り可能なNUL終端文字列であること。
- * @pre out_shader_は書き込み可能なポインタを指し、
- *      *out_shader_はNULLに初期化されていること。
- *
- * @post 成功時、*out_shader_はShader ProgramとVAOを
- *       所有する有効なShader Resourceを指す。
- * @post VBO Managerの所有権は移転しない。
- */
-shader_result_t untextured_mesh_shader_create(const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, renderer_backend_context_t* backend_context_, vbo_manager_t* vbo_manager_, untextured_mesh_shader_t** out_shader_);
+shader_result_t untextured_mesh_shader_create(const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vbo_, untextured_mesh_shader_t** out_shader_);
 
 /**
  * @brief Untextured Mesh Shader Resourceを破棄する。

@@ -403,6 +403,13 @@ cleanup:
     return ret;
 }
 
+const renderer_backend_vbo_t* vbo_manager_vbo_get(const vbo_manager_t* vbo_manager_) {
+    if(NULL == vbo_manager_) {
+        return NULL;
+    }
+    return vbo_manager_->vbo;
+}
+
 bool vbo_manager_config_is_valid(const vbo_manager_config_t* config_) {
     if(NULL == config_) {
         return false;

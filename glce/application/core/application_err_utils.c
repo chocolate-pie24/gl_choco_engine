@@ -317,3 +317,28 @@ application_result_t application_result_convert_renderer_backend(renderer_backen
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
+
+application_result_t application_result_convert_resource_manager(resource_manager_result_t result_) {
+    switch(result_) {
+    case RESOURCE_MANAGER_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case RESOURCE_MANAGER_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case RESOURCE_MANAGER_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RESOURCE_MANAGER_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case RESOURCE_MANAGER_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case RESOURCE_MANAGER_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case RESOURCE_MANAGER_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case RESOURCE_MANAGER_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case RESOURCE_MANAGER_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}

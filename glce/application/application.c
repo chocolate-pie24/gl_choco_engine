@@ -58,6 +58,9 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
+#include "engine/systems/renderer/resource_manager/core/resource_manager_types.h"
+#include "engine/systems/renderer/resource_manager/resource_manager.h"
+
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
 
@@ -104,9 +107,10 @@ typedef struct application_state {
     ambient_light_t ambient_light;
 
     // Renderer System
-    renderer_frontend_config_t renderer_config;
     renderer_frontend_t* renderer_frontend;
     renderer_backend_context_t* renderer_backend_context;
+    resource_manager_config_t resource_manager_config;
+    resource_manager_t* resource_manager;
 
     // Frame State
     application_frame_state_t frame_state;
@@ -150,7 +154,7 @@ static void app_state_begin_frame(void);
 // subsystem configuration
 static void platform_system_config_initialize(platform_system_config_t* config_);
 static void event_system_config_initialize(event_system_config_t* config_);
-static void renderer_config_initialize(renderer_frontend_config_t* config_);
+static void resource_manager_config_initialize(resource_manager_config_t* config_);
 
 // static application_result_t point_mesh_geometry_import(application_state_t* state_);        // TODO: remove this!!
 // static application_result_t ui_mesh_geometry_import(application_state_t* state_);
@@ -169,6 +173,7 @@ application_result_t application_create(void) {
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
     light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
+    resource_manager_result_t ret_resource_manager = RESOURCE_MANAGER_INVALID_ARGUMENT;
 
     size_t subsystem_memory_pool_size = 0;
 
@@ -266,9 +271,18 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
+    INFO_MESSAGE("Creating resource manager...");
+    resource_manager_config_initialize(&tmp_state->resource_manager_config);
+    ret_resource_manager = resource_manager_create(&tmp_state->resource_manager_config, tmp_state->subsystem_allocator, tmp_state->renderer_backend_context, &tmp_state->resource_manager);
+    if(RESOURCE_MANAGER_SUCCESS != ret_resource_manager) {
+        ret = application_result_convert_resource_manager(ret_resource_manager);
+        ERROR_MESSAGE("application_create(%s) - resource_manager_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("resource manager created successfully.");
+
     INFO_MESSAGE("Creating renderer frontend...");
-    renderer_config_initialize(&tmp_state->renderer_config);
-    ret_renderer_frontend = renderer_frontend_create(&tmp_state->renderer_config, tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", tmp_state->renderer_backend_context, &tmp_state->renderer_frontend);
+    ret_renderer_frontend = renderer_frontend_create(tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", tmp_state->renderer_backend_context, tmp_state->resource_manager, &tmp_state->renderer_frontend);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("application_create(%s) - renderer_frontend_create failed.", application_result_to_str(ret));
@@ -293,6 +307,9 @@ cleanup:
         if(NULL != tmp_state) {
             if(NULL != tmp_state->renderer_frontend) {
                 renderer_frontend_deinitialize(tmp_state->renderer_backend_context, tmp_state->renderer_frontend);
+            }
+            if(NULL != tmp_state->resource_manager) {
+                resource_manager_deinitialize(tmp_state->resource_manager);
             }
             if(NULL != tmp_state->renderer_backend_context) {
                 renderer_backend_deinitialize(tmp_state->renderer_backend_context);
@@ -327,6 +344,9 @@ void application_destroy(void) {
     // begin cleanup all systems.
     if(NULL != s_application_state->renderer_frontend) {
         renderer_frontend_deinitialize(s_application_state->renderer_backend_context, s_application_state->renderer_frontend);
+    }
+    if(NULL != s_application_state->resource_manager) {
+        resource_manager_deinitialize(s_application_state->resource_manager);
     }
     if(NULL != s_application_state->renderer_backend_context) {
         renderer_backend_deinitialize(s_application_state->renderer_backend_context);
@@ -540,7 +560,7 @@ application_result_t application_run(void) {
         // }
 
         // STL描画
-        ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_backend_context, s_application_state->renderer_frontend, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
+        ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->resource_manager, s_application_state->renderer_backend_context, s_application_state->renderer_frontend, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
         if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
             ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
             ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
@@ -644,18 +664,13 @@ static void event_system_config_initialize(event_system_config_t* config_) {
     config_->max_window_event_count = 8;
 }
 
-static void renderer_config_initialize(renderer_frontend_config_t* config_) {
-    config_->untextured_mesh.max_geometry_count = 128;
-    config_->untextured_mesh.max_material_count = 128;
-    config_->untextured_mesh.vbo.base_align = alignof(max_align_t);
-    config_->untextured_mesh.vbo.buffer_usage = BUFFER_USAGE_STATIC;
-    config_->untextured_mesh.vbo.max_allocation_count = 512;
-    config_->untextured_mesh.vbo.vbo_size = 1 * GIB;
-
-    // TODO: base_alignについてはrenderer_frontend_config_tからは外し、renderer_frontendで設定することを検討する
-    // TODO: line_mesh base_align = alignof(float)
-    // TODO: point_mesh base_align = 16
-    // TODO: ui_mesh base_align = 16
+static void resource_manager_config_initialize(resource_manager_config_t* config_) {
+    config_->untextured_mesh_resource_config.max_geometry_count = 128;
+    config_->untextured_mesh_resource_config.max_material_count = 128;
+    config_->untextured_mesh_resource_config.vbo_config.base_align = alignof(max_align_t);
+    config_->untextured_mesh_resource_config.vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
+    config_->untextured_mesh_resource_config.vbo_config.max_allocation_count = 512;
+    config_->untextured_mesh_resource_config.vbo_config.vbo_size = 1 * GIB;
 }
 
 // TODO: remove this!!
@@ -749,7 +764,7 @@ static application_result_t untextured_mesh_import(application_state_t* state_) 
 
     application_result_t ret_cleanup = APPLICATION_INVALID_ARGUMENT;
     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
-    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+    resource_manager_result_t ret_resource_manager = RESOURCE_MANAGER_INVALID_ARGUMENT;
 
     fs_path_t* penguin_material_path = NULL;
     fs_path_t* penguin_geometry_path = NULL;
@@ -775,18 +790,18 @@ static application_result_t untextured_mesh_import(application_state_t* state_) 
         goto cleanup;
     }
 
-    ret_renderer_frontend = renderer_frontend_untextured_mesh_material_import_from_file(state_->renderer_frontend, penguin_material_name, fs_path_fullpath_get(penguin_material_path), &state_->material_id_penguin);
-    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-        ERROR_MESSAGE("untextured_mesh_import(%s) - renderer_frontend_untextured_mesh_material_import_from_file failed.", application_result_to_str(ret));
+    ret_resource_manager = resource_manager_untextured_mesh_material_import_from_file(state_->resource_manager, penguin_material_name, fs_path_fullpath_get(penguin_material_path), &state_->material_id_penguin);
+    if(RESOURCE_MANAGER_SUCCESS != ret_resource_manager) {
+        ret = application_result_convert_resource_manager(ret_resource_manager);
+        ERROR_MESSAGE("untextured_mesh_import(%s) - resource_manager_untextured_mesh_material_import_from_file failed.", application_result_to_str(ret));
         goto cleanup;
     }
     material_imported = true;
 
-    ret_renderer_frontend = renderer_frontend_untextured_mesh_geometry_import_from_file(state_->renderer_frontend, penguin_geometry_name, fs_path_fullpath_get(penguin_geometry_path), &state_->geometry_id_penguin);
-    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-        ERROR_MESSAGE("untextured_mesh_import(%s) - renderer_frontend_untextured_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
+    ret_resource_manager = resource_manager_untextured_mesh_geometry_import_from_file(state_->resource_manager, penguin_geometry_name, fs_path_fullpath_get(penguin_geometry_path), &state_->geometry_id_penguin);
+    if(RESOURCE_MANAGER_SUCCESS != ret_resource_manager) {
+        ret = application_result_convert_resource_manager(ret_resource_manager);
+        ERROR_MESSAGE("untextured_mesh_import(%s) - resource_manager_untextured_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -797,9 +812,9 @@ cleanup:
         fs_path_destroy(&penguin_material_path);
         fs_path_destroy(&penguin_geometry_path);
         if(material_imported && APPLICATION_SUCCESS != ret) {
-            ret_renderer_frontend = renderer_frontend_untextured_mesh_material_release(state_->renderer_frontend, state_->material_id_penguin);
-            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-                ret_cleanup = application_result_convert_renderer_frontend(ret_renderer_frontend);
+            ret_resource_manager = resource_manager_untextured_mesh_material_release(state_->resource_manager, state_->material_id_penguin);
+            if(RESOURCE_MANAGER_SUCCESS != ret_resource_manager) {
+                ret_cleanup = application_result_convert_resource_manager(ret_resource_manager);
                 ret = APPLICATION_DATA_CORRUPTED;   // importに成功しているのにreleaseに失敗するのはDATA_CORRUPTED
                 ERROR_MESSAGE("untextured_mesh_import(%s) - renderer_frontend_untextured_mesh_material_release failed. reason = '%s'", application_result_to_str(ret), application_result_to_str(ret_cleanup));
             }
