@@ -20,6 +20,7 @@
 #include "engine/io_utils/fs_path.h"
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 #include "application/core/application_types.h"
 
@@ -282,6 +283,35 @@ application_result_t application_result_convert_renderer_frontend(renderer_front
     case RENDERER_FRONTEND_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     case RENDERER_FRONTEND_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t application_result_convert_renderer_backend(renderer_backend_result_t result_) {
+    switch(result_) {
+    case RENDERER_BACKEND_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case RENDERER_BACKEND_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case RENDERER_BACKEND_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_BACKEND_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case RENDERER_BACKEND_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case RENDERER_BACKEND_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case RENDERER_BACKEND_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case RENDERER_BACKEND_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case RENDERER_BACKEND_SHADER_COMPILE_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_BACKEND_SHADER_LINK_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDERER_BACKEND_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

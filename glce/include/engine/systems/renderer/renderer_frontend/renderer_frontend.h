@@ -22,6 +22,7 @@ typedef struct renderer_frontend renderer_frontend_t;
 typedef struct subsystem_allocator subsystem_allocator_t;
 typedef struct directional_light directional_light_t;
 typedef struct ambient_light ambient_light_t;
+typedef struct renderer_backend_context renderer_backend_context_t;
 
 /**
  * @brief Untextured Mesh用VBO Managerの生成設定
@@ -71,9 +72,10 @@ renderer_frontend_result_t renderer_frontend_create(
     subsystem_allocator_t* allocator_,
     const char* executable_directory_,
     const char* shader_dir_,
+    renderer_backend_context_t* backend_context_,
     renderer_frontend_t** out_renderer_frontend_);
 
-void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_);
+void renderer_frontend_deinitialize(renderer_backend_context_t* backend_context_, renderer_frontend_t* renderer_frontend_);
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // for Untexture Mesh
@@ -99,7 +101,7 @@ void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_);
  * @retval RENDERER_FRONTEND_OVERFLOW Draw Rangeの算術計算でoverflowを検出
  * @return その他、Shader操作の失敗を変換したResult
  */
-renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_frontend_t* renderer_frontend_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
+renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(const renderer_backend_context_t* backend_context_, renderer_frontend_t* renderer_frontend_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
 
 /**
  * @brief Untextured Mesh描画用のView / Projection MatrixおよびLightを更新する
@@ -121,7 +123,7 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_front
  * @retval RENDERER_FRONTEND_INVALID_ARGUMENT 引数不正
  * @return その他、Shader操作の失敗を変換したResult
  */
-renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_);
+renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(const renderer_backend_context_t* backend_context_, renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_);
 
 // Geometry Import
 /**

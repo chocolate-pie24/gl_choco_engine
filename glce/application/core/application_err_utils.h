@@ -34,6 +34,7 @@ extern "C" {
 
 #include "engine/systems/event_system/core/event_system_types.h"
 
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
 /**
@@ -69,6 +70,8 @@ application_result_t application_result_convert_event_system(event_system_result
 application_result_t application_result_convert_general_allocator(general_allocator_result_t result_);
 
 application_result_t application_result_convert_renderer_frontend(renderer_frontend_result_t result_);
+
+application_result_t application_result_convert_renderer_backend(renderer_backend_result_t result_);
 
 #ifdef __cplusplus
 }

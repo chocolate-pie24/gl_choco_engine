@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-21
+最終更新: 2026-10-24
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -5738,3 +5738,370 @@ Untexturedの単独Drawが成功した時点でLine / Point / UIを一括してF
 - `glce_renderer_resource_model_workplan.md`
 - `glce_near_term_todo.md`
 - `design_notes.md`
+
+---
+
+## Decision: Render Modelを共有可能な不変の描画設計情報とし、MeshとCoordinateの関連付けをModel内で管理する
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-24  
+**Scope:** Render Model / Mesh / Coordinate Tree / Resource Reference Right / Ownership / Model Configuration / Instance Sharing
+
+### Decision
+
+1. **`render_model_t`は、描画インスタンスごとの可変Objectではなく、同一構成の複数描画個体から共有できる描画設計情報を表す。** Meshの種類・構成、MeshとCoordinateの対応、Coordinate Hierarchyおよび設計上の固定Transformは共有Modelに属する。`render_model_t`はOpaque Typeとし、具体的なStorageや可変Pointerを公開しない。共有Modelはロボット固有の型や関節の意味を知らない。
+2. **`xxx_mesh_t`はGeometry / Material / Texture等のResource IDと、Mesh種別固有の描画属性を保持するValue Typeとする。Coordinate IDは保持しない。** Mesh自身はLocal / World / Model Matrix、個体姿勢、可変Visibilityを所有しない。Geometry等のResource実体は引き続きRegistryが所有する。
+3. **MeshとCoordinate IDの対応は`render_model_t`内部で管理する。** 種別ごとの`xxx_mesh_t[]`と`coordinate_id[]`を同一Indexで対応付け、共通のMesh Countを使用する。別個の`binding_t`やMesh–Coordinate Binding Collection型を現段階では設けない。これは二つの独立Collectionではなく、一つのModel-ownedな論理的対応関係である。配列の長さ・Index対応・Coordinate参照の有効性はModelの内部Invariantとする。具体的なMemory Layoutは公開Contractとしない。
+4. **`model_transform_tree_t`の既存Pointer-based Tree表現を当面維持する。** Parent / Childの構造、各Coordinateの設計上のLocal Translation / Rotationは共有Modelの固定構成を表す。Meshを持たないCoordinate、複数Meshが参照するCoordinate、Meshを持たないModelも引き続き許す。
+5. **完成した共有Modelの構成およびDefault Transformは変更禁止とする。** Model Import / Construction中は必要なTree構築・初期化を行えるが、成功したModelのLifetimeでは、Mesh構成、Coordinate Binding、Hierarchy、固定Translation / Rotationを更新しない。既存の`model_transform_tree_rotation_set()` / `model_transform_tree_translate_set()`等のMutation APIは、全体のEnd-to-End成立を確認した後、構築用途との切り分けを行って不要な公開経路を削除する。それまでは旧APIがSourceに存在しても、完成済みModelに対して使用しない。
+6. **Modelが使用するResourceのReference Rightは、共有ModelのLifetime単位で保持・返却する。** 同一Model内では同一Registry Resourceにつき一参照だけをAcquireし、Model Releaseで当該Modelが保持する参照集合を返却する。複数の描画個体が同一`render_model_t`をBorrowしても、その個体数に応じてRegistry Countを増減させない。別個にImportされた共有Model Object同士が同一Resourceを使用する場合は、各Modelがそれぞれの参照権を持つ。Model自身はRegistry Countを操作・判定しない。ModelをBorrow中の個体／Render Packetが存在する間のModel Lifetimeは、その利用関係を管理するApplicationが保証する。
+7. **個体ごとの姿勢・配置・表示状態を共有Modelへ格納しない。** それらのOwnerは利用側とし、まずApplication側の機種固有Model / `robot_type_current_posture_t`等で管理する。用途横断の`render_model_instance_t`や`render_model_definition_t`を今回新設しない。
+8. `render_model_config_t`は共有Modelの構築入力として維持する。Coordinate Configに記載するTranslation / Rotationは設計上の固定Transformであり、個体ごとの現在姿勢やWorld配置ではない。旧`render_model_create()`に存在する個体配置を想定したRoot Translation / Rotation引数は、新しいImport / Construction Contractに合わせて再設計する。
+
+### Context / Change Reason
+
+2026-10-17のDecisionでは、各`render_model_t`が一つの描画インスタンスに対応し、各MeshがCoordinate IDを直接持ち、Modelが個体ごとのCoordinate TreeとVisibilityを管理する構成を採用した。当時はMeshとCoordinateの関連付けを一か所へ集約し、別Binding型を増やさず、個体ごとの状態共有を避ける合理性があった。
+
+その後、Render PacketをModelとFrontendの境界に置く設計を再検討し、Mesh自体を描画Resource参照、ModelをMeshとCoordinateの対応を持つ構造、Packetを解決済みDraw情報へ分けることが明確になった。さらに、同じ機種の複数個体ではMesh構成、Coordinateの接続関係、取付位置・固定回転がすべて共通であり、異なるのは主に現在姿勢やWorld配置であることを確認した。設計情報まで個体数に応じて複製する必要はない。
+
+固定Translation / Rotationもロボットの設計情報である。したがって、既存TreeからTransformをすべて分離する必要はない。Treeを共有Model内に残し、各個体のPostureを利用側で合成する方が変更範囲とConcept数を抑えられる。
+
+また、`binding_t`と独立したCoordinate ID配列は、現段階では同一のIndex対応を異なる物理Representationで表現するものに過ぎない。OpaqueなModelが対応Invariantを保証できるため、追加のBinding Typeを設けない。
+
+### Rationale
+
+- 共有可能な設計情報と個体ごとに変化する状態のAuthorityが一致する。
+- ModelをOpaque化することで、Mesh配列・Coordinate ID配列の対応関係と構築後の不変条件を境界内に閉じられる。
+- MeshをResource参照Value Typeとして保ち、Coordinate IDというModel-local Identityへの依存を除ける。
+- 既存`model_transform_tree`の親子構造・固定Transform表現を再利用でき、Tree Storageの全面再設計を先行しなくて済む。
+- Registryの共有・Reference Countingを維持しながら、同一Modelを使う個体数に比例したAcquire / Releaseを不要にできる。
+- `render_model_definition_t` / `render_model_instance_t` / `binding_t`を必要性なく増やさない。
+
+### Considered / Rejected Alternatives
+
+- **描画個体ごとに`render_model_t`を構築する:** 各個体の姿勢を独立管理できるが、同一のMesh / Coordinate構成を重複保持するため不採用。
+- **DefinitionとInstanceの二層をEngineへ導入する:** 一般的なInstancing管理には適するが、現時点の個体姿勢はApplication固有の型で表現でき、汎用Instance Objectを新設する要件がないため見送る。
+- **Coordinate TreeからすべてのTranslation / Rotationを分離する:** 固定取付Transformまで個体状態として扱う必要はなく、既存Treeの有効な設計情報表現を失うため採用しない。
+- **`xxx_mesh_t`へCoordinate IDを格納する:** Model-localな空間Identityが、Resource参照を表すValue Typeと混在するため採用しない。
+- **`binding_t`配列を新設する:** MeshとCoordinate IDのIndex対応をModel内部Invariantにできるため、専用型の追加を現時点では見送る。
+- **描画個体ごとにRegistry Reference Rightを保持する:** Resourceの実体は共有Modelに依存しており、個体数による重複したRegistry Count管理を避ける。
+
+### Consequences / Implementation Contract
+
+- 現行`render_model.h`は非OpaqueなFieldを公開しており、まだ本Decisionの形ではない。Opaque Typeへの変更と、各Mesh種別の読取API / Count API / Coordinate参照APIの整理が必要。
+- Model PipelineはConfigから共有Modelを構築し、必要ResourceをAcquire、権利集合をModelへCommitする。失敗時は取得済み参照をRollbackし、`DATA_CORRUPTED`確定後の通常Cleanupは行わない。
+- Model Releaseは一つの共有Model ObjectのLifecycle終了であり、各描画個体の終了ではない。参照集合をConfigの再走査なしで返却する。
+- `render_model_t`をBorrow中のApplication ObjectやFrame Packetが存在する間にModelを破棄しない。PacketがResource参照を独自所有する方式への変更は本Decisionに含まない。
+- 完成済みModelを可変にするGetterやTree PointerのMutating Borrowは提供しない。Treeの構築専用操作は必要な期間に限って利用し、完成後Mutation APIを削除する際にはConstructionが引き続き成立することを確認する。
+- Meshの可変Visibilityは個体側に移す方向とし、Applicationでの識別・Filteringの具体APIはSample Robot / Packet Integrationで決定する。
+- 一時的なLine / Point、静的構造物、他の機械にも同じ共有Modelを利用できる。ただし各用途の姿勢・表示状態表現を汎用化する判断ではない。
+
+### Supersession / Related Decisions
+
+- **2026-10-17「すべてのMeshを非共有のRender Modelへ所属させ、Coordinateに描画姿勢のAuthorityを集約する」:** 「Modelごとに独立した個体状態を持つ」「MeshがCoordinate IDを保持する」「ModelがRuntime Visibility / 姿勢を持つ」の部分を本Decisionで更新する。Treeの空Node、ModelがMesh構成を管理すること、Resource実体をRegistryが所有することは維持する。
+- **2026-10-18「Model ImportをResource Dependency解決の入口とし、Model単位のReference LifecycleをRegistry Reference Countingで管理する」:** Model単位のReference Right、Resource重複排除、Transaction、Registry Count Authorityは維持する。「Modelを複数Importして描画個体を増やす」という利用想定を、**一度Importした共有Modelを複数個体がBorrowする**方向へ変更する。別途ImportされたModel同士は独立した参照権を持つ。
+- **2026-10-18「Render Model Configを独立Moduleに集約し、具体的なInitialize APIを設ける」:** Config独立、Owned String / Initialize、Subdirectory方針は維持する。
+- **2026-10-21「Untextured ModelのEnd-to-End完成を他Mesh Sliceへの横展開より優先する」:** 縦方向優先は維持する。End-to-Endの共有検証は複数Model生成だけでなく、単一共有Model＋複数個体の描画を含める。
+
+### Revisit Conditions
+
+- 個体ごとにMesh構成やHierarchyを改変する具体的要件が生じた場合。
+- 大量Instancing、Model Definitionの同一性Cache、Shared Model自身の参照カウント等が必要になった場合。
+- Shared ModelのLifetime管理をApplication側Borrow Contractだけで安全に維持できなくなった場合。
+- Model内のMesh / Coordinate ID配列の同期管理やData Localityに実際の問題が生じた場合。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+- `design_notes.md`
+
+---
+
+## Decision: 個体姿勢から描画Matrixへの変換はApplication固有Moduleが担当し、Render PacketをFrontendの入力境界とする
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-24  
+**Scope:** Application Model / Posture / Model Transform Tree / Render Packet / Renderer Frontend / Future Render Pass
+
+### Decision
+
+1. **個体ごとの現在姿勢はApplication Domainが所有する。** Sample Robotでは`robot_type_current_posture_t`相当の機種固有型を使用し、関節の意味、回転軸、姿勢制約、現在位置等をRenderer共通の`render_model_t`に持ち込まない。個体全体のWorld配置をどのApplication Stateへ含めるかは具体的なRobot API設計で決める。
+2. **Postureから描画用World / Model Matrixを算出するOperationは、各機種固有のApplication Moduleに属する。** 同Moduleは共有Modelが持つ設計上のCoordinate Treeを参照し、対象CoordinateからRootまでの各階層でDefault Local Transformと当該個体のPosture Transformを合成する。完成済みTree自身のTranslation / Rotationは変更しない。汎用的な行列演算にはEngineのMath Utilityを利用できる。
+3. **Coordinate Treeへ、設計上のDefault Local MatrixとParent関係を読み取るAPIを追加する方向とする。** 既存`model_transform_tree_world_matrix_get()`で得られる設計上のWorld Matrixに対象Nodeの姿勢だけを後掛けする方式では、途中の関節が子孫へ与える影響を表現できない。必要なGetterの正確なName、Root表現、出力形式、`render_model_t`からTree情報を安全に公開する境界は実装段階で決める。`render_model_t`のOpaque性を破って内部Treeを可変Pointerとして返さない。
+4. **Applicationは共有Modelと個体姿勢からFrame用のRender Packetを構築し、Renderer Frontendへ渡す。** Render Packet Module / Value TypeはEngine側に配置する。Applicationは描画対象の選択、個体の姿勢反映、Visibilityによる取捨選択、将来のRender Pass構成のPolicyを所有する。共通のPacket格納操作やStateless HelperをEngine側へ置くことは妨げない。
+5. **Render PacketはMesh / Shader種別ごとにCountと連続したDraw Entry群を持つ方向とする。** 各Draw Entryには描画Resource参照と、個体姿勢を反映して解決済みのModel Matrixを対応付ける。FrontendはPacketを受けてDrawを実行し、Application固有のPosture型、共有ModelのCoordinate Tree、関節の意味を解釈しない。Entryの具体的な型、Mesh ValueのCopy / Borrow、MatrixのInline保持 / 別配列、Packet Capacity等は実装時に決める。
+6. **Render PacketとRender Passは別概念とする。** 将来のRender Passの組立て、描画対象の割当てと順序に関するApplication Policyを維持し、FrontendがModel Arrayから独自にPassを推定・構築する方式を通常の入口としない。Pass / Sorting / Culling / Frame Allocatorの最終Data Modelは今回は確定しない。
+7. **PacketはFrame内のBorrowed Resource参照を基本とし、描画個体ごと・FrameごとのRegistry Acquire / Releaseを行わない。** Packetが使用するResourceと共有ModelはそのPacketの利用終了まで有効でなければならない。具体的なPacket StorageのOwner、Reset / Capacity / Failure ContractはPacket実装時に決める。
+
+### Context / Change Reason
+
+Model Arrayを直接Renderer Frontendへ渡す方式でも描画自体は成立する。しかしFrontendがModelを走査し、Coordinate / 個体姿勢を解釈し、Meshを分類する責務を持ち始める。さらに将来Render PassをApplicationが組み立てる場合、Model内のどのDrawをどのPassへ含めるかをFrontendへ委譲するか、別途Filter機構を追加する必要がある。
+
+一方、共有Modelと個体姿勢を分離すれば、個体ごとの描画MatrixはModel単独では決定できない。機種固有PostureからCoordinateごとの変換を定める知識はApplicationにあり、Frontendへ持ち込むべきではない。そこでRender Packetを明示的な描画情報境界とする。
+
+### Rationale
+
+- Applicationの機種固有Semanticsと、RendererのDraw実行を分離できる。
+- Coordinate Treeの設計上の固定Transformを保持したまま、個体ごとの階層姿勢を正しく合成できる。
+- 複数個体・複数ModelのDraw情報をShader別に集約でき、FrontendをModel内部Representationから独立させられる。
+- 将来のPass構築においてApplicationが描画対象・順序を決めるAuthorityを維持できる。
+- Render PacketをEngine側の汎用Valueとして提供しつつ、Application固有の処理を適切なVertical Sliceへ閉じられる。
+
+### Considered / Rejected Alternatives
+
+- **Model ArrayをFrontendへ直接渡し、Frontendがすべての描画要求を導出する:** 現時点の描画は可能だが、Model解釈と将来のPass構築Policyの境界が曖昧になるため、通常経路には採用しない。
+- **Engine側の汎用Model Instanceへ姿勢を保持する:** 各機種のPostureの意味が異なり、新しい汎用Instance型を作る必要がないため見送る。
+- **描画直前に共有TreeのTransformを個体姿勢で書き換える:** 他個体と共有する固定設計情報の不変性を壊すため採用しない。
+- **設計上のWorld Matrixだけを取得して対象MeshのPostureを後掛けする:** 中間関節の姿勢が子孫に伝播せず、階層動作を一般には表現できないため採用しない。
+- **最初からRender Pass / Frame Allocator / Sortingを一般化する:** まずUntextured Packetの実動作でOperationとLifetimeを確立し、具体的要件を得てから拡張する。
+
+### Consequences / Integration Contract
+
+- 新しいRender ModelのGetterは、前に検討した「Mesh + 個体ごとの最終Model Matrix」をModel単独で返すContractにはしない。ModelはMesh + 所属Coordinate ID等の設計情報を読み取り可能にし、ApplicationのRobot Moduleが姿勢反映済みMatrixへ変換する。
+- 共有TreeのDefault Local Matrix / Parent取得に必要なAPIを整備する。姿勢反映時の基本形は、親World Matrixと当該NodeのFixed Local Matrix、機種固有Posture Matrixを階層ごとに合成すること。典型的には`W_child = W_parent * D_child * P_child`だが、回転中心・座標Conventionに応じた詳細Semanticsは各Application Moduleで定める。
+- Root全体の配置Matrixは、Application側で個体位置を解決して必要箇所へ合成する。固定Tree側のRoot Transformを個体ごとに書き換えない。
+- Packet生成中のModel / Registry ResourceのBorrow Lifetime、PacketのFrame終了、Frontend Draw完了、Shared Model Releaseの順序を明示したContractにする。Model Release時はそのModelを使用するPacketが残っていないことをApplicationが保証する。
+- Render PacketはまずUntextured MeshのEnd-to-Endで検証し、Line / Point / UI用Collectionは各Slice移行時に具体化する。高度なRender Pass / Sortingは後続Workとする。
+- Sample Robotの検証では、同一共有Modelを参照する複数の異なるPostureから異なるMatrixを生成し、一方の個体状態変更が共有Modelや他個体に影響しないことを確認する。
+
+### Supersession / Related Decisions
+
+- **2026-10-16「Render PacketをShader別Draw Collectionとし、Model連携を先に検証してからOrchestrationを抽出する」:** Shader別Collection、Tree順序とDraw順序の分離は維持し、**Untextured Model End-to-Endに最小Packetを組み込む**形にWork順序を更新する。後続R4はRender Pass / Frame Allocator等の拡張を扱う。
+- **2026-10-17「Application固有Modelが姿勢と診断描画の意味を管理し、Render Modelを汎用描画構成に限定する」:** 機種固有PostureのAuthorityは維持する。Postureを可変なRender ModelへApplyする想定を、**共有Model + 個体PostureからPacketを生成する方式**へ更新する。
+- **2026-10-24「Render Modelを共有可能な不変の描画設計情報とし、MeshとCoordinateの関連付けをModel内で管理する」:** 本Decisionは共有ModelとApplication個体状態の間の変換Boundaryを確定する。
+
+### Revisit Conditions
+
+- GenericなAnimation / Skeleton / SimulationがApplication固有Moduleから独立したTransform Authorityを必要とする場合。
+- PacketのCopy / Borrow CostやFrame Allocation、Pass間共有に具体的な性能・Lifetime問題が生じた場合。
+- FrontendへScene / Model Arrayを直接渡す具体的用途が、Packet方式より明確な価値を示した場合。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+- `design_notes.md`
+
+---
+
+## Decision: 共有描画設計情報を`render_model_definition_t`と呼び、Model RegistryをIdentity / Ownership / const Borrowの境界とする
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-24  
+**Scope:** Renderer / Render Model Definition / Model Registry / Immutability / Identity / Reference Lifetime / Application Borrow
+
+### Decision
+
+1. **従来の`render_model_t`を`render_model_definition_t`へ改名する。** この型は、各描画個体の現在状態を表すModel Instanceではなく、描画に必要な共有可能な**設計情報（Definition）**を表す。従来の`render_model_t`が持っていた個体姿勢・位置を想起させる曖昧さを解消する。`render_model_definition_t`はOpaque Typeとし、構築成功後は不変とする。
+2. **Model Definition Registryを新設する。** RegistryはDefinitionの登録Identity、完成済みObjectの実体Ownership、取得・参照・解放のLifecycleを管理する。ApplicationはModel Objectの可変Pointerやその内部配列を所有・直接変更せず、Registryを通して利用する。
+3. **Registryの読み取りAPIでは`const render_model_definition_t *`をBorrowさせる。** `const`は利用側からのMutationを防ぐAPI上の意思表示であり、Objectの絶対的な不変性・生存保証そのものではない。不変性はOpaque境界、構築完了後のMutation経路封鎖、Ownerが保持するInvariantによって保証する。借用期間中はDefinitionと依存Resourceが生存していなければならない。
+4. **Model Definitionが必要とするGeometry / Material等のReference Rightは、Registryに登録された当該DefinitionのLifetimeに結び付ける。** RegistryはDefinitionを最終的に取り除く際に、Definitionが取得したユニークなReference Rightの返却を調整する。Reference Rightの実体をDefinition内部の集合とするか、Registry Entryに属させるかは実装時に詳細化する。いずれの場合も、同一Definitionを使用するRobot個体数に比例して下位Registry Countを増減させない。
+5. **Model RegistryのReference Counting採用可否・Acquire単位は現時点で未確定とする。** 「登録済みDefinitionを`const*`でBorrowできること」と「複数の独立OwnerがModel RegistryへのReference Rightを取得・返却すること」は別である。Geometry Registry等の実装と整合させつつ、実際に必要となる複数Owner / 最終Releaseの利用例から決める。Model Identity Keyの具体表現、同名異Config、ID再利用時の保証も実装時に決める。
+6. **機種固有の個体状態は引き続きApplication側に置く。** Robot個体は、Model Definitionへの生存期間が保証された参照と、自身の`robot_type_current_posture_t`相当の状態を持つ。Engine共通の`render_model_instance_t`をこのためだけに新設しない。
+
+### Context / Change Reason
+
+2026-10-24の先行Decisionでは、`render_model_t`の意味を「共有可能で不変の描画設計情報」へ更新したが、名称は以前のままであった。また、共有ModelのLifetimeをApplicationが保証し、直接Borrowすることを主としていた。
+
+Model Definitionが一つの描画個体に属さず、複数のRobotが利用することが明確になった段階で、Identity・Lifetime・不変のBorrowを取り扱う場所が必要になった。既存GLCEでは、Geometry、Material、Texture等についてRegistryがResource Identityと長寿命Ownershipを管理している。Model Definitionにも同様のOwner境界を与えることで、ApplicationにModelの実体所有・直接Destroyを要求せずに済む。
+
+また、単に`render_model`と呼ぶと個体ごとの姿勢が変わるModelを想起させる。`definition`と明示することで、固定Coordinate Tree、Mesh構成、Coordinate ID対応が設計情報であり、姿勢はApplication側の個体情報であるという対比が型名から読み取れる。
+
+### Rationale
+
+- Modelの**設計情報**と個体ごとの**現在状態**を、名前・Ownership・Mutation Scopeで区別できる。
+- RegistryのIdentity / Lifetime Authorityと、Definitionの不変DataのAuthorityを重複させずに済む。
+- Registryからの`const*` BorrowとOpaque Typeによって、利用側へ可変内部構造を公開しない。
+- Model単位の下位Resource Reference Rightを、個体数と無関係に保てる。
+- 将来のModel CacheやModel Registry Countを可能にしつつ、現段階でConfig内容HashやGeneric Instancingを先行導入しなくて済む。
+
+### Considered / Rejected or Deferred Alternatives
+
+- **従来の`render_model_t`という名称を維持する:** Runtime個体状態との意味の混同を避けるため変更する。
+- **`render_model_instance_t`を同時に導入する:** 機種固有PostureはApplication側で保持できるため採用しない。
+- **ApplicationがDefinition実体を直接所有・直接Destroyする:** RegistryにIdentityとLifetimeを集中させる方針へ変更する。
+- **同じConfig内容のModelを自動的に同一Objectと認定する:** KeyとConfig一致判定のContractを未確定のまま実装しない。
+- **Model RegistryへGeometry Registryと同一のReference Countingを無条件に採用する:** その要否と所有者数の要件は別途決定する。
+
+### Consequences
+
+- Header / Source / API / 型名の`render_model_t`を`render_model_definition_t`へ置き換える。`render_model_config_t`、`model_transform_tree_t`等の関連型は、名前が長くなるという理由だけで機械的に改名しない。
+- Model RegistryをResource Managerが所有するTargetとする。`const*` BorrowはRegistryのLifetime Contractに従う。Modelの単独DestroyとRegistry管理の最終Releaseが競合する公開経路を設けない。
+- `xxx_mesh_t`はResource IDを表すValue Type、Meshに対応するCoordinate IDはDefinition内部のIndex対応配列、固定TransformはDefinitionが所有するTreeに配置するという先行Decisionを維持する。
+- 参照中のDefinitionやFrame Packetを残したまま最終Releaseしない責務と、RegistryによるReference Count保証は混同しない。Model Registry Countが未導入なら、ApplicationがModelを借用する期間を明示して保証する。
+- Model Pipeline / Model RegistryのRegistration・Releaseの詳細は、Resource Manager / Pipeline再編と合わせて設計する。
+
+### Supersession / Related Decisions
+
+- **2026-10-24「Render Modelを共有可能な不変の描画設計情報とし、MeshとCoordinateの関連付けをModel内で管理する」:** 不変性・共有・配列対応等の意味を維持し、`render_model_t`という名称と、`render_model_definition_t`を新設しないという当時の記載を本Decisionで変更する。**これは第二のDefinition Objectを追加するのではなく、既存Modelの改名である。**
+- **2026-10-24「個体姿勢から描画Matrixへの変換はApplication固有Moduleが担当し、Render PacketをFrontendの入力境界とする」:** PostureとPacketの責務は維持し、参照されるModel型名を新名称として読む。
+- **2026-10-18「Model ImportをResource Dependency解決の入口とし、Model単位のReference LifecycleをRegistry Reference Countingで管理する」:** 下位Resourceの権利集合と重複排除を維持し、Model自体のIdentity / 実体OwnerをModel Registryへ配置する。
+
+### Revisit Conditions
+
+- Config内容による自動共有・Hot Reload・Runtime差替え・複数Ownerの権利移転が必要になった場合。
+- Borrow Pointerの安定性やID再利用の保証が、実用途のSafety Contractでは不足する場合。
+- Render Model Definition以外に共有される不変Model Descriptorが現れ、名称・責務を再編する必要が生じた場合。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md`
+- `design_notes.md`
+- `glce_near_term_todo.md`
+
+---
+
+## Decision: ApplicationがBackend ContextとResource Managerを所有し、Renderer Frontendを描画実行へ専念させる
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-24  
+**Scope:** Application / Renderer Backend Context / Renderer Resource Manager / Renderer Frontend / Shader / VBO Manager / Registry / Lifetime / Dependency Direction
+
+### Decision
+
+1. **ApplicationをRenderer関連長寿命ObjectのComposition Rootとする。** Applicationは`renderer_backend_context_t`相当のBackend Context、Renderer Resource Manager、Renderer Frontendをそれぞれ一意に所有し、生成・使用・破棄順序を決定する。Backend Contextの具体型名は既存Sourceの名称に従い、概念説明のための別Objectを増やさない。
+2. **Shader以外の長寿命Renderer Resource群は、Application所有のRenderer Resource Managerが所有する。** 対象はGeometry / Material / Texture / Model Definitionの各Registry、および各Mesh SliceのVBO Manager等のResource Storage管理機構である。Registryは個別Resource Identity・Reference Count・実体OwnershipのAuthorityを維持し、VBO ManagerはGPU Buffer / Allocation StorageのAuthorityを維持する。Resource ManagerはそれらのLifecycleとResource取得・返却の入口を統括する。
+3. **Renderer FrontendはShader / VAO等の描画状態を所有し、描画操作の入口となる。** FrontendはRender Packetの描画、Shader Bind / Uniform / Render State / Drawを担当する。Geometry / Material / Model等の長寿命登録・参照数・最終ReleaseのOwnerにならない。FrontendがResourceを**利用**することと、そのResourceを**所有・管理**することを区別する。
+4. **FrontendはResource Managerが所有するResourceを必要な操作でBorrowする。** 特にShaderのVAO生成でVBO Managerを利用でき、描画ではResource IDから描画に必要な情報を取得できる。ただしResource ManagerがShaderを所有する、あるいはShader / Registry / Pipeline同士が相互依存する構造にはしない。Borrowed Pointerを長寿命Fieldへ保持するか否かはAPIごとの必要性から判断し、不要な常設依存を作らない。
+5. **Backend ContextをApplicationが独立して所有し、Resource ManagerとFrontendは必要なGPU操作でBorrowする。** Backend ContextのLifetimeは両者より長くする。Shader側のOperation-scoped Borrowという先行判断は維持し、必要なOperation引数でContextを渡す。BackendのGPU操作はContextが有効かつ適切な実行状態であることを前提とする。
+6. **初期化・破棄の基本順序を明示する。** 生成は原則として`Backend Context → Resource Manager（VBO Manager / Registry）→ Renderer Frontend（Shader / VAO）`、破棄はFrontendのShader / VAOを先に終了し、次にResource ManagerのModel Registry → 下位Resource Registries / VBO Managersを終了し、最後にBackend Contextを終了する。個々のAPIが要求するContext Current条件、借用有効期間、失敗時部分構築Rollbackは実装で確認する。
+7. **Resource Managerは汎用Resource Systemの導入ではなく、既存のShader別Vertical Sliceが持つResource Owner群のComposition / Lifecycle責務として設ける。** Registryを一つの万能Registryへ統合したり、既存Stateless Loader / Import PipelineをStateful化したりしない。
+
+### Context / Change Reason
+
+2026-10-20～21の判断では、Frontendを先に成立させるため、Backend Context、Untextured VBO Manager、Registry、ShaderをFrontendへ直接集約した。この構造でUntextured Meshの描画経路を成立させ、Resource Managerの導入は当時の要件が具体化するまで保留した。
+
+その後、Reference Countingの導入が完了し、共有・不変のModel Definition、Model Registry、Model Pipeline、複数個体のPostureとRender Packetが具体化した。この段階では、Resourceの登録 / Acquire / Final Releaseと、描画の実行を一つのFrontendへ閉じ込める必然性が弱くなった。FrontendがRenderer Resourceの巨大な上位Ownerを兼ねるより、Resource Ownerを独立させ、FrontendへDrawの責務を集中した方が、各Moduleの役割とLifecycleが整合する。
+
+Resource ManagerがVBO Managerを所有するとShaderのVAO生成でVBOをBorrowする必要が生じるが、ApplicationがFrontendとResource Managerを双方所有すれば、そのBorrowと破棄順序は明示的に成立する。さらにBackend ContextをFrontendが所有したままでは、Resource Managerの初期化にContextが必要である一方、FrontendのShader初期化にはResource ManagerのVBO Managerが必要というConstructor順序の循環が生じ得る。ContextをApplicationの直接Owned Objectへ移すことで、双方のComplete Constructorを独立した順序で実行できる。
+
+### Rationale
+
+- ResourceのIdentity / Ownership / Lifetimeと描画実行の責務を分離できる。
+- Model Registryと既存Resource Registry群を、Shader・Frontendとは独立したResource管理Domainにまとめられる。
+- Renderer Frontendの変更をShader / VAO / Render Packet / Drawに集中させられる。
+- Backend ContextのLifetimeがResource Manager・Frontendの双方より長いことをApplicationが明示できる。
+- VBO ManagerをResource StorageのOwnerへ寄せ、Shaderによる非所有利用と整合させられる。
+- Backend ContextをFrontendから独立させることで、Resource ManagerとFrontendのConstructor間の循環を避けられる。
+- 各Vertical SliceのRegistry / Pipelineを維持し、必要な部分だけをApplicationでCompositionできる。
+
+### Considered / Rejected Alternatives
+
+- **FrontendがRegistry / VBO Manager / Backend Contextまで直接所有し続ける:** Untexturedの先行構築には合理的だったが、Model RegistryやResource Lifecycleが具体化した現段階では描画とResource管理のOwner責務が混在する。
+- **FrontendがBackend Contextを所有したままResource Managerを独立させる:** Resource ManagerのGPU初期化とShaderのVBO Borrowが互いの生成順に依存するため採用しない。
+- **Resource ManagerがShader / VAOまで所有する:** 描画状態のLifecycleをResource管理責務へ混在させるため採用しない。
+- **Applicationが個別Registry / VBO Managerをすべて直接所有する:** ApplicationのComposition負担と個別Release順の知識を増やすためResource Managerを設ける。
+- **新しいGeneric Mesh / Registry / Renderer Abstractionを先行構築する:** 実際に成立した各Vertical Sliceの責務分離を維持する。
+
+### Consequences / Implementation Contract
+
+- `renderer_frontend_t`のOwned Fields、Create / Destroy、Import / Release API、ShaderのVBO Borrow、Context Borrow、既存Application Call Siteを段階的に変更する。実装上の一時的な旧所有は移行中の状態として扱い、**VBO Manager / Registry / Backend Contextの二重Ownerを発生させない**。
+- Resource ManagerはContextを作成・破棄しない。Renderer FrontendもContextを作成・破棄しない。ApplicationだけがContextの最終Lifetime Authorityを持つ。
+- Renderer FrontendがResource IDから描画情報を取得するためのRead API / Borrow Boundaryを用意する。Resource Managerの内部Registry PointerやVBO Managerを無制限に公開するのではなく、必要な契約をAPI単位で決める。
+- Model RegistryをResource Manager配下へ配置し、完成済みModel Definitionの`const*` Borrow、Identity / Lifetimeを管理する。
+- Model Registryの解放はGeometry / Material Registryの解放より前に行い、保持している下位Reference Rightを返却する。
+- Shader / VAOの終了は、それらがBorrowしたVBOおよびContextの終了より前に行う。
+- 最新のSource SnapshotはFrontEnd直接所有の旧構造であり、本DecisionはSource実装済みを意味しない。実装と検証はUntextured Sliceを先行させる。
+
+### Supersession / Related Decisions
+
+- **2026-10-20～21「Renderer Frontendを先行確立し、Untextured Meshの描画経路をFrontendへ直接集約する」:** FrontendがBackend Context / VBO Manager / Registryを直接所有する**最終Target**を変更する。Frontend先行で描画を成立させた理由と過去の実装経緯は履歴として維持する。
+- **2026-10-19「VBO ManagerをRenderer Frontendの共通基盤とし、Shader / Resource Managerから引数でBorrowする」:** VBO Managerの最終OwnerをResource Managerへ変更する。ShaderがVBOを所有せず、必要なOperationでBorrowすることは維持する。
+- **2026-10-19「Renderer Resource LifecycleをResource Manager / Shader / Mesh Renderer / Import Pipelineへ再編する」:** Resource ManagerによるResource Lifecycle統括を今回採用する一方、Shader / Frontendの分離は現在の実装と新Decisionを優先して整理する。以前のStateless Mesh Renderer必須化には戻さない。
+- **2026-10-21「Untextured Mesh ShaderのBackend ContextはOperation単位でBorrowし、長期保持しない」:** Operation-scoped Borrowを維持し、Borrow元のOwnerをFrontendからApplicationへ変更する。
+- **2026-09-12「Backend ContextはRender Resourceがborrowする」:** Backend Contextを下位が所有しないという基本原則を維持し、上位OwnerとBorrow方式の具体化を本Decisionで更新する。
+
+### Revisit Conditions
+
+- Context共有・Multi-Window・複数Renderer Backendを同時に扱う要件が生じ、Application単一Ownerでは不自然になった場合。
+- Resource Managerが実際に巨大なService Locatorへ肥大化し、Vertical SliceごとのOwner分離が必要になった場合。
+- VAO / VBOのBuffer IdentityやContext Loss / Reloadが、現在のLifetime・Borrow契約では安全に維持できなくなった場合。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+- `design_notes.md`
+
+---
+
+## Decision: Resource統合AcquireをModel Pipelineの内部Operationとして実装し、独立W8 Resource Moduleを先行導入しない
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-24  
+**Scope:** Resource Acquire / Model Pipeline / Resource Manager / Registry / Transaction / Dependency Direction / Work Ordering
+
+### Decision
+
+1. **Untextured Geometry / MaterialのCache Hit / Miss統合Acquireは、最初の用途であるModel Pipeline内のPrivate Operationとして実装する。** 独立したStateless Resource Acquire Moduleまたは二つのPublic API（既存用 / 新規用）を、Model Pipelineに先行して設けない。
+2. Model PipelineはConfigから必要なユニークResource集合を導出し、Registryにすでに存在する場合は`acquire()`で一参照を取得し、存在しない場合は既存のGeometry / Material Import PipelineでLoad・Construct・Upload・`register()`を行う。既存ResourceのAcquireと新規ResourceのRegisterは異なるRegistry Operationであり、Model Pipeline内の統合処理がそれを隠蔽する。
+3. **Model Pipelineは引き続きStatelessなTransaction Coordinatorとする。** Geometry / Material Registry、VBO Manager、個別Import Pipeline等の必要なDependencyを呼び出し時にBorrowする。Frontend全体へ依存せず、Resource Manager全体をPipelineに渡す逆向きDependencyも原則として作らない。Resource Managerが上位入口としてModel PipelineのOperationを呼ぶ構成とする。
+4. Model Registryへの登録が成功したとき、完成済みDefinitionのIdentity・実体Ownershipおよび取得済み下位Resource Reference RightのLifecycleをModel Registry管理へCommitする。登録前の途中失敗では、そのOperation自身が取得した参照だけをRollbackする。下位Pipelineの失敗処理とRegistry登録後の最終Releaseを混同しない。
+5. Resource KeyとLoad Fullpathを別概念として扱う。Keyの`(normalized subdirectory, resource name)`によるIdentity、Root / 配置LocationのApplication Policy、個別Loaderの完成済みPath Contractは維持する。
+6. W8は独立した統合Acquire Module実装Workとしては残さず、**新しいW8をApplication所有Backend Context / Resource Manager / FrontendのOwnership再編に充てる。** Model Pipeline内の統合AcquireとModel Registry / Definition構築はW9で扱う。従来のW8という識別子の変更理由をWork Planで明示し、履歴への参照を失わない。
+
+### Context / Change Reason
+
+以前のWork Planでは、FrontendがRegistryとVBO Managerを一意に所有していたため、Model Pipelineへ直接それらを渡しにくく、W8で上位統合Acquire境界を先に抽出することを検討していた。しかし、統合Acquireの最初のConcrete ConsumerはModel Pipelineであり、単独の長寿命Stateや他の実利用者をまだ持たない。
+
+今回Resource ManagerをResource Owner、Frontendを描画側とする構造へ移行することで、Model PipelineがResource Managerから必要なRegistry / VBO ManagerをBorrowして処理する依存経路を作れる。Model Pipeline内部のPrivate HelperとしてCache Hit / Missを処理すれば、Moduleを一つ増やすことなく同じ上位操作を成立させられる。
+
+### Rationale
+
+- 最初のConcrete ConsumerのTransaction内に、必要な統合処理を配置できる。
+- 独立Moduleを設けることによるPublic Scope / Dependency / Result Domainの増加を避けられる。
+- RegistryのReference Countと既存Import PipelineのOwnership Commitを維持できる。
+- Resource ManagerをState Owner、Model Pipelineを短命Operationとする一方向Dependencyを維持できる。
+- Model単位のユニークResource取得、Model Registry登録、Failure Rollbackを一連のTransactionとして見通せる。
+
+### Considered / Rejected Alternatives
+
+- **統合Acquireを独立のW8 Resource Operation Moduleにする:** 他のConsumerがまだ具体化しておらず、先行抽象化となるため採用しない。
+- **Frontendが統合Acquireを提供しModel Pipelineから呼ぶ:** Resource OwnerをFrontendから分離する新構造に反し、逆依存 / 循環の原因になる。
+- **Model PipelineがResource Managerを丸ごと引数としてBorrowする:** 上位State Ownerへの依存となるため、必要なRegistry / VBO Manager等の具体的Dependencyを渡す構造を優先する。
+- **モデルのImport成功前に下位参照権を別のOwnerへ無条件にCommitする:** RollbackとFinal Releaseの境界が不明確になるため採用しない。
+
+### Consequences
+
+- W8のDone GateはContext / Resource Manager / Frontendの分離、Create・Destroy、Borrow、Untextured描画回帰へ変更する。
+- W9のDone GateにはModel Registry、Model Definition、Model Pipeline内部Acquire、下位Resource Reference Rightの取得・返却 / Rollbackを含める。
+- 将来、Line / Point / UIやModel以外のConsumerにも統合Acquireが必要になった場合は、その実利用と重複処理を確認してから共通Moduleへ抽出できる。今回のPrivate Helperを全Slice共通抽象として固定しない。
+- 旧`application_renderer` / `render_resources`は、後続Slice移行を終えるまで実装資料として保持する。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+- `design_notes.md`
+
+---
+
+## Design Candidate (Deferred): Render Packetで同一Meshに複数Model Matrixを対応付けるGrouped Representation
+
+**Status:** Deferred / **Not yet accepted as implementation contract**  
+**Date:** 2026-10-24  
+**Scope:** Render Packet / Draw Entry Representation / Instancing / Render Pass / Ordering
+
+### Candidate
+
+同じ`xxx_mesh_t`を複数の個体・Coordinateで描画する場合、Render Packet内で`mesh + model_matrix`の組を毎回重複させず、**一つのMesh（または同等の描画Resource状態）に複数の解決済みModel Matrixを関連付ける**方式を候補として記録する。概念上、GroupはMeshとMatrix配列からなる。
+
+例えば6種類のMeshからなるRobotを100台描画する場合、Flat Entry方式では600個のMesh＋Matrix対応を保持するのに対し、Group方式では最大6つのMesh Groupに合計600個のMatrixを持たせられる。ただしこれは**Packet内でのMesh Metadataの重複を削減する案**であり、Registryが所有するGeometry / Material実体や、個々のModel Matrix計算がなくなることを意味しない。また、GroupだけではDraw Callの数は減らず、GPU InstancingにはShader / Buffer / Backend対応が別途必要となる。
+
+### Why Deferred
+
+- 現在のModel Pipeline / Registry / Resource Managerの完成には、PacketのPhysical Layout決定を必要としない。
+- 透明物・UI・Pass固有の描画順序では、同一Meshの全Instanceを連続して描画できない場合がある。
+- Flat EntryとGrouped Entry、MatrixをInline / 別配列に保持する方式、Copy / Borrow、Frame AllocationとReset、Resource StateのGrouping Key、Batchingの実際の効果は未評価である。
+- **Render Passの組み立てと描画対象の選択はApplication Policy**であるという確定判断を変更しない。
+- Model Definition内部のMesh配列とCoordinate ID配列を、Packet最適化のために直ちに一対多へ変更しない。
+
+### Consequence / Revisit
+
+W10の最小Render Packet設計時にFlat / Groupedの両案を比較し、必要なData Modelを確定する。**Grouped Representationを今回の必須仕様として実装・公開APIへ固定しない。** 確定した時点で新しいDecisionを追記し、Work Planの実装Taskへ昇格させる。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md`
+- 2026-10-24「個体姿勢から描画Matrixへの変換はApplication固有Moduleが担当し、Render PacketをFrontendの入力境界とする」
