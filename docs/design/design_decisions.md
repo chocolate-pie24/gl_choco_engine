@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-24
+最終更新: 2026-10-25
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -6105,3 +6105,117 @@ W10の最小Render Packet設計時にFlat / Groupedの両案を比較し、必�
 
 - `glce_renderer_resource_model_workplan.md`
 - 2026-10-24「個体姿勢から描画Matrixへの変換はApplication固有Moduleが担当し、Render PacketをFrontendの入力境界とする」
+
+---
+
+## Decision: Renderer FrontendをRenderer SubsystemのOwnership Rootとし、Modelの所有をApplication / Sceneへ分離する
+
+**Status:** Accepted / Implementation Pending  
+**Date:** 2026-10-25  
+**Scope:** Renderer Frontend / Renderer Backend Context / Resource Manager廃止 / Shader / VBO Manager / Resource Registry / Model Definition / Application / Scene / Resource Reference Right
+
+### Decision
+
+1. **Renderer FrontendをRenderer Subsystemの長寿命なComposition / Ownership Rootへ戻す。** 各Mesh SliceのGeometry Registry、Material Registry、必要なTexture Registry、VBO Manager、および描画用Shader / VAOは、Renderer Frontendが直接または所有する下位Moduleを通して管理する。各Registryが持つResource Identity・実体Ownership・Reference CountのAuthority、VBO Managerが持つBuffer / AllocationのAuthority、Shaderが持つProgram / VAOのAuthorityは変更しない。Frontendによる所有は、それらの下位Moduleの処理をFrontendへ移植することを意味しない。
+2. **新設した`renderer_resource_manager_t`相当のResource Managerを最終Architectureから廃止する。** RegistryやVBO Managerを集約するためだけの中間Owner、あるいは個別Resource APIを転送するFacadeは設けない。Renderer Frontend自身がCompositionと、必要なResource操作・Draw操作の上位入口を担う。別名の`Renderer System`を新設してFrontendと二重に統括させることもしない。
+3. **Renderer Backend Contextは引き続きApplicationが所有し、Renderer Frontendが必要なOperationでBorrowする。** Contextを独立させた判断まで一律に巻き戻さない。ApplicationがRenderer内部のRegistry / VBO Manager / Shaderを個別生成・破棄することは要求しない。基本的な長寿命生成順は`Backend Context → Renderer Frontend`、破棄順は逆とする。Contextの必要なCurrent状態や具体的なBorrow Contractは従来どおり各APIで保証する。
+4. **Renderer Subsystemの内部ではGeometry ID、Material ID、Texture ID等を基本的なResource識別子として扱う。** Renderer Frontend、Registry、VBO Manager、Shader / Backendの責務は、この描画Resource Domainで成立させる。Renderer FrontendおよびResource Manager相当の下位機能へ、Model Identity、Model Registry、Scene、Robotの現在姿勢等のApplication側概念を持ち込まない。
+5. **共有Model Definitionの長寿命OwnerはApplication / Scene側とし、Engine内のModel Registryを新設しない。** Sceneまたはその役割を担うApplication側Ownerが共有Modelの実体とLifetimeを管理し、複数の個体が同じModelをBorrowする。Modelの共有は、必ずしもRegistryによるIdentity、Model ID、Model Reference Countingを必要としない。Sceneを超える共有Ownerが具体的に必要になったときには、Application側の所有構造を再評価する。
+6. **共有Modelの型名は`render_model_t`とし、完成後は不変な描画設計情報として扱う。** 2026-10-24に採用した`render_model_definition_t`への一律改名方針は撤回する。`render_model_t`は引き続き、Mesh構成・MeshとCoordinate IDの対応・固定Coordinate Tree等を持ち、個体固有のCurrent Posture、World配置、Visibilityを所有しない。汎用的な型・構築操作はEngine側に置き得るが、**型をEngineが定義することとObjectのLifetimeをEngineが所有することを同一視しない**。`render_model_t`の最終的なsource配置・公開APIは実装経験により再評価可能とする。
+7. **Model ImporterはRenderer内部のResource管理とは独立した、長寿命Stateを持たない構築処理として扱う。** 当面はApplicationが用意した構築済み`render_model_config_t`を入力とし、Loaderの追加は後続とする。Importerは必要な下位Resourceを取得して共有Modelを構築し、そのOwnershipをApplication / Sceneへ移す。下位RegistryのCache Hit / Miss、Model内で重複するResourceのReference Right取得、失敗時Rollback、Model終了時の参照返却は必要だが、**それらを理由にResource ManagerやModel Registryを復活させない**。ImporterとRenderer Frontendの間で必要なResource OperationをどのAPIへ置くかは、具体的なImport実装時に決める。
+8. **Model単位のResource Reference Rightと、Registryが所有するResource実体を区別する。** 同一共有Modelを複数個体が利用しても、その個体数分だけ下位RegistryへAcquire / Releaseを行わない。Modelを所有するApplication / Sceneは、Modelの利用終了と下位Resource Reference Right返却を、Renderer Frontendの終了前に完了させる。参照権の詳細な保持表現・Release API・失敗時のTransactionは実装時のContractとして確定する。
+9. **今回のOwnership再編はRender Packet / Render Pass / 描画順序の具体的Data Modelを確定しない。** Applicationが姿勢、描画対象、将来のPass構成Policyを決め、Renderer側がDrawを実行する基本境界は維持する。Model内の描画順序、Model Array / Mesh Draw Entry、PacketのFlat / Grouped構造等は、Modelの構築・所有を成立させるための前提条件にしない。
+
+### Target Ownership / Responsibility（概念構造）
+
+```text
+Application
+├── Renderer Backend Context                  [Owned]
+├── Renderer Frontend                         [Owned]
+│   ├── Geometry Registries                   [Owned / each registry owns resources]
+│   ├── Material Registries                   [Owned / each registry owns resources]
+│   ├── Texture Registry                      [Owned as needed by mesh slices]
+│   ├── VBO Managers                          [Owned / GPU buffer storage]
+│   └── Shaders / VAOs                         [Owned / drawing state]
+│
+└── Scene / Application-owned Model storage   [Owned]
+    ├── render_model_t A                       [shared immutable definition]
+    ├── render_model_t B                       [shared immutable definition]
+    └── individual objects                     [posture / placement; borrow models]
+
+Model Importer                                [Stateless operation]
+    ├── consumes model config
+    ├── acquires or imports Renderer resources through explicit APIs
+    ├── constructs render_model_t
+    └── transfers completed Model ownership to Application / Scene
+
+Renderer Backend Context                      [Application-owned; borrowed by Renderer]
+```
+
+この図は最終的なOwnerの区分を表す。実装時の個別Field配置、各Mesh Sliceの具体的な構成、Importerが利用する公開APIのSignatureを固定するものではない。`render_model_t`がRenderer Resource IDを内部に保持することと、Renderer FrontendがModelのIdentity / Lifetimeを管理することは異なる。
+
+### Context / Change Reason
+
+2026-10-20～21時点のRenderer Frontendは、Backend Context、VBO Manager、Geometry / Material Registry、Shaderをまとめて所有し、Untextured Meshの描画経路を成立させていた。その後、Resource LifetimeとDraw責務をより明確に分離し、共有ModelやRender Packetへ発展させる意図で、2026-10-24にはBackend ContextとResource ManagerをApplication所有へ移し、FrontendをShader / Drawに限定するTargetを採用した。実際にBackend ContextとResource Ownerを移動する実装も進んでいる。
+
+しかし、Model Registry、Model Pipeline、Model向けResource Acquire、Draw Data Getter、Render Packet、Render Passを続けて検討する過程で、どのModuleが何を知るべきかが不明瞭になった。特にResource ManagerへModel Import・Model Registry・Model解決済みDraw Dataを統合しようとすると、Renderer Resource IDの世界と、Scene / ModelというApplication側の構成・Identityの世界が混在する。また、Registry群をResource Managerへ移すと、Frontendから描画Resourceを参照するための転送APIが必要になり、Applicationが複数のRenderer関連Ownerを組み立てる負担も増えた。
+
+Renderer Resourceの実体とReference Countは既存Registryが管理でき、複数Model間のResource共有も各RegistryのReference Countingで成立する。Renderer FrontendをRenderer SubsystemのRootと捉えれば、既存のRegistry / VBO Manager / Shaderを自然に束ねられ、Applicationはそれらの内部生成・破棄順序を知らなくて済む。
+
+さらに、ModelはRendererのResource Identityより上の、Application / Sceneが扱う描画設計情報であると整理した。Modelの型やImporterをEngineが提供することは可能でも、Modelの実体をEngine側Registryへ登録して管理する必要はない。Sceneが共有Modelを直接所有すれば、Model RegistryのIdentity・Reference Countを先行して設計する必要もなくなる。
+
+このため、Renderer FrontendのOwnershipを以前の構造へ戻す一方、**Backend ContextのApplication所有**と、**共有ModelのApplication / Scene所有**という今回得られた境界は維持する。過去の構造へ無条件に戻すのではなく、実装経験から必要性を確認できなかった中間抽象化を取り除く判断である。
+
+### Rationale
+
+- Renderer Subsystem全体のCompositionを一つのRenderer Frontendへ閉じ、Applicationから内部Registry・VBO・Shaderの生成順序と破棄順序を隠せる。
+- 各Registry / VBO Manager / Shaderが既に持つAuthorityを尊重し、単なるObject集約や転送のためのResource Managerを増やさずに済む。
+- Modelという上位概念がRenderer Resource管理へ侵入せず、描画Resource DomainとApplication / Scene Domainの責務が分かれる。
+- 共有ModelのLifetimeをSceneが保証することで、Model Registry / Model ID / Model Reference Countingの追加設計が不要となる。
+- 元のFrontend中心構造で成立していた使いやすさを回復しながら、Backend Contextの独立したLifetimeと、共有Modelの不変性は維持できる。
+- 個々のModuleの局所的な単純化ではなく、Renderer全体のDependencyとPublic APIの総量を抑制できる。
+
+### Considered / Rejected Alternatives
+
+- **ApplicationがRegistry、VBO Manager、Shaderをすべて直接所有する:** Resource Managerは不要になるが、ApplicationがRenderer内部構成と生成・破棄順序を知る必要がある。Engine利用者へComposition負担を移すため採用しない。
+- **ApplicationがResource Managerと描画専用Frontendを別々に所有する:** Ownershipの分離は明確だが、Resource Manager固有の責務を必要とする具体的な要求がなく、追加の長寿命OwnerとResource転送境界が生じるため採用しない。
+- **Resource ManagerへModel Registry / Model Import / Model Draw Data解決を集約する:** Renderer ResourceのIdentity / LifetimeとApplication固有のModel / Scene構成の責務が混在するため採用しない。
+- **Frontendとは別に`Renderer System` Rootを追加する:** Renderer Subsystemを成立させるCompositionが既存Frontendと重複するため、別のRoot Moduleは設けない。
+- **ShaderをFrontendから移してApplicationへ直接所有させる:** Shader / VAOは描画実行と結びつき、ApplicationへRenderer内部のLifecycle責務を漏らすため採用しない。
+- **Model RegistryをEngine内に新設し、ModelをResource Manager配下で所有する:** Sceneが共有Modelを所有でき、Model RegistryによるIdentity・Reference Countingを必要とするConcrete Use Caseがないため採用しない。
+- **Renderer FrontendへBackend ContextのOwnershipも戻す:** 本Decisionの必須変更ではない。Contextの独立とResource Owner再編は別問題であり、ApplicationがContextを所有する現在の判断を維持する。
+
+### Consequences / Implementation Contract
+
+- 新設したResource ManagerのOwned FieldsをFrontendへ移管し、Resource Manager Module・関連Wrapper API・Application側のResource Manager Lifetime管理を段階的に撤去する。二重Ownerを作らず、移行中も既存Untextured描画の動作を維持する。
+- Renderer FrontendのCreate / Deinitializeは、必要なRegistry・VBO Manager・Shaderの成立とCleanupを内部で管理する。Backend Contextは引き続きApplicationのOwnerであり、Frontendは必要なOperationでBorrowする。
+- Geometry / Material / Texture Registryと既存の個別Import Pipelineは継続する。登録済みResourceのAcquire、未登録ResourceのImport / Register、Reference RightのReleaseをModel Importerからどう利用するかは、FrontendとImporterの実際のOperation Contractを確認して最小限のAPIを設ける。
+- ResourceのAuthorityはRegistry / VBO Managerに残す。Frontend所有へ戻すことによってReference CountのAuthorityやGPU Allocation AuthorityをFrontendへ移さない。
+- Model Registryを新設せず、Modelの生成後はApplication / SceneへOwnershipをCommitする。SceneがModelを参照中の個体・PacketのLifetimeを保証し、Scene終了時などに下位Reference Rightを返却してからModelを破棄する。
+- 既存の共有Model構造（Opaque / Immutable / MeshとCoordinate IDのIndex対応 / 固定Coordinate Tree / 個体姿勢はApplication）は維持する。型名は`render_model_t`を使用する。`render_model_definition_t`への改名作業を本Decisionで要求しない。
+- Model ImporterがConfig Loaderを必須とすることはない。当面は構築済みConfigからEnd-to-EndのModel Import・Reference Right返却を成立させる。
+- Renderer FrontendのDraw API、Render Packetの具体Representation、Render Passの具体的実装は本Decisionでは変更・確定しない。ModelをRendererへ持ち込まない境界を守ったうえで、実際の描画統合時に決める。
+- 本Decisionは**Target Architectureの確定**であり、旧Owner配置からのSource移行・Build / Runtime検証が完了したことを意味しない。
+
+### Supersession / Related Decisions
+
+- **2026-10-24「ApplicationがBackend ContextとResource Managerを所有し、Renderer Frontendを描画実行へ専念させる」:** Resource Manager所有、FrontendからRegistry / VBO Managerを分離する部分を本Decisionで置換する。Backend ContextのApplication所有と、ShaderがVBOをBorrowする基本方針は維持する。
+- **2026-10-24「共有描画設計情報を`render_model_definition_t`と呼び、Model RegistryをIdentity / Ownership / const Borrowの境界とする」:** `render_model_definition_t`への改名とModel Registry設置を撤回する。不変な共有描画設計情報、Mesh / Coordinateの固定構成、個体姿勢のApplication所有は維持する。
+- **2026-10-24「Resource統合AcquireをModel Pipelineの内部Operationとして実装し、独立W8 Resource Moduleを先行導入しない」:** 最初の用途に即したPrivate Acquire処理とStateless Importerの考え方は維持する。ただしResource ManagerがModel Pipelineを呼び出し、Model Registryへ登録する構成および当時のW8 / W9 Owner前提は本Decisionで置換する。作業順序の詳細はWork Planで更新する。
+- **2026-10-24「Render Modelを共有可能な不変の描画設計情報とし、MeshとCoordinateの関連付けをModel内で管理する」:** `render_model_t`の型名、共有・不変性、Mesh / Coordinate対応、Resource実体はRegistryが所有するという判断を維持する。Modelの最終OwnerはScene / Applicationと明示する。
+- **2026-10-24「個体姿勢から描画Matrixへの変換はApplication固有Moduleが担当し、Render PacketをFrontendの入力境界とする」:** Posture / MatrixとRenderer Drawの責務分離は維持する。Packetの形式・順序・Passは引き続き後続設計とする。
+- **2026-10-20～21「Renderer Frontendを先行確立し、Untextured Meshの描画経路をFrontendへ直接集約する」:** Registry / VBO Manager / ShaderをFrontendが所有する考え方を再採用する。ただしBackend ContextまでFrontendが所有する旧実装を丸ごと復元する判断ではない。
+- **2026-10-19「Renderer Resource LifecycleをResource Manager / Shader / Mesh Renderer / Import Pipelineへ再編する」および「VBO ManagerをRenderer Frontendの共通基盤とし、Shader / Resource Managerから引数でBorrowする」:** Resource Managerを最終的に置く前提を変更し、FrontendがRegistry / VBO / Shaderをまとめる構造へ整理する。Registry / VBO / Shaderの各AuthorityとStateless Pipeline自体は維持する。
+
+### Revisit Conditions
+
+- Renderer FrontendとRegistry / VBO Manager / ShaderのLifetimeを独立させる必要性が、実際の利用やContext Recovery等で確認された場合。
+- Scene単位のModel Ownershipでは複数Scene間の共有、Hot Reload、Object交換、Model同一性管理等の要求を満たせなくなった場合。
+- Model ImporterとRenderer FrontendのResource Operation境界が実装上不自然となり、独立したOrchestrationまたはOwnerが明確な価値を持つことが確認された場合。
+- Renderer FrontendのPublic APIが肥大化し、単なる転送ではない独立責務を持つModule境界が実装経験から見つかった場合。
+
+### Related Documents
+
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+- `design_notes.md`

@@ -6,6 +6,7 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/containers/choco_string.h"
+#include "engine/containers/ring_queue.h"
 
 #include "engine/systems/renderer/resources/render_model/core/render_model_types.h"
 
@@ -86,6 +87,33 @@ render_model_result_t render_model_result_convert_general_allocator(general_allo
     case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
         return RENDER_MODEL_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return RENDER_MODEL_UNDEFINED_ERROR;
+    default:
+        return RENDER_MODEL_UNDEFINED_ERROR;
+    }
+}
+
+render_model_result_t render_model_result_convert_ring_queue(ring_queue_result_t result_) {
+    switch(result_) {
+    case RING_QUEUE_SUCCESS:
+        return RENDER_MODEL_SUCCESS;
+    case RING_QUEUE_INVALID_ARGUMENT:
+        return RENDER_MODEL_INVALID_ARGUMENT;
+    case RING_QUEUE_NO_MEMORY:
+        return RENDER_MODEL_NO_MEMORY;
+    case RING_QUEUE_RUNTIME_ERROR:
+        return RENDER_MODEL_RUNTIME_ERROR;
+    case RING_QUEUE_LIMIT_EXCEEDED:
+        return RENDER_MODEL_LIMIT_EXCEEDED;
+    case RING_QUEUE_BAD_OPERATION:
+        return RENDER_MODEL_BAD_OPERATION;
+    case RING_QUEUE_DATA_CORRUPTED:
+        return RENDER_MODEL_DATA_CORRUPTED;
+    case RING_QUEUE_OVERFLOW:
+        return RENDER_MODEL_OVERFLOW;
+    case RING_QUEUE_EMPTY:
+        return RENDER_MODEL_RUNTIME_ERROR;
+    case RING_QUEUE_UNDEFINED_ERROR:
         return RENDER_MODEL_UNDEFINED_ERROR;
     default:
         return RENDER_MODEL_UNDEFINED_ERROR;

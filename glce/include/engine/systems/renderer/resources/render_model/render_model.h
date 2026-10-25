@@ -17,22 +17,9 @@ extern "C" {
 
 typedef struct render_model_config render_model_config_t;
 typedef struct model_transform_tree model_transform_tree_t;
+typedef struct render_model render_model_t;
 
-typedef struct render_model {
-    size_t line_mesh_count;
-    size_t point_mesh_count;
-    size_t ui_mesh_count;
-    size_t untextured_mesh_count;
-
-    line_mesh_t* line_meshes;
-    point_mesh_t* point_meshes;
-    ui_mesh_t* ui_meshes;
-    untextured_mesh_t* untextured_meshes;
-
-    model_transform_tree_t* transform_tree;
-} render_model_t;
-
-render_model_result_t render_model_create(const render_model_config_t* config_, const vec3f_t* root_translate_, const vec3f_t* root_rotation_, render_model_t** out_render_model_);
+render_model_result_t render_model_create(const render_model_config_t* config_, render_model_t** out_render_model_);
 
 void render_model_destroy(render_model_t** render_model_);
 

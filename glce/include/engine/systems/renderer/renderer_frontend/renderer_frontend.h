@@ -25,7 +25,25 @@ typedef struct ambient_light ambient_light_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct resource_manager resource_manager_t;
 
-renderer_frontend_result_t renderer_frontend_create(subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, renderer_backend_context_t* backend_context_, resource_manager_t* resource_manager_, renderer_frontend_t** out_renderer_frontend_);
+typedef struct {
+    size_t vbo_size;
+    size_t max_allocation_count;
+    size_t base_align;
+    buffer_usage_t buffer_usage;
+} vbo_config_t;
+
+typedef struct {
+    vbo_config_t vbo_config;
+    size_t max_geometry_count;
+    size_t max_material_count;
+} untextured_mesh_resource_config_t;
+
+typedef struct {
+    // Untextured mesh
+    untextured_mesh_resource_config_t untextured_mesh_resource_config;
+} renderer_frontend_config_t;
+
+renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_config_t* config_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, renderer_backend_context_t* backend_context_, renderer_frontend_t** out_renderer_frontend_);
 
 void renderer_frontend_deinitialize(renderer_backend_context_t* backend_context_, renderer_frontend_t* renderer_frontend_);
 
@@ -53,7 +71,7 @@ void renderer_frontend_deinitialize(renderer_backend_context_t* backend_context_
  * @retval RENDERER_FRONTEND_OVERFLOW Draw Rangeの算術計算でoverflowを検出
  * @return その他、Shader操作の失敗を変換したResult
  */
-renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(const resource_manager_t* resource_manager_, const renderer_backend_context_t* backend_context_, renderer_frontend_t* renderer_frontend_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
+renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_frontend_t* renderer_frontend_, const renderer_backend_context_t* backend_context_, uint16_t geometry_id_, uint16_t material_id_, const mat4x4f_t* model_matrix_);
 
 /**
  * @brief Untextured Mesh描画用のView / Projection MatrixおよびLightを更新する
@@ -75,7 +93,15 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(const resource
  * @retval RENDERER_FRONTEND_INVALID_ARGUMENT 引数不正
  * @return その他、Shader操作の失敗を変換したResult
  */
-renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(const renderer_backend_context_t* backend_context_, renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_);
+renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(renderer_frontend_t* renderer_frontend_, const renderer_backend_context_t* backend_context_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_);
+
+renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_import_from_file(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
+
+renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_release(renderer_frontend_t* renderer_frontend_, uint16_t geometry_id_);
+
+renderer_frontend_result_t renderer_frontend_untextured_mesh_material_import_from_file(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
+
+renderer_frontend_result_t renderer_frontend_untextured_mesh_material_release(renderer_frontend_t* renderer_frontend_, uint16_t material_id_);
 
 #ifdef __cplusplus
 }
