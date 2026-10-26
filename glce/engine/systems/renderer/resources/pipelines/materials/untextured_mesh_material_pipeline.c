@@ -163,34 +163,50 @@ resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_file(un
     untextured_mesh_material_t material = { 0 };
 
     uint16_t tmp_material_id = 0;
+    bool exists = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_file", "material_registry_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_file", "resource_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_file", "out_material_id_")
 
-    ret_loader = untextured_mesh_material_config_loader_load(resource_fullpath_, &material_config);
-    if(LOADER_SUCCESS != ret_loader) {
-        ret = resource_pipeline_result_convert_loader(ret_loader);
-        ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_config_loader_load failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-
-    material.ambient = material_config.ambient;
-    material.diffuse = material_config.diffuse;
-    material.shininess = material_config.shininess;
-    material.specular = material_config.specular;
-    if(!untextured_mesh_material_is_valid(&material)) {
-        ret = RESOURCE_PIPELINE_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - Invalid material.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_resource_registry = untextured_mesh_material_registry_register(material_registry_, resource_name_, &material, &tmp_material_id);
+    ret_resource_registry = untextured_mesh_material_registry_exists(material_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_registry_register failed.", resource_pipeline_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_registry_exists failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
+    }
+    if(exists) {
+        ret_resource_registry = untextured_mesh_material_registry_acquire(material_registry_, resource_name_, &tmp_material_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_registry_acquire failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        ret_loader = untextured_mesh_material_config_loader_load(resource_fullpath_, &material_config);
+        if(LOADER_SUCCESS != ret_loader) {
+            ret = resource_pipeline_result_convert_loader(ret_loader);
+            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_config_loader_load failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+
+        material.ambient = material_config.ambient;
+        material.diffuse = material_config.diffuse;
+        material.shininess = material_config.shininess;
+        material.specular = material_config.specular;
+        if(!untextured_mesh_material_is_valid(&material)) {
+            ret = RESOURCE_PIPELINE_UNSUPPORTED_FILE;
+            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - Invalid material.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret_resource_registry = untextured_mesh_material_registry_register(material_registry_, resource_name_, &material, &tmp_material_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_registry_register failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
     }
 
     *out_material_id_ = tmp_material_id;

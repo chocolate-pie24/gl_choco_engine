@@ -216,6 +216,7 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vb
     uint16_t tmp_geometry_id = 0;
     vbo_range_t tmp_buffer_range = { 0 };
     bool vbo_written = false;
+    bool exists = false;
 
     untextured_mesh_geometry_t* geometry = NULL;
 
@@ -225,45 +226,60 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vb
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_file", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_file", "resource_fullpath_")
 
-    ret_loader = stl_ascii_loader_load(resource_fullpath_, &vertex_count, &vertices);
-    if(LOADER_SUCCESS != ret_loader) {
-        ret = resource_pipeline_result_convert_loader(ret_loader);
-        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=stl_load_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
-        goto cleanup;
-    }
-
-    ret_geometry = untextured_mesh_geometry_create_from_vertices(vertex_count, vertices, &geometry);
-    if(GEOMETRY_SUCCESS != ret_geometry) {
-        ret = resource_pipeline_result_convert_geometry(ret_geometry);
-        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
-        goto cleanup;
-    }
-
-    if(!size_mul_checked(vertex_count, sizeof(point_normal_vertex_t), &write_size)) {
-        ret = RESOURCE_PIPELINE_OVERFLOW;
-        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - vbo write size overflow failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_buffer_manager = vbo_manager_write(vbo_manager_, write_size, vertices, &tmp_buffer_range.allocation_info);
-    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = resource_pipeline_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
-        goto cleanup;
-    }
-    vbo_written = true;
-    if(0 != (tmp_buffer_range.allocation_info.offset % sizeof(point_normal_vertex_t))) {
-        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-        goto cleanup;
-    }
-    tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(point_normal_vertex_t);
-    tmp_buffer_range.draw_range.vertex_count = vertex_count;
-    general_allocator_free((void**)&vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
-
-    ret_resource_registry = untextured_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+    ret_resource_registry = untextured_mesh_geometry_registry_exists(geometry_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
+        ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - untextured_mesh_geometry_registry_exists failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
+    }
+    if(exists) {
+        ret_resource_registry = untextured_mesh_geometry_registry_acquire(geometry_registry_, resource_name_, &tmp_geometry_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - untextured_mesh_geometry_registry_acquire failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        ret_loader = stl_ascii_loader_load(resource_fullpath_, &vertex_count, &vertices);
+        if(LOADER_SUCCESS != ret_loader) {
+            ret = resource_pipeline_result_convert_loader(ret_loader);
+            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=stl_load_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
+            goto cleanup;
+        }
+
+        ret_geometry = untextured_mesh_geometry_create_from_vertices(vertex_count, vertices, &geometry);
+        if(GEOMETRY_SUCCESS != ret_geometry) {
+            ret = resource_pipeline_result_convert_geometry(ret_geometry);
+            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
+            goto cleanup;
+        }
+
+        if(!size_mul_checked(vertex_count, sizeof(point_normal_vertex_t), &write_size)) {
+            ret = RESOURCE_PIPELINE_OVERFLOW;
+            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - vbo write size overflow failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_buffer_manager = vbo_manager_write(vbo_manager_, write_size, vertices, &tmp_buffer_range.allocation_info);
+        if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
+            ret = resource_pipeline_result_convert_buffer_manager(ret_buffer_manager);
+            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
+            goto cleanup;
+        }
+        vbo_written = true;
+        if(0 != (tmp_buffer_range.allocation_info.offset % sizeof(point_normal_vertex_t))) {
+            ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+            goto cleanup;
+        }
+        tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(point_normal_vertex_t);
+        tmp_buffer_range.draw_range.vertex_count = vertex_count;
+        general_allocator_free((void**)&vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
+
+        ret_resource_registry = untextured_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("untextured_mesh_geometry_pipeline_import_from_file(%s) - Failed to import untextured mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
+            goto cleanup;
+        }
     }
 
     *out_geometry_id_ = tmp_geometry_id;

@@ -19,7 +19,17 @@ typedef struct render_model_config render_model_config_t;
 typedef struct model_transform_tree model_transform_tree_t;
 typedef struct render_model render_model_t;
 
-render_model_result_t render_model_create(const render_model_config_t* config_, render_model_t** out_render_model_);
+typedef struct line_mesh line_mesh_t;
+typedef struct point_mesh point_mesh_t;
+typedef struct ui_mesh ui_mesh_t;
+typedef struct untextured_mesh untextured_mesh_t;
+
+render_model_result_t render_model_create(
+    size_t untextured_mesh_count_,
+    untextured_mesh_t** untextured_meshes_,
+    uint16_t** untextured_mesh_coordinate_ids_,
+    model_transform_tree_t** transform_tree_,
+    render_model_t** out_model_);
 
 void render_model_destroy(render_model_t** render_model_);
 
