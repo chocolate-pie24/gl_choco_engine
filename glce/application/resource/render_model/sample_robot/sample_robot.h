@@ -20,21 +20,30 @@ typedef struct render_model_config render_model_config_t;
 typedef struct renderer_frontend renderer_frontend_t;
 typedef struct model_transform_tree model_transform_tree_t;
 
-typedef struct sample_robot {
-    model_transform_tree_t* transform_tree;
-
-    // robot posture
+typedef struct {
     float link1_angle;
     float link2_angle;
+    float gripper_angle;
     float left_finger_angle;
     float right_finger_angle;
+} sample_robot_posture_t;
+
+typedef struct {
+    model_transform_tree_t* transform_tree;
+    sample_robot_posture_t posture;
 } sample_robot_t;
 
 application_result_t sample_robot_create(vec3f_t root_translate_, vec3f_t root_rotation_, renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, render_model_t** out_model_definition_, sample_robot_t** out_robot_);
 
 void sample_robot_destroy(sample_robot_t** robot_);
 
-// application_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_);
+application_result_t sample_robot_clone(const sample_robot_t* src_, sample_robot_t** out_robot_);
+
+application_result_t sample_robot_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_t* robot_);
+
+application_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_);
+
+void sample_robot_posture_default_get(sample_robot_posture_t* posture_);
 
 application_result_t sample_robot_dummy_config_loader(vec3f_t root_translate_, vec3f_t root_rotation_, render_model_config_t* out_config_);
 

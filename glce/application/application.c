@@ -126,6 +126,7 @@ typedef struct application_state {
     // Render model
     render_model_t* sample_robot_definition;
     sample_robot_t* sample_robot1;
+    sample_robot_t* sample_robot2;
 
     // Texture ID
     // uint16_t tex_id_rabbit;
@@ -292,9 +293,20 @@ application_result_t application_create(void) {
     tmp_state->diag_config.runtime_status_report = KEY_1;
     tmp_state->diag_config.validation_report = KEY_2;
 
+    // sample robot
     ret = sample_robot_create(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->renderer_frontend, fs_path_fullpath_get(tmp_state->asset_root), &tmp_state->sample_robot_definition, &tmp_state->sample_robot1);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret = sample_robot_clone(tmp_state->sample_robot1, &tmp_state->sample_robot2);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - sample_robot_clone failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret = sample_robot_placement_set(vec3f_initialize(150.0f, 0.0f, -1000.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->sample_robot2);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - sample_robot_placement_set failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -309,6 +321,9 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret && APPLICATION_DATA_CORRUPTED != ret) {
         if(NULL != tmp_state) {
+            if(NULL != tmp_state->sample_robot2) {
+                sample_robot_destroy(&tmp_state->sample_robot2);
+            }
             if(NULL != tmp_state->sample_robot1) {
                 sample_robot_destroy(&tmp_state->sample_robot1);
             }
@@ -349,6 +364,9 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_application_state->sample_robot2) {
+        sample_robot_destroy(&s_application_state->sample_robot2);
+    }
     if(NULL != s_application_state->sample_robot1) {
         sample_robot_destroy(&s_application_state->sample_robot1);
     }
@@ -509,6 +527,22 @@ application_result_t application_run(void) {
     // TODO: window NULLチェック
     // end temporary
     while(!s_application_state->window_should_close) {
+        s_application_state->sample_robot1->posture.gripper_angle += 0.1f;
+        if(s_application_state->sample_robot1->posture.gripper_angle >= 360.0f) {
+            s_application_state->sample_robot1->posture.gripper_angle = 0.0f;
+        }
+        s_application_state->sample_robot2->posture.link1_angle -= 0.1f;
+        if(s_application_state->sample_robot2->posture.link1_angle <= -90.0f) {
+            s_application_state->sample_robot2->posture.link1_angle = 0.0f;
+        }
+
+        if(APPLICATION_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot1->posture, s_application_state->sample_robot1)) {
+            ERROR_MESSAGE("sample_robot_posture_update failed.");
+        }
+        if(APPLICATION_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot2->posture, s_application_state->sample_robot2)) {
+            ERROR_MESSAGE("sample_robot_posture_update failed.");
+        }
+
         penguin_rotation_angle += 0.001f;
         mat4f_rot_z(penguin_rotation_angle, &penguin_rotation);
 
@@ -596,6 +630,19 @@ application_result_t application_run(void) {
             }
 
             ret_render_model = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(RENDER_MODEL_SUCCESS != ret_render_model) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+
+            ret_render_model = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
             if(RENDER_MODEL_SUCCESS != ret_render_model) {
                 ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
                 continue;

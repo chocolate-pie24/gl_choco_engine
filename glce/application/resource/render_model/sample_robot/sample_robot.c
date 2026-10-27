@@ -29,6 +29,7 @@ application_result_t sample_robot_create(vec3f_t root_translate_, vec3f_t root_r
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     sample_robot_t* tmp_robot = NULL;
+    sample_robot_posture_t default_posture = { 0 };
     model_transform_tree_t* tmp_transform_tree = NULL;
     render_model_t* tmp_model = NULL;
     render_model_config_t config;
@@ -65,10 +66,8 @@ application_result_t sample_robot_create(vec3f_t root_translate_, vec3f_t root_r
     }
     render_model_config_deinitialize(&config);
 
-    tmp_robot->left_finger_angle = 0.0f;
-    tmp_robot->link1_angle = 0.0f;
-    tmp_robot->link2_angle = 0.0f;
-    tmp_robot->right_finger_angle = 0.0f;
+    sample_robot_posture_default_get(&default_posture);
+    tmp_robot->posture = default_posture;
     tmp_robot->transform_tree = tmp_transform_tree;
     tmp_transform_tree = NULL;
 
@@ -102,9 +101,166 @@ void sample_robot_destroy(sample_robot_t** robot_) {
     general_allocator_free((void**)robot_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
-// application_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_) {
-//     return APPLICATION_SUCCESS;
-// }
+application_result_t sample_robot_clone(const sample_robot_t* src_, sample_robot_t** out_robot_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    render_model_result_t ret_render_model = RENDER_MODEL_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+
+    sample_robot_t* tmp_robot = NULL;
+    model_transform_tree_t* tmp_transform_tree = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_clone", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_clone", "out_robot_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "sample_robot_clone", "*out_robot_")
+
+    ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_robot);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = application_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("sample_robot_clone(%s) - general_allocator_allocate failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_model = model_transform_tree_clone(src_->transform_tree, &tmp_transform_tree);
+    if(RENDER_MODEL_SUCCESS != ret_render_model) {
+        ret = APPLICATION_RUNTIME_ERROR;    // TODO: 正式な実行結果コード変換
+        ERROR_MESSAGE("sample_robot_clone(%s) - model_transform_tree_clone failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    tmp_robot->posture = src_->posture;
+    tmp_robot->transform_tree = tmp_transform_tree;
+    tmp_transform_tree = NULL;
+
+    *out_robot_ = tmp_robot;
+    tmp_robot = NULL;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != tmp_transform_tree) {
+        model_transform_tree_destroy(&tmp_transform_tree);
+    }
+    if(NULL != tmp_robot) {
+        general_allocator_free((void**)&tmp_robot, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    return ret;
+}
+
+application_result_t sample_robot_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_t* robot_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    render_model_result_t ret_render_model = RENDER_MODEL_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_placement_set", "robot_")
+
+    // Base: Coordinate ID = 1
+    ret_render_model = model_transform_tree_rotation_set(robot_->transform_tree, 1, rotation_);
+    if(RENDER_MODEL_SUCCESS != ret_render_model) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_rotation_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_model = model_transform_tree_translate_set(robot_->transform_tree, 1, translate_);
+    if(RENDER_MODEL_SUCCESS != ret_render_model) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_translate_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+// NOTE: linkとcoordinate idのbindingはconfigを見ながら手動で書く
+// NOTE: 可動範囲等の調整はまだ行わない
+// TODO: 座標変換処理が途中で失敗した場合のrollback
+application_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    render_model_result_t ret_render_model = RENDER_MODEL_INVALID_ARGUMENT;
+
+    vec3f_t tmp_rotation = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_posture_update", "posture_")
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_posture_update", "robot_")
+
+    // | Coordinate ID | File                            | Model part                   | Local origin              | Motion axis |
+    // |---------------|---------------------------------|------------------------------|---------------------------|-------------|
+    // | 1             | `01_base_rotation_joint.stl`    | Base with support pedestal   | Base yaw center at origin | Z           |
+    // | 2             | `02_shoulder_link.stl`          | Link 1                       | Shoulder pitch hinge      | Y           |
+    // | 3             | `03_elbow_link.stl`             | Link 2                       | Elbow pitch hinge         | Y           |
+    // | 4             | `04_wrist_gripper_base.stl`     | Link 3 tip / gripper base    | Wrist roll center         | X           |
+    // | 5             | `05_left_finger.stl`            | Left finger: **one cuboid**  | Left hinge, on rear face  | Z           |
+    // | 6             | `06_right_finger.stl`           | Right finger: **one cuboid** | Right hinge, on rear face | Z           |
+
+    // Link1
+    tmp_rotation = vec3f_initialize(0.0f, posture_->link1_angle, 0.0f);
+    ret_render_model = model_transform_tree_rotation_set(robot_->transform_tree, 2, tmp_rotation);
+    if(RENDER_MODEL_SUCCESS != ret_render_model) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Link2
+    tmp_rotation = vec3f_initialize(0.0f, posture_->link2_angle, 0.0f);
+    ret_render_model = model_transform_tree_rotation_set(robot_->transform_tree, 3, tmp_rotation);
+    if(RENDER_MODEL_SUCCESS != ret_render_model) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Link3
+    tmp_rotation = vec3f_initialize(posture_->gripper_angle, 0.0f, 0.0f);
+    ret_render_model = model_transform_tree_rotation_set(robot_->transform_tree, 4, tmp_rotation);
+    if(RENDER_MODEL_SUCCESS != ret_render_model) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Left finger
+    tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->left_finger_angle);
+    ret_render_model = model_transform_tree_rotation_set(robot_->transform_tree, 5, tmp_rotation);
+    if(RENDER_MODEL_SUCCESS != ret_render_model) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Right finger
+    tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->right_finger_angle);
+    ret_render_model = model_transform_tree_rotation_set(robot_->transform_tree, 6, tmp_rotation);
+    if(RENDER_MODEL_SUCCESS != ret_render_model) {
+        ret = APPLICATION_RUNTIME_ERROR;
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+void sample_robot_posture_default_get(sample_robot_posture_t* posture_) {
+    if(NULL == posture_) {
+        return;
+    }
+    posture_->left_finger_angle = 0.0f;
+    posture_->gripper_angle = 0.0f;
+    posture_->link1_angle = 0.0f;
+    posture_->link2_angle = 0.0f;
+    posture_->right_finger_angle = 0.0f;
+}
 
 // NOTE: dummyの一時関数なので正式なエラー処理は一旦おいておく
 application_result_t sample_robot_dummy_config_loader(vec3f_t root_translate_, vec3f_t root_rotation_, render_model_config_t* out_config_) {
