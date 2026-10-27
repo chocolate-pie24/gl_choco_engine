@@ -317,3 +317,28 @@ application_result_t application_result_convert_renderer_backend(renderer_backen
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
+
+application_result_t application_result_convert_mesh(mesh_result_t result_) {
+    switch(result_) {
+    case MESH_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case MESH_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case MESH_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case MESH_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case MESH_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case MESH_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case MESH_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case MESH_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case MESH_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}

@@ -58,6 +58,10 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
+#include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
+#include "engine/systems/renderer/resources/render_model/core/render_model_types.h"
+#include "engine/systems/renderer/resources/render_model/render_model.h"
+
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
 
@@ -69,6 +73,8 @@
 #include "application/cameras/application_flight_camera.h"
 #include "application/renderer/application_renderer.h"
 #include "application/diagnostics/application_diagnostics.h"
+
+#include "application/resource/render_model/sample_robot/sample_robot.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -83,8 +89,9 @@ typedef struct application_state {
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
 
-    // 実行ファイルパス
+    // ファイルパス
     fs_path_t* executable_directory;
+    fs_path_t* asset_root;
 
     // Subsystem Allocator
     subsystem_allocator_t* subsystem_allocator;
@@ -114,6 +121,9 @@ typedef struct application_state {
     mat4x4f_t view_matrix;
     mat4x4f_t model_matrix;
     mat4x4f_t penguin_model_matrix;
+
+    // Render model
+    sample_robot_t* sample_robot;
 
     // Texture ID
     // uint16_t tex_id_rabbit;
@@ -157,7 +167,7 @@ static void renderer_frontend_config_initialize(renderer_frontend_config_t* conf
 static application_result_t untextured_mesh_import(application_state_t* state_);
 // static application_result_t ui_mesh_textures_import(application_state_t* state_);
 
-static application_result_t executable_directory_get(application_state_t* state_);
+static application_result_t directory_path_initialize(application_state_t* state_);
 
 application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
@@ -200,9 +210,9 @@ application_result_t application_create(void) {
     }
 
     // 実行ファイルパス取得
-    ret = executable_directory_get(tmp_state);
+    ret = directory_path_initialize(tmp_state);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - executable_directory_get failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - directory_path_initialize failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -280,6 +290,12 @@ application_result_t application_create(void) {
     tmp_state->diag_config.runtime_status_report = KEY_1;
     tmp_state->diag_config.validation_report = KEY_2;
 
+    ret = sample_robot_create(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->renderer_frontend, fs_path_fullpath_get(tmp_state->asset_root), &tmp_state->sample_robot);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
     application_diagnostics_status_report(tmp_state->subsystem_allocator);
 
     // commit
@@ -291,6 +307,9 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret && APPLICATION_DATA_CORRUPTED != ret) {
         if(NULL != tmp_state) {
+            if(NULL != tmp_state->sample_robot) {
+                sample_robot_destroy(&tmp_state->sample_robot);
+            }
             if(NULL != tmp_state->renderer_frontend) {
                 renderer_frontend_deinitialize(tmp_state->renderer_backend_context, tmp_state->renderer_frontend);
             }
@@ -325,6 +344,9 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_application_state->sample_robot) {
+        sample_robot_destroy(&s_application_state->sample_robot);
+    }
     if(NULL != s_application_state->renderer_frontend) {
         renderer_frontend_deinitialize(s_application_state->renderer_backend_context, s_application_state->renderer_frontend);
     }
@@ -360,6 +382,7 @@ application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
 
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+    render_model_result_t ret_render_model = RENDER_MODEL_INVALID_ARGUMENT;
 
     // penguin AABB
     // aabb_3d_t penguin_aabb = { 0 };
@@ -371,6 +394,10 @@ application_result_t application_run(void) {
     float penguin_rotation_angle = 0.0f;
     mat4x4f_t penguin_orientation = { 0 };
     mat4x4f_t penguin_rotation = { 0 };
+
+    mat4x4f_t tmp_model_matrix = { 0 };
+    untextured_mesh_t tmp_mesh = { 0 };
+    size_t tmp_mesh_count = 0;
 
     if(NULL == s_application_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -540,12 +567,32 @@ application_result_t application_run(void) {
         // }
 
         // STL描画
-        ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
-        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-            ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-            ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
+        ret_render_model = render_model_untextured_mesh_count_get(s_application_state->sample_robot->render_model, &tmp_mesh_count);
+        // UINT16_MAX検査はそのうち追加
+        if(RENDER_MODEL_SUCCESS != ret_render_model) {
+            ERROR_MESSAGE("application_run - render_model_untextured_mesh_count_get failed. continue...");
+            continue;
         }
+        for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
+            ret_render_model = render_model_untextured_mesh_render_info_get(s_application_state->sample_robot->render_model, i, &tmp_model_matrix, &tmp_mesh);
+            if(RENDER_MODEL_SUCCESS != ret_render_model) {
+                ERROR_MESSAGE("application_run - render_model_untextured_mesh_render_info_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+        }
+        // ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
+        // if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        //     ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        //     ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
+        //     goto cleanup;
+        // }
 
         platform_system_swap_buffers(s_application_state->platform_system);
         // end temporary
@@ -855,22 +902,46 @@ cleanup:
 //     return ret;
 // }
 
-static application_result_t executable_directory_get(application_state_t* state_) {
+static application_result_t directory_path_initialize(application_state_t* state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "executable_directory_get", "state_")
+    fs_path_t* executable_directory_path = NULL;
+    fs_path_t* asset_root_path = NULL;
 
-    ret_fs_path = fs_path_create_from_executable_directory(&state_->executable_directory);
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "directory_path_initialize", "state_")
+
+    ret_fs_path = fs_path_create_from_executable_directory(&executable_directory_path);
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = application_result_convert_fs_path(ret_fs_path);
-        ERROR_MESSAGE("executable_directory_get(%s) - fs_path_create_from_executable_directory failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("directory_path_initialize(%s) - fs_path_create_from_executable_directory failed.", application_result_to_str(ret));
         goto cleanup;
     }
+
+    ret_fs_path = fs_path_create(&asset_root_path, fs_path_fullpath_get(executable_directory_path), "../..", "assets", NULL);
+    if(FS_PATH_SUCCESS != ret_fs_path) {
+        ret = application_result_convert_fs_path(ret_fs_path);
+        ERROR_MESSAGE("directory_path_initialize(%s) - fs_path_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    state_->executable_directory = executable_directory_path;
+    state_->asset_root = asset_root_path;
+    executable_directory_path = NULL;
+    asset_root_path = NULL;
 
     ret = APPLICATION_SUCCESS;
 
 cleanup:
+    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != executable_directory_path) {
+        fs_path_destroy(&executable_directory_path);
+    }
+    if(NULL != asset_root_path) {
+        fs_path_destroy(&asset_root_path);
+    }
     return ret;
 }

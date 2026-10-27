@@ -35,16 +35,14 @@
 
 static application_result_t transform_tree_create_from_config(const render_model_config_t* config_, model_transform_tree_t** out_transform_tree_);
 
-application_result_t render_model_import(const render_model_config_t* config_, renderer_frontend_t* renderer_frontend_, const char* executable_directory_, render_model_t** out_model_) {
+application_result_t render_model_import(const render_model_config_t* config_, renderer_frontend_t* renderer_frontend_, const char* asset_root_path_,render_model_t** out_model_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
-    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
     render_model_result_t ret_render_model = RENDER_MODEL_INVALID_ARGUMENT;
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     render_model_t* tmp_model = NULL;
-    fs_path_t* fs_path = NULL;
 
     size_t tmp_untextured_mesh_count = 0;
     untextured_mesh_t* tmp_untextured_meshes = NULL;
@@ -52,12 +50,12 @@ application_result_t render_model_import(const render_model_config_t* config_, r
     model_transform_tree_t* tmp_transform_tree = NULL;
 
     size_t allocation_size = 0;
-    uint16_t tmp_geometry_id = 0;
-    uint16_t tmp_material_id = 0;
+    untextured_mesh_t tmp_mesh = { 0 };
+    bool model_created = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "render_model_import", "config_")
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "render_model_import", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "render_model_import", "executable_directory_")
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "render_model_import", "asset_root_path_")
     IF_ARG_NULL_GOTO_CLEANUP(out_model_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "render_model_import", "out_model_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_model_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "render_model_import", "*out_model_")
 
@@ -66,7 +64,7 @@ application_result_t render_model_import(const render_model_config_t* config_, r
         ERROR_MESSAGE("render_model_import(%s) - allocation size overflow.", application_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)tmp_untextured_meshes);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_untextured_meshes);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = application_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("render_model_import(%s) - general_allocator_allocate failed.", application_result_to_str(ret));
@@ -78,7 +76,7 @@ application_result_t render_model_import(const render_model_config_t* config_, r
         ERROR_MESSAGE("render_model_import(%s) - allocation size overflow.", application_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)tmp_untextured_mesh_coordinate_ids);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_untextured_mesh_coordinate_ids);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = application_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("render_model_import(%s) - general_allocator_allocate failed.", application_result_to_str(ret));
@@ -86,43 +84,18 @@ application_result_t render_model_import(const render_model_config_t* config_, r
     }
 
     for(size_t i = 0; i != config_->untextured_mesh_count; ++i) {
-        // TODO: configにextension追加, configのgeometry_subdirectoryはexecutable_directory_からの相対パスにするため../../を追加する
-        // TODO: geometry系でhelper functionに移す
-        // TODO: transaction設計
-
-        // geometry
-        ret_fs_path = fs_path_create(&fs_path, executable_directory_, choco_string_c_str(config_->untextured_mesh_configs[i].geometry_subdirectory), choco_string_c_str(config_->untextured_mesh_configs[i].geometry_resource_name), "stl");
-        if(FS_PATH_SUCCESS != ret_fs_path) {
-            ret = application_result_convert_fs_path(ret_fs_path);
-            ERROR_MESSAGE("untextured_mesh_import(%s) - fs_path_create failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret_renderer_frontend = renderer_frontend_untextured_mesh_geometry_import_from_file(renderer_frontend_, choco_string_c_str(config_->untextured_mesh_configs[i].geometry_resource_name), fs_path_fullpath_get(fs_path), &tmp_geometry_id);
+        ret_renderer_frontend = renderer_frontend_untextured_mesh_import(renderer_frontend_, &config_->untextured_mesh_configs[i], asset_root_path_, &tmp_mesh);
         if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
             ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-            ERROR_MESSAGE("untextured_mesh_import(%s) - renderer_frontend_untextured_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("render_model_import(%s) - renderer_frontend_untextured_mesh_import failed.", application_result_to_str(ret));
             goto cleanup;
         }
-        fs_path_destroy(&fs_path);
 
-        // material
-        ret_fs_path = fs_path_create(&fs_path, executable_directory_, choco_string_c_str(config_->untextured_mesh_configs[i].material_subdirectory), choco_string_c_str(config_->untextured_mesh_configs[i].material_resource_name), "untextured_mat");
-        if(FS_PATH_SUCCESS != ret_fs_path) {
-            ret = application_result_convert_fs_path(ret_fs_path);
-            ERROR_MESSAGE("untextured_mesh_import(%s) - fs_path_create failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret_renderer_frontend = renderer_frontend_untextured_mesh_material_import_from_file(renderer_frontend_, choco_string_c_str(config_->untextured_mesh_configs[i].material_resource_name), fs_path_fullpath_get(fs_path), &tmp_material_id);
-        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-            ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-            ERROR_MESSAGE("untextured_mesh_import(%s) - renderer_frontend_untextured_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        fs_path_destroy(&fs_path);
-
-        tmp_untextured_meshes[i].geometry_id = tmp_geometry_id;
-        tmp_untextured_meshes[i].material_id = tmp_material_id;
-        tmp_untextured_mesh_coordinate_ids[i] = config_->untextured_mesh_configs[i].coordinate_id;
+        tmp_untextured_meshes[i].geometry_id = tmp_mesh.geometry_id;
+        tmp_untextured_meshes[i].material_id = tmp_mesh.material_id;
+    }
+    for(size_t i = 0; i != config_->untextured_mesh_count; ++i) {
+        tmp_untextured_mesh_coordinate_ids[i] = config_->untextured_mesh_coordinate_ids[i];
     }
 
     ret = transform_tree_create_from_config(config_, &tmp_transform_tree);
@@ -139,12 +112,30 @@ application_result_t render_model_import(const render_model_config_t* config_, r
         ERROR_MESSAGE("untextured_mesh_import(%s) - render_model_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
+    model_created = true;
 
     *out_model_ = tmp_model;
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    // TODO: cleanup, rollback
+    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
+        return ret;
+    }
+    if(model_created) {
+        if(NULL != tmp_model) {
+            render_model_destroy(&tmp_model);
+        }
+    } else {
+        if(NULL != tmp_transform_tree) {
+            model_transform_tree_destroy(&tmp_transform_tree);
+        }
+        if(NULL != tmp_untextured_mesh_coordinate_ids) {
+            general_allocator_free((void**)&tmp_untextured_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        }
+        if(NULL != tmp_untextured_meshes) {
+            general_allocator_free((void**)&tmp_untextured_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        }
+    }
     return ret;
 }
 

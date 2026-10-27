@@ -33,6 +33,10 @@ render_model_result_t render_model_create(
 
 void render_model_destroy(render_model_t** render_model_);
 
+render_model_result_t render_model_untextured_mesh_render_info_get(const render_model_t* render_model_, uint16_t untextured_mesh_index_, mat4x4f_t* out_model_matrix_, untextured_mesh_t* out_mesh_);
+
+render_model_result_t render_model_untextured_mesh_count_get(const render_model_t* render_model_, size_t* out_count_);
+
 #ifdef __cplusplus
 }
 #endif

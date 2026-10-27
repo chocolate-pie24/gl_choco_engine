@@ -38,7 +38,7 @@ struct application_flight_camera {
 static flight_camera_key_bind_t s_default_keybinds[FLIGHT_CAMERA_COMMAND_MAX];
 static const float s_default_fovy = 45.0f;
 static const float s_default_near_clip = 0.1f;
-static const float s_default_far_clip = 50.0f;
+static const float s_default_far_clip = 1000.0f;
 
 static void default_keybinds_initialize(void);
 
