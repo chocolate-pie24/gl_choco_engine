@@ -13,14 +13,8 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/containers/choco_string.h"
 #include "engine/containers/ring_queue.h"
 
-#include "engine/io_utils/fs_path.h"
-
-#include "engine/systems/renderer/resources/meshes/line_mesh.h"
-#include "engine/systems/renderer/resources/meshes/point_mesh.h"
-#include "engine/systems/renderer/resources/meshes/ui_mesh.h"
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 
 #include "engine/systems/renderer/resources/render_model/core/render_model_types.h"

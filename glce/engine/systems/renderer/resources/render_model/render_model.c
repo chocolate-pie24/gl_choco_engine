@@ -5,15 +5,11 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdalign.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
-#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
-
-#include "engine/containers/ring_queue.h"
 
 #include "engine/systems/renderer/resources/render_model/core/render_model_types.h"
 #include "engine/systems/renderer/resources/render_model/core/render_model_err_utils.h"
@@ -135,8 +131,6 @@ cleanup:
 
 render_model_result_t render_model_untextured_mesh_count_get(const render_model_t* render_model_, size_t* out_count_) {
     render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
-
-    mat4x4f_t tmp_model_matrix = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(render_model_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_untextured_mesh_count_get", "render_model_")
     IF_ARG_NULL_GOTO_CLEANUP(out_count_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_untextured_mesh_count_get", "out_count_")

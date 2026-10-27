@@ -9,8 +9,6 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/containers/choco_string.h"
-
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 #include "engine/systems/renderer/resources/render_model/core/render_model_types.h"
 #include "engine/systems/renderer/resources/render_model/config/render_model_config.h"
@@ -61,6 +59,7 @@ application_result_t sample_robot_create(vec3f_t root_translate_, vec3f_t root_r
         ERROR_MESSAGE("sample_robot_create(%s) - render_model_import failed.", application_result_to_str(ret));
         goto cleanup;
     }
+    render_model_config_deinitialize(&config);
 
     tmp_robot->posture_dirty = true;
     tmp_robot->posture.left_finger_angle = 0.0f;
@@ -91,6 +90,7 @@ void sample_robot_destroy(sample_robot_t** robot_) {
         return;
     }
     render_model_destroy(&(*robot_)->render_model);
+    general_allocator_free((void**)robot_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
 // application_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_) {
