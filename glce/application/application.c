@@ -60,6 +60,7 @@
 
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 #include "engine/systems/renderer/resources/render_model/core/render_model_types.h"
+#include "engine/systems/renderer/resources/render_model/model_transform_tree.h"
 #include "engine/systems/renderer/resources/render_model/render_model.h"
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
@@ -123,7 +124,8 @@ typedef struct application_state {
     mat4x4f_t penguin_model_matrix;
 
     // Render model
-    sample_robot_t* sample_robot;
+    render_model_t* sample_robot_definition;
+    sample_robot_t* sample_robot1;
 
     // Texture ID
     // uint16_t tex_id_rabbit;
@@ -290,7 +292,7 @@ application_result_t application_create(void) {
     tmp_state->diag_config.runtime_status_report = KEY_1;
     tmp_state->diag_config.validation_report = KEY_2;
 
-    ret = sample_robot_create(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->renderer_frontend, fs_path_fullpath_get(tmp_state->asset_root), &tmp_state->sample_robot);
+    ret = sample_robot_create(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->renderer_frontend, fs_path_fullpath_get(tmp_state->asset_root), &tmp_state->sample_robot_definition, &tmp_state->sample_robot1);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
         goto cleanup;
@@ -307,8 +309,11 @@ application_result_t application_create(void) {
 cleanup:
     if(APPLICATION_SUCCESS != ret && APPLICATION_DATA_CORRUPTED != ret) {
         if(NULL != tmp_state) {
-            if(NULL != tmp_state->sample_robot) {
-                sample_robot_destroy(&tmp_state->sample_robot);
+            if(NULL != tmp_state->sample_robot1) {
+                sample_robot_destroy(&tmp_state->sample_robot1);
+            }
+            if(NULL != tmp_state->sample_robot_definition) {
+                render_model_destroy(&tmp_state->sample_robot_definition);
             }
             if(NULL != tmp_state->renderer_frontend) {
                 renderer_frontend_deinitialize(tmp_state->renderer_backend_context, tmp_state->renderer_frontend);
@@ -344,8 +349,11 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
-    if(NULL != s_application_state->sample_robot) {
-        sample_robot_destroy(&s_application_state->sample_robot);
+    if(NULL != s_application_state->sample_robot1) {
+        sample_robot_destroy(&s_application_state->sample_robot1);
+    }
+    if(NULL != s_application_state->sample_robot_definition) {
+        render_model_destroy(&s_application_state->sample_robot_definition);
     }
     if(NULL != s_application_state->renderer_frontend) {
         renderer_frontend_deinitialize(s_application_state->renderer_backend_context, s_application_state->renderer_frontend);
@@ -398,6 +406,7 @@ application_result_t application_run(void) {
     mat4x4f_t tmp_model_matrix = { 0 };
     untextured_mesh_t tmp_mesh = { 0 };
     size_t tmp_mesh_count = 0;
+    uint16_t tmp_coordinate_id = 0;
 
     if(NULL == s_application_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -567,16 +576,28 @@ application_result_t application_run(void) {
         // }
 
         // STL描画
-        ret_render_model = render_model_untextured_mesh_count_get(s_application_state->sample_robot->render_model, &tmp_mesh_count);
+        ret_render_model = render_model_untextured_mesh_count_get(s_application_state->sample_robot_definition, &tmp_mesh_count);
         // UINT16_MAX検査はそのうち追加
         if(RENDER_MODEL_SUCCESS != ret_render_model) {
             ERROR_MESSAGE("application_run - render_model_untextured_mesh_count_get failed. continue...");
             continue;
         }
         for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
-            ret_render_model = render_model_untextured_mesh_render_info_get(s_application_state->sample_robot->render_model, i, &tmp_model_matrix, &tmp_mesh);
+            ret_render_model = render_model_untextured_mesh_mesh_get(s_application_state->sample_robot_definition, i, &tmp_mesh);
             if(RENDER_MODEL_SUCCESS != ret_render_model) {
-                ERROR_MESSAGE("application_run - render_model_untextured_mesh_render_info_get failed. continue...");
+                ERROR_MESSAGE("application_run - render_model_untextured_mesh_mesh_get failed. continue...");
+                continue;
+            }
+
+            ret_render_model = render_model_untextured_mesh_coordinate_id_get(s_application_state->sample_robot_definition, i, &tmp_coordinate_id);
+            if(RENDER_MODEL_SUCCESS != ret_render_model) {
+                ERROR_MESSAGE("application_run - render_model_untextured_mesh_mesh_get failed. continue...");
+                continue;
+            }
+
+            ret_render_model = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(RENDER_MODEL_SUCCESS != ret_render_model) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
                 continue;
             }
 

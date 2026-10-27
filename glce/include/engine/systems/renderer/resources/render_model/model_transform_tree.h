@@ -125,6 +125,8 @@ render_model_result_t model_transform_tree_create(uint16_t coordinate_id_, model
  */
 void model_transform_tree_destroy(model_transform_tree_t** transform_tree_);
 
+render_model_result_t model_transform_tree_clone(model_transform_tree_t* src_, model_transform_tree_t** out_transform_tree);
+
 /**
  * @brief 指定されたParent Coordinateの下にChild Coordinateを追加する
  *

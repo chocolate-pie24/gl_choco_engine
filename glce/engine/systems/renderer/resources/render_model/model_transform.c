@@ -207,6 +207,82 @@ void model_transform_tree_destroy(model_transform_tree_t** transform_tree_) {
     general_allocator_free((void**)transform_tree_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
+render_model_result_t model_transform_tree_clone(model_transform_tree_t* src_, model_transform_tree_t** out_transform_tree) {
+    render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
+
+    model_transform_tree_t* tmp_tree = NULL;
+    const model_transform_node_t* node = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_clone", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_clone", "out_transform_tree")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree, ret, RENDER_MODEL_BAD_OPERATION, render_model_result_to_str(RENDER_MODEL_BAD_OPERATION), "model_transform_tree_clone", "*out_transform_tree")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!model_transform_tree_is_valid(src_)) {
+        ret = RENDER_MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - Precondition validation failed for 'src_'.", render_model_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    ret = model_transform_tree_create(src_->root->coordinate_id, &tmp_tree);
+    if(RENDER_MODEL_SUCCESS != ret) {
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_create failed.", render_model_result_to_str(ret));
+        goto cleanup;
+    }
+    ret = model_transform_tree_translate_set(tmp_tree, src_->root->coordinate_id, src_->root->translate);
+    if(RENDER_MODEL_SUCCESS != ret) {
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_translate_set failed.", render_model_result_to_str(ret));
+        goto cleanup;
+    }
+    ret = model_transform_tree_rotation_set(tmp_tree, src_->root->coordinate_id, src_->root->rotation);
+    if(RENDER_MODEL_SUCCESS != ret) {
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_rotation_set failed.", render_model_result_to_str(ret));
+        goto cleanup;
+    }
+
+    node = src_->root;
+    while(NULL != node) {
+        if(node != src_->root) {
+            ret = model_transform_tree_add_child(tmp_tree, node->parent->coordinate_id, node->coordinate_id, node->translate, node->rotation);
+            if(RENDER_MODEL_SUCCESS != ret) {
+                ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_add_child failed.", render_model_result_to_str(ret));
+                goto cleanup;
+            }
+        }
+        if(NULL != node->child) {
+            node = node->child;
+            continue;
+        }
+        while(node != src_->root && NULL == node->next) {
+            node = node->parent;
+        }
+        if(node == src_->root) {
+            break;
+        }
+        node = node->next;
+    }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!model_transform_tree_is_valid(tmp_tree)) {
+        ret = RENDER_MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - Postcondition validation failed for 'tmp_tree'.", render_model_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    *out_transform_tree = tmp_tree;
+    tmp_tree = NULL;
+
+    ret = RENDER_MODEL_SUCCESS;
+
+cleanup:
+    if(RENDER_MODEL_DATA_CORRUPTED == ret || RENDER_MODEL_SUCCESS == ret) {
+        return ret;
+    }
+    model_transform_tree_destroy(&tmp_tree);
+    return ret;
+}
+
 /*
  * API-specific Validation Policy
  *

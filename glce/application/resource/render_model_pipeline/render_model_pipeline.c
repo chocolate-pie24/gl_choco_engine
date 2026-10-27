@@ -29,7 +29,7 @@
 
 static application_result_t transform_tree_create_from_config(const render_model_config_t* config_, model_transform_tree_t** out_transform_tree_);
 
-application_result_t render_model_import(const render_model_config_t* config_, renderer_frontend_t* renderer_frontend_, const char* asset_root_path_,render_model_t** out_model_) {
+application_result_t render_model_import(const render_model_config_t* config_, renderer_frontend_t* renderer_frontend_, const char* asset_root_path_,render_model_t** out_model_, model_transform_tree_t** out_transform_tree_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -52,6 +52,8 @@ application_result_t render_model_import(const render_model_config_t* config_, r
     IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "render_model_import", "asset_root_path_")
     IF_ARG_NULL_GOTO_CLEANUP(out_model_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "render_model_import", "out_model_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_model_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "render_model_import", "*out_model_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "render_model_import", "out_transform_tree_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "render_model_import", "*out_transform_tree_")
 
     if(!size_mul_checked(sizeof(untextured_mesh_t), config_->untextured_mesh_count, &allocation_size)) {
         ret = APPLICATION_OVERFLOW;
@@ -100,7 +102,7 @@ application_result_t render_model_import(const render_model_config_t* config_, r
 
     tmp_untextured_mesh_count = config_->untextured_mesh_count;
 
-    ret_render_model = render_model_create(tmp_untextured_mesh_count, &tmp_untextured_meshes, &tmp_untextured_mesh_coordinate_ids, &tmp_transform_tree, &tmp_model);
+    ret_render_model = render_model_create(tmp_untextured_mesh_count, &tmp_untextured_meshes, &tmp_untextured_mesh_coordinate_ids, &tmp_model);
     if(RENDER_MODEL_SUCCESS != ret_render_model) {
         ret = APPLICATION_RUNTIME_ERROR;    // TODO: 正式な実行結果コード返還が必要だが、render_model自体をapplication側に移すことも想定しているため、とりあえず置いてく
         ERROR_MESSAGE("untextured_mesh_import(%s) - render_model_create failed.", application_result_to_str(ret));
@@ -109,6 +111,10 @@ application_result_t render_model_import(const render_model_config_t* config_, r
     model_created = true;
 
     *out_model_ = tmp_model;
+    *out_transform_tree_ = tmp_transform_tree;
+    tmp_transform_tree = NULL;
+    tmp_model = NULL;
+
     ret = APPLICATION_SUCCESS;
 
 cleanup:

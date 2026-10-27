@@ -12,6 +12,7 @@
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 #include "engine/systems/renderer/resources/render_model/core/render_model_types.h"
 #include "engine/systems/renderer/resources/render_model/config/render_model_config.h"
+#include "engine/systems/renderer/resources/render_model/model_transform_tree.h"
 #include "engine/systems/renderer/resources/render_model/render_model.h"
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
@@ -22,17 +23,20 @@
 
 #include "application/resource/render_model_pipeline/render_model_pipeline.h"
 
-application_result_t sample_robot_create(vec3f_t root_translate_, vec3f_t root_rotation_, renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, sample_robot_t** out_robot_) {
+application_result_t sample_robot_create(vec3f_t root_translate_, vec3f_t root_rotation_, renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, render_model_t** out_model_definition_, sample_robot_t** out_robot_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     sample_robot_t* tmp_robot = NULL;
+    model_transform_tree_t* tmp_transform_tree = NULL;
     render_model_t* tmp_model = NULL;
     render_model_config_t config;
 
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_create", "renderer_frontend_")
     IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_create", "asset_root_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_model_definition_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_create", "out_model_definition_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_model_definition_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "sample_robot_create", "*out_model_definition_")
     IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_create", "out_robot_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "sample_robot_create", "*out_robot_")
     if('\0' == asset_root_path_[0]) {
@@ -54,22 +58,24 @@ application_result_t sample_robot_create(vec3f_t root_translate_, vec3f_t root_r
         goto cleanup;
     }
 
-    ret = render_model_import(&config, renderer_frontend_, asset_root_path_, &tmp_model);
+    ret = render_model_import(&config, renderer_frontend_, asset_root_path_, &tmp_model, &tmp_transform_tree);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("sample_robot_create(%s) - render_model_import failed.", application_result_to_str(ret));
         goto cleanup;
     }
     render_model_config_deinitialize(&config);
 
-    tmp_robot->posture_dirty = true;
-    tmp_robot->posture.left_finger_angle = 0.0f;
-    tmp_robot->posture.link1_angle = 0.0f;
-    tmp_robot->posture.link2_angle = 0.0f;
-    tmp_robot->posture.right_finger_angle = 0.0f;
-    tmp_robot->render_model = tmp_model;
-    tmp_model = NULL;
+    tmp_robot->left_finger_angle = 0.0f;
+    tmp_robot->link1_angle = 0.0f;
+    tmp_robot->link2_angle = 0.0f;
+    tmp_robot->right_finger_angle = 0.0f;
+    tmp_robot->transform_tree = tmp_transform_tree;
+    tmp_transform_tree = NULL;
 
+    *out_model_definition_ = tmp_model;
     *out_robot_ = tmp_robot;
+    tmp_model = NULL;
+    tmp_robot = NULL;
 
     ret = APPLICATION_SUCCESS;
 
@@ -80,6 +86,9 @@ cleanup:
     if(NULL != tmp_model) {
         render_model_destroy(&tmp_model);
     }
+    if(NULL != tmp_transform_tree) {
+        model_transform_tree_destroy(&tmp_transform_tree);
+    }
     render_model_config_deinitialize(&config);
     general_allocator_free((void**)&tmp_robot, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     return ret;
@@ -89,7 +98,7 @@ void sample_robot_destroy(sample_robot_t** robot_) {
     if(NULL == robot_ || NULL == *robot_) {
         return;
     }
-    render_model_destroy(&(*robot_)->render_model);
+    model_transform_tree_destroy(&(*robot_)->transform_tree);
     general_allocator_free((void**)robot_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
