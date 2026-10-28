@@ -23,9 +23,11 @@ typedef struct point_mesh point_mesh_t;
 typedef struct ui_mesh ui_mesh_t;
 typedef struct untextured_mesh untextured_mesh_t;
 
+typedef struct renderer_frontend renderer_frontend_t;
+
 render_model_result_t render_model_create(size_t untextured_mesh_count_, untextured_mesh_t** untextured_meshes_, uint16_t** untextured_mesh_coordinate_ids_, render_model_t** out_model_);
 
-void render_model_destroy(render_model_t** render_model_);
+render_model_result_t render_model_destroy(renderer_frontend_t* renderer_frontend_, render_model_t** render_model_);
 
 render_model_result_t render_model_untextured_mesh_mesh_get(const render_model_t* render_model_, uint16_t untextured_mesh_index_, untextured_mesh_t* out_mesh_);
 

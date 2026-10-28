@@ -83,7 +83,11 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_model) {
-        render_model_destroy(&tmp_model);
+        if(RENDER_MODEL_SUCCESS != render_model_destroy(renderer_frontend_, &tmp_model)) {
+            ret = APPLICATION_DATA_CORRUPTED;
+            ERROR_MESSAGE("sample_robot_create(%s) - render_model_destroy failed.", application_result_to_str(ret));
+            return ret;
+        }
     }
     if(NULL != tmp_transform_tree) {
         model_transform_tree_destroy(&tmp_transform_tree);

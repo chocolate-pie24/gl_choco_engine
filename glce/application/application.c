@@ -319,38 +319,43 @@ application_result_t application_create(void) {
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    if(APPLICATION_SUCCESS != ret && APPLICATION_DATA_CORRUPTED != ret) {
-        if(NULL != tmp_state) {
-            if(NULL != tmp_state->sample_robot2) {
-                sample_robot_destroy(&tmp_state->sample_robot2);
-            }
-            if(NULL != tmp_state->sample_robot1) {
-                sample_robot_destroy(&tmp_state->sample_robot1);
-            }
-            if(NULL != tmp_state->sample_robot_definition) {
-                render_model_destroy(&tmp_state->sample_robot_definition);
-            }
-            if(NULL != tmp_state->renderer_frontend) {
-                renderer_frontend_deinitialize(tmp_state->renderer_backend_context, tmp_state->renderer_frontend);
-            }
-            if(NULL != tmp_state->renderer_backend_context) {
-                renderer_backend_deinitialize(tmp_state->renderer_backend_context);
-            }
-            if(NULL != tmp_state->flight_camera) {
-                application_flight_camera_deinitialize(tmp_state->flight_camera);
-            }
-            if(NULL != tmp_state->event_system) {
-                event_system_deinitialize(tmp_state->event_system);
-            }
-            if(NULL != tmp_state->platform_system) {
-                platform_system_deinitialize(tmp_state->platform_system);
-            }
-            if(NULL != tmp_state->executable_directory) {
-                fs_path_destroy(&tmp_state->executable_directory);
-            }
-            subsystem_allocator_destroy(&tmp_state->subsystem_allocator);
-            general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS) {
+        return ret;
+    }
+    if(NULL != tmp_state) {
+        if(NULL != tmp_state->sample_robot2) {
+            sample_robot_destroy(&tmp_state->sample_robot2);
         }
+        if(NULL != tmp_state->sample_robot1) {
+            sample_robot_destroy(&tmp_state->sample_robot1);
+        }
+        if(NULL != tmp_state->sample_robot_definition) {
+            if(RENDER_MODEL_SUCCESS != render_model_destroy(tmp_state->renderer_frontend, &tmp_state->sample_robot_definition)) {
+                ret = APPLICATION_DATA_CORRUPTED;
+                ERROR_MESSAGE("application_create(%s) - render_model_destroy failed.", application_result_to_str(ret));
+                return ret;
+            }
+        }
+        if(NULL != tmp_state->renderer_frontend) {
+            renderer_frontend_deinitialize(tmp_state->renderer_backend_context, tmp_state->renderer_frontend);
+        }
+        if(NULL != tmp_state->renderer_backend_context) {
+            renderer_backend_deinitialize(tmp_state->renderer_backend_context);
+        }
+        if(NULL != tmp_state->flight_camera) {
+            application_flight_camera_deinitialize(tmp_state->flight_camera);
+        }
+        if(NULL != tmp_state->event_system) {
+            event_system_deinitialize(tmp_state->event_system);
+        }
+        if(NULL != tmp_state->platform_system) {
+            platform_system_deinitialize(tmp_state->platform_system);
+        }
+        if(NULL != tmp_state->executable_directory) {
+            fs_path_destroy(&tmp_state->executable_directory);
+        }
+        subsystem_allocator_destroy(&tmp_state->subsystem_allocator);
+        general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     }
 
     return ret;
@@ -371,7 +376,10 @@ void application_destroy(void) {
         sample_robot_destroy(&s_application_state->sample_robot1);
     }
     if(NULL != s_application_state->sample_robot_definition) {
-        render_model_destroy(&s_application_state->sample_robot_definition);
+        if(RENDER_MODEL_SUCCESS != render_model_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_definition)) {
+            ERROR_MESSAGE("application_destroy(%s) - render_model_destroy failed.", application_result_to_str(APPLICATION_DATA_CORRUPTED));
+            return;
+        }
     }
     if(NULL != s_application_state->renderer_frontend) {
         renderer_frontend_deinitialize(s_application_state->renderer_backend_context, s_application_state->renderer_frontend);

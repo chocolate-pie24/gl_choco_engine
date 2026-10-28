@@ -16,6 +16,9 @@
 #include "engine/systems/renderer/resources/render_model/config/render_model_config.h"
 #include "engine/systems/renderer/resources/render_model/model_transform_tree.h"
 
+#include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
+#include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
+
 typedef struct render_model {
     size_t line_mesh_count;
     size_t point_mesh_count;
@@ -74,13 +77,32 @@ cleanup:
     return ret;
 }
 
-void render_model_destroy(render_model_t** render_model_) {
-    if(NULL == render_model_ || NULL == *render_model_) {
-        return;
+render_model_result_t render_model_destroy(renderer_frontend_t* renderer_frontend_, render_model_t** render_model_) {
+    render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
+
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_destroy", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_model_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_destroy", "render_model_")
+    IF_ARG_NULL_GOTO_CLEANUP(*render_model_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "render_model_destroy", "*render_model_")
+
+    for(size_t i = 0; i != (*render_model_)->untextured_mesh_count; ++i) {
+        ret_renderer_frontend = renderer_frontend_untextured_mesh_release(renderer_frontend_, &(*render_model_)->untextured_meshes[i]);
+        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+            ret = RENDER_MODEL_DATA_CORRUPTED;
+            ERROR_MESSAGE("render_model_destroy(%s) - renderer_frontend_untextured_mesh_release failed.", render_model_result_to_str(ret));
+            goto cleanup;
+        }
     }
+
     general_allocator_free((void**)&(*render_model_)->untextured_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     general_allocator_free((void**)&(*render_model_)->untextured_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     general_allocator_free((void**)render_model_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+
+    ret = RENDER_MODEL_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
 render_model_result_t render_model_untextured_mesh_mesh_get(const render_model_t* render_model_, uint16_t untextured_mesh_index_, untextured_mesh_t* out_mesh_) {
