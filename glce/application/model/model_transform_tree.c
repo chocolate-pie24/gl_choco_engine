@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "engine/systems/renderer/resources/render_model/model_transform_tree.h"
+#include "application/model/model_transform_tree.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -13,8 +13,8 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/systems/renderer/resources/render_model/core/render_model_types.h"
-#include "engine/systems/renderer/resources/render_model/core/render_model_err_utils.h"
+#include "application/model/core/model_types.h"
+#include "application/model/core/model_err_utils.h"
 
 /*
  * Module Internal Contract
@@ -83,8 +83,8 @@ static bool is_valid_shallow(const model_transform_tree_t* transform_tree_);
  * - DATA_CORRUPTEDの場合は、破損した可能性のあるStateを使用した
  *   Cleanupを行わない。
  */
-render_model_result_t model_transform_tree_create(uint16_t coordinate_id_, model_transform_tree_t** out_transform_tree_) {
-    render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
+model_result_t model_transform_tree_create(uint16_t coordinate_id_, model_transform_tree_t** out_transform_tree_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -92,21 +92,21 @@ render_model_result_t model_transform_tree_create(uint16_t coordinate_id_, model
     model_transform_node_t* tmp_root_node = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_create", "out_transform_tree_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree_, ret, RENDER_MODEL_BAD_OPERATION, render_model_result_to_str(RENDER_MODEL_BAD_OPERATION), "model_transform_tree_create", "*out_transform_tree_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_transform_tree_create", "out_transform_tree_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree_, ret, MODEL_BAD_OPERATION, model_result_to_str(MODEL_BAD_OPERATION), "model_transform_tree_create", "*out_transform_tree_")
 
     // Prepare.
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_tree_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_tree);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = render_model_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("model_transform_tree_create(%s) - general_allocator_allocate failed.", render_model_result_to_str(ret));
+        ret = model_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("model_transform_tree_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
         goto cleanup;
     }
 
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_root_node);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = render_model_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("model_transform_tree_create(%s) - general_allocator_allocate failed.", render_model_result_to_str(ret));
+        ret = model_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("model_transform_tree_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
         goto cleanup;
     }
     tmp_root_node->child = NULL;
@@ -122,8 +122,8 @@ render_model_result_t model_transform_tree_create(uint16_t coordinate_id_, model
     // Result validation.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(tmp_tree)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_create(%s) - Result validation failed for 'tmp_tree'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_create(%s) - Result validation failed for 'tmp_tree'.", model_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -132,10 +132,10 @@ render_model_result_t model_transform_tree_create(uint16_t coordinate_id_, model
     tmp_root_node = NULL;
     tmp_tree = NULL;
 
-    ret = RENDER_MODEL_SUCCESS;
+    ret = MODEL_SUCCESS;
 
 cleanup:
-    if(RENDER_MODEL_DATA_CORRUPTED != ret) {
+    if(MODEL_DATA_CORRUPTED != ret) {
         if(NULL != tmp_root_node) {
             general_allocator_free((void**)&tmp_root_node, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
         }
@@ -178,7 +178,7 @@ void model_transform_tree_destroy(model_transform_tree_t** transform_tree_) {
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(*transform_tree_)) {
-        ERROR_MESSAGE("model_transform_tree_destroy(%s) - Preconditions validation failed for '*transform_tree_'.", render_model_result_to_str(RENDER_MODEL_DATA_CORRUPTED));
+        ERROR_MESSAGE("model_transform_tree_destroy(%s) - Preconditions validation failed for '*transform_tree_'.", model_result_to_str(MODEL_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -207,36 +207,36 @@ void model_transform_tree_destroy(model_transform_tree_t** transform_tree_) {
     general_allocator_free((void**)transform_tree_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
-render_model_result_t model_transform_tree_clone(model_transform_tree_t* src_, model_transform_tree_t** out_transform_tree) {
-    render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
+model_result_t model_transform_tree_clone(model_transform_tree_t* src_, model_transform_tree_t** out_transform_tree) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
 
     model_transform_tree_t* tmp_tree = NULL;
     const model_transform_node_t* node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_clone", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_clone", "out_transform_tree")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree, ret, RENDER_MODEL_BAD_OPERATION, render_model_result_to_str(RENDER_MODEL_BAD_OPERATION), "model_transform_tree_clone", "*out_transform_tree")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_transform_tree_clone", "src_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_transform_tree_clone", "out_transform_tree")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree, ret, MODEL_BAD_OPERATION, model_result_to_str(MODEL_BAD_OPERATION), "model_transform_tree_clone", "*out_transform_tree")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(src_)) {
-        ret = RENDER_MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_transform_tree_clone(%s) - Precondition validation failed for 'src_'.", render_model_result_to_str(ret));
+        ret = MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - Precondition validation failed for 'src_'.", model_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret = model_transform_tree_create(src_->root->coordinate_id, &tmp_tree);
-    if(RENDER_MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_create failed.", render_model_result_to_str(ret));
+    if(MODEL_SUCCESS != ret) {
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_create failed.", model_result_to_str(ret));
         goto cleanup;
     }
     ret = model_transform_tree_translate_set(tmp_tree, src_->root->coordinate_id, src_->root->translate);
-    if(RENDER_MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_translate_set failed.", render_model_result_to_str(ret));
+    if(MODEL_SUCCESS != ret) {
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_translate_set failed.", model_result_to_str(ret));
         goto cleanup;
     }
     ret = model_transform_tree_rotation_set(tmp_tree, src_->root->coordinate_id, src_->root->rotation);
-    if(RENDER_MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_rotation_set failed.", render_model_result_to_str(ret));
+    if(MODEL_SUCCESS != ret) {
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_rotation_set failed.", model_result_to_str(ret));
         goto cleanup;
     }
 
@@ -244,8 +244,8 @@ render_model_result_t model_transform_tree_clone(model_transform_tree_t* src_, m
     while(NULL != node) {
         if(node != src_->root) {
             ret = model_transform_tree_add_child(tmp_tree, node->parent->coordinate_id, node->coordinate_id, node->translate, node->rotation);
-            if(RENDER_MODEL_SUCCESS != ret) {
-                ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_add_child failed.", render_model_result_to_str(ret));
+            if(MODEL_SUCCESS != ret) {
+                ERROR_MESSAGE("model_transform_tree_clone(%s) - model_transform_tree_add_child failed.", model_result_to_str(ret));
                 goto cleanup;
             }
         }
@@ -264,8 +264,8 @@ render_model_result_t model_transform_tree_clone(model_transform_tree_t* src_, m
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(tmp_tree)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_clone(%s) - Postcondition validation failed for 'tmp_tree'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_clone(%s) - Postcondition validation failed for 'tmp_tree'.", model_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -273,10 +273,10 @@ render_model_result_t model_transform_tree_clone(model_transform_tree_t* src_, m
     *out_transform_tree = tmp_tree;
     tmp_tree = NULL;
 
-    ret = RENDER_MODEL_SUCCESS;
+    ret = MODEL_SUCCESS;
 
 cleanup:
-    if(RENDER_MODEL_DATA_CORRUPTED == ret || RENDER_MODEL_SUCCESS == ret) {
+    if(MODEL_DATA_CORRUPTED == ret || MODEL_SUCCESS == ret) {
         return ret;
     }
     model_transform_tree_destroy(&tmp_tree);
@@ -312,8 +312,8 @@ cleanup:
  * - DATA_CORRUPTEDの場合は、破損した可能性のあるStateに対する
  *   Cleanupを行わない。
  */
-render_model_result_t model_transform_tree_add_child(model_transform_tree_t* transform_tree_, uint16_t parent_coordinate_id_, uint16_t coordinate_id_, vec3f_t translate_, vec3f_t rotation_) {
-    render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
+model_result_t model_transform_tree_add_child(model_transform_tree_t* transform_tree_, uint16_t parent_coordinate_id_, uint16_t coordinate_id_, vec3f_t translate_, vec3f_t rotation_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -322,37 +322,37 @@ render_model_result_t model_transform_tree_add_child(model_transform_tree_t* tra
     model_transform_node_t* next = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_add_child", "transform_tree_")
+    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_transform_tree_add_child", "transform_tree_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_add_child(%s) - Preconditions validation failed for 'transform_tree_'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_add_child(%s) - Preconditions validation failed for 'transform_tree_'.", model_result_to_str(ret));
         goto cleanup;
     }
 #else
     if(!is_valid_shallow(transform_tree_)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_add_child(%s) - Preconditions validation failed for 'transform_tree_'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_add_child(%s) - Preconditions validation failed for 'transform_tree_'.", model_result_to_str(ret));
         goto cleanup;
     }
 #endif
     if(NULL != node_find_by_id(transform_tree_->root, coordinate_id_)) {
-        ret = RENDER_MODEL_BAD_OPERATION;
-        ERROR_MESSAGE("model_transform_tree_add_child(%s) - Provided coordinate_id_ is already registered.", render_model_result_to_str(ret));
+        ret = MODEL_BAD_OPERATION;
+        ERROR_MESSAGE("model_transform_tree_add_child(%s) - Provided coordinate_id_ is already registered.", model_result_to_str(ret));
         goto cleanup;
     }
 
     // Prepare.
     parent = node_find_by_id(transform_tree_->root, parent_coordinate_id_);
     if(NULL == parent) {
-        ret = RENDER_MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_transform_tree_add_child(%s) - Provided parent_coordinate_id_ not found.", render_model_result_to_str(ret));
+        ret = MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_transform_tree_add_child(%s) - Provided parent_coordinate_id_ not found.", model_result_to_str(ret));
         goto cleanup;
     }
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&child);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = render_model_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("model_transform_tree_add_child(%s) - general_allocator_allocate failed.", render_model_result_to_str(ret));
+        ret = model_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("model_transform_tree_add_child(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
         goto cleanup;
     }
     child->child = NULL;
@@ -374,10 +374,10 @@ render_model_result_t model_transform_tree_add_child(model_transform_tree_t* tra
     }
     child = NULL;
 
-    ret = RENDER_MODEL_SUCCESS;
+    ret = MODEL_SUCCESS;
 
 cleanup:
-    if(RENDER_MODEL_DATA_CORRUPTED != ret) {
+    if(MODEL_DATA_CORRUPTED != ret) {
         if(NULL != child) {
             general_allocator_free((void**)&child, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
         }
@@ -403,35 +403,35 @@ cleanup:
  * - 成立済みPreconditionと単純代入の性質を信頼し、
  *   Postcondition Validationは行わない。
  */
-render_model_result_t model_transform_tree_rotation_set(model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, vec3f_t rotation_) {
-    render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
+model_result_t model_transform_tree_rotation_set(model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, vec3f_t rotation_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
 
     model_transform_node_t* node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_rotation_set", "transform_tree_")
+    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_transform_tree_rotation_set", "transform_tree_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_rotation_set(%s) - Preconditions validation failed for 'transform_tree_'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_rotation_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_result_to_str(ret));
         goto cleanup;
     }
 #else
     if(!is_valid_shallow(transform_tree_)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_rotation_set(%s) - Preconditions validation failed for 'transform_tree_'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_rotation_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_result_to_str(ret));
         goto cleanup;
     }
 #endif
     node = node_find_by_id(transform_tree_->root, coordinate_id_);
     if(NULL == node) {
-        ret = RENDER_MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_transform_tree_rotation_set(%s) - Provided coordinate_id_ not found.", render_model_result_to_str(ret));
+        ret = MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_transform_tree_rotation_set(%s) - Provided coordinate_id_ not found.", model_result_to_str(ret));
         goto cleanup;
     }
 
     node->rotation = rotation_;
 
-    ret = RENDER_MODEL_SUCCESS;
+    ret = MODEL_SUCCESS;
 
 cleanup:
     return ret;
@@ -455,35 +455,35 @@ cleanup:
  * - 成立済みPreconditionと単純代入の性質を信頼し、
  *   Postcondition Validationは行わない。
  */
-render_model_result_t model_transform_tree_translate_set(model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, vec3f_t translate_) {
-    render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
+model_result_t model_transform_tree_translate_set(model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, vec3f_t translate_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
 
     model_transform_node_t* node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_translate_set", "transform_tree_")
+    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_transform_tree_translate_set", "transform_tree_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_translate_set(%s) - Preconditions validation failed for 'transform_tree_'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_translate_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_result_to_str(ret));
         goto cleanup;
     }
 #else
     if(!is_valid_shallow(transform_tree_)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_translate_set(%s) - Preconditions validation failed for 'transform_tree_'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_translate_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_result_to_str(ret));
         goto cleanup;
     }
 #endif
     node = node_find_by_id(transform_tree_->root, coordinate_id_);
     if(NULL == node) {
-        ret = RENDER_MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_transform_tree_translate_set(%s) - Provided coordinate_id_ not found.", render_model_result_to_str(ret));
+        ret = MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_transform_tree_translate_set(%s) - Provided coordinate_id_ not found.", model_result_to_str(ret));
         goto cleanup;
     }
 
     node->translate = translate_;
 
-    ret = RENDER_MODEL_SUCCESS;
+    ret = MODEL_SUCCESS;
 
 cleanup:
     return ret;
@@ -512,8 +512,8 @@ cleanup:
  * - 計算結果は成功時にのみCallerのOutputへ格納するため、
  *   追加のPostcondition Validationは行わない。
  */
-render_model_result_t model_transform_tree_world_matrix_get(const model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, mat4x4f_t* out_matrix_) {
-    render_model_result_t ret = RENDER_MODEL_INVALID_ARGUMENT;
+model_result_t model_transform_tree_world_matrix_get(const model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, mat4x4f_t* out_matrix_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
 
     model_transform_node_t* node = NULL;
     mat4x4f_t mat = { 0 };
@@ -522,25 +522,25 @@ render_model_result_t model_transform_tree_world_matrix_get(const model_transfor
     mat4x4f_t local = { 0 };
     mat4x4f_t tmp = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_world_matrix_get", "transform_tree_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_matrix_, ret, RENDER_MODEL_INVALID_ARGUMENT, render_model_result_to_str(RENDER_MODEL_INVALID_ARGUMENT), "model_transform_tree_world_matrix_get", "out_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_transform_tree_world_matrix_get", "transform_tree_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_matrix_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_transform_tree_world_matrix_get", "out_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_world_matrix_get(%s) - Preconditions validation failed for 'transform_tree_'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_world_matrix_get(%s) - Preconditions validation failed for 'transform_tree_'.", model_result_to_str(ret));
         goto cleanup;
     }
 #else
     if(!is_valid_shallow(transform_tree_)) {
-        ret = RENDER_MODEL_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_world_matrix_get(%s) - Preconditions validation failed for 'transform_tree_'.", render_model_result_to_str(ret));
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_transform_tree_world_matrix_get(%s) - Preconditions validation failed for 'transform_tree_'.", model_result_to_str(ret));
         goto cleanup;
     }
 #endif
     node = node_find_by_id(transform_tree_->root, coordinate_id_);
     if(NULL == node) {
-        ret = RENDER_MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_transform_tree_world_matrix_get(%s) - Provided coordinate_id_ not found.", render_model_result_to_str(ret));
+        ret = MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_transform_tree_world_matrix_get(%s) - Provided coordinate_id_ not found.", model_result_to_str(ret));
         goto cleanup;
     }
 
@@ -556,7 +556,7 @@ render_model_result_t model_transform_tree_world_matrix_get(const model_transfor
 
     *out_matrix_ = mat;
 
-    ret = RENDER_MODEL_SUCCESS;
+    ret = MODEL_SUCCESS;
 
 cleanup:
     return ret;

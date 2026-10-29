@@ -59,9 +59,6 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
-#include "engine/systems/renderer/resources/render_model/core/render_model_types.h"
-#include "engine/systems/renderer/resources/render_model/model_transform_tree.h"
-#include "engine/systems/renderer/resources/render_model/render_model.h"
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
@@ -75,7 +72,11 @@
 #include "application/renderer/application_renderer.h"
 #include "application/diagnostics/application_diagnostics.h"
 
-#include "application/resource/render_model/sample_robot/sample_robot.h"
+#include "application/model/core/model_types.h"
+#include "application/model/model_assembly_config.h"
+#include "application/model/model_resource_map.h"
+#include "application/model/model_transform_tree.h"
+#include "application/model/sample_robot/sample_robot.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -124,7 +125,7 @@ typedef struct application_state {
     mat4x4f_t penguin_model_matrix;
 
     // Render model
-    render_model_t* sample_robot_definition;
+    model_resource_map_t* sample_robot_resource_map;
     sample_robot_t* sample_robot1;
     sample_robot_t* sample_robot2;
 
@@ -171,6 +172,7 @@ static application_result_t untextured_mesh_import(application_state_t* state_);
 // static application_result_t ui_mesh_textures_import(application_state_t* state_);
 
 static application_result_t directory_path_initialize(application_state_t* state_);
+static application_result_t sample_robot_initialize(application_state_t* state_);
 
 application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
@@ -294,19 +296,9 @@ application_result_t application_create(void) {
     tmp_state->diag_config.validation_report = KEY_2;
 
     // sample robot
-    ret = sample_robot_create(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->renderer_frontend, fs_path_fullpath_get(tmp_state->asset_root), &tmp_state->sample_robot_definition, &tmp_state->sample_robot1);
+    ret = sample_robot_initialize(tmp_state);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    ret = sample_robot_clone(tmp_state->sample_robot1, &tmp_state->sample_robot2);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - sample_robot_clone failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    ret = sample_robot_placement_set(vec3f_initialize(150.0f, 0.0f, -1000.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->sample_robot2);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - sample_robot_placement_set failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - sample_robot_initialize failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -319,7 +311,7 @@ application_result_t application_create(void) {
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS) {
+    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
         return ret;
     }
     if(NULL != tmp_state) {
@@ -328,13 +320,6 @@ cleanup:
         }
         if(NULL != tmp_state->sample_robot1) {
             sample_robot_destroy(&tmp_state->sample_robot1);
-        }
-        if(NULL != tmp_state->sample_robot_definition) {
-            if(RENDER_MODEL_SUCCESS != render_model_destroy(tmp_state->renderer_frontend, &tmp_state->sample_robot_definition)) {
-                ret = APPLICATION_DATA_CORRUPTED;
-                ERROR_MESSAGE("application_create(%s) - render_model_destroy failed.", application_result_to_str(ret));
-                return ret;
-            }
         }
         if(NULL != tmp_state->renderer_frontend) {
             renderer_frontend_deinitialize(tmp_state->renderer_backend_context, tmp_state->renderer_frontend);
@@ -375,9 +360,9 @@ void application_destroy(void) {
     if(NULL != s_application_state->sample_robot1) {
         sample_robot_destroy(&s_application_state->sample_robot1);
     }
-    if(NULL != s_application_state->sample_robot_definition) {
-        if(RENDER_MODEL_SUCCESS != render_model_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_definition)) {
-            ERROR_MESSAGE("application_destroy(%s) - render_model_destroy failed.", application_result_to_str(APPLICATION_DATA_CORRUPTED));
+    if(NULL != s_application_state->sample_robot_resource_map && NULL != s_application_state->renderer_frontend) {
+        if(MODEL_SUCCESS != model_resource_map_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_resource_map)) {
+            ERROR_MESSAGE("application_destroy(%s) - model_resource_map_destroy failed.", application_result_to_str(APPLICATION_DATA_CORRUPTED));
             return;
         }
     }
@@ -416,7 +401,7 @@ application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
 
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
-    render_model_result_t ret_render_model = RENDER_MODEL_INVALID_ARGUMENT;
+    model_result_t ret_model = MODEL_INVALID_ARGUMENT;
 
     // penguin AABB
     // aabb_3d_t penguin_aabb = { 0 };
@@ -544,10 +529,10 @@ application_result_t application_run(void) {
             s_application_state->sample_robot2->posture.link1_angle = 0.0f;
         }
 
-        if(APPLICATION_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot1->posture, s_application_state->sample_robot1)) {
+        if(MODEL_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot1->posture, s_application_state->sample_robot1)) {
             ERROR_MESSAGE("sample_robot_posture_update failed.");
         }
-        if(APPLICATION_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot2->posture, s_application_state->sample_robot2)) {
+        if(MODEL_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot2->posture, s_application_state->sample_robot2)) {
             ERROR_MESSAGE("sample_robot_posture_update failed.");
         }
 
@@ -618,27 +603,26 @@ application_result_t application_run(void) {
         // }
 
         // STL描画
-        ret_render_model = render_model_untextured_mesh_count_get(s_application_state->sample_robot_definition, &tmp_mesh_count);
-        // UINT16_MAX検査はそのうち追加
-        if(RENDER_MODEL_SUCCESS != ret_render_model) {
-            ERROR_MESSAGE("application_run - render_model_untextured_mesh_count_get failed. continue...");
+        ret_model = model_resource_map_untextured_mesh_count_get(s_application_state->sample_robot_resource_map, &tmp_mesh_count);
+        if(MODEL_SUCCESS != ret_model) {
+            ERROR_MESSAGE("application_run - model_resource_map_untextured_mesh_count_get failed. continue...");
             continue;
         }
         for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
-            ret_render_model = render_model_untextured_mesh_mesh_get(s_application_state->sample_robot_definition, i, &tmp_mesh);
-            if(RENDER_MODEL_SUCCESS != ret_render_model) {
-                ERROR_MESSAGE("application_run - render_model_untextured_mesh_mesh_get failed. continue...");
+            ret_model = model_resource_map_untextured_mesh_get(s_application_state->sample_robot_resource_map, i, &tmp_mesh);
+            if(MODEL_SUCCESS != ret_model) {
+                ERROR_MESSAGE("application_run - model_resource_map_untextured_mesh_get failed. continue...");
                 continue;
             }
 
-            ret_render_model = render_model_untextured_mesh_coordinate_id_get(s_application_state->sample_robot_definition, i, &tmp_coordinate_id);
-            if(RENDER_MODEL_SUCCESS != ret_render_model) {
-                ERROR_MESSAGE("application_run - render_model_untextured_mesh_mesh_get failed. continue...");
+            ret_model = model_resource_map_untextured_mesh_coordinate_id_get(s_application_state->sample_robot_resource_map, i, &tmp_coordinate_id);
+            if(MODEL_SUCCESS != ret_model) {
+                ERROR_MESSAGE("application_run - model_resource_map_untextured_mesh_coordinate_id_get failed. continue...");
                 continue;
             }
 
-            ret_render_model = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
-            if(RENDER_MODEL_SUCCESS != ret_render_model) {
+            ret_model = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_SUCCESS != ret_model) {
                 ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
                 continue;
             }
@@ -650,8 +634,8 @@ application_result_t application_run(void) {
                 goto cleanup;
             }
 
-            ret_render_model = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
-            if(RENDER_MODEL_SUCCESS != ret_render_model) {
+            ret_model = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_SUCCESS != ret_model) {
                 ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
                 continue;
             }
@@ -1018,6 +1002,84 @@ cleanup:
     }
     if(NULL != asset_root_path) {
         fs_path_destroy(&asset_root_path);
+    }
+    return ret;
+}
+
+static application_result_t sample_robot_initialize(application_state_t* state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    model_result_t ret_model = MODEL_INVALID_ARGUMENT;
+
+    model_assembly_config_t config;
+    model_resource_map_t* resource_map = NULL;
+    sample_robot_t* robot1 = NULL;
+    sample_robot_t* robot2 = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_initialize", "state_")
+
+    ret_model = sample_robot_dummy_config_loader(&config);
+    if(MODEL_SUCCESS != ret_model) {
+        ret = application_result_convert_model(ret_model);
+        ERROR_MESSAGE("sample_robot_initialize(%s) - sample_robot_dummy_config_loader failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_model = model_resource_map_create(state_->renderer_frontend, &config, fs_path_fullpath_get(state_->asset_root), &resource_map);
+    if(MODEL_SUCCESS != ret_model) {
+        ret = application_result_convert_model(ret_model);
+        ERROR_MESSAGE("sample_robot_initialize(%s) - model_resource_map_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_model = sample_robot_create(resource_map, &robot1);
+    if(MODEL_SUCCESS != ret_model) {
+        ret = application_result_convert_model(ret_model);
+        ERROR_MESSAGE("sample_robot_initialize(%s) - sample_robot_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_model = sample_robot_placement_set(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), robot1);
+    if(MODEL_SUCCESS != ret_model) {
+        ret = application_result_convert_model(ret_model);
+        ERROR_MESSAGE("sample_robot_initialize(%s) - sample_robot_placement_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_model = sample_robot_create(resource_map, &robot2);
+    if(MODEL_SUCCESS != ret_model) {
+        ret = application_result_convert_model(ret_model);
+        ERROR_MESSAGE("sample_robot_initialize(%s) - sample_robot_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_model = sample_robot_placement_set(vec3f_initialize(150.0f, 0.0f, -1000.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), robot2);
+    if(MODEL_SUCCESS != ret_model) {
+        ret = application_result_convert_model(ret_model);
+        ERROR_MESSAGE("sample_robot_initialize(%s) - sample_robot_placement_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    state_->sample_robot1 = robot1;
+    state_->sample_robot2 = robot2;
+    state_->sample_robot_resource_map = resource_map;
+    robot1 = NULL;
+    robot2 = NULL;
+    resource_map = NULL;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != robot1) {
+        sample_robot_destroy(&robot1);
+    }
+    if(NULL != robot2) {
+        sample_robot_destroy(&robot2);
+    }
+    if(NULL != resource_map && NULL != state_ && NULL != state_->renderer_frontend) {
+        model_resource_map_destroy(state_->renderer_frontend, &resource_map);
     }
     return ret;
 }

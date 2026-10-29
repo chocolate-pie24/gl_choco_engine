@@ -39,6 +39,8 @@ extern "C" {
 
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
+#include "application/model/core/model_types.h"
+
 /**
  * @brief アプリケーションレイヤー実行結果コードを文字列に変換する
  *
@@ -76,6 +78,8 @@ application_result_t application_result_convert_renderer_frontend(renderer_front
 application_result_t application_result_convert_renderer_backend(renderer_backend_result_t result_);
 
 application_result_t application_result_convert_mesh(mesh_result_t result_);
+
+application_result_t application_result_convert_model(model_result_t result_);
 
 #ifdef __cplusplus
 }

@@ -342,3 +342,28 @@ application_result_t application_result_convert_mesh(mesh_result_t result_) {
         return APPLICATION_UNDEFINED_ERROR;
     }
 }
+
+application_result_t application_result_convert_model(model_result_t result_) {
+    switch(result_) {
+    case MODEL_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case MODEL_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case MODEL_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case MODEL_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case MODEL_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case MODEL_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case MODEL_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case MODEL_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case MODEL_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
