@@ -20,9 +20,11 @@ typedef struct model_transform_tree model_transform_tree_t;
 typedef struct model_assembly_config model_assembly_config_t;
 
 typedef struct {
-    float link1_angle;
-    float link2_angle;
-    float gripper_angle;
+    float base_motor_angle;
+    float shoulder_motor_angle;
+    float elbow_motor_angle;
+    float wrist_motor_angle;
+
     float left_finger_angle;
     float right_finger_angle;
 } sample_robot_posture_t;

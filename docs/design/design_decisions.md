@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-28
+最終更新: 2026-10-30
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -5755,6 +5755,7 @@ Untexturedの単独Drawが成功した時点でLine / Point / UIを一括してF
 **Status:** Partially Superseded（Mesh / Coordinate Index対応・Tree所有は維持。共有不変Modelの必須化は2026-10-27 Decisionで変更）  
 **Update (2026-10-27):** 2026-10-27の正常系ではModelがCoordinate Treeを持ち、Mesh Indexから対応World Matrixを計算して描画する。共有不変Definition / Instance分離は必須化せず、後日の具体的需要から再検討する。  
 **Update (2026-10-28):** その後、共有Resource参照と個体別Treeの分離が動作確認され、`render_model_t`がCoordinate Bindingを保持することも再評価した。Resource参照の集合を`model_resource_map_t`、組立構造とCoordinate Bindingを`model_assembly_config_t`に分離する新Decisionを優先する。ここに記載した旧Field配置・型名は当時の設計経緯として保持する。
+**Update (2026-10-30):** 共有Runtime定義としてのResource Mapは初期Transform Treeと型別Mesh–Coordinate Bindingを所有し、Robot個体はTreeをDeep Cloneする構造を採用。旧`render_model_t`を共有不変Definitionとする設計とは同一ではないため、現行の責務・型名は2026-10-30 Decisionを正本とする。  
 **Date:** 2026-10-24  
 **Scope:** Render Model / Mesh / Coordinate Tree / Resource Reference Right / Ownership / Model Configuration / Instance Sharing
 
@@ -6319,8 +6320,9 @@ Engine : Renderer Frontend
 
 ## Decision: Mesh ConfigのSemantic OwnerをMesh Moduleとし、Coordinate BindingをModel Configへ分離する
 
-**Status:** Accepted / Untextured Meshで実装済み（他Mesh種別への展開は未完了）  
+**Status:** Accepted（MeshとCoordinateのSemantic分離は維持。Runtime Bindingの保持位置は2026-10-30 Decisionで更新）  
 **Update (2026-10-28):** Coordinate Bindingを`render_model_config_t`（新名称`model_assembly_config_t`）に置く判断を維持する。旧`render_model_t`からCoordinate ID配列を除去し、新`model_resource_map_t`は解決済みMesh Resource参照のみを保持する。  
+**Update (2026-10-30):** Mesh単体にCoordinate IDを含めない判断は維持。組立図で定義したMesh–Coordinate Bindingは、`model_resource_map_create()`時にResource Mapへコピーし、RuntimeではConfigを参照しない構成へ変更。組立図におけるBindingの定義責務と、RuntimeでそのBindingを保持する責務を区別する。  
 **Date:** 2026-10-27  
 **Scope:** Mesh / Configuration / Model Configuration / Coordinate Binding / Module Ownership
 
@@ -6449,8 +6451,9 @@ Renderer Frontend: xxx_mesh_draw
 
 ## Decision: Model Import PipelineをApplication側のStateless Operationとして構成する
 
-**Status:** Partially Superseded（Application側Stateless Pipeline / Renderer Frontend経由のMesh Importを維持。生成物の概念・名称・Ownership Commit先は2026-10-28 Decisionで更新）  
+**Status:** Superseded（独立Model Pipelineは2026-10-30 Decisionで廃止。Application配置・Renderer Frontend経由のMesh Importという境界は維持）  
 **Update (2026-10-28):** `render_model_t`と個体用Treeを同時に構築する旧Import APIの責務を分割し、Model Pipelineは組立図からResource参照Mapを取得する処理へ整理する。個体のTransform Treeは`sample_robot_create()`が組立図から生成する。MeshのImport成功数に応じたRollbackと、Map破棄時のReference Right返却を維持する。旧API・旧Sourceの実装説明は時点を示す履歴として読む。  
+**Update (2026-10-30):** 独立した`render_model_pipeline` / Model Import Pipelineは廃止。共有Runtime定義の生成とResource Right取得は`model_resource_map_create()`へ統合し、初期Transform TreeもMap生成時に構築する。RobotはMapのTreeをCloneする。下記本文は旧構成のDecision履歴として保持する。  
 **Date:** 2026-10-27  
 **Scope:** Application / Model Pipeline / Renderer Frontend / Configuration / Transform Tree / Ownership Transfer
 
@@ -6506,8 +6509,9 @@ FrontendがMesh単位のImportを公開すれば、Application側のModel Pipeli
 
 ## Decision: Render ModelのCoordinate Treeを姿勢計算に利用し、Meshと描画用MatrixをModel側で対応付ける
 
-**Status:** Partially Superseded（HierarchyからWorld Matrixを求める方式とRenderer FrontendのMesh + Matrix Drawは維持。Model-owned TreeとModel-owned Coordinate Bindingは2026-10-28 Decisionで更新）  
+**Status:** Partially Superseded（HierarchyからWorld Matrixを求める方式とRenderer FrontendのMesh + Matrix Drawは維持。Treeの所有・描画時のBinding取得は2026-10-30 Decisionに従う）  
 **Update (2026-10-28):** 2台のRobotが独立した`model_transform_tree_t`とPostureを保持して動作する構成が確認された。共有の旧`render_model_t`はResource参照集合の実体であり、Treeは`sample_robot_t`側にある。Coordinate Bindingは組立図（旧`render_model_config_t`）の情報として保持する。従来の「Model GetterがMeshとMatrixを一括して返す」説明は旧実装時点のものとし、新構成ではApplicationがMap / Config / 個体Treeを組み合わせる。  
+**Update (2026-10-30):** 初期TreeはResource Mapが共有Templateとして所有し、RobotはDeep Cloneした個体Treeを所有する。RuntimeのMesh–Coordinate BindingもResource Mapへ保持させる。描画時はMapと対象RobotのTreeだけでMesh + World Matrixを組み合わせる。  
 **Date:** 2026-10-27  
 **Scope:** Render Model / Model Transform Tree / World Matrix / Robot Posture / Model Instance / Draw Contract
 
@@ -6572,7 +6576,8 @@ FrontendがMesh単位のImportを公開すれば、Application側のModel Pipeli
 
 ## Decision: Modelの組立図・Resource参照Map・個体状態を概念分離し、型名とApplication内の命名を再編する
 
-**Status:** Accepted / Target Naming and Responsibility（名称変更と既存Sourceの移行はこれから実施）  
+**Status:** Partially Superseded（組立図・Resource Map・個体の概念分離と型名は維持。Resource Mapの責務、ConfigのLifetime、Model Pipelineの扱いを2026-10-30 Decisionで更新）  
+**Update (2026-10-30):** 命名と三者分離は採用したが、当初却下した「Resource Mapで初期Transform Treeを保持し、RobotへCloneする」案を再評価して採用した。さらにCoordinate BindingのRuntime用コピーをMapが保持し、ConfigをMap生成直後に破棄可能とした。独立Model Pipelineも廃止。以下の「MapはCoordinate IDを持たない」「TreeはRobotがConfigから生成する」「Configを描画時まで保持する」とする記述は2026-10-28時点の履歴であり、現行仕様ではない。  
 **Date:** 2026-10-28  
 **Scope:** Application Model / Assembly Configuration / Resource Reference Right / Model Pipeline / Robot Instance / Naming / Renderer Boundary
 
@@ -6711,3 +6716,212 @@ sample_robot_create(&sample_robot_assembly, &arm_robot);
 - `glce_renderer_resource_model_workplan.md`
 - `glce_near_term_todo.md`
 
+---
+
+## Decision: Model Assembly Configを「組立図」、Resource Mapを「製造準備済みの共有定義」、Robotを「個別の実機」とする
+
+**Status:** Accepted（Untextured MeshとSample Robotの現行Architecture。Line / Point / UI等への横展開は未完了）  
+**Date:** 2026-10-30  
+**Scope:** Application Model / Assembly Configuration / Model Resource Map / Transform Tree Template / Instance Lifecycle / Ownership / Renderer Boundary
+
+### Decision
+
+1. GLCEのModel Domainは、**組立図（`model_assembly_config_t`）→ 製造準備済みの共有Runtime定義（`model_resource_map_t`）→ 個別の実機（`sample_robot_t`）**という3段階を基本構造とする。3段階は単なる呼出し順ではなく、それぞれ異なる責務・Owner・Lifetimeを持つ。
+2. `model_assembly_config_t`は、MeshごとのAsset / Resource指定、MeshとCoordinate IDのBinding、Coordinate ID・Parent ID・初期Translation / Rotationを記述する**組立図**である。設計情報を所有するが、Renderer Registry上のResource Rightや可変の個体姿勢は所有しない。
+3. `model_resource_map_t`は、組立図を用いてRenderer Frontend経由で取得した型別`xxx_mesh_t`、そのResource Reference Right、**型別Mesh–Coordinate IDのRuntime用コピー**、および**初期`model_transform_tree_t`**を所有する。完成後はConfigをBorrowせず、Runtimeの描画と個体生成に必要な情報を自身のLifetime内に保持する。
+4. Resource Mapが所有する初期Transform Treeは、**個体生成用の読み取り専用Template**とする。これは全Robotで共有して直接MutationするTreeではない。Resource Map内部のTreeは外部へMutable Pointerとして公開せず、`model_resource_map_transform_tree_clone()`で独立したTreeを生成する。
+5. `sample_robot_create(resource_map, &robot)`は、Resource MapのTemplateをDeep Cloneして個体専用Transform Treeを取得し、Robot固有のPostureを保持する。RobotはResource MapやAssembly Configを恒久的にBorrow / Ownしない。Robotを二台生成してもResource Importは個体ごとに繰り返さない。
+6. `model_resource_map_create()`が成功した時点で、Assembly Configの内容からRuntimeで必要な情報への移行は完了する。**Configはその直後に`model_assembly_config_destroy()`で破棄でき、Robotの生成・配置・姿勢変更・描画にConfigを保持する必要はない。**
+7. 旧`render_model_pipeline` / 独立Model Import Pipelineは廃止し、その責務を`model_resource_map_create()`へ集約する。AssetのImportは引き続きRenderer FrontendのMesh Import APIへ委譲し、Coordinate Treeの組立はResource Map側のPrivate処理とする。Renderer内部のRegistry / Shader / VBO等をModel Domainから直接操作しない。
+8. 描画時は、Resource Mapの同一Mesh IndexからMesh ValueとCoordinate IDを取得し、対象RobotのTransform TreeからWorld Matrixを計算して、Renderer Frontendへ**Mesh + Matrix**を渡す。Renderer FrontendはModel / Robot / Coordinate ID / Hierarchyを認識しない。Render Packet等の新しい抽象化を今回の成立条件としない。
+9. Mesh–Coordinate Bindingは引き続き**Line / Point / UI / Untextured等のMesh種別ごとのParallel Array**で表現する。Mesh種別を横断した単一Index空間、新しいBinding Entry型、汎用Model Registry等は導入しない。Mesh自体にCoordinate IDを持たせない判断は維持する。
+10. `model_assembly_config_t`の型定義は公開された非opaqueのままとするが、Config本体とOwned ArrayのLifetime管理はModuleに統一し、`model_assembly_config_create()` / `model_assembly_config_destroy()`を用いる。`create` / `destroy`の選択はOpaque性ではなく、**本体Backing Storageを含むOwnership**に基づく。Dummy Loader等のProducerは完成済みConfigへのPointerをDouble Pointer Outputで渡す。
+
+### 製造・機械組立のメタファー
+
+このArchitectureは、**設計図面を完成品と混同せず、部品の物理保管と組立準備、製造された実機の現在状態も区別する**ため、機械製造の流れに対応させて説明する。
+
+| 製造・機械設計の概念 | GLCEの対応 | 責務と注意点 |
+|---|---|---|
+| 部品番号 | Geometry / Material Resource Name | Asset / Resourceの論理的Identity。Registry内のRuntime IDとは区別する |
+| 部品図面・素材データ | STL、Material Configuration等 | Resource生成のための元データ |
+| 協力工場・部品加工工程 | Geometry / Material等のResource Pipeline | Loader / Conversion / Registrationを介して描画用Resourceを用意する |
+| 部品倉庫 | Renderer側のResource Registry | Geometry / Material等の実体・Identity・Reference CountのAuthority |
+| 倉庫内の棚番・引当ID | Registryが発行したResource ID | RuntimeでResourceを参照する識別子であり、物理在庫数を示すものではない |
+| **組立図・部品表** | **`model_assembly_config_t`** | 必要な部品、組付先、親子関係、基準となる初期姿勢を指示する |
+| **製造準備済みの部品引当表＋組立基準マスター** | **`model_resource_map_t`** | 調達済みResourceの参照権とID、Mesh–Coordinate対応、個体生成用の初期Treeを共有保持する |
+| 組立基準マスターから個体へ複製する工程 | `model_resource_map_transform_tree_clone()` | 親子関係と初期Local Transformを個体専用StorageへDeep Cloneする |
+| **製造された実機** | **`sample_robot_t`** | 自身のTransform Treeと関節Postureを独立して保持し、別の個体と異なる姿勢を取る |
+| 完成した実機を所定の場所へ設置する | `sample_robot_placement_set()` | 個体TreeのBase Transformを変更する。共有Templateは変更しない |
+| 実機の関節を動かす | `sample_robot_posture_update()` | 個体固有の関節SemanticからLocal Transformを更新する |
+| 実機をカメラに映す | ApplicationによるMesh・World Matrixの取得とRenderer Frontend Draw | 個体Treeで姿勢を計算し、部品の描画Resourceを共有して使用する |
+
+この比喩での`model_resource_map_t`は「別途製造された実機」を意味しない。**部品はRegistryに保管されたまま、Resource Mapはその利用権を管理し、組立基準マスターを保持する。** Robot個体へコピーするのは主としてTransform Treeの状態・階層であり、Geometry / Material Resourceの実体ではない。
+
+また、組立図（Config）と製造準備済み共有定義（Map）に同じMesh–Coordinate IDが存在しても、これは二つの独立したSemantic Authorityを新設したことではない。**Configは定義元、MapはそのConfigから生成したRuntime用の確定済みCopy**である。Map生成完了後はConfigのLifetimeに依存しない。
+
+### Lifetime / Ownership / Call Flow
+
+現在の利用形を概念的に示す。
+
+```c
+model_assembly_config_t* config = NULL;
+model_resource_map_t* resource_map = NULL;
+sample_robot_t* robot1 = NULL;
+sample_robot_t* robot2 = NULL;
+
+sample_robot_dummy_config_loader(&config);
+model_resource_map_create(renderer_frontend, config, asset_root, &resource_map);
+model_assembly_config_destroy(&config);
+
+sample_robot_create(resource_map, &robot1);
+sample_robot_create(resource_map, &robot2);
+
+// robot1 / robot2はそれぞれ独立したTransform Treeを持つ。
+// Draw時はResource MapのMesh / Coordinate IDと個体Treeを組み合わせる。
+
+sample_robot_destroy(&robot2);
+sample_robot_destroy(&robot1);
+model_resource_map_destroy(renderer_frontend, &resource_map);
+```
+
+上記は**Ownershipと順序を説明する概念例**であり、Result確認とFailure時Cleanupは省略している。実際のSourceでは、各Resultに応じたRollback / Fail-stopを実施する。
+
+```text
+Application（Owner / Orchestrator）
+│
+├── Assembly Config  [短命・構築時のみ]
+│      └── Mesh Config / Coordinate定義 / Binding
+│             │ borrow during create
+│             ▼
+├── Resource Map     [共有・Robot群の利用中に存続]
+│      ├── Mesh Value + Registry Reference Right
+│      ├── Mesh Index ↔ Coordinate ID
+│      └── Initial Transform Tree（Template）
+│             │ Deep Clone（Robotごと）
+│             ├─────────► Robot 1: mutable Transform Tree + Posture
+│             └─────────► Robot 2: mutable Transform Tree + Posture
+│
+└── Renderer Frontend [Mapが持つRightのRelease先 / Draw提供者]
+       └── Registries: actual Geometry / Material Resource authority
+```
+
+Owner / Lifetimeの区別は以下のとおり。
+
+- **Assembly Config:** Config本体、Coordinate Config Array、Mesh Config Array、Mesh–Coordinate ID Array、および各Configが所有するNested Resourceを管理する。`create()`成功時にCaller側のArray Ownershipを取得し、`destroy()`で返却／解放する。Mapへの変換はConfigを消費するOwnership Moveではなく、構築中のRead-only Borrowである。
+- **Resource Map:** ImportしたMesh Valueに対応するRegistry Reference Right、Runtime Binding配列、初期Transform Tree、および自分のBacking Storageを管理する。Shared Resource実体そのものはRegistryが所有する。
+- **Robot:** Deep Cloneした個体専用Transform Treeと機種固有Postureを管理する。Config / Resource MapのPointerを永続保持しない。
+- **Application:** 作成順序と各OwnerのLifetimeを管理する。Robotを先に破棄し、Mapに残るReference RightをRenderer Frontendへ返却した後、Renderer Frontendを終了する。
+
+Clone完了後の個体Treeは、Resource MapのTreeとは独立して有効である。一方、**RobotのTreeが生存していることと、そのRobotを継続して描画できることは別の問題**であり、描画のためにはMapと対応するRegistry Resource Rightが生存していなければならない。
+
+### Context / Change Reason
+
+#### 1. 責務分離はできても、ConfigのLifetimeがRuntimeへ残った
+
+2026-10-28のDecisionでは、旧`render_model_config_t`を組立図、旧`render_model_t`をResource参照Map、`sample_robot_t`を個体として分離した。その時点ではCoordinate BindingをConfigだけに置き、Transform TreeもRobot Create時にConfigから構築する方針だった。
+
+この方式では、Configは組立図であるにもかかわらず、**個体生成や描画のたびにRuntimeで参照される**。Resource MapはConfigから独立した寿命を持ちにくく、描画側でもConfig / Map / Robotの3者を同時に扱う必要があった。
+
+組立図とRuntime定義の責務を分離したはずが、組立図を使い続けなければならない点が残っていた。
+
+#### 2. 当初却下した初期Transform Treeの保持案を再評価した
+
+前回は、Mapに初期Treeを持たせると共有DefinitionやBorrow Contractを増やすと考え、TreeをRobot側でConfigから生成する方針を採用した。
+
+しかし、**初期TreeをMapが独占所有し、RobotにはMutable BorrowではなくDeep Cloneを渡す**のであれば、Configへの長期依存も、Robot間のMutable State Sharingも生じない。
+
+むしろMapが、複数の同型Robotを生成するための確定済みTemplateを一つ保持し、個体は各自のTreeを持つ方が、製造準備情報と実機の違いを素直に表現できる。
+
+#### 3. Coordinate BindingをRuntime側へコピーする理由
+
+TreeだけをMapへ移しても、各MeshがどのCoordinateに属するかを描画時に取り出せなければ、Configを破棄できない。
+
+そこでMesh–Coordinate BindingもModel Resource Mapへコピーする。MeshとCoordinate IDの組合せは引き続きModel Domainの情報であり、Renderer FrontendのMeshやRegistryへ入れない。
+
+ConfigとMapの両方に同じ情報を保持する期間はMap構築中の短時間だけであり、Map構築完了後はConfigを破棄できる。このコピーは、**異なるLifetimeの境界をまたぐために必要な情報の固定化**である。
+
+#### 4. Model Pipelineが不要になった
+
+Renderer FrontendがMesh Importという下位の責務を提供し、Resource MapがImport結果と初期Treeを所有することが決まると、**独立したModel Pipelineにしか所属できない責務が残らなくなった**。
+
+そのため、`render_model_pipeline`を別Moduleとして残すのではなく、Mapの`create()`内部へImportの調整・Binding Copy・Tree構築を集約した。中間Moduleを維持することを目的にしない。
+
+#### 5. Config本体のLifetimeをModuleへ集約した
+
+当初の`model_assembly_config_t`は非opaqueで、Callerが本体をStack上に置き、Owned Arrayだけを`initialize()` / `deinitialize()`で管理していた。そのためConfig本体のStorage Ownerと配列Ownerが分かれていた。
+
+今回、Config本体も含むLifetimeを一つのModuleに閉じ、`create()` / `destroy()`へ変更した。**非opaqueかどうかはStorage Ownershipの決定要因ではない**。Dummy Loaderも`model_assembly_config_t**`で完成済みConfigを返す構成へ揃えた。
+
+### Rationale
+
+- **利用側のコードが製造工程の順序と一致する。** 組立図を作る、共有Runtime定義を準備する、組立図を片付ける、必要な数だけ個体を作る、という流れに沿う。
+- **Lifecycle Dependencyを減らせる。** Configと個体の間に長期Borrowを残さず、Robotが参照するのはCreate中のMapだけでよい。
+- **Resource Sharingを明確にできる。** 一つのMapから複数Robotを生成できる一方、Resource Registryの実体と個体Transform Stateを混同しない。
+- **Mutable Stateを個体へ局所化できる。** MapのTemplateを変更せず、Robotそれぞれの姿勢・配置を独立させる。
+- **Renderer Boundaryを維持できる。** RendererはMesh + Matrixだけを描画し、Modelの組立やRobotの機種固有Semanticを持たない。
+- **不要なArchitectureを減らせる。** 独立Pipeline、新たなDefinition型・Registry・Binding型を設けなくても現在のOperationを成立させられる。
+- **RollbackのOwnershipを追いやすい。** Map構築中のTemporaryと完成したMapを区別し、成功したImportだけをRollbackする。
+
+### Rejected / Revisited / Deferred Alternatives
+
+- **10月28日の「ConfigにBindingを残し、描画まで保持する」方式。** ConfigにRuntime利用上のLifetimeを要求するため変更した。組立図がBindingの定義元であることは維持する。
+- **10月28日の「初期TreeをMapに持たせない」方式。** 共有Mutable Stateや長期Borrowの懸念を、MapがTemplateを所有しCloneを返す構造で解消できると分かったため変更した。
+- **Model Import Pipelineを独立Moduleとして残す。** Renderer Importを再実装せず、Map Createの主責務と重なるため採用しない。
+- **RobotごとにResourceを再Import / Acquireする。** 個体数に応じて同じResource参照権の管理を重複させる必要がない。
+- **Mesh Value / Mesh ConfigへCoordinate IDを格納する。** Model-localな空間配置をRenderer Resource側へ漏らすため採用しない。
+- **全Mesh種別のCoordinate IDを一つの配列へ統合する。** SliceごとのIndex対応をOffsetや全体順序で間接化する必要が生じる。現在は型別配列を維持する。
+- **MeshとCoordinate IDを新Entry型へまとめる。** 両者の対応を値として表現できるが、現在のParallel Arrayで十分であり、各Sliceに新しい型・Getter・Lifecycleを導入する利益が小さい。
+- **汎用Model Registry / Scene / Render Packet / Binding Registryを追加する。** 必要となる具体的なOwnership / Runtime要求がないため先行導入しない。
+- **`model_assembly_config_t`をOpaque化しなければ`create`を使えないとする。** Representation VisibilityとBacking Storage Ownershipは別概念なので採用しない。
+- **`model_resource_map_create()`の重要処理を細かいPrivate Helperへ抽出する。** Allocation・Release等はCreate / DestroyのOwnership追跡とRollback判断の中心であり、現段階では抽出効果よりFlowの可視性を優先する。
+
+### Validation / Rollbackに関する今回のScope
+
+このDecisionはProject-wideなValidation Policyを変更しない。詳細は`validation_policy.md`を正本とし、ここではModel Domain固有の採用範囲だけ記録する。
+
+- Assembly ConfigのCanonical Validationでは、既存の構造検証に加え、**Coordinate IDの一意性とParent Coordinate IDの存在**を確認する。Parent IDの`0`は仮想Root参照として許容する。
+- **Rootからの到達可能性とTree構築の成否**は`transform_tree_create_from_config()`が扱い、Assembly Config Validatorへ同じBFSを二重実装しない。Mesh Coordinate ID参照先の網羅的探索検証も今回は追加しない。
+- `model_coordinate_config_initialize()`は角度を`0〜360°`へ制限しない。負角度や360度超の値はTransform表現として許す。FiniteをInitializerへ一律に再確認することは要求せず、既存のTrust / Validator Responsibilityを維持する。
+- 現行Memory APIに存在しない**Allocation範囲の照会・検証能力**を、Model Validatorのためだけに追加しない。Memory Domainの改造は別Workとする。
+- `model_resource_map_create()`のRecoverable Failure時には、**Import成功件数に基づくReference Rightの返却と、Temporary StorageのRollback**を扱う。完成済みMapのDestroyを部分構築中のTemporary Cleanupとして使用しない。`DATA_CORRUPTED`検出後のFail-stopは既存Policyに従う。
+- `sample_robot_posture_update()`の部分Mutationに対する包括的なPreflight / Rollbackは要求しない。機種固有Coordinate IDの指定はApplication側の責務とし、汎用Engine Domainと同等の複雑な防護をApplicationに強制しない。これは**Application全体のMutationに対してRollbackを不要とする一般規則ではない**。
+- `void` Destroy APIからの失敗伝播問題は今回のModel Workでは扱わない。Lifecycle / Error Handlingの横断的変更に発展するため、別の必要性が生じた時点で再検討する。
+- Line / Point / UI等のMesh Import / Releaseの未移行箇所は、本Decisionによって実装完了とは扱わない。
+
+### Consequences / Implementation Status
+
+- Model Domainは`application/model/`に配置し、`model_assembly_config`、`model_resource_map`、`model_transform_tree`、機種固有の`sample_robot`に責務を分ける。
+- `model_assembly_config_create()` / `destroy()`が組立図のBacking Storage Lifecycleを管理し、Dummy Loader等は`model_assembly_config_t**`へ完成済みConfigを返す。
+- `model_resource_map_create()`が共有定義のBuild Boundaryとなり、Resource Import、Binding Copy、初期Tree構築を行う。
+- `model_resource_map_transform_tree_clone()`はMap内TemplateのMutable Pointerを公開せず、個体専用Treeを返すAPIとして維持する。
+- ApplicationはConfigをMap生成後に破棄し、MapとRobotを独立したLifetimeで管理する。
+- 描画はMapからMesh ValueとCoordinate IDを取得し、Robot TreeのWorld Matrixを使用してFrontendへ渡す。旧`render_model_pipeline`の独立Moduleは不要となる。
+- 2026-10-30時点のSourceでは、Untextured MeshとSample Robotで主要な利用経路が具体化している。他のMesh種別、正式な`.glce_model` Loader、`model_resource_map_is_valid()`の本格整備、失敗注入を含む検証等は完成済みと主張しない。
+- 過去Decisionの本文は、その時点でなぜ別案を採用したかを追跡できるよう保持する。**2026-10-30時点のCurrent Architectureを判断する場合は、本Decisionを優先する。**
+
+### Supersession / Related Decisions
+
+- **2026-10-28「Modelの組立図・Resource参照Map・個体状態を概念分離し、型名とApplication内の命名を再編する」:** 組立図・Map・個体の分類と型名は維持。MapへのCoordinate Binding Copy、初期Tree Templateの所有、Configの早期破棄を採用して旧Field / Lifetimeの判断を更新する。
+- **2026-10-27「Model Import PipelineをApplication側のStateless Operationとして構成する」:** Application配置・Frontend Mesh Import利用の方針は維持。独立Pipelineは廃止し、Map Createへ責務を集約する。
+- **2026-10-27「Render ModelのCoordinate Treeを姿勢計算に利用し、Meshと描画用MatrixをModel側で対応付ける」:** HierarchyからWorld Matrixを求める考え方とFrontend Mesh + Matrix Drawを維持。Treeの所有とRuntime Binding取得元を更新する。
+- **2026-10-27「Mesh ConfigのSemantic OwnerをMesh Moduleとし、Coordinate BindingをModel Configへ分離する」:** Mesh自身にCoordinateを持たせない判断を維持。BindingのSourceはConfig、Runtime CopyのOwnerはMapとする。
+- **2026-10-24「Render Modelを共有可能な不変の描画設計情報とし、MeshとCoordinateの関連付けをModel内で管理する」:** 同一Resourceの共有という方向は維持。ただし新しい共有Objectは旧`render_model_t`そのものではなく、Reference Rightと生成Templateを持つ`model_resource_map_t`である。
+- **2026-10-18「Render Model Configを独立Moduleに集約し、具体的なInitialize APIを設ける」:** Configの独立責務は維持し、Storage Ownershipの統合に伴って`initialize / deinitialize`から`create / destroy`へ更新する。
+- **2026-10-27「Application–Engine間の描画InterfaceをMesh単位とし、Model概念をEngine全体から分離する」:** Model DomainのApplication配置とRenderer FrontendのMesh Draw Boundaryを維持する。
+
+### Revisit Conditions
+
+- Model ConfigがLoad / Parseした後も長期間変更・再利用される要件が現れ、Runtime側とConfig側のLifetime関係を再設計する必要が生じた場合。
+- 同型個体の大量生成、Animation、Physics、Dynamic Reparenting等により、初期TreeのClone方式や可変個体StateのStorage Modelが実測上または意味上不適切になった場合。
+- Mesh種別増加・動的Binding変更により、型別Parallel Arrayの管理費用が明確になった場合。
+- Asset Hot Reload、Runtime Resource Swap、Scene / Model Registry等の要件により、Resource Mapを静的な共有Runtime定義として扱えなくなった場合。
+- Resource Import / Rollbackが複数Mesh Sliceへ広がり、実際の重複から独立Operation Module等を作る利益が明確になった場合。
+- Application固有Model Domainの利用者が増え、`sample_robot`以外にも共有する必要のある具体的API Boundaryが成立した場合。
+
+### Related Documents
+
+- `design_notes.md`
+- `validation_policy.md`
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`

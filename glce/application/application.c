@@ -259,7 +259,7 @@ application_result_t application_create(void) {
     // direction: 正面から少し斜め上の光で、面の違いが見やすい
     // color: 白色光。色による影響を除外できる
     // intensity: 明るさの計算と結果を比較しやすい
-    ret_light_result = directional_light_initialize(vec3f_initialize(0.4f, 0.8f, 1.0f), vec3f_initialize(1.0f, 1.0f, 1.0f), 5.0f, &tmp_state->directional_light);
+    ret_light_result = directional_light_initialize(vec3f_initialize(0.4f, 0.8f, 1.0f), vec3f_initialize(1.0f, 1.0f, 1.0f), 1.0f, &tmp_state->directional_light);
     if(LIGHT_SUCCESS != ret_light_result) {
         ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
         ERROR_MESSAGE("application_create(%s) - directional_light_initialize failed.", application_result_to_str(ret));
@@ -526,13 +526,30 @@ application_result_t application_run(void) {
     // TODO: window NULLチェック
     // end temporary
     while(!s_application_state->window_should_close) {
-        s_application_state->sample_robot1->posture.gripper_angle += 0.1f;
-        if(s_application_state->sample_robot1->posture.gripper_angle >= 360.0f) {
-            s_application_state->sample_robot1->posture.gripper_angle = 0.0f;
+        s_application_state->sample_robot1->posture.base_motor_angle += 0.1f;
+        if(s_application_state->sample_robot1->posture.base_motor_angle >= 360.0f) {
+            s_application_state->sample_robot1->posture.base_motor_angle = 0.0f;
         }
-        s_application_state->sample_robot2->posture.link1_angle -= 0.1f;
-        if(s_application_state->sample_robot2->posture.link1_angle <= -90.0f) {
-            s_application_state->sample_robot2->posture.link1_angle = 0.0f;
+        s_application_state->sample_robot1->posture.shoulder_motor_angle -= 0.1f;
+        if(s_application_state->sample_robot1->posture.shoulder_motor_angle <= -45.0f) {
+            s_application_state->sample_robot1->posture.shoulder_motor_angle = 0.0f;
+        }
+
+        s_application_state->sample_robot2->posture.wrist_motor_angle += 0.1f;
+        if(s_application_state->sample_robot2->posture.wrist_motor_angle >= 360.0f) {
+            s_application_state->sample_robot2->posture.wrist_motor_angle = 0.0f;
+        }
+        s_application_state->sample_robot2->posture.elbow_motor_angle += 0.1f;
+        if(s_application_state->sample_robot2->posture.elbow_motor_angle >= 45.0f) {
+            s_application_state->sample_robot2->posture.elbow_motor_angle = 0.0f;
+        }
+        s_application_state->sample_robot2->posture.left_finger_angle += 0.1f;
+        if(s_application_state->sample_robot2->posture.left_finger_angle >= 45.0f) {
+            s_application_state->sample_robot2->posture.left_finger_angle = 0.0f;
+        }
+        s_application_state->sample_robot2->posture.right_finger_angle -= 0.1f;
+        if(s_application_state->sample_robot2->posture.right_finger_angle <= -45.0f) {
+            s_application_state->sample_robot2->posture.right_finger_angle = 0.0f;
         }
 
         if(MODEL_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot1->posture, s_application_state->sample_robot1)) {
