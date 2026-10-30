@@ -339,6 +339,9 @@ cleanup:
         if(NULL != tmp_state->executable_directory) {
             fs_path_destroy(&tmp_state->executable_directory);
         }
+        if(NULL != tmp_state->asset_root) {
+            fs_path_destroy(&tmp_state->asset_root);
+        }
         subsystem_allocator_destroy(&tmp_state->subsystem_allocator);
         general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     }
@@ -383,6 +386,9 @@ void application_destroy(void) {
     }
     if(NULL != s_application_state->executable_directory) {
         fs_path_destroy(&s_application_state->executable_directory);
+    }
+    if(NULL != s_application_state->asset_root) {
+        fs_path_destroy(&s_application_state->asset_root);
     }
 
     application_diagnostics_status_report(s_application_state->subsystem_allocator);
@@ -1011,7 +1017,7 @@ static application_result_t sample_robot_initialize(application_state_t* state_)
 
     model_result_t ret_model = MODEL_INVALID_ARGUMENT;
 
-    model_assembly_config_t config;
+    model_assembly_config_t* config = NULL;
     model_resource_map_t* resource_map = NULL;
     sample_robot_t* robot1 = NULL;
     sample_robot_t* robot2 = NULL;
@@ -1024,13 +1030,13 @@ static application_result_t sample_robot_initialize(application_state_t* state_)
         ERROR_MESSAGE("sample_robot_initialize(%s) - sample_robot_dummy_config_loader failed.", application_result_to_str(ret));
         goto cleanup;
     }
-
-    ret_model = model_resource_map_create(state_->renderer_frontend, &config, fs_path_fullpath_get(state_->asset_root), &resource_map);
+    ret_model = model_resource_map_create(state_->renderer_frontend, config, fs_path_fullpath_get(state_->asset_root), &resource_map);
     if(MODEL_SUCCESS != ret_model) {
         ret = application_result_convert_model(ret_model);
         ERROR_MESSAGE("sample_robot_initialize(%s) - model_resource_map_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
+    model_assembly_config_destroy(&config);
 
     ret_model = sample_robot_create(resource_map, &robot1);
     if(MODEL_SUCCESS != ret_model) {
@@ -1080,6 +1086,9 @@ cleanup:
     }
     if(NULL != resource_map && NULL != state_ && NULL != state_->renderer_frontend) {
         model_resource_map_destroy(state_->renderer_frontend, &resource_map);
+    }
+    if(NULL != config) {
+        model_assembly_config_destroy(&config);
     }
     return ret;
 }

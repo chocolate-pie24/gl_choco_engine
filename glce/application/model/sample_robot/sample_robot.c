@@ -73,7 +73,7 @@ cleanup:
         model_transform_tree_destroy(&tmp_transform_tree);
     }
     if(NULL != tmp_robot) {
-        general_allocator_free((void**)tmp_robot, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_robot, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
     return ret;
 }
@@ -170,6 +170,8 @@ model_result_t sample_robot_posture_update(const sample_robot_posture_t* posture
         goto cleanup;
     }
 
+    robot_->posture = *posture_;
+
     ret = MODEL_SUCCESS;
 
 cleanup:
@@ -188,7 +190,7 @@ void sample_robot_posture_default_get(sample_robot_posture_t* posture_) {
 }
 
 // NOTE: dummyの一時関数なので正式なエラー処理は一旦おいておく
-model_result_t sample_robot_dummy_config_loader(model_assembly_config_t* out_config_) {
+model_result_t sample_robot_dummy_config_loader(model_assembly_config_t** out_config_) {
     model_result_t ret = MODEL_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -196,13 +198,16 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t* out_con
 
     size_t coordinate_count = 0;
     size_t untextured_mesh_count = 0;
+    size_t created_config_count = 0;
 
+    model_assembly_config_t* tmp_assembly_config = NULL;
     model_coordinate_config_t* coordinates = NULL;
     untextured_mesh_config_t* untextured_mesh_configs = NULL;
     uint16_t* coordinate_ids = NULL;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "sample_robot_dummy_config_loader", "out_config_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, MODEL_BAD_OPERATION, model_result_to_str(MODEL_BAD_OPERATION), "sample_robot_dummy_config_loader", "*out_config_")
 
     //////////////////////////////////////////////////////////////////////////////////////////
     // Coordinate config
@@ -302,6 +307,7 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t* out_con
         ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - untextured_mesh_config_initialize failed.", model_result_to_str(ret));
         goto cleanup;
     }
+    created_config_count++;
 
     ret_mesh = untextured_mesh_config_initialize(
         "stl/robot_sample",
@@ -316,6 +322,7 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t* out_con
         ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - untextured_mesh_config_initialize failed.", model_result_to_str(ret));
         goto cleanup;
     }
+    created_config_count++;
 
     ret_mesh = untextured_mesh_config_initialize(
         "stl/robot_sample",
@@ -330,6 +337,7 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t* out_con
         ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - untextured_mesh_config_initialize failed.", model_result_to_str(ret));
         goto cleanup;
     }
+    created_config_count++;
 
     ret_mesh = untextured_mesh_config_initialize(
         "stl/robot_sample",
@@ -344,6 +352,7 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t* out_con
         ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - untextured_mesh_config_initialize failed.", model_result_to_str(ret));
         goto cleanup;
     }
+    created_config_count++;
 
     ret_mesh = untextured_mesh_config_initialize(
         "stl/robot_sample",
@@ -358,6 +367,7 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t* out_con
         ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - untextured_mesh_config_initialize failed.", model_result_to_str(ret));
         goto cleanup;
     }
+    created_config_count++;
 
     ret_mesh = untextured_mesh_config_initialize(
         "stl/robot_sample",
@@ -372,27 +382,33 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t* out_con
         ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - untextured_mesh_config_initialize failed.", model_result_to_str(ret));
         goto cleanup;
     }
+    created_config_count++;
 
-    out_config_->coordinate_count = coordinate_count;
-    out_config_->coordinates = coordinates;
-    out_config_->line_mesh_configs = NULL;
-    out_config_->line_mesh_coordinate_ids = NULL;
-    out_config_->line_mesh_count = 0;
-    out_config_->point_mesh_configs = NULL;
-    out_config_->point_mesh_coordinate_ids = NULL;
-    out_config_->point_mesh_count = 0;
-    out_config_->ui_mesh_configs = NULL;
-    out_config_->ui_mesh_coordinate_ids = NULL;
-    out_config_->ui_mesh_count = 0;
-    out_config_->untextured_mesh_configs = untextured_mesh_configs;
-    out_config_->untextured_mesh_coordinate_ids = coordinate_ids;
-    out_config_->untextured_mesh_count = untextured_mesh_count;
+    ret = model_assembly_config_create(
+        coordinate_count,
+        &coordinates,
+        0, NULL, NULL,
+        0, NULL, NULL,
+        0, NULL, NULL,
+        untextured_mesh_count, &coordinate_ids, &untextured_mesh_configs, &tmp_assembly_config);
+    if(MODEL_SUCCESS != ret) {
+        ERROR_MESSAGE("model_assembly_config_create(%s) - model_assembly_config_create failed.", model_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // NOTE: ユーザーアプリケーション領域なのでvalidationは行わない
+    *out_config_ = tmp_assembly_config;
 
     ret = MODEL_SUCCESS;
 
 cleanup:
     if(MODEL_DATA_CORRUPTED == ret || MODEL_SUCCESS == ret) {
         return ret;
+    }
+    if(NULL != untextured_mesh_configs) {
+        for(size_t i = 0; i != created_config_count; ++i) {
+            untextured_mesh_config_deinitialize(&untextured_mesh_configs[i]);
+        }
     }
     if(NULL != coordinates) {
         general_allocator_free((void**)&coordinates, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
@@ -402,6 +418,9 @@ cleanup:
     }
     if(NULL != coordinate_ids) {
         general_allocator_free((void**)&coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != tmp_assembly_config) {
+        general_allocator_free((void**)&tmp_assembly_config, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
     return ret;
 }

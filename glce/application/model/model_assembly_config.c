@@ -36,16 +36,6 @@ model_result_t model_coordinate_config_initialize(uint16_t coordinate_id_, uint1
         ERROR_MESSAGE("model_coordinate_config_initialize(%s) - Provided coordinate_id_ or parent_coordinate_id_ is not valid.", model_result_to_str(ret));
         goto cleanup;
     }
-    if(360.0f < rotation_.elem[0] || 360.0f < rotation_.elem[1] || 360.0f < rotation_.elem[2]) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_coordinate_config_initialize(%s) - Provided rotation_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0.0f > rotation_.elem[0] || 0.0f > rotation_.elem[1] || 0.0f > rotation_.elem[2]) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_coordinate_config_initialize(%s) - Provided rotation_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
 
     out_config_->coordinate_id = coordinate_id_;
     out_config_->parent_coordinate_id = parent_coordinate_id_;
@@ -68,7 +58,7 @@ void model_coordinate_config_deinitialize(model_coordinate_config_t* config_) {
     config_->translate = vec3f_initialize(0.0f, 0.0f, 0.0f);
 }
 
-model_result_t model_assembly_config_initialize(
+model_result_t model_assembly_config_create(
     size_t coordinate_count_,
     model_coordinate_config_t** coordinates_,
     size_t line_mesh_count_,
@@ -83,130 +73,79 @@ model_result_t model_assembly_config_initialize(
     size_t untextured_mesh_count_,
     uint16_t** untextured_mesh_coordinate_ids_,
     untextured_mesh_config_t** untextured_mesh_configs_,
-    model_assembly_config_t* out_config_) {
+    model_assembly_config_t** out_config_) {
 
     model_result_t ret = MODEL_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_assembly_config_initialize", "out_config_")
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+
+    model_assembly_config_t* tmp_config = NULL;
+
     IF_ARG_NULL_GOTO_CLEANUP(coordinates_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_assembly_config_initialize", "coordinates_")
     IF_ARG_NULL_GOTO_CLEANUP(*coordinates_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_assembly_config_initialize", "*coordinates_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_assembly_config_initialize", "out_config_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, MODEL_BAD_OPERATION, model_result_to_str(MODEL_BAD_OPERATION), "model_assembly_config_initialize", "*out_config_")
     if(0 == coordinate_count_) {
         ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided coordinate_count_ is not valid.", model_result_to_str(ret));
+        ERROR_MESSAGE("model_assembly_config_create(%s) - Provided coordinate_count_ is not valid.", model_result_to_str(ret));
         goto cleanup;
     }
 
-    if(0 != line_mesh_count_ && (NULL == line_mesh_coordinate_ids_ || NULL == line_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided line_mesh_count_, line_mesh_coordinate_ids_ or line_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 != line_mesh_count_ && (NULL == *line_mesh_coordinate_ids_ || NULL == *line_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided line_mesh_count_, line_mesh_coordinate_ids_ or line_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == line_mesh_count_ && (NULL != line_mesh_coordinate_ids_ || NULL != line_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided line_mesh_count_, line_mesh_coordinate_ids_ or line_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == line_mesh_count_ && (NULL != *line_mesh_coordinate_ids_ || NULL != *line_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided line_mesh_count_, line_mesh_coordinate_ids_ or line_mesh_configs_ is not valid.", model_result_to_str(ret));
+    ret_general_allocator = general_allocator_allocate(sizeof(model_assembly_config_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_config);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = model_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("model_assembly_config_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
         goto cleanup;
     }
 
-    if(0 != point_mesh_count_ && (NULL == point_mesh_coordinate_ids_ || NULL == point_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided point_mesh_count_, point_mesh_coordinate_ids_ or point_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 != point_mesh_count_ && (NULL == *point_mesh_coordinate_ids_ || NULL == *point_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided point_mesh_count_, point_mesh_coordinate_ids_ or point_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == point_mesh_count_ && (NULL != point_mesh_coordinate_ids_ || NULL != point_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided point_mesh_count_, point_mesh_coordinate_ids_ or point_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == point_mesh_count_ && (NULL != *point_mesh_coordinate_ids_ || NULL != *point_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided point_mesh_count_, point_mesh_coordinate_ids_ or point_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
+    tmp_config->coordinate_count = coordinate_count_;
+    tmp_config->coordinates = *coordinates_;
 
-    if(0 != ui_mesh_count_ && (NULL == ui_mesh_coordinate_ids_ || NULL == ui_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided ui_mesh_count_, ui_mesh_coordinate_ids_ or ui_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 != ui_mesh_count_ && (NULL == *ui_mesh_coordinate_ids_ || NULL == *ui_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided ui_mesh_count_, ui_mesh_coordinate_ids_ or ui_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == ui_mesh_count_ && (NULL != ui_mesh_coordinate_ids_ || NULL != ui_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided ui_mesh_count_, ui_mesh_coordinate_ids_ or ui_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
-    if(0 == ui_mesh_count_ && (NULL != *ui_mesh_coordinate_ids_ || NULL != *ui_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided ui_mesh_count_, ui_mesh_coordinate_ids_ or ui_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
-    }
+    tmp_config->line_mesh_count = line_mesh_count_;
+    tmp_config->line_mesh_coordinate_ids = (0 != line_mesh_count_) ? *line_mesh_coordinate_ids_ : NULL;
+    tmp_config->line_mesh_configs = (0 != line_mesh_count_) ? *line_mesh_configs_ : NULL;
 
-    if(0 != untextured_mesh_count_ && (NULL == untextured_mesh_coordinate_ids_ || NULL == untextured_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided untextured_mesh_count_, untextured_mesh_coordinate_ids_ or untextured_mesh_configs_ is not valid.", model_result_to_str(ret));
+    tmp_config->point_mesh_count = point_mesh_count_;
+    tmp_config->point_mesh_coordinate_ids = (0 != point_mesh_count_) ? *point_mesh_coordinate_ids_ : NULL;
+    tmp_config->point_mesh_configs = (0 != point_mesh_count_) ? *point_mesh_configs_ : NULL;
+
+    tmp_config->ui_mesh_count = ui_mesh_count_;
+    tmp_config->ui_mesh_coordinate_ids = (0 != ui_mesh_count_) ? *ui_mesh_coordinate_ids_ : NULL;
+    tmp_config->ui_mesh_configs = (0 != ui_mesh_count_) ? *ui_mesh_configs_ : NULL;
+
+    tmp_config->untextured_mesh_count = untextured_mesh_count_;
+    tmp_config->untextured_mesh_coordinate_ids = (0 != untextured_mesh_count_) ? *untextured_mesh_coordinate_ids_ : NULL;
+    tmp_config->untextured_mesh_configs = (0 != untextured_mesh_count_) ? *untextured_mesh_configs_ : NULL;
+
+    // Result validation.
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!model_assembly_config_is_valid(tmp_config)) {
+        ret = MODEL_DATA_CORRUPTED;
+        ERROR_MESSAGE("model_assembly_config_create(%s) - Result validation failed for 'tmp_config'.", model_result_to_str(ret));
         goto cleanup;
     }
-    if(0 != untextured_mesh_count_ && (NULL == *untextured_mesh_coordinate_ids_ || NULL == *untextured_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided untextured_mesh_count_, untextured_mesh_coordinate_ids_ or untextured_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
+#endif
+
+    *out_config_ = tmp_config;
+    tmp_config = NULL;
+
+    if(0 != line_mesh_count_) {
+        *line_mesh_coordinate_ids_ = NULL;
+        *line_mesh_configs_ = NULL;
     }
-    if(0 == untextured_mesh_count_ && (NULL != untextured_mesh_coordinate_ids_ || NULL != untextured_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided untextured_mesh_count_, untextured_mesh_coordinate_ids_ or untextured_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
+    if(0 != point_mesh_count_) {
+        *point_mesh_coordinate_ids_ = NULL;
+        *point_mesh_configs_ = NULL;
     }
-    if(0 == untextured_mesh_count_ && (NULL != *untextured_mesh_coordinate_ids_ || NULL != *untextured_mesh_configs_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_assembly_config_initialize(%s) - Provided untextured_mesh_count_, untextured_mesh_coordinate_ids_ or untextured_mesh_configs_ is not valid.", model_result_to_str(ret));
-        goto cleanup;
+    if(0 != ui_mesh_count_) {
+        *ui_mesh_coordinate_ids_ = NULL;
+        *ui_mesh_configs_ = NULL;
     }
-
-    out_config_->coordinate_count = coordinate_count_;
-    out_config_->coordinates = *coordinates_;
-
-    out_config_->line_mesh_count = line_mesh_count_;
-    out_config_->line_mesh_coordinate_ids = *line_mesh_coordinate_ids_;
-    out_config_->line_mesh_configs = *line_mesh_configs_;
-
-    out_config_->point_mesh_count = point_mesh_count_;
-    out_config_->point_mesh_coordinate_ids = *point_mesh_coordinate_ids_;
-    out_config_->point_mesh_configs = *point_mesh_configs_;
-
-    out_config_->ui_mesh_count = ui_mesh_count_;
-    out_config_->ui_mesh_coordinate_ids = *ui_mesh_coordinate_ids_;
-    out_config_->ui_mesh_configs = *ui_mesh_configs_;
-
-    out_config_->untextured_mesh_count = untextured_mesh_count_;
-    out_config_->untextured_mesh_coordinate_ids = *untextured_mesh_coordinate_ids_;
-    out_config_->untextured_mesh_configs = *untextured_mesh_configs_;
-
-    *line_mesh_coordinate_ids_ = NULL;
-    *line_mesh_configs_ = NULL;
-    *point_mesh_coordinate_ids_ = NULL;
-    *point_mesh_configs_ = NULL;
-    *ui_mesh_coordinate_ids_ = NULL;
-    *ui_mesh_configs_ = NULL;
-    *untextured_mesh_coordinate_ids_ = NULL;
-    *untextured_mesh_configs_ = NULL;
+    if(0 != untextured_mesh_count_) {
+        *untextured_mesh_coordinate_ids_ = NULL;
+        *untextured_mesh_configs_ = NULL;
+    }
+    *coordinates_ = NULL;
 
     ret = MODEL_SUCCESS;
 
@@ -214,16 +153,16 @@ cleanup:
     return ret;
 }
 
-void model_assembly_config_deinitialize(model_assembly_config_t* config_) {
+void model_assembly_config_destroy(model_assembly_config_t** config_) {
     if(NULL == config_) {
         return;
     }
-    if(!model_assembly_config_is_valid(config_)) {
-        ERROR_MESSAGE("model_assembly_config_deinitialize(%s) - Provided config_ is corrupted.", model_result_to_str(MODEL_DATA_CORRUPTED));
+    if(!model_assembly_config_is_valid(*config_)) {
+        ERROR_MESSAGE("model_assembly_config_destroy(%s) - Provided config_ is corrupted.", model_result_to_str(MODEL_DATA_CORRUPTED));
         return;
     }
-    for(size_t i = 0; i != config_->coordinate_count; ++i) {
-        model_coordinate_config_deinitialize(&config_->coordinates[i]);
+    for(size_t i = 0; i != (*config_)->coordinate_count; ++i) {
+        model_coordinate_config_deinitialize(&(*config_)->coordinates[i]);
     }
 
     // TODO: xxx_mesh_config_deinitialize実装
@@ -236,45 +175,41 @@ void model_assembly_config_deinitialize(model_assembly_config_t* config_) {
     // for(size_t i = 0; i != config_->ui_mesh_count; ++i) {
     //     ui_mesh_config_deinitialize(&config_->ui_mesh_configs[i]);
     // }
-    for(size_t i = 0; i != config_->untextured_mesh_count; ++i) {
-        untextured_mesh_config_deinitialize(&config_->untextured_mesh_configs[i]);
+    for(size_t i = 0; i != (*config_)->untextured_mesh_count; ++i) {
+        untextured_mesh_config_deinitialize(&(*config_)->untextured_mesh_configs[i]);
     }
 
-    if(NULL != config_->coordinates) {
-        general_allocator_free((void**)&config_->coordinates, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    if(NULL != (*config_)->coordinates) {
+        general_allocator_free((void**)&(*config_)->coordinates, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
 
-    if(NULL != config_->line_mesh_configs) {
-        general_allocator_free((void**)&config_->line_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    if(NULL != (*config_)->line_mesh_configs) {
+        general_allocator_free((void**)&(*config_)->line_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
-    if(NULL != config_->point_mesh_configs) {
-        general_allocator_free((void**)&config_->point_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    if(NULL != (*config_)->point_mesh_configs) {
+        general_allocator_free((void**)&(*config_)->point_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
-    if(NULL != config_->ui_mesh_configs) {
-        general_allocator_free((void**)&config_->ui_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    if(NULL != (*config_)->ui_mesh_configs) {
+        general_allocator_free((void**)&(*config_)->ui_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
-    if(NULL != config_->untextured_mesh_configs) {
-        general_allocator_free((void**)&config_->untextured_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    }
-
-    if(NULL != config_->line_mesh_coordinate_ids) {
-        general_allocator_free((void**)&config_->line_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    }
-    if(NULL != config_->point_mesh_coordinate_ids) {
-        general_allocator_free((void**)&config_->point_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    }
-    if(NULL != config_->ui_mesh_coordinate_ids) {
-        general_allocator_free((void**)&config_->ui_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    }
-    if(NULL != config_->untextured_mesh_coordinate_ids) {
-        general_allocator_free((void**)&config_->untextured_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    if(NULL != (*config_)->untextured_mesh_configs) {
+        general_allocator_free((void**)&(*config_)->untextured_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
 
-    config_->coordinate_count = 0;
-    config_->line_mesh_count = 0;
-    config_->point_mesh_count = 0;
-    config_->ui_mesh_count = 0;
-    config_->untextured_mesh_count = 0;
+    if(NULL != (*config_)->line_mesh_coordinate_ids) {
+        general_allocator_free((void**)&(*config_)->line_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != (*config_)->point_mesh_coordinate_ids) {
+        general_allocator_free((void**)&(*config_)->point_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != (*config_)->ui_mesh_coordinate_ids) {
+        general_allocator_free((void**)&(*config_)->ui_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != (*config_)->untextured_mesh_coordinate_ids) {
+        general_allocator_free((void**)&(*config_)->untextured_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+
+    general_allocator_free((void**)config_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
 bool model_coordinate_config_is_valid(const model_coordinate_config_t* config_) {
@@ -301,6 +236,8 @@ bool model_assembly_config_is_valid(const model_assembly_config_t* config_) {
         return false;
     }
 
+    bool found_parent = false;
+
     // coordinate
     if(!general_allocator_ptr_is_allocated(config_->coordinates)) {
         return false;
@@ -310,6 +247,34 @@ bool model_assembly_config_is_valid(const model_assembly_config_t* config_) {
     }
     if(NULL == config_->coordinates) {
         return false;
+    }
+    for(size_t i = 0; i != config_->coordinate_count; ++i) {
+        if(!model_coordinate_config_is_valid(&config_->coordinates[i])) {
+            return false;
+        }
+    }
+    for(size_t i = 0; i != config_->coordinate_count; ++i) {
+        found_parent = false;
+        for(size_t j = i + 1; j != config_->coordinate_count; ++j) {
+            if(config_->coordinates[i].coordinate_id == config_->coordinates[j].coordinate_id) {
+                return false;
+            }
+        }
+    }
+    for(size_t i = 0; i < config_->coordinate_count; ++i) {
+        if(0 == config_->coordinates[i].parent_coordinate_id) {
+            continue;
+        }
+        found_parent = false;
+        for(size_t j = 0; j < config_->coordinate_count; ++j) {
+            if(config_->coordinates[i].parent_coordinate_id == config_->coordinates[j].coordinate_id) {
+                found_parent = true;
+                break;
+            }
+        }
+        if(!found_parent) {
+            return false;
+        }
     }
 
     // line mesh

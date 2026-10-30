@@ -42,7 +42,7 @@ model_result_t sample_robot_posture_update(const sample_robot_posture_t* posture
 
 void sample_robot_posture_default_get(sample_robot_posture_t* posture_);
 
-model_result_t sample_robot_dummy_config_loader(model_assembly_config_t* out_config_);
+model_result_t sample_robot_dummy_config_loader(model_assembly_config_t** out_config_);
 
 #ifdef __cplusplus
 }

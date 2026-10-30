@@ -58,7 +58,7 @@ model_result_t model_coordinate_config_initialize(uint16_t coordinate_id_, uint1
 
 void model_coordinate_config_deinitialize(model_coordinate_config_t* config_);
 
-model_result_t model_assembly_config_initialize(
+model_result_t model_assembly_config_create(
     size_t coordinate_count_,
     model_coordinate_config_t** coordinates_,
     size_t line_mesh_count_,
@@ -73,9 +73,9 @@ model_result_t model_assembly_config_initialize(
     size_t untextured_mesh_count_,
     uint16_t** untextured_mesh_coordinate_ids_,
     untextured_mesh_config_t** untextured_mesh_configs_,
-    model_assembly_config_t* out_config_);
+    model_assembly_config_t** out_config_);
 
-void model_assembly_config_deinitialize(model_assembly_config_t* config_);
+void model_assembly_config_destroy(model_assembly_config_t** config_);
 
 bool model_coordinate_config_is_valid(const model_coordinate_config_t* config_);
 

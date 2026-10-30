@@ -102,6 +102,11 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
             goto cleanup;
         }
         ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_line_meshes);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = model_result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("model_resource_map_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
+            goto cleanup;
+        }
 
         if(!size_mul_checked(sizeof(uint16_t), config_->line_mesh_count, &allocation_size)) {
             ret = MODEL_OVERFLOW;
@@ -127,8 +132,13 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
             goto cleanup;
         }
         ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_point_meshes);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = model_result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("model_resource_map_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
+            goto cleanup;
+        }
 
-        if(!size_mul_checked(sizeof(uint16_t), config_->line_mesh_count, &allocation_size)) {
+        if(!size_mul_checked(sizeof(uint16_t), config_->point_mesh_count, &allocation_size)) {
             ret = MODEL_OVERFLOW;
             ERROR_MESSAGE("model_resource_map_create(%s) - allocation overflow.", model_result_to_str(ret));
             goto cleanup;
@@ -152,6 +162,11 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
             goto cleanup;
         }
         ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_ui_meshes);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = model_result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("model_resource_map_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
+            goto cleanup;
+        }
 
         if(!size_mul_checked(sizeof(uint16_t), config_->ui_mesh_count, &allocation_size)) {
             ret = MODEL_OVERFLOW;
@@ -177,6 +192,11 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
             goto cleanup;
         }
         ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_untextured_meshes);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = model_result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("model_resource_map_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
+            goto cleanup;
+        }
 
         if(!size_mul_checked(sizeof(uint16_t), config_->untextured_mesh_count, &allocation_size)) {
             ret = MODEL_OVERFLOW;
@@ -260,13 +280,9 @@ cleanup:
             }
         }
     }
-    if(NULL != tmp_resource_map) {
-        if(MODEL_SUCCESS != model_resource_map_destroy(renderer_frontend_, &tmp_resource_map)) {
-            ret = MODEL_DATA_CORRUPTED;
-            ERROR_MESSAGE("model_resource_map_create(%s) - model_resource_map_destroy failed.", model_result_to_str(ret));
-            return ret;
-        }
-    }
+
+    // TODO: renderer_frontendへのpoint, ui, line meshのreleaseを追加したらrelease処理を追加する
+
     if(NULL != tmp_transform_tree) {
         model_transform_tree_destroy(&tmp_transform_tree);
     }
@@ -275,6 +291,9 @@ cleanup:
     }
     if(NULL != tmp_untextured_meshes) {
         general_allocator_free((void**)&tmp_untextured_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != tmp_resource_map) {
+        general_allocator_free((void**)&tmp_resource_map, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
     return ret;
 }
@@ -300,10 +319,16 @@ model_result_t model_resource_map_destroy(renderer_frontend_t* renderer_frontend
         }
     }
 
-    general_allocator_free((void**)&(*resource_map_)->untextured_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    general_allocator_free((void**)&(*resource_map_)->untextured_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    if(NULL != (*resource_map_)->untextured_mesh_coordinate_ids) {
+        general_allocator_free((void**)&(*resource_map_)->untextured_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != (*resource_map_)->untextured_meshes) {
+        general_allocator_free((void**)&(*resource_map_)->untextured_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != (*resource_map_)->transform_tree) {
+        model_transform_tree_destroy(&(*resource_map_)->transform_tree);
+    }
     general_allocator_free((void**)resource_map_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    model_transform_tree_destroy(&(*resource_map_)->transform_tree);
 
     ret = MODEL_SUCCESS;
 

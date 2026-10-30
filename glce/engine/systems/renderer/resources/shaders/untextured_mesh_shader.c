@@ -602,7 +602,6 @@ static shader_result_t vao_initialize(renderer_backend_context_t* backend_contex
 
     shader_result_t ret_cleanup = SHADER_INVALID_ARGUMENT;
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-    buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     bool vao_created = false;
     bool vao_bound = false;
