@@ -671,26 +671,29 @@ static shader_result_t vao_initialize(renderer_backend_context_t* backend_contex
     ret = SHADER_SUCCESS;
 
 cleanup:
-    if(SHADER_SUCCESS != ret) {
-        if(vbo_bound) {
-            ret_renderer_backend = renderer_backend_vbo_unbind(backend_context_);
-            if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-                ret_cleanup = shader_result_convert_renderer_backend(ret_renderer_backend);
-                ERROR_MESSAGE("vao_initialize failed. %s", shader_result_to_str(ret_cleanup));
-                ret = SHADER_DATA_CORRUPTED;
-            }
+    if(SHADER_DATA_CORRUPTED == ret || SHADER_SUCCESS == ret) {
+        return ret;
+    }
+    if(vbo_bound) {
+        ret_renderer_backend = renderer_backend_vbo_unbind(backend_context_);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ret_cleanup = shader_result_convert_renderer_backend(ret_renderer_backend);
+            ERROR_MESSAGE("vao_initialize failed. %s", shader_result_to_str(ret_cleanup));
+            ret = SHADER_DATA_CORRUPTED;
+            return ret;
         }
-        if(vao_bound) {
-            ret_renderer_backend = renderer_backend_vao_unbind(backend_context_);
-            if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-                ret_cleanup = shader_result_convert_renderer_backend(ret_renderer_backend);
-                ERROR_MESSAGE("vao_initialize failed. %s", shader_result_to_str(ret_cleanup));
-                ret = SHADER_DATA_CORRUPTED;
-            }
+    }
+    if(vao_bound) {
+        ret_renderer_backend = renderer_backend_vao_unbind(backend_context_);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ret_cleanup = shader_result_convert_renderer_backend(ret_renderer_backend);
+            ERROR_MESSAGE("vao_initialize failed. %s", shader_result_to_str(ret_cleanup));
+            ret = SHADER_DATA_CORRUPTED;
+            return ret;
         }
-        if(vao_created) {
-            renderer_backend_vao_destroy(backend_context_, &shader_->vao);
-        }
+    }
+    if(vao_created) {
+        renderer_backend_vao_destroy(backend_context_, &shader_->vao);
     }
     return ret;
 }
