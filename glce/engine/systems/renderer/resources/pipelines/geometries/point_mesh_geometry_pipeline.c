@@ -173,6 +173,7 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(vbo
     vbo_range_t tmp_buffer_range = { 0 };
     bool vbo_written = false;
     size_t write_size = 0;
+    bool exists = false;
 
     point_mesh_geometry_t* geometry = NULL;
 
@@ -182,37 +183,52 @@ resource_pipeline_result_t point_mesh_geometry_pipeline_import_from_vertices(vbo
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "out_geometry_id_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "point_mesh_geometry_pipeline_import_from_vertices", "vertices_")
 
-    ret_geometry = point_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
-    if(GEOMETRY_SUCCESS != ret_geometry) {
-        ret = resource_pipeline_result_convert_geometry(ret_geometry);
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
-        goto cleanup;
-    }
-
-    if(!size_mul_checked(vertex_count_, sizeof(point_vertex_t), &write_size)) {
-        ret = RESOURCE_PIPELINE_OVERFLOW;
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - vbo write size overflow failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_buffer_manager = vbo_manager_write(vbo_manager_, write_size, vertices_, &tmp_buffer_range.allocation_info);
-    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = resource_pipeline_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
-        goto cleanup;
-    }
-    vbo_written = true;
-    if(0 != (tmp_buffer_range.allocation_info.offset % sizeof(point_vertex_t))) {
-        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-        goto cleanup;
-    }
-    tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(point_vertex_t);
-    tmp_buffer_range.draw_range.vertex_count = vertex_count_;
-
-    ret_resource_registry = point_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+    ret_resource_registry = point_mesh_geometry_registry_exists(geometry_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
+        ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - point_mesh_geometry_registry_exists failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
+    }
+    if(exists) {
+        ret_resource_registry = point_mesh_geometry_registry_acquire(geometry_registry_, resource_name_, &tmp_geometry_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - point_mesh_geometry_registry_acquire failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        ret_geometry = point_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
+        if(GEOMETRY_SUCCESS != ret_geometry) {
+            ret = resource_pipeline_result_convert_geometry(ret_geometry);
+            ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
+            goto cleanup;
+        }
+
+        if(!size_mul_checked(vertex_count_, sizeof(point_vertex_t), &write_size)) {
+            ret = RESOURCE_PIPELINE_OVERFLOW;
+            ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - vbo write size overflow failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_buffer_manager = vbo_manager_write(vbo_manager_, write_size, vertices_, &tmp_buffer_range.allocation_info);
+        if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
+            ret = resource_pipeline_result_convert_buffer_manager(ret_buffer_manager);
+            ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
+            goto cleanup;
+        }
+        vbo_written = true;
+        if(0 != (tmp_buffer_range.allocation_info.offset % sizeof(point_vertex_t))) {
+            ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+            goto cleanup;
+        }
+        tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(point_vertex_t);
+        tmp_buffer_range.draw_range.vertex_count = vertex_count_;
+
+        ret_resource_registry = point_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("point_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import point mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
+            goto cleanup;
+        }
     }
 
     *out_geometry_id_ = tmp_geometry_id;

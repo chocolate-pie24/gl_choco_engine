@@ -166,6 +166,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(vbo_
     uint16_t tmp_geometry_id = 0;
     vbo_range_t tmp_buffer_range = { 0 };
     size_t write_size = 0;
+    bool exists = false;
 
     line_mesh_geometry_t* geometry = NULL;
     bool vbo_written = false;
@@ -177,39 +178,53 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(vbo_
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "out_geometry_id_")
     IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_vertices", "vertices_")
 
-    // Geometry CPUリソース生成
-    ret_geometry = line_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
-    if(GEOMETRY_SUCCESS != ret_geometry) {
-        ret = resource_pipeline_result_convert_geometry(ret_geometry);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
-        goto cleanup;
-    }
-
-    if(!size_mul_checked(vertex_count_, sizeof(line_vertex_t), &write_size)) {
-        ret = RESOURCE_PIPELINE_OVERFLOW;
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - vbo write size overflow failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_buffer_manager = vbo_manager_write(vbo_manager_, write_size, vertices_, &tmp_buffer_range.allocation_info);
-    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = resource_pipeline_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
-        goto cleanup;
-    }
-    vbo_written = true;
-    if(0 != (tmp_buffer_range.allocation_info.offset % sizeof(line_vertex_t))) {
-        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-        goto cleanup;
-    }
-    tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(line_vertex_t);
-    tmp_buffer_range.draw_range.vertex_count = vertex_count_;
-
-    // Geometry Registryへ登録
-    ret_resource_registry = line_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+    ret_resource_registry = line_mesh_geometry_registry_exists(geometry_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - line_mesh_geometry_registry_exists failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
+    }
+    if(exists) {
+        ret_resource_registry = line_mesh_geometry_registry_acquire(geometry_registry_, resource_name_, &tmp_geometry_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - line_mesh_geometry_registry_acquire failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        ret_geometry = line_mesh_geometry_create_from_vertices(vertex_count_, vertices_, &geometry);
+        if(GEOMETRY_SUCCESS != ret_geometry) {
+            ret = resource_pipeline_result_convert_geometry(ret_geometry);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
+            goto cleanup;
+        }
+
+        if(!size_mul_checked(vertex_count_, sizeof(line_vertex_t), &write_size)) {
+            ret = RESOURCE_PIPELINE_OVERFLOW;
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - vbo write size overflow failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_buffer_manager = vbo_manager_write(vbo_manager_, write_size, vertices_, &tmp_buffer_range.allocation_info);
+        if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
+            ret = resource_pipeline_result_convert_buffer_manager(ret_buffer_manager);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
+            goto cleanup;
+        }
+        vbo_written = true;
+        if(0 != (tmp_buffer_range.allocation_info.offset % sizeof(line_vertex_t))) {
+            ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+            goto cleanup;
+        }
+        tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(line_vertex_t);
+        tmp_buffer_range.draw_range.vertex_count = vertex_count_;
+
+        // Geometry Registryへ登録
+        ret_resource_registry = line_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
+            goto cleanup;
+        }
     }
 
     *out_geometry_id_ = tmp_geometry_id;
@@ -308,6 +323,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(vbo_mana
     uint16_t tmp_geometry_id = 0;
     vbo_range_t tmp_buffer_range = { 0 };
     size_t write_size = 0;
+    bool exists = false;
 
     line_mesh_geometry_t* geometry = NULL;
     const line_vertex_t* vertices = NULL;
@@ -321,45 +337,60 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(vbo_mana
     IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "out_geometry_id_")
     IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "aabb_")
 
-    // Geometry CPUリソース生成
-    ret_geometry = line_mesh_geometry_create_from_aabbs(1, aabb_, color_, &geometry);
-    if(GEOMETRY_SUCCESS != ret_geometry) {
-        ret = resource_pipeline_result_convert_geometry(ret_geometry);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
-        goto cleanup;
-    }
-
-    ret_geometry = line_mesh_geometry_vertices_get(geometry, &vertices, &vertex_count);
-    if(GEOMETRY_SUCCESS != ret_geometry) {
-        ret = resource_pipeline_result_convert_geometry(ret_geometry);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertices_get_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
-        goto cleanup;
-    }
-
-    if(!size_mul_checked(vertex_count, sizeof(line_vertex_t), &write_size)) {
-        ret = RESOURCE_PIPELINE_OVERFLOW;
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - vbo write size overflow failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_buffer_manager = vbo_manager_write(vbo_manager_, write_size, vertices, &tmp_buffer_range.allocation_info);
-    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = resource_pipeline_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
-        goto cleanup;
-    }
-    vbo_written = true;
-    if(0 != (tmp_buffer_range.allocation_info.offset % sizeof(line_vertex_t))) {
-        ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
-        goto cleanup;
-    }
-    tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(line_vertex_t);
-    tmp_buffer_range.draw_range.vertex_count = vertex_count;
-
-    ret_resource_registry = line_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+    ret_resource_registry = line_mesh_geometry_registry_exists(geometry_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
+        ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - line_mesh_geometry_registry_exists failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
+    }
+    if(exists) {
+        ret_resource_registry = line_mesh_geometry_registry_acquire(geometry_registry_, resource_name_, &tmp_geometry_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - line_mesh_geometry_registry_acquire failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        // Geometry CPUリソース生成
+        ret_geometry = line_mesh_geometry_create_from_aabbs(1, aabb_, color_, &geometry);
+        if(GEOMETRY_SUCCESS != ret_geometry) {
+            ret = resource_pipeline_result_convert_geometry(ret_geometry);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
+            goto cleanup;
+        }
+
+        ret_geometry = line_mesh_geometry_vertices_get(geometry, &vertices, &vertex_count);
+        if(GEOMETRY_SUCCESS != ret_geometry) {
+            ret = resource_pipeline_result_convert_geometry(ret_geometry);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=vertices_get_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);
+            goto cleanup;
+        }
+
+        if(!size_mul_checked(vertex_count, sizeof(line_vertex_t), &write_size)) {
+            ret = RESOURCE_PIPELINE_OVERFLOW;
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - vbo write size overflow failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_buffer_manager = vbo_manager_write(vbo_manager_, write_size, vertices, &tmp_buffer_range.allocation_info);
+        if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
+            ret = resource_pipeline_result_convert_buffer_manager(ret_buffer_manager);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
+            goto cleanup;
+        }
+        vbo_written = true;
+        if(0 != (tmp_buffer_range.allocation_info.offset % sizeof(line_vertex_t))) {
+            ret = RESOURCE_PIPELINE_DATA_CORRUPTED;
+            goto cleanup;
+        }
+        tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(line_vertex_t);
+        tmp_buffer_range.draw_range.vertex_count = vertex_count;
+
+        ret_resource_registry = line_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_register_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count);
+            goto cleanup;
+        }
     }
 
     *out_geometry_id_ = tmp_geometry_id;

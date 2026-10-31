@@ -199,6 +199,7 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
     uint8_t* tmp_pixels = NULL; // CPUリソースにmoveされるピクセルデータ
     const uint8_t* tmp_pixels2 = NULL;  // CPUリソースから借用するピクセルデータ
     uint16_t tmp_texture_id = 0;
+    bool exists = false;
 
     // 入力値検証
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "backend_context_")
@@ -207,41 +208,56 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
     IF_ARG_NULL_GOTO_CLEANUP(texture_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "texture_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "out_texture_id_")
 
-    ret = bmp_load(texture_fullpath_, &resource_info, &tmp_pixels);
-    if(RESOURCE_PIPELINE_SUCCESS != ret) {
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - bmp_load failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // CPU側リソース生成
-    ret_texture = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
-    if(TEXTURE_SUCCESS != ret_texture) {
-        ret = resource_pipeline_result_convert_texture(ret_texture);
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-    // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
-    ret_texture = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
-    if(TEXTURE_SUCCESS != ret_texture) {
-        ret = resource_pipeline_result_convert_texture(ret_texture);
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // GPU側リソース生成
-    ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
-    if(TEXTURE_SUCCESS != ret_texture) {
-        ret = resource_pipeline_result_convert_texture(ret_texture);
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // Registry登録(gpu_resource, cpu_resourceはregistry側にmoveされる)
-    ret_resource_registry = texture_registry_register(registry_, resource_name_, &gpu_resource, &cpu_resource, &tmp_texture_id);
+    ret_resource_registry = texture_registry_exists(registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_registry_register failed.", resource_pipeline_result_to_str(ret));
+        ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_registry_exists failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
+    }
+    if(exists) {
+        ret_resource_registry = texture_registry_acquire(registry_, resource_name_, &tmp_texture_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_registry_acquire failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        ret = bmp_load(texture_fullpath_, &resource_info, &tmp_pixels);
+        if(RESOURCE_PIPELINE_SUCCESS != ret) {
+            ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - bmp_load failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+
+        // CPU側リソース生成
+        ret_texture = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
+        if(TEXTURE_SUCCESS != ret_texture) {
+            ret = resource_pipeline_result_convert_texture(ret_texture);
+            ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+        // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
+        ret_texture = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
+        if(TEXTURE_SUCCESS != ret_texture) {
+            ret = resource_pipeline_result_convert_texture(ret_texture);
+            ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+
+        // GPU側リソース生成
+        ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
+        if(TEXTURE_SUCCESS != ret_texture) {
+            ret = resource_pipeline_result_convert_texture(ret_texture);
+            ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+
+        // Registry登録(gpu_resource, cpu_resourceはregistry側にmoveされる)
+        ret_resource_registry = texture_registry_register(registry_, resource_name_, &gpu_resource, &cpu_resource, &tmp_texture_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_registry_register failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
     }
 
     *out_texture_id_ = tmp_texture_id;
@@ -345,6 +361,7 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
     uint8_t* tmp_pixels = NULL; // CPUリソースにmoveされるピクセルデータ
     const uint8_t* tmp_pixels2 = NULL;  // CPUリソースから借用するピクセルデータ
     uint16_t tmp_texture_id = 0;
+    bool exists = false;
 
     // 入力値検証
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "backend_context_")
@@ -352,41 +369,56 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
     IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "resource_name_")
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "out_texture_id_")
 
-    ret = solid_color_texture_generate(red_, green_, blue_, &resource_info, &tmp_pixels);
-    if(RESOURCE_PIPELINE_SUCCESS != ret) {
-        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - solid_color_texture_generate failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // CPU側リソース生成
-    ret_texture = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
-    if(TEXTURE_SUCCESS != ret_texture) {
-        ret = resource_pipeline_result_convert_texture(ret_texture);
-        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-    // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
-    ret_texture = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
-    if(TEXTURE_SUCCESS != ret_texture) {
-        ret = resource_pipeline_result_convert_texture(ret_texture);
-        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // GPU側リソース生成
-    ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
-    if(TEXTURE_SUCCESS != ret_texture) {
-        ret = resource_pipeline_result_convert_texture(ret_texture);
-        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // Registry登録(gpu_resource, cpu_resourceはregistry側にmoveされる)
-    ret_resource_registry = texture_registry_register(registry_, resource_name_, &gpu_resource, &cpu_resource, &tmp_texture_id);
+    ret_resource_registry = texture_registry_exists(registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_registry_register failed.", resource_pipeline_result_to_str(ret));
+        ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_registry_exists failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
+    }
+    if(exists) {
+        ret_resource_registry = texture_registry_acquire(registry_, resource_name_, &tmp_texture_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_registry_acquire failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        ret = solid_color_texture_generate(red_, green_, blue_, &resource_info, &tmp_pixels);
+        if(RESOURCE_PIPELINE_SUCCESS != ret) {
+            ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - solid_color_texture_generate failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+
+        // CPU側リソース生成
+        ret_texture = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
+        if(TEXTURE_SUCCESS != ret_texture) {
+            ret = resource_pipeline_result_convert_texture(ret_texture);
+            ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+        // texture_cpu_resource_createによってtmp_pixelsはNULLになっているためCPUリソースから借用
+        ret_texture = texture_cpu_resource_pixels_get(cpu_resource, &tmp_pixels2);
+        if(TEXTURE_SUCCESS != ret_texture) {
+            ret = resource_pipeline_result_convert_texture(ret_texture);
+            ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_pixels_get failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+
+        // GPU側リソース生成
+        ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
+        if(TEXTURE_SUCCESS != ret_texture) {
+            ret = resource_pipeline_result_convert_texture(ret_texture);
+            ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+
+        // Registry登録(gpu_resource, cpu_resourceはregistry側にmoveされる)
+        ret_resource_registry = texture_registry_register(registry_, resource_name_, &gpu_resource, &cpu_resource, &tmp_texture_id);
+        if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
+            ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
+            ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_registry_register failed.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
     }
 
     *out_texture_id_ = tmp_texture_id;
