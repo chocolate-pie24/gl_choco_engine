@@ -25,6 +25,9 @@ typedef struct ambient_light ambient_light_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct untextured_mesh_config untextured_mesh_config_t;
 typedef struct untextured_mesh untextured_mesh_t;
+typedef struct line_vertex line_vertex_t;
+typedef struct line_mesh line_mesh_t;
+typedef struct aabb_3d aabb_3d_t;
 
 typedef struct {
     size_t vbo_size;
@@ -36,11 +39,16 @@ typedef struct {
 typedef struct {
     vbo_config_t vbo_config;
     size_t max_geometry_count;
+} line_mesh_resource_config_t;
+
+typedef struct {
+    vbo_config_t vbo_config;
+    size_t max_geometry_count;
     size_t max_material_count;
 } untextured_mesh_resource_config_t;
 
 typedef struct {
-    // Untextured mesh
+    line_mesh_resource_config_t line_mesh_resource_config;
     untextured_mesh_resource_config_t untextured_mesh_resource_config;
 } renderer_frontend_config_t;
 
@@ -100,13 +108,30 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_import(renderer_fro
 
 renderer_frontend_result_t renderer_frontend_untextured_mesh_release(renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_);
 
+// TODO: 廃止
 renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_import_from_file(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 
+// TODO: 廃止
 renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_release(renderer_frontend_t* renderer_frontend_, uint16_t geometry_id_);
 
+// TODO: 廃止
 renderer_frontend_result_t renderer_frontend_untextured_mesh_material_import_from_file(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
 
+// TODO: 廃止
 renderer_frontend_result_t renderer_frontend_untextured_mesh_material_release(renderer_frontend_t* renderer_frontend_, uint16_t material_id_);
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// for Line Mesh
+//////////////////////////////////////////////////////////////////////////////////////////
+renderer_frontend_result_t renderer_frontend_line_mesh_draw(renderer_frontend_t* renderer_frontend_, const renderer_backend_context_t* backend_context_, const line_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
+
+renderer_frontend_result_t renderer_frontend_line_mesh_render_update(renderer_frontend_t* renderer_frontend_, const renderer_backend_context_t* backend_context_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
+
+renderer_frontend_result_t renderer_frontend_line_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, line_mesh_t* out_mesh_);
+
+renderer_frontend_result_t renderer_frontend_line_mesh_import_from_aabb(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const aabb_3d_t* aabb_, vec4u8_t color_, line_mesh_t* out_mesh_);
+
+renderer_frontend_result_t renderer_frontend_line_mesh_release(renderer_frontend_t* renderer_frontend_, const line_mesh_t* mesh_);
 
 #ifdef __cplusplus
 }

@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-30
+最終更新: 2026-10-31
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -6925,3 +6925,87 @@ Renderer FrontendがMesh Importという下位の責務を提供し、Resource M
 - `validation_policy.md`
 - `glce_renderer_resource_model_workplan.md`
 - `glce_near_term_todo.md`
+---
+
+## Decision: Line MeshのColorをMesh単位からVertex単位へ移動し、大規模Voxel Grid描画に対応する
+
+**Status:** Accepted（実装は未完了）  
+**Date:** 2026-10-31  
+**Scope:** Renderer / Line Mesh / Vertex Format / Shader / Draw Call / Data Visualization
+
+### Decision
+
+Line MeshのColorを`line_mesh_t`単位のUniform Colorから、`line_vertex_t`が保持するVertex Colorへ変更する。
+
+変更後の基本的なデータ表現は以下とする。
+
+```c
+typedef struct line_vertex {
+    vec3f_t position;
+    vec4u8_t color;
+} line_vertex_t;
+
+typedef struct line_mesh {
+    uint16_t geometry_id;
+} line_mesh_t;
+```
+
+Line ShaderはColorをVertex Attributeとして受け取り、Fragment Shaderへ渡す。従来のMesh単位Color Uniformを標準の描画色指定経路としては使用しない。
+
+Line Geometryは、異なるColorを持つ線分を一つのGeometryに格納できるものとする。同じ色の線分は両端のVertexへ同じColorを指定する。
+
+この変更を理由としてLine専用Material Registryは新設しない。ColorはLine Geometryを構成するVertex Dataの一部として管理する。
+
+### Context
+
+今回の直接の実装対象は、Robot ModelのLocal AABBをLine MeshによってDebug Visualization表示することである。この用途だけなら、すべてのAABBを共通色で描画し、既存のMesh単位Color Uniformを維持することも可能である。
+
+しかしGLCEでは将来的に、点群データからVoxel Gridを生成し、各VoxelのWireframeをLine Mesh Shaderで描画する用途を想定している。点群に由来するColorをVoxelごとに反映する場合、Voxel間で異なるColorが必要になる。
+
+従来のLine Meshは`line_mesh_t`が一つのColorを保持し、Draw時にShader Uniformへ設定する方式である。この構造では、一度のDraw Callで一つのColorしか指定できない。そのため、異なるColorの線分を同時に扱うには、少なくともColorごとに描画を分ける必要がある。
+
+Voxel Gridの規模やColorの種類が増えると、Colorの違いだけを理由としてMeshの分割数とDraw Callが増大する。例えばVoxelごとに固有色を持つ場合、単純な実装ではVoxel数に近い数の描画単位が生じ得る。これは将来の大規模点群可視化に対して望ましくない。
+
+ColorをVertex Attributeとすれば、異なるColorを一つのVertex Buffer / Geometryへ格納し、まとめて描画できる。**Colorの違いがDraw Callを分割する必須条件ではなくなる**ことが、今回の変更の主要目的である。
+
+### Rationale
+
+- 点群由来のColorをVoxel Grid内の多数の線分へ与えても、Color単位でMeshを分割せずに済む。
+- 大量の線分を単一または少数のGeometryへまとめることができ、Colorの違いに起因するDraw Call増加を抑えられる。
+- Colorを各Vertexと同じGeometry Storageに保持するため、PositionとColorの対応を同じVertex Indexで表現できる。
+- AABB、座標補助線、将来のVoxel Grid等、生成元や用途が異なるLine Geometryを同じVertex / Shaderモデルで描画できる。
+- Line MeshのResource参照表現をGeometry ID中心に単純化でき、Line専用Material Registryの追加を必要としない。
+
+### Rejected Alternatives
+
+- **Mesh単位のColor Uniformを維持する。**
+  - 単色のAABB表示には十分だが、異なるColorを持つ多数のVoxelを表示するにはColorごとの描画分割が必要になる。現在の小規模Debug表示だけを基準に、将来のLine描画の制約を固定しない。
+- **ColorごとにLine Mesh / Geometryを生成する。**
+  - 大規模Voxel GridではMeshの個数とDraw Callの増加につながり得るため、基本方針としない。
+- **Line専用Material Registryを導入してColorを管理する。**
+  - Colorが各線分・各Vertexに結び付く用途では、Material IDで描画単位を分割する構造を必要とし、今回解消したい制約を残す。
+
+### Consequences / Implementation Scope
+
+- `line_vertex_t`へ`color`を追加し、Line GeometryがPositionとColorを一体として保持・転送するようにする。
+- `line_mesh_t`からMesh単位の`color`を削除する。既存の`line_mesh_config_t.line_color`等、旧Colorの入力経路は実装変更時に新しいVertex Colorの生成責務に合わせて整理する。
+- Line ShaderのVertex Input、VAO Attribute Configuration、GLSL、および既存のDraw Call Siteを新しいVertex Formatへ整合させる。
+- VertexごとにColorを保持するため、従来のPosition-only Line VertexよりCPU / GPU上のVertex Data量は増加する。このStorage Costを受け入れ、Colorに起因する描画分割の削減を優先する。
+- 異なる色のInstanceを同じGeometryで描画することは今回の要求に含めない。RobotのDebug AABBは全Instanceで共通Colorとし、同一のAABB Geometryを共有する。
+- `model_assembly_config_t`の通常Line Mesh Collectionは維持する。Debug Visualization用AABBの自動生成・共有・表示Policyは別の設計論点であり、このColor DecisionだけでModel ConfigやResource Mapの最終構造を確定しない。
+- Colorを含むGeometryの再生成・更新が必要になった場合には、Registry上のResource Identityと更新・共有のContractを考慮する。
+- **本Decisionは設計の確定を記録するものであり、2026-10-31時点でVertex / Shader / Frontendの移行実装が完了したことを意味しない。**
+
+### Revisit Conditions
+
+- 実測によりVertex ColorのStorage / Bandwidth Costが支配的となり、別のColor EncodingやBuffer Layoutが必要になった場合。
+- Mesh単位のTint / Highlight等、共有GeometryのVertex Colorを変えずにInstanceごとの色変更を行う具体的な要求が生じた場合。
+- 大規模Voxel GridにおけるDraw Call、Geometry分割、Streaming / Cullingの実測から、Line描画の別のBatching方式が必要になった場合。
+
+### Related Documents
+
+- `design_notes.md`
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+- `glce/include/engine/core/geometry_primitive/vertex.h`
+- `glce/include/engine/systems/renderer/resources/meshes/line_mesh.h`

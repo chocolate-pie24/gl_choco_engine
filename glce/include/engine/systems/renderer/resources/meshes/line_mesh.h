@@ -17,12 +17,10 @@ typedef struct choco_string choco_string_t;
 typedef struct line_mesh_config {
     choco_string_t* geometry_subdirectory;  // assetsからの相対パス
     choco_string_t* geometry_resource_name;
-    vec4u8_t line_color;
 } line_mesh_config_t;
 
 typedef struct line_mesh {
     uint16_t geometry_id;
-    vec4u8_t color;
 } line_mesh_t;
 
 #ifdef __cplusplus

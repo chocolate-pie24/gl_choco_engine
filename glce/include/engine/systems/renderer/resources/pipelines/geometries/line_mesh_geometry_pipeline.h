@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
+
 /** @ingroup renderer
  *
  * @file line_mesh_geometry_pipeline.h
@@ -96,6 +97,8 @@ extern "C" {
 
 #include <stdint.h>
 #include <stddef.h>
+
+#include "engine/base/choco_math/math_types.h"
 
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
@@ -224,6 +227,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(vbo_
  * @param[in,out] geometry_registry_ 登録先のLine Mesh Geometry Registry。
  * @param[in] resource_name_ 登録するResource Name。
  * @param[in] aabb_ 入力AABB。
+ * @param[in] color_ 入力描画色。
  * @param[out] out_geometry_id_ 登録したGeometry IDの出力先。
  *
  * @retval RESOURCE_PIPELINE_SUCCESS 登録成功。
@@ -253,7 +257,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(vbo_
  *       out_geometry_id_に登録IDが格納される。
  * @post 入力AABBのownershipは移転しない。
  */
-resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(vbo_manager_t* vbo_manager_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_);
+resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(vbo_manager_t* vbo_manager_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, vec4u8_t color_, uint16_t* out_geometry_id_);
 
 /**
  * @brief Line Mesh Geometryの利用権を1つ返却する。

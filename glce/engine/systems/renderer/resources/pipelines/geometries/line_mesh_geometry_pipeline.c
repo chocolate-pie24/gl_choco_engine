@@ -297,7 +297,7 @@ cleanup:
  * - 成功時、一時的なCPU Geometryの所有ポインタは
  *   RegistryへのOwnership TransferによってNULLとなる。
  */
-resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(vbo_manager_t* vbo_manager_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, uint16_t* out_geometry_id_) {
+resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(vbo_manager_t* vbo_manager_, line_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const aabb_3d_t* aabb_, vec4u8_t color_, uint16_t* out_geometry_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
@@ -322,7 +322,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_aabb(vbo_mana
     IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "line_mesh_geometry_pipeline_import_from_aabb", "aabb_")
 
     // Geometry CPUリソース生成
-    ret_geometry = line_mesh_geometry_create_from_aabbs(1, aabb_, &geometry);
+    ret_geometry = line_mesh_geometry_create_from_aabbs(1, aabb_, color_, &geometry);
     if(GEOMETRY_SUCCESS != ret_geometry) {
         ret = resource_pipeline_result_convert_geometry(ret_geometry);
         ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_aabb(%s) - Failed to import line mesh geometry. reason=geometry_create_failed, geometry_name='%s'", resource_pipeline_result_to_str(ret), resource_name_);

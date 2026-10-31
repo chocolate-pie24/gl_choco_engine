@@ -70,7 +70,7 @@ typedef struct line_mesh_geometry line_mesh_geometry_t;   /**< line_mesh_geometr
 
 geometry_result_t line_mesh_geometry_create_from_vertices(size_t vertex_count_, const line_vertex_t* vertices_, line_mesh_geometry_t** out_geometry_);
 
-geometry_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** out_geometry_);
+geometry_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, vec4u8_t color_, line_mesh_geometry_t** out_geometry_);
 
 void line_mesh_geometry_destroy(line_mesh_geometry_t** geometry_);
 

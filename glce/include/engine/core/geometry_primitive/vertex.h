@@ -33,10 +33,10 @@ typedef struct ui_vertex {
 /**
  * @brief 線分描画用頂点情報構造体
  *
- * @note 線分のグラデーション表示は行わないので、色情報は親構造体に持たせる
  */
 typedef struct line_vertex {
     vec3f_t position;   /**< 線分の頂点座標 */
+    vec4u8_t color;     /**< 色情報 */
 } line_vertex_t;
 
 /**

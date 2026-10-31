@@ -355,6 +355,58 @@ cleanup:
     return ret;
 }
 
+model_result_t model_resource_map_line_mesh_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, line_mesh_t* out_mesh_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_line_mesh_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_line_mesh_get", "out_mesh_")
+    if(mesh_index_ >= resource_map_->untextured_mesh_count) {
+        ret = MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_resource_map_line_mesh_get(%s) - Provided mesh_index_ is not valid.", model_result_to_str(ret));
+        goto cleanup;
+    }
+
+    out_mesh_->geometry_id = resource_map_->line_meshes[mesh_index_].geometry_id;
+
+    return MODEL_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+model_result_t model_resource_map_line_mesh_coordinate_id_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_line_mesh_coordinate_id_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_coordinate_id_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_line_mesh_coordinate_id_get", "out_coordinate_id_")
+    if(mesh_index_ >= resource_map_->line_mesh_count) {
+        ret = MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_resource_map_line_mesh_coordinate_id_get(%s) - Provided untextured_mesh_index_ is not valid.", model_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_coordinate_id_ = resource_map_->line_mesh_coordinate_ids[mesh_index_];
+
+    return MODEL_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+model_result_t model_resource_map_line_mesh_count_get(const model_resource_map_t* resource_map_, size_t* out_count_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_line_mesh_count_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_count_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_line_mesh_count_get", "out_count_")
+
+    *out_count_ = resource_map_->line_mesh_count;
+
+    ret = MODEL_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 model_result_t model_resource_map_untextured_mesh_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, untextured_mesh_t* out_mesh_) {
     model_result_t ret = MODEL_INVALID_ARGUMENT;
 

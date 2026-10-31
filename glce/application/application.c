@@ -775,6 +775,12 @@ static void event_system_config_initialize(event_system_config_t* config_) {
 }
 
 static void renderer_frontend_config_initialize(renderer_frontend_config_t* config_) {
+    config_->line_mesh_resource_config.max_geometry_count = 128;
+    config_->line_mesh_resource_config.vbo_config.base_align = alignof(float);
+    config_->line_mesh_resource_config.vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
+    config_->line_mesh_resource_config.vbo_config.max_allocation_count = 512;
+    config_->line_mesh_resource_config.vbo_config.vbo_size = 1 * MIB;
+
     config_->untextured_mesh_resource_config.max_geometry_count = 128;
     config_->untextured_mesh_resource_config.max_material_count = 128;
     config_->untextured_mesh_resource_config.vbo_config.base_align = alignof(max_align_t);

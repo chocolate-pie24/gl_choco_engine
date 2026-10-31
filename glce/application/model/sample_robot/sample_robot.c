@@ -228,24 +228,24 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t** out_co
         const char* geometry_name;
         const char* material_name;
         uint16_t coordinate_id;
-    } mesh_definitions[] = {
+    } untextured_mesh_definitions[] = {
         { "base_motor_mount", "link_mat",  1 },
         { "base_support", "link_mat", 13 },
         { "motor", "actuator_mat",  9 },
         { "motor", "actuator_mat", 10 },
         { "motor", "actuator_mat", 11 },
         { "motor", "actuator_mat", 12 },
-        { "shoulder_link", "link_mat",  2 },
-        { "elbow_link", "link_mat",  3 },
-        { "wrist_link", "link_mat",  4 },
-        { "tool_interface", "actuator_mat",  4 },
-        { "gripper_body", "end_tool_mat",  8 },
-        { "left_finger", "end_tool_mat",  5 },
-        { "right_finger", "end_tool_mat",  6 },
+        { "shoulder_link", "link_mat", 2 },
+        { "elbow_link", "link_mat", 3 },
+        { "wrist_link", "link_mat", 4 },
+        { "tool_interface", "actuator_mat", 4 },
+        { "gripper_body", "end_tool_mat", 8 },
+        { "left_finger", "end_tool_mat", 5 },
+        { "right_finger", "end_tool_mat", 6 },
     };
 
     const size_t coordinate_count = sizeof(coordinate_definitions) / sizeof(coordinate_definitions[0]);
-    const size_t untextured_mesh_count = sizeof(mesh_definitions) / sizeof(mesh_definitions[0]);
+    const size_t untextured_mesh_count = sizeof(untextured_mesh_definitions) / sizeof(untextured_mesh_definitions[0]);
     size_t created_config_count = 0;
 
     model_assembly_config_t* tmp_assembly_config = NULL;
@@ -293,13 +293,13 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t** out_co
     }
 
     for(size_t i = 0; i != untextured_mesh_count; ++i) {
-        coordinate_ids[i] = mesh_definitions[i].coordinate_id;
+        coordinate_ids[i] = untextured_mesh_definitions[i].coordinate_id;
         ret_mesh = untextured_mesh_config_initialize(
             "stl/robot_sample",
-            mesh_definitions[i].geometry_name,
+            untextured_mesh_definitions[i].geometry_name,
             "stl",
             "materials/robot_sample",
-            mesh_definitions[i].material_name,
+            untextured_mesh_definitions[i].material_name,
             "untextured_mat",
             &untextured_mesh_configs[i]);
         if(MESH_SUCCESS != ret_mesh) {

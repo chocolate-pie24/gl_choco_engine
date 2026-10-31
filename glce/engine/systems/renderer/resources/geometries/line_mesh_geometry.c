@@ -298,7 +298,7 @@ cleanup:
 // - 本セクションはChatGPTを用いて草案を作成し、
 //   プロジェクト作成者が実装との整合性を確認・修正した。
 // - 実装コードはプロジェクト作成者が作成した。
-geometry_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, line_mesh_geometry_t** out_geometry_) {
+geometry_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const aabb_3d_t* aabbs_, vec4u8_t color_, line_mesh_geometry_t** out_geometry_) {
     geometry_result_t ret = GEOMETRY_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -370,6 +370,10 @@ geometry_result_t line_mesh_geometry_create_from_aabbs(size_t aabb_count_, const
         tmp_vertices[ii + 18].position = aabb_vertices[5]; tmp_vertices[ii + 19].position = aabb_vertices[6]; // p5 - p6
         tmp_vertices[ii + 20].position = aabb_vertices[6]; tmp_vertices[ii + 21].position = aabb_vertices[7]; // p6 - p7
         tmp_vertices[ii + 22].position = aabb_vertices[7]; tmp_vertices[ii + 23].position = aabb_vertices[4]; // p7 - p4
+
+        for(size_t j = 0; j != 24; ++j) {
+            tmp_vertices[ii + j].color = color_;
+        }
     }
 
     // geometry初期化

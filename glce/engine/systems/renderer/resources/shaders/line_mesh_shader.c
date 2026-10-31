@@ -27,8 +27,8 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vao.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_vbo.h"
 
-#include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_program_builder.h"
@@ -44,7 +44,6 @@ struct line_mesh_shader {
     int32_t model_matrix_location;          /**< モデル行列のユニフォーム変数Location */
     int32_t view_matrix_location;           /**< ビュー行列のユニフォーム変数Location */
     int32_t projection_matrix_location;     /**< プロジェクション行列のユニフォーム変数Location */
-    int32_t color_location;                 /**< 色情報のユニフォーム変数Location */
 
     renderer_backend_shader_t* shader;      /**< シェーダープログラムハンドルインスタンスへのポインタ */
     renderer_backend_vao_t* vao;            /**< 線分描画シェーダー用VAO */
@@ -52,24 +51,24 @@ struct line_mesh_shader {
 
 static void destroy_unchecked(renderer_backend_context_t* backend_context_, line_mesh_shader_t** shader_);
 static shader_result_t program_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_);
-static shader_result_t vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, vbo_manager_t* vbo_manager_);
+static shader_result_t vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, const renderer_backend_vbo_t* vbo_);
 
 // validation
 static bool is_valid_shallow(const line_mesh_shader_t* shader_);
 
-shader_result_t line_mesh_shader_create(renderer_backend_context_t* backend_context_, const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, vbo_manager_t* vbo_manager_, line_mesh_shader_t** out_shader_) {
+shader_result_t line_mesh_shader_create(const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vbo_, line_mesh_shader_t** out_shader_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     line_mesh_shader_t* tmp_line_mesh_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_create", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_create", "out_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION, shader_result_to_str(SHADER_BAD_OPERATION), "line_mesh_shader_create", "*out_shader_")
     IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_create", "vertex_shader_fullpath_")
     IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_create", "fragment_shader_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_create", "backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_create", "vbo_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_create", "out_shader_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION, shader_result_to_str(SHADER_BAD_OPERATION), "line_mesh_shader_create", "*out_shader_")
     if('\0' == vertex_shader_fullpath_[0]) {
         ret = SHADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("line_mesh_shader_create(%s) - Provided vertex_shader_fullpath_ is not valid.", shader_result_to_str(ret));
@@ -95,7 +94,7 @@ shader_result_t line_mesh_shader_create(renderer_backend_context_t* backend_cont
         goto cleanup;
     }
 
-    ret = vao_initialize(backend_context_, tmp_line_mesh_shader, vbo_manager_);
+    ret = vao_initialize(backend_context_, tmp_line_mesh_shader, vbo_);
     if(SHADER_SUCCESS != ret) {
         ERROR_MESSAGE("line_mesh_shader_create(%s) - vao_initialize failed.", shader_result_to_str(ret));
         goto cleanup;
@@ -270,33 +269,6 @@ cleanup:
     return ret;
 }
 
-shader_result_t line_mesh_shader_color_set(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* shader_, const uint8_t color_[4]) {
-    shader_result_t ret = SHADER_INVALID_ARGUMENT;
-
-    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_color_set", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_color_set", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(color_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "line_mesh_shader_color_set", "color_")
-    if(!is_valid_shallow(shader_)) {
-        ret = SHADER_DATA_CORRUPTED;
-        ERROR_MESSAGE("line_mesh_shader_color_set(%s) - Provided shader_ is corrupted.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_renderer_backend = renderer_backend_shader_vec4u8_uniform_set(backend_context_, shader_->color_location, color_);
-    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("line_mesh_shader_color_set(%s) - Failed to set color.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = SHADER_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
 static void destroy_unchecked(renderer_backend_context_t* backend_context_, line_mesh_shader_t** shader_) {
     if(NULL == shader_) {
         return;
@@ -326,7 +298,6 @@ static shader_result_t program_initialize(renderer_backend_context_t* backend_co
     int32_t tmp_model_matrix_location = 0;
     int32_t tmp_view_matrix_location = 0;
     int32_t tmp_projection_matrix_location = 0;
-    int32_t tmp_color_location = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "program_initialize", "shader_")
@@ -362,17 +333,9 @@ static shader_result_t program_initialize(renderer_backend_context_t* backend_co
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_shader_uniform_location_get(backend_context_, tmp_shader, "g_line_color", &tmp_color_location);
-    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("program_initialize(%s) - Failed to get color location.", shader_result_to_str(ret));
-        goto cleanup;
-    }
-
     shader_->model_matrix_location = tmp_model_matrix_location;
     shader_->view_matrix_location = tmp_view_matrix_location;
     shader_->projection_matrix_location = tmp_projection_matrix_location;
-    shader_->color_location = tmp_color_location;
     shader_->shader = tmp_shader;
     tmp_shader = NULL;
 
@@ -390,13 +353,12 @@ cleanup:
     return ret;
 }
 
-static shader_result_t vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, vbo_manager_t* vbo_manager_) {
+static shader_result_t vao_initialize(renderer_backend_context_t* backend_context_, line_mesh_shader_t* shader_, const renderer_backend_vbo_t* vbo_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     shader_result_t ret_cleanup = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
-    buffer_manager_result_t ret_buffer_manager = BUFFER_MANAGER_INVALID_ARGUMENT;
 
     bool vao_created = false;
     bool vao_bound = false;
@@ -404,7 +366,7 @@ static shader_result_t vao_initialize(renderer_backend_context_t* backend_contex
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vao_initialize", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vao_initialize", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vao_initialize", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "vao_initialize", "vbo_")
 
     ret_renderer_backend = renderer_backend_vao_create(backend_context_, &shader_->vao);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
@@ -422,10 +384,10 @@ static shader_result_t vao_initialize(renderer_backend_context_t* backend_contex
     }
     vao_bound = true;
 
-    ret_buffer_manager = vbo_manager_bind(vbo_manager_);
-    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = shader_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("vao_initialize(%s) - Failed to bind vertex buffer.", shader_result_to_str(ret));
+    ret_renderer_backend = renderer_backend_vbo_bind(backend_context_, vbo_);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vao_initialize(%s) - Failed to bind vertex buffer.",shader_result_to_str(ret));
         goto cleanup;
     }
     vbo_bound = true;
@@ -437,10 +399,17 @@ static shader_result_t vao_initialize(renderer_backend_context_t* backend_contex
         goto cleanup;
     }
 
-    ret_buffer_manager = vbo_manager_unbind(vbo_manager_);
-    if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-        ret = shader_result_convert_buffer_manager(ret_buffer_manager);
-        ERROR_MESSAGE("vao_initialize(%s) - Failed to unbind vertex buffer.", shader_result_to_str(ret));
+    ret_renderer_backend = renderer_backend_vao_attribute_set(backend_context_, 1, 4, RENDERER_TYPE_UNSIGNED_BYTE, true, sizeof(line_vertex_t), offsetof(line_vertex_t, color));    // 色情報(layout = 1)
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = shader_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("vao_initialize(%s) - Failed to set vertex array attribute(color).", shader_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_vbo_unbind(backend_context_);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = SHADER_DATA_CORRUPTED;
+        ERROR_MESSAGE("vao_initialize(%s) - Failed to unbind vertex buffer.",shader_result_to_str(ret));
         goto cleanup;
     }
     vbo_bound = false;
@@ -458,9 +427,9 @@ static shader_result_t vao_initialize(renderer_backend_context_t* backend_contex
 cleanup:
     if(SHADER_SUCCESS != ret) {
         if(vbo_bound) {
-            ret_buffer_manager = vbo_manager_unbind(vbo_manager_);
-            if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
-                ret_cleanup = shader_result_convert_buffer_manager(ret_buffer_manager);
+            ret_renderer_backend = renderer_backend_vbo_unbind(backend_context_);
+            if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+                ret_cleanup = shader_result_convert_renderer_backend(ret_renderer_backend);
                 ERROR_MESSAGE("vao_initialize failed. %s", shader_result_to_str(ret_cleanup));
                 ret = SHADER_DATA_CORRUPTED;
             }

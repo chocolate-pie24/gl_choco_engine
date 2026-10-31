@@ -34,12 +34,21 @@ model_result_t model_resource_map_destroy(renderer_frontend_t* renderer_frontend
 
 model_result_t model_resource_map_transform_tree_clone(const model_resource_map_t* resource_map_, model_transform_tree_t** out_transform_tree_);
 
+// for Line Mesh.
+model_result_t model_resource_map_line_mesh_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, line_mesh_t* out_mesh_);
+
+model_result_t model_resource_map_line_mesh_coordinate_id_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_);
+
+model_result_t model_resource_map_line_mesh_count_get(const model_resource_map_t* resource_map_, size_t* out_count_);
+
+// for Untextured Mesh.
 model_result_t model_resource_map_untextured_mesh_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, untextured_mesh_t* out_mesh_);
 
 model_result_t model_resource_map_untextured_mesh_coordinate_id_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_);
 
 model_result_t model_resource_map_untextured_mesh_count_get(const model_resource_map_t* resource_map_, size_t* out_count_);
 
+// Validator.
 bool model_resource_map_is_valid(const model_resource_map_t* resource_map_);
 
 #ifdef __cplusplus
