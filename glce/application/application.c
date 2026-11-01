@@ -58,6 +58,7 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
+#include "engine/systems/renderer/resources/meshes/line_mesh.h"
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
@@ -421,7 +422,8 @@ application_result_t application_run(void) {
     mat4x4f_t penguin_rotation = { 0 };
 
     mat4x4f_t tmp_model_matrix = { 0 };
-    untextured_mesh_t tmp_mesh = { 0 };
+    untextured_mesh_t tmp_untextured_mesh = { 0 };
+    line_mesh_t tmp_line_mesh = { 0 };
     size_t tmp_mesh_count = 0;
     uint16_t tmp_coordinate_id = 0;
 
@@ -632,7 +634,7 @@ application_result_t application_run(void) {
             continue;
         }
         for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
-            ret_model = model_resource_map_untextured_mesh_get(s_application_state->sample_robot_resource_map, i, &tmp_mesh);
+            ret_model = model_resource_map_untextured_mesh_get(s_application_state->sample_robot_resource_map, i, &tmp_untextured_mesh);
             if(MODEL_SUCCESS != ret_model) {
                 ERROR_MESSAGE("application_run - model_resource_map_untextured_mesh_get failed. continue...");
                 continue;
@@ -650,7 +652,7 @@ application_result_t application_run(void) {
                 continue;
             }
 
-            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_mesh, &tmp_model_matrix);
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_untextured_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
                 ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
                 ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
@@ -663,13 +665,60 @@ application_result_t application_run(void) {
                 continue;
             }
 
-            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_mesh, &tmp_model_matrix);
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_untextured_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
                 ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
                 ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
                 goto cleanup;
             }
         }
+
+        // Debug AABB Line描画
+        ret_model = model_resource_map_debug_aabb_mesh_count_get(s_application_state->sample_robot_resource_map, &tmp_mesh_count);
+        if(MODEL_SUCCESS != ret_model) {
+            ERROR_MESSAGE("application_run - model_resource_map_debug_aabb_mesh_count_get failed. continue...");
+            continue;
+        }
+        for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
+            ret_model = model_resource_map_debug_aabb_mesh_get(s_application_state->sample_robot_resource_map, i, &tmp_line_mesh);
+            if(MODEL_SUCCESS != ret_model) {
+                ERROR_MESSAGE("application_run - model_resource_map_debug_aabb_mesh_get failed. continue...");
+                continue;
+            }
+
+            ret_model = model_resource_map_debug_aabb_mesh_coordinate_id_get(s_application_state->sample_robot_resource_map, i, &tmp_coordinate_id);
+            if(MODEL_SUCCESS != ret_model) {
+                ERROR_MESSAGE("application_run - model_resource_map_debug_aabb_mesh_coordinate_id_get failed. continue...");
+                continue;
+            }
+
+            ret_model = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_SUCCESS != ret_model) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_line_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+
+            ret_model = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_SUCCESS != ret_model) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_line_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+        }
+
         // ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
         // if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         //     ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
@@ -727,7 +776,14 @@ static application_result_t app_state_update(void) {
     ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-        ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("app_state_update(%s) - renderer_frontend_untextured_mesh_render_update failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_frontend = renderer_frontend_line_mesh_render_update(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &s_application_state->view_matrix, &s_application_state->projection_matrix);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("app_state_update(%s) - renderer_frontend_line_mesh_render_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
 

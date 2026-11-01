@@ -108,6 +108,8 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_import(renderer_fro
 
 renderer_frontend_result_t renderer_frontend_untextured_mesh_release(renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_);
 
+renderer_frontend_result_t renderer_frontend_untextured_mesh_local_aabb_get(const renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_, aabb_3d_t* out_aabb_);
+
 // TODO: 廃止
 renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_import_from_file(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
 

@@ -14,6 +14,8 @@
 
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
+#include "engine/core/geometry_primitive/aabb_3d.h"
+
 #include "engine/containers/choco_string.h"
 
 #include "engine/io_utils/fs_path.h"
@@ -22,6 +24,8 @@
 #include "engine/light/ambient_light.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
+
+#include "engine/systems/renderer/resources/geometries/conversion/geometry_conversion.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/vbo_manager.h"
 #include "engine/systems/renderer/resources/shaders/line_mesh_shader.h"
@@ -508,6 +512,40 @@ cleanup:
     return ret;
 }
 
+renderer_frontend_result_t renderer_frontend_untextured_mesh_local_aabb_get(const renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_, aabb_3d_t* out_aabb_) {
+    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
+
+    const untextured_mesh_geometry_t* tmp_geometry = NULL;
+    aabb_3d_t tmp_aabb = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_local_aabb_get", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_local_aabb_get", "mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_local_aabb_get", "out_aabb_")
+
+    tmp_geometry = untextured_mesh_geometry_registry_geometry_get(renderer_frontend_->untextured_mesh_geometry_registry, mesh_->geometry_id);
+    if(NULL == tmp_geometry) {
+        ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_local_aabb_get(%s) - untextured_mesh_geometry_registry_geometry_get failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_geometry = geometry_conversion_untextured_mesh_geometry_to_aabb_3d(tmp_geometry, &tmp_aabb);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        renderer_frontend_result_convert_geometry(ret_geometry);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_local_aabb_get(%s) - geometry_conversion_untextured_mesh_geometry_to_aabb_3d failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_aabb_ = tmp_aabb;
+
+    ret = RENDERER_FRONTEND_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 renderer_frontend_result_t renderer_frontend_untextured_mesh_geometry_import_from_file(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_) {
     renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
@@ -631,7 +669,7 @@ renderer_frontend_result_t renderer_frontend_line_mesh_draw(renderer_frontend_t*
         ret = RENDERER_FRONTEND_OVERFLOW;
         goto cleanup;
     }
-    glDrawArrays(GL_TRIANGLES, (GLint)draw_range->first_vertex_count, (GLsizei)draw_range->vertex_count);
+    glDrawArrays(GL_LINES, (GLint)draw_range->first_vertex_count, (GLsizei)draw_range->vertex_count);
 
     ret = RENDERER_FRONTEND_SUCCESS;
 

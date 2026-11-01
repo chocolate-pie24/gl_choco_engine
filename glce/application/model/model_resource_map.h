@@ -48,6 +48,13 @@ model_result_t model_resource_map_untextured_mesh_coordinate_id_get(const model_
 
 model_result_t model_resource_map_untextured_mesh_count_get(const model_resource_map_t* resource_map_, size_t* out_count_);
 
+// for Debug AABB Line Mesh.
+model_result_t model_resource_map_debug_aabb_mesh_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, line_mesh_t* out_mesh_);
+
+model_result_t model_resource_map_debug_aabb_mesh_coordinate_id_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_);
+
+model_result_t model_resource_map_debug_aabb_mesh_count_get(const model_resource_map_t* resource_map_, size_t* out_count_);
+
 // Validator.
 bool model_resource_map_is_valid(const model_resource_map_t* resource_map_);
 

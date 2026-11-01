@@ -11,9 +11,12 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
 
+#include "engine/core/geometry_primitive/aabb_3d.h"
+
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/containers/ring_queue.h"
+#include "engine/containers/choco_string.h"
 
 #include "engine/systems/renderer/resources/meshes/line_mesh.h"
 #include "engine/systems/renderer/resources/meshes/point_mesh.h"
@@ -28,10 +31,12 @@
 #include "application/model/model_assembly_config.h"
 #include "application/model/model_transform_tree.h"
 
+// TODO: それぞれのmeshを別の構造体に分割し、create / destroy処理をprivate helperに分割し、create処理をリファクタリングする
 struct model_resource_map {
     // 個体生成用の初期Transform Tree
     model_transform_tree_t* transform_tree;
 
+    // model_assembly_config_tから生成されるmesh
     size_t line_mesh_count;
     line_mesh_t* line_meshes;
     uint16_t* line_mesh_coordinate_ids;
@@ -47,10 +52,17 @@ struct model_resource_map {
     size_t untextured_mesh_count;
     untextured_mesh_t* untextured_meshes;
     uint16_t* untextured_mesh_coordinate_ids;
+
+    // Debug用でuntextured_meshesから自動生成される AABB Line Mesh
+    size_t debug_line_mesh_count;
+    line_mesh_t* debug_line_meshes;
+    uint16_t* debug_line_mesh_coordinate_ids;
 };
 
 static model_result_t transform_tree_create_from_config(const model_assembly_config_t* config_, model_transform_tree_t** out_transform_tree_);
+static model_result_t debug_aabb_mesh_resource_name_create(const choco_string_t* source_resource_name_, choco_string_t** out_string_);
 
+// NOTE: debug用AABB line meshの描画色は当面赤で固定
 model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_, const model_assembly_config_t* config_, const char* asset_root_path_, model_resource_map_t** out_resource_map_) {
     model_result_t ret = MODEL_INVALID_ARGUMENT;
 
@@ -63,15 +75,21 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
     point_mesh_t* tmp_point_meshes = NULL;
     ui_mesh_t* tmp_ui_meshes = NULL;
     untextured_mesh_t* tmp_untextured_meshes = NULL;
+    line_mesh_t* tmp_debug_line_meshes = NULL;
+
+    choco_string_t* tmp_debug_aabb_resource_name = NULL;
 
     uint16_t* tmp_line_mesh_coordinate_ids = NULL;
     uint16_t* tmp_point_mesh_coordinate_ids = NULL;
     uint16_t* tmp_ui_mesh_coordinate_ids = NULL;
     uint16_t* tmp_untextured_mesh_coordinate_ids = NULL;
+    uint16_t* tmp_debug_line_mesh_coordinate_ids = NULL;
 
     size_t allocation_size = 0;
     size_t imported_untextured_mesh_count = 0;
+    size_t imported_debug_line_mesh_count = 0;
     untextured_mesh_t tmp_mesh = { 0 };
+    aabb_3d_t tmp_aabb = { 0 };
 
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_create", "config_")
     IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_create", "asset_root_path_")
@@ -93,7 +111,7 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////
-    // Line Mesh
+    // Line Mesh(現状ではrenderer_frontendにimport_from_fileがないためまだ機能しない)
     //////////////////////////////////////////////////////////////////////////////////////////
     if(0 != config_->line_mesh_count) {
         if(!size_mul_checked(sizeof(line_mesh_t), config_->line_mesh_count, &allocation_size)) {
@@ -119,11 +137,11 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
             ERROR_MESSAGE("model_resource_map_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
             goto cleanup;
         }
-        // TODO: renderer_frontend_line_mesh_import
+        // TODO: renderer_frontend_line_mesh_import_from_file
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////
-    // Point Mesh
+    // Point Mesh(現状ではrenderer_frontendにimport_from_fileがないためまだ機能しない)
     //////////////////////////////////////////////////////////////////////////////////////////
     if(0 != config_->point_mesh_count) {
         if(!size_mul_checked(sizeof(point_mesh_t), config_->point_mesh_count, &allocation_size)) {
@@ -149,7 +167,7 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
             ERROR_MESSAGE("model_resource_map_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
             goto cleanup;
         }
-        // TODO: renderer_frontend_point_mesh_import
+        // TODO: renderer_frontend_point_mesh_import_file
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +247,65 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////
+    // Debug AABB Line Mesh
+    //////////////////////////////////////////////////////////////////////////////////////////
+    if(0 != config_->untextured_mesh_count) {
+        if(!size_mul_checked(sizeof(line_mesh_t), config_->untextured_mesh_count, &allocation_size)) {
+            ret = MODEL_OVERFLOW;
+            ERROR_MESSAGE("model_resource_map_create(%s) - allocation overflow.", model_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_debug_line_meshes);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = model_result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("model_resource_map_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
+            goto cleanup;
+        }
+
+        if(!size_mul_checked(sizeof(uint16_t), config_->untextured_mesh_count, &allocation_size)) {
+            ret = MODEL_OVERFLOW;
+            ERROR_MESSAGE("model_resource_map_create(%s) - allocation overflow.", model_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_debug_line_mesh_coordinate_ids);
+        if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+            ret = model_result_convert_general_allocator(ret_general_allocator);
+            ERROR_MESSAGE("model_resource_map_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
+            goto cleanup;
+        }
+
+        for(size_t i = 0; i != config_->untextured_mesh_count; ++i) {
+            ret = debug_aabb_mesh_resource_name_create(config_->untextured_mesh_configs[i].geometry_resource_name, &tmp_debug_aabb_resource_name);
+            if(MODEL_SUCCESS != ret) {
+                ERROR_MESSAGE("model_resource_map_create(%s) - debug_aabb_mesh_resource_name_create failed.", model_result_to_str(ret));
+                goto cleanup;
+            }
+
+            // Untextured MeshからLocal AABBを取得
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_local_aabb_get(renderer_frontend_, &tmp_untextured_meshes[i], &tmp_aabb);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = model_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("model_resource_map_create(%s) - renderer_frontend_untextured_mesh_local_aabb_get failed.", model_result_to_str(ret));
+                goto cleanup;
+            }
+
+            // AABBをLine MeshとしてImport
+            ret_renderer_frontend = renderer_frontend_line_mesh_import_from_aabb(renderer_frontend_, choco_string_c_str(tmp_debug_aabb_resource_name), &tmp_aabb, vec4u8_initialize(255, 0, 0, 255), &tmp_debug_line_meshes[i]);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = model_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("model_resource_map_create(%s) - renderer_frontend_line_mesh_import_from_aabb failed.", model_result_to_str(ret));
+                goto cleanup;
+            }
+
+            choco_string_destroy(&tmp_debug_aabb_resource_name);
+            imported_debug_line_mesh_count++;
+
+            // 元Meshと同じCoordinate IDを使用
+            tmp_debug_line_mesh_coordinate_ids[i] = tmp_untextured_mesh_coordinate_ids[i];
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////
     // Transform Tree
     //////////////////////////////////////////////////////////////////////////////////////////
     ret = transform_tree_create_from_config(config_, &tmp_transform_tree);
@@ -241,15 +318,23 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
     tmp_resource_map->line_mesh_coordinate_ids = tmp_line_mesh_coordinate_ids;
     tmp_resource_map->line_mesh_count = config_->line_mesh_count;
     tmp_resource_map->line_meshes = tmp_line_meshes;
+
     tmp_resource_map->point_mesh_coordinate_ids = tmp_point_mesh_coordinate_ids;
     tmp_resource_map->point_mesh_count = config_->point_mesh_count;
     tmp_resource_map->point_meshes = tmp_point_meshes;
+
     tmp_resource_map->ui_mesh_coordinate_ids = tmp_ui_mesh_coordinate_ids;
     tmp_resource_map->ui_mesh_count = config_->ui_mesh_count;
     tmp_resource_map->ui_meshes = tmp_ui_meshes;
+
     tmp_resource_map->untextured_mesh_coordinate_ids = tmp_untextured_mesh_coordinate_ids;
     tmp_resource_map->untextured_mesh_count = config_->untextured_mesh_count;
     tmp_resource_map->untextured_meshes = tmp_untextured_meshes;
+
+    tmp_resource_map->debug_line_mesh_coordinate_ids = tmp_debug_line_mesh_coordinate_ids;
+    tmp_resource_map->debug_line_mesh_count = config_->untextured_mesh_count;
+    tmp_resource_map->debug_line_meshes = tmp_debug_line_meshes;
+
     tmp_resource_map->transform_tree = tmp_transform_tree;
     *out_resource_map_ = tmp_resource_map;
 
@@ -258,17 +343,32 @@ model_result_t model_resource_map_create(renderer_frontend_t* renderer_frontend_
     tmp_point_meshes = NULL;
     tmp_ui_meshes = NULL;
     tmp_untextured_meshes = NULL;
+    tmp_debug_line_meshes = NULL;
 
     tmp_line_mesh_coordinate_ids = NULL;
     tmp_point_mesh_coordinate_ids = NULL;
     tmp_ui_mesh_coordinate_ids = NULL;
     tmp_untextured_mesh_coordinate_ids = NULL;
+    tmp_debug_line_mesh_coordinate_ids = NULL;
 
     ret = MODEL_SUCCESS;
 
 cleanup:
     if(MODEL_DATA_CORRUPTED == ret || MODEL_SUCCESS == ret) {
         return ret;
+    }
+    if(NULL != tmp_debug_aabb_resource_name) {
+        choco_string_destroy(&tmp_debug_aabb_resource_name);
+    }
+
+    if(NULL != tmp_debug_line_meshes) {
+        for(size_t i = 0; i != imported_debug_line_mesh_count; ++i) {
+            if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_line_mesh_release(renderer_frontend_, &tmp_debug_line_meshes[i])) {
+                ret = MODEL_DATA_CORRUPTED;
+                ERROR_MESSAGE("model_resource_map_create(%s) - renderer_frontend_line_mesh_release failed.", model_result_to_str(ret));
+                return ret;
+            }
+        }
     }
 
     if(NULL != tmp_untextured_meshes) {
@@ -285,6 +385,12 @@ cleanup:
 
     if(NULL != tmp_transform_tree) {
         model_transform_tree_destroy(&tmp_transform_tree);
+    }
+    if(NULL != tmp_debug_line_mesh_coordinate_ids) {
+        general_allocator_free((void**)&tmp_debug_line_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != tmp_debug_line_meshes) {
+        general_allocator_free((void**)&tmp_debug_line_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
     if(NULL != tmp_untextured_mesh_coordinate_ids) {
         general_allocator_free((void**)&tmp_untextured_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
@@ -310,6 +416,24 @@ model_result_t model_resource_map_destroy(renderer_frontend_t* renderer_frontend
     // TODO: line_mesh release
     // TODO: point_mesh release
     // TODO: ui_mesh release
+
+    // debug line mesh
+    for(size_t i = 0; i != (*resource_map_)->debug_line_mesh_count; ++i) {
+        ret_renderer_frontend = renderer_frontend_line_mesh_release(renderer_frontend_, &(*resource_map_)->debug_line_meshes[i]);
+        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+            ret = MODEL_DATA_CORRUPTED;
+            ERROR_MESSAGE("model_resource_map_destroy(%s) - renderer_frontend_line_mesh_release failed.", model_result_to_str(ret));
+            goto cleanup;
+        }
+    }
+    if(NULL != (*resource_map_)->debug_line_mesh_coordinate_ids) {
+        general_allocator_free((void**)&(*resource_map_)->debug_line_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != (*resource_map_)->debug_line_meshes) {
+        general_allocator_free((void**)&(*resource_map_)->debug_line_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+
+    // untextured mesh
     for(size_t i = 0; i != (*resource_map_)->untextured_mesh_count; ++i) {
         ret_renderer_frontend = renderer_frontend_untextured_mesh_release(renderer_frontend_, &(*resource_map_)->untextured_meshes[i]);
         if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
@@ -318,13 +442,13 @@ model_result_t model_resource_map_destroy(renderer_frontend_t* renderer_frontend
             goto cleanup;
         }
     }
-
     if(NULL != (*resource_map_)->untextured_mesh_coordinate_ids) {
         general_allocator_free((void**)&(*resource_map_)->untextured_mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
     if(NULL != (*resource_map_)->untextured_meshes) {
         general_allocator_free((void**)&(*resource_map_)->untextured_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
+
     if(NULL != (*resource_map_)->transform_tree) {
         model_transform_tree_destroy(&(*resource_map_)->transform_tree);
     }
@@ -460,6 +584,58 @@ cleanup:
     return ret;
 }
 
+model_result_t model_resource_map_debug_aabb_mesh_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, line_mesh_t* out_mesh_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_debug_aabb_mesh_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_debug_aabb_mesh_get", "out_mesh_")
+    if(mesh_index_ >= resource_map_->debug_line_mesh_count) {
+        ret = MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_resource_map_debug_aabb_mesh_get(%s) - Provided mesh_index_ is not valid.", model_result_to_str(ret));
+        goto cleanup;
+    }
+
+    out_mesh_->geometry_id = resource_map_->debug_line_meshes[mesh_index_].geometry_id;
+
+    return MODEL_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+model_result_t model_resource_map_debug_aabb_mesh_coordinate_id_get(const model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_debug_aabb_mesh_coordinate_id_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_coordinate_id_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_debug_aabb_mesh_coordinate_id_get", "out_coordinate_id_")
+    if(mesh_index_ >= resource_map_->debug_line_mesh_count) {
+        ret = MODEL_INVALID_ARGUMENT;
+        ERROR_MESSAGE("model_resource_map_debug_aabb_mesh_coordinate_id_get(%s) - Provided untextured_mesh_index_ is not valid.", model_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_coordinate_id_ = resource_map_->debug_line_mesh_coordinate_ids[mesh_index_];
+
+    return MODEL_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+model_result_t model_resource_map_debug_aabb_mesh_count_get(const model_resource_map_t* resource_map_, size_t* out_count_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_debug_aabb_mesh_count_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_count_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "model_resource_map_debug_aabb_mesh_count_get", "out_count_")
+
+    *out_count_ = resource_map_->debug_line_mesh_count;
+
+    ret = MODEL_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 bool model_resource_map_is_valid(const model_resource_map_t* resource_map_) {
     if(NULL == resource_map_) {
         return false;
@@ -568,5 +744,46 @@ cleanup:
         model_transform_tree_destroy(&tmp_transform_tree);
     }
 
+    return ret;
+}
+
+// source_resource_name_がxxxの場合、xxx_debug_aabbという名称がout_string_に格納される
+static model_result_t debug_aabb_mesh_resource_name_create(const choco_string_t* source_resource_name_, choco_string_t** out_string_) {
+    model_result_t ret = MODEL_INVALID_ARGUMENT;
+
+    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
+
+    choco_string_t* tmp_string = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(source_resource_name_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "debug_aabb_mesh_resource_name_create", "source_resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "debug_aabb_mesh_resource_name_create", "out_string_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, MODEL_BAD_OPERATION, model_result_to_str(MODEL_BAD_OPERATION), "debug_aabb_mesh_resource_name_create", "*out_string_")
+
+    ret_choco_string = choco_string_create_from_c_string(choco_string_c_str(source_resource_name_), &tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = model_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_aabb_mesh_resource_name_create(%s) - choco_string_create_from_c_string failed.", model_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_concat_from_c_string("_debug_aabb", tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = model_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_aabb_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", model_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_string_ = tmp_string;
+    tmp_string = NULL;
+
+    ret = MODEL_SUCCESS;
+
+cleanup:
+    if(MODEL_DATA_CORRUPTED == ret || MODEL_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != tmp_string) {
+        choco_string_destroy(&tmp_string);
+    }
     return ret;
 }
