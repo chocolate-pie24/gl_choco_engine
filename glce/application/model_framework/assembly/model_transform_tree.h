@@ -50,8 +50,8 @@
  *   プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#ifndef GLCE_APPLICATION_MODEL_MODEL_TRANSFORM_TREE_H
-#define GLCE_APPLICATION_MODEL_MODEL_TRANSFORM_TREE_H
+#ifndef GLCE_APPLICATION_MODEL_FRAMEWORK_ASSEMBLY_MODEL_TRANSFORM_TREE_H
+#define GLCE_APPLICATION_MODEL_FRAMEWORK_ASSEMBLY_MODEL_TRANSFORM_TREE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +62,7 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
-#include "application/model/core/model_types.h"
+#include "application/model_framework/assembly/core/model_framework_types.h"
 
 /**
  * @brief Model内の階層座標系とLocal Transformを所有するOpaque Object
@@ -92,18 +92,18 @@ typedef struct model_transform_tree model_transform_tree_t;
  * @param[in] coordinate_id_ Root CoordinateのID
  * @param[out] out_transform_tree_ 生成したTreeを受け取るPointer
  *
- * @retval MODEL_SUCCESS Treeの生成に成功
- * @retval MODEL_INVALID_ARGUMENT out_transform_tree_がNULL、またはGeneral Allocator由来のINVALID_ARGUMENT
- * @retval MODEL_BAD_OPERATION *out_transform_tree_がNULLではない、またはGeneral Allocator由来のBAD_OPERATION
- * @retval MODEL_DATA_CORRUPTED 構築したTreeの内部整合性異常、またはGeneral Allocator由来のDATA_CORRUPTED
- * @retval MODEL_NO_MEMORY General AllocatorでMemory不足が発生
- * @retval MODEL_LIMIT_EXCEEDED General AllocatorでAllocation Limitを超過
- * @retval MODEL_OVERFLOW General AllocatorでOverflowが発生
- * @retval MODEL_UNDEFINED_ERROR General Allocatorで未定義のErrorが発生
+ * @retval MODEL_FRAMEWORK_SUCCESS Treeの生成に成功
+ * @retval MODEL_FRAMEWORK_INVALID_ARGUMENT out_transform_tree_がNULL、またはGeneral Allocator由来のINVALID_ARGUMENT
+ * @retval MODEL_FRAMEWORK_BAD_OPERATION *out_transform_tree_がNULLではない、またはGeneral Allocator由来のBAD_OPERATION
+ * @retval MODEL_FRAMEWORK_DATA_CORRUPTED 構築したTreeの内部整合性異常、またはGeneral Allocator由来のDATA_CORRUPTED
+ * @retval MODEL_FRAMEWORK_NO_MEMORY General AllocatorでMemory不足が発生
+ * @retval MODEL_FRAMEWORK_LIMIT_EXCEEDED General AllocatorでAllocation Limitを超過
+ * @retval MODEL_FRAMEWORK_OVERFLOW General AllocatorでOverflowが発生
+ * @retval MODEL_FRAMEWORK_UNDEFINED_ERROR General Allocatorで未定義のErrorが発生
  *
  * @post 成功時、生成されたTreeには指定されたIDのRoot Coordinateが存在する。
  */
-model_result_t model_transform_tree_create(uint16_t coordinate_id_, model_transform_tree_t** out_transform_tree_);
+model_framework_result_t model_transform_tree_create(uint16_t coordinate_id_, model_transform_tree_t** out_transform_tree_);
 
 /**
  * @brief Model Transform Treeとその全Coordinateを破棄する
@@ -125,7 +125,7 @@ model_result_t model_transform_tree_create(uint16_t coordinate_id_, model_transf
  */
 void model_transform_tree_destroy(model_transform_tree_t** transform_tree_);
 
-model_result_t model_transform_tree_clone(model_transform_tree_t* src_, model_transform_tree_t** out_transform_tree);
+model_framework_result_t model_transform_tree_clone(model_transform_tree_t* src_, model_transform_tree_t** out_transform_tree);
 
 /**
  * @brief 指定されたParent Coordinateの下にChild Coordinateを追加する
@@ -158,19 +158,19 @@ model_result_t model_transform_tree_clone(model_transform_tree_t* src_, model_tr
  * @param[in] translate_ Parentを基準とするLocal Translation
  * @param[in] rotation_ Parentを基準とするLocal Rotation（Degree）
  *
- * @retval MODEL_SUCCESS Child Coordinateの追加に成功
- * @retval MODEL_INVALID_ARGUMENT TreeがNULL、Parent Coordinateが存在しない、またはGeneral Allocator由来のINVALID_ARGUMENT
- * @retval MODEL_BAD_OPERATION Coordinate IDが既に登録されている、またはGeneral Allocator由来のBAD_OPERATION
- * @retval MODEL_DATA_CORRUPTED Treeの内部整合性異常、またはGeneral Allocator由来のDATA_CORRUPTED
- * @retval MODEL_NO_MEMORY General AllocatorでMemory不足が発生
- * @retval MODEL_LIMIT_EXCEEDED General AllocatorでAllocation Limitを超過
- * @retval MODEL_OVERFLOW General AllocatorでOverflowが発生
- * @retval MODEL_UNDEFINED_ERROR General Allocatorで未定義のErrorが発生
+ * @retval MODEL_FRAMEWORK_SUCCESS Child Coordinateの追加に成功
+ * @retval MODEL_FRAMEWORK_INVALID_ARGUMENT TreeがNULL、Parent Coordinateが存在しない、またはGeneral Allocator由来のINVALID_ARGUMENT
+ * @retval MODEL_FRAMEWORK_BAD_OPERATION Coordinate IDが既に登録されている、またはGeneral Allocator由来のBAD_OPERATION
+ * @retval MODEL_FRAMEWORK_DATA_CORRUPTED Treeの内部整合性異常、またはGeneral Allocator由来のDATA_CORRUPTED
+ * @retval MODEL_FRAMEWORK_NO_MEMORY General AllocatorでMemory不足が発生
+ * @retval MODEL_FRAMEWORK_LIMIT_EXCEEDED General AllocatorでAllocation Limitを超過
+ * @retval MODEL_FRAMEWORK_OVERFLOW General AllocatorでOverflowが発生
+ * @retval MODEL_FRAMEWORK_UNDEFINED_ERROR General Allocatorで未定義のErrorが発生
  *
  * @pre translate_およびrotation_はfiniteなVectorである。
  * @post 成功時、新しいCoordinateが指定されたParentのChildとして登録される。
  */
-model_result_t model_transform_tree_add_child(model_transform_tree_t* transform_tree_, uint16_t parent_coordinate_id_, uint16_t coordinate_id_, vec3f_t translate_, vec3f_t rotation_);
+model_framework_result_t model_transform_tree_add_child(model_transform_tree_t* transform_tree_, uint16_t parent_coordinate_id_, uint16_t coordinate_id_, vec3f_t translate_, vec3f_t rotation_);
 
 /**
  * @brief 指定されたCoordinateのLocal Rotationを更新する
@@ -183,14 +183,14 @@ model_result_t model_transform_tree_add_child(model_transform_tree_t* transform_
  * @param[in] coordinate_id_ 更新するCoordinateのID
  * @param[in] rotation_ 設定するLocal Rotation（Degree）
  *
- * @retval MODEL_SUCCESS Rotationの更新に成功
- * @retval MODEL_INVALID_ARGUMENT TreeがNULL、またはCoordinateが存在しない
- * @retval MODEL_DATA_CORRUPTED Treeの内部整合性に異常を検出
+ * @retval MODEL_FRAMEWORK_SUCCESS Rotationの更新に成功
+ * @retval MODEL_FRAMEWORK_INVALID_ARGUMENT TreeがNULL、またはCoordinateが存在しない
+ * @retval MODEL_FRAMEWORK_DATA_CORRUPTED Treeの内部整合性に異常を検出
  *
  * @pre rotation_はfiniteなVectorである。
  * @post 成功時、対象CoordinateのLocal Rotationがrotation_となる。
  */
-model_result_t model_transform_tree_rotation_set(model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, vec3f_t rotation_);
+model_framework_result_t model_transform_tree_rotation_set(model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, vec3f_t rotation_);
 
 /**
  * @brief 指定されたCoordinateのLocal Translationを更新する
@@ -202,14 +202,14 @@ model_result_t model_transform_tree_rotation_set(model_transform_tree_t* transfo
  * @param[in] coordinate_id_ 更新するCoordinateのID
  * @param[in] translate_ 設定するLocal Translation
  *
- * @retval MODEL_SUCCESS Translationの更新に成功
- * @retval MODEL_INVALID_ARGUMENT TreeがNULL、またはCoordinateが存在しない
- * @retval MODEL_DATA_CORRUPTED Treeの内部整合性に異常を検出
+ * @retval MODEL_FRAMEWORK_SUCCESS Translationの更新に成功
+ * @retval MODEL_FRAMEWORK_INVALID_ARGUMENT TreeがNULL、またはCoordinateが存在しない
+ * @retval MODEL_FRAMEWORK_DATA_CORRUPTED Treeの内部整合性に異常を検出
  *
  * @pre translate_はfiniteなVectorである。
  * @post 成功時、対象CoordinateのLocal Translationがtranslate_となる。
  */
-model_result_t model_transform_tree_translate_set(model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, vec3f_t translate_);
+model_framework_result_t model_transform_tree_translate_set(model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, vec3f_t translate_);
 
 /**
  * @brief 指定されたCoordinateのWorld Transform Matrixを取得する
@@ -235,13 +235,13 @@ model_result_t model_transform_tree_translate_set(model_transform_tree_t* transf
  * @param[in] coordinate_id_ World Transformを取得するCoordinateのID
  * @param[out] out_matrix_ 計算結果を格納するMatrix
  *
- * @retval MODEL_SUCCESS World Transform Matrixの取得に成功
- * @retval MODEL_INVALID_ARGUMENT Treeまたは出力PointerがNULL、またはCoordinateが存在しない
- * @retval MODEL_DATA_CORRUPTED Treeの内部整合性に異常を検出
+ * @retval MODEL_FRAMEWORK_SUCCESS World Transform Matrixの取得に成功
+ * @retval MODEL_FRAMEWORK_INVALID_ARGUMENT Treeまたは出力PointerがNULL、またはCoordinateが存在しない
+ * @retval MODEL_FRAMEWORK_DATA_CORRUPTED Treeの内部整合性に異常を検出
  *
  * @post 成功時、*out_matrix_には階層関係を反映したWorld Transform Matrixが格納される。
  */
-model_result_t model_transform_tree_world_matrix_get(const model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, mat4x4f_t* out_matrix_);
+model_framework_result_t model_transform_tree_world_matrix_get(const model_transform_tree_t* transform_tree_, uint16_t coordinate_id_, mat4x4f_t* out_matrix_);
 
 /**
  * @brief Model Transform Treeの内部整合性をCanonical Validationする

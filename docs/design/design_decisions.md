@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-31
+最終更新: 2026-11-02
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -3656,6 +3656,7 @@ callerへOutputしてよいかを確認するphaseとして`Output eligibility`�
 ## Decision: Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する
 
 **Status:** Accepted
+**Update (2026-11-02):** 本DecisionはRenderer側Material / Mesh Sliceの区分として維持する。Application Model Assemblyも2026-11-02「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」で独立Sliceへ分離するが、Product Configurationの適用有無とShader種別を同一視するものではない。  
 **Date:** 2026-10-09
 **Scope:** Renderer / Material / Texture Reference / Resource Ownership
 
@@ -6243,6 +6244,7 @@ Renderer Resourceの実体とReference Countは既存Registryが管理でき、�
 
 **Status:** Accepted / Target Architecture（Model関連Moduleの配置移行は未完了）  
 **Update (2026-10-28):** `render_model_t`のResource参照責務を`model_resource_map_t`へ、`render_model_config_t`の組立図責務を`model_assembly_config_t`へ整理する。Renderer FrontendのMesh + Matrix境界、MeshがCoordinateを知らない原則、およびModel DomainをEngine外へ移すTargetは維持する。  
+**Update (2026-11-02):** Application側Model Domainの具体的配置は2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」および2026-11-02「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」で更新。Renderer FrontendのMesh + Matrix BoundaryとEngineからのModel Concept分離は維持する。  
 **Date:** 2026-10-27  
 **Scope:** Application / Engine Boundary / Renderer / Mesh / Model / Semantic Ownership / Module Placement
 
@@ -6578,6 +6580,7 @@ FrontendがMesh単位のImportを公開すれば、Application側のModel Pipeli
 
 **Status:** Partially Superseded（組立図・Resource Map・個体の概念分離と型名は維持。Resource Mapの責務、ConfigのLifetime、Model Pipelineの扱いを2026-10-30 Decisionで更新）  
 **Update (2026-10-30):** 命名と三者分離は採用したが、当初却下した「Resource Mapで初期Transform Treeを保持し、RobotへCloneする」案を再評価して採用した。さらにCoordinate BindingのRuntime用コピーをMapが保持し、ConfigをMap生成直後に破棄可能とした。独立Model Pipelineも廃止。以下の「MapはCoordinate IDを持たない」「TreeはRobotがConfigから生成する」「Configを描画時まで保持する」とする記述は2026-10-28時点の履歴であり、現行仕様ではない。  
+**Update (2026-11-02):** Config / Map / Instanceの概念分離と2026-10-30更新後のLifetimeを維持。2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」でScene固有InstanceをFramework外へ移し、2026-11-02「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」でModel内の通常Mesh種類とDirectoryを再定義する。過去の全Mesh種別横展開・旧Directoryは履歴として保持する。  
 **Date:** 2026-10-28  
 **Scope:** Application Model / Assembly Configuration / Resource Reference Right / Model Pipeline / Robot Instance / Naming / Renderer Boundary
 
@@ -6720,7 +6723,8 @@ sample_robot_create(&sample_robot_assembly, &arm_robot);
 
 ## Decision: Model Assembly Configを「組立図」、Resource Mapを「製造準備済みの共有定義」、Robotを「個別の実機」とする
 
-**Status:** Accepted（Untextured MeshとSample Robotの現行Architecture。Line / Point / UI等への横展開は未完了）  
+**Status:** Accepted / Partially Superseded（Config / Map / Instanceの三者分離とLifecycleは維持。全Mesh種別への横展開・Directory構成は2026-11-02 Decisionで更新）  
+**Update (2026-11-02):** Config / Map / Instanceの三者分離、Resource Reference Right、Config早期破棄、初期Tree Template / 個体Clone等は維持。2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」および2026-11-02「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」で、ModelをUntextured / Texturedの独立Sliceに分離し、通常Line / Point / UI等のModel所属を撤回し、機種固有InstanceをScene側へ配置するTargetへ更新。既存の実装済みUntextured経路は移行まで維持する。  
 **Date:** 2026-10-30  
 **Scope:** Application Model / Assembly Configuration / Model Resource Map / Transform Tree Template / Instance Lifecycle / Ownership / Renderer Boundary
 
@@ -6929,7 +6933,8 @@ Renderer FrontendがMesh Importという下位の責務を提供し、Resource M
 
 ## Decision: Line MeshのColorをMesh単位からVertex単位へ移動し、大規模Voxel Grid描画に対応する
 
-**Status:** Accepted（実装は未完了）  
+**Status:** Accepted / Partially Superseded（Line Vertex Colorの判断は維持。Model内の通常Line Mesh Collection保持のみ2026-11-02 Decisionで変更）  
+**Update (2026-11-02):** Line MeshのVertex Color / Shader設計は維持。一方、当時記載したModel Assembly Config内の「通常Line Mesh Collectionを維持する」方針は2026-11-02「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」で更新し、通常Line / PointをScene側Standaloneとする。Model由来Debug AABBは引き続きLine Meshを利用する。  
 **Date:** 2026-10-31  
 **Scope:** Renderer / Line Mesh / Vertex Format / Shader / Draw Call / Data Visualization
 
@@ -6994,7 +6999,7 @@ ColorをVertex Attributeとすれば、異なるColorを一つのVertex Buffer /
 - 異なる色のInstanceを同じGeometryで描画することは今回の要求に含めない。RobotのDebug AABBは全Instanceで共通Colorとし、同一のAABB Geometryを共有する。
 - `model_assembly_config_t`の通常Line Mesh Collectionは維持する。Debug Visualization用AABBの自動生成・共有・表示Policyは別の設計論点であり、このColor DecisionだけでModel ConfigやResource Mapの最終構造を確定しない。
 - Colorを含むGeometryの再生成・更新が必要になった場合には、Registry上のResource Identityと更新・共有のContractを考慮する。
-- **本Decisionは設計の確定を記録するものであり、2026-10-31時点でVertex / Shader / Frontendの移行実装が完了したことを意味しない。**
+- **Implementation Update (2026-11-01):** `line_vertex_t`のVertex Color、Line ShaderのVertex Attribute、Line Meshの描画経路を整備し、Sample RobotのDebug AABB表示で動作を確認した。Voxel Grid本体の生成、Draw Batchingや大規模描画性能の検証は未実施である。
 
 ### Revisit Conditions
 
@@ -7009,3 +7014,466 @@ ColorをVertex Attributeとすれば、異なるColorを一つのVertex Buffer /
 - `glce_near_term_todo.md`
 - `glce/include/engine/core/geometry_primitive/vertex.h`
 - `glce/include/engine/systems/renderer/resources/meshes/line_mesh.h`
+
+---
+
+## Decision: Debug AABBをModel Resource Mapで自動生成・所有し、Robot個体間で共有する
+
+**Status:** Accepted（Untextured Mesh / Sample Robotで実装し、描画動作を確認済み）  
+**Update (2026-11-02):** Untextured Model由来のDebug AABBは派生診断用Line Resourceとして本DecisionのOwnershipを維持。2026-11-02「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」の「同一Model内のUntextured / Textured通常Geometry混在禁止」はDebug AABBに適用しない。新Directoryへの移動は後続実装で対応する。  
+**Date:** 2026-11-01  
+**Scope:** Application Model / Debug Visualization / Local AABB / Line Mesh / Resource Reference Ownership / Transform Tree
+
+### Decision
+
+GLCEの現在のModel Domainでは、**Untextured MeshのDebug AABBを`model_resource_map_create()`で自動生成し、`model_resource_map_t`が対応するLine MeshのResource Reference RightとCoordinate Bindingを所有する**。
+
+Debug AABBは、`model_assembly_config_t`が定義する通常の部品や組立構成ではなく、完成したUntextured Geometryから派生するApplication側の診断用Resourceとして扱う。そのため、Debug AABB用のLine Mesh ConfigやCoordinate BindingをAssembly Configへ要求しない。
+
+現在の具体的な構成は以下とする。
+
+1. `model_resource_map_create()`で各Untextured MeshをImportした後、対応するUntextured Geometryの**Local AABB**をRenderer Frontend経由で取得する。
+2. Local AABBを`renderer_frontend_line_mesh_import_from_aabb()`へ渡し、通常のLine Mesh GeometryとしてImportする。AABB専用のRenderer Object、AABB専用Shader、AABB固有のDraw APIは設けない。
+3. **Untextured Mesh 1件につきDebug Line Mesh 1件**を対応させる。現在のResource Mapでは`debug_line_mesh_count == untextured_mesh_count`とし、同じIndexで両者を対応付ける。
+4. Debug Line MeshのCoordinate IDは元のUntextured Meshと同じ値を使用する。`model_resource_map_t`は、通常のMesh Collectionとは別に`debug_line_meshes`と`debug_line_mesh_coordinate_ids`を保持する。
+5. Debug Line MeshのResource Nameは、元のUntextured Geometry Resource Nameへ`_debug_aabb`を付加して生成する。命名処理はModel Resource Map内部のPrivate Helperへ閉じる。現行の単一Resource Name方式に基づく命名であり、将来のComposite Registry Key導入時にはそのIdentity表現に合わせて見直す。
+6. ImporterがRegistry上の既存ResourceをAcquireできる場合には、それを利用する。Resource MapがImport / Acquireによって得た**各Reference Right**を所有し、`model_resource_map_destroy()`で対応する回数だけReleaseする。RegistryがGeometry実体を所有する構造は変更しない。
+7. Resource Map生成途中のRecoverable Failureでは、Import成功済みのDebug Line Meshの件数に基づいてReleaseし、確保したTemporary StorageをRollbackする。`DATA_CORRUPTED`後の扱いは既存Validation Policyに従う。
+8. 描画時は、Resource MapからDebug Line MeshとCoordinate IDを取得し、対象Robotが所有する**個体固有Transform Tree**からWorld Matrixを取得して、Renderer Frontendの通常のLine Mesh Draw APIへ渡す。Robot個体自身はDebug GeometryをImport / Acquireしない。
+9. 表示するBoxは**Local AABBをWorld Matrixで変換したもの**であり、回転後にWorld座標軸と平行なBounding Boxであることは保証しない。World AABBの再計算やCollision / Physics向けの境界Volumeは、このDebug Visualizationの責務に含めない。
+
+現在のDebug AABB表示色は赤で統一する。これはSample Robotの診断表示における当面のApplication Policyであり、すべてのLine Meshや将来のDebug Visualizationへ同じ色を要求するものではない。
+
+### Context
+
+Model Domainでは、`model_assembly_config_t`を組立図、`model_resource_map_t`を製造準備済みの共有Runtime定義、`sample_robot_t`を個別の実機として分離している。Resource MapはMesh ResourceのReference RightとMesh–Coordinate Bindingを所有し、Robot個体は独立したTransform TreeとPostureを所有する。
+
+Robotの関節に追従するAABBを表示するには、各部品のLocal AABBをLine Meshとして用意し、部品に対応するCoordinateのWorld Matrixで描画すればよい。
+
+ここでDebug AABBをAssembly Configに記述させると、**元のGeometryから一意に導出できる診断用Resourceを、通常の組立図に重複して記述する**ことになる。反対に、各Robot個体の生成時や各Frameの描画時にAABBを生成すると、同じModel定義に対してResource ImportとReference Right管理を繰り返すことになる。
+
+また、Untextured MeshとLine Meshは独立したRenderer Vertical Sliceである。Untextured側のRender ResourceがLine Geometryを直接所有・生成する構造にすると、Sibling Slice間に診断表示のためのDependencyが生まれる。
+
+そこで、両Sliceを利用でき、かつ同じModel定義を複数Robotで共有するLifetimeを持つ`model_resource_map_create()`を、このDebug Resourceの生成・Ownership Boundaryとした。
+
+### Rationale
+
+- **組立図を診断用途から独立させられる。** Debug AABBの定義をConfigへ複製せず、Runtimeで取得したGeometryから導出できる。
+- **既存のResource / Renderer機構を再利用できる。** Local AABB取得とLine Mesh Import / Drawを組み合わせるだけで、AABB専用のRenderer ResourceやShaderを必要としない。
+- **Sibling Vertical Slice間の依存を作らずに済む。** Untextured GeometryとLine Geometryの組合せをApplication側Model Resource Mapで調整できる。
+- **同一Modelの複数個体でResourceを共有できる。** Geometry Reference Rightは共有Mapが保持し、Robotごとに異なるWorld Matrixだけを適用する。
+- **Meshと空間配置の責務分離を維持できる。** Debug Line MeshはCoordinate IDを持たず、Model Resource MapのBindingから描画位置を決定できる。
+- **LifetimeとRollbackを同じOwnerに閉じられる。** Map Createが取得したReference RightをMap Destroyで返却し、途中失敗も成功件数に基づいて処理できる。
+- **関節追従の診断に適した表現となる。** Local AABBを部品のWorld Matrixで変換することで、部品の位置・姿勢と同じTransform経路を検査できる。
+
+### Rejected / Deferred Alternatives
+
+- **Debug AABB用のMesh ConfigをAssembly Configへ追加する。** 元Geometryから導出可能な診断用Resourceを組立図に重複保持し、Configと診断実装を結合させるため採用しない。
+- **Robot個体ごとにDebug GeometryをImport / Acquireする。** 同じ共有Model定義に対するResource RightとImport処理を個体数だけ増やす必要がない。
+- **Frameごと、または表示切替のたびにAABBを生成する。** StaticなLocal AABBに対して不必要なResource生成 / 破棄を生むため採用しない。
+- **Untextured Mesh RendererからLine Mesh Rendererを直接操作する。** Renderer Vertical Slice間のDependencyが発生するため採用しない。
+- **AABB専用のRenderer Object / Shader / Draw APIを設ける。** 通常のLine Meshによる描画で成立するため導入しない。
+- **World AABBを毎Frame再計算する。** 現在の目的は部品とTransform Treeの可視化であり、World軸に平行な境界BoxやCollision用Volumeを求めるものではない。
+- **Debug Line Meshを通常のLine Mesh Collectionに混在させる。** 現行Resource MapではAssembly Config由来のLine Meshと、自動生成する診断用Line Meshの由来・件数・Bindingを区別する方が明確である。
+
+### Consequences / Implementation Status
+
+- `model_resource_map_t`に`debug_line_mesh_count`、`debug_line_meshes`、`debug_line_mesh_coordinate_ids`を設け、Untextured MeshとIndexで対応させる。
+- `model_resource_map_create()`がLocal AABBの取得、名前生成、Line Mesh Import、Coordinate IDのCopyを行い、`destroy()`がResource RightのReleaseとOwned Arrayの解放を行う。
+- Resource MapはDebug Line MeshのCount / Mesh / Coordinate IDをGetterとして公開し、ApplicationがRobotごとのWorld Matrixと組み合わせて描画する。
+- Line Meshの描画は`GL_LINES`を用い、Line ShaderへView / Projection Matrixを更新する。これは既存のLine描画経路を正しく利用するための実装整備であり、新しいAABB専用APIではない。
+- 2026-11-01時点で、Sample Robot 2個体の描画経路にDebug AABBを組み込み、ビルドと実行時表示を確認した。一方、正式な自動テスト・Failure Injection・他Mesh種別へのDebug Visualizationの横展開が完了したとは扱わない。
+- `model_resource_map_create()`のMesh種別ごとのPrivate Helperへの分割や、他のRenderer Sliceへの実装横展開は別の作業として扱う。
+
+### Related Decisions
+
+- **2026-10-17「Application固有Modelが姿勢と診断描画の意味を管理し、Render Modelを汎用描画構成に限定する」:** AABBをApplication側の診断Semanticとし、Local AABBをTransformする判断を維持する。具体的な生成・Ownership Boundaryを本Decisionで確定する。
+- **2026-10-30「Model Assembly Configを『組立図』、Resource Mapを『製造準備済みの共有定義』、Robotを『個別の実機』とする」:** Config / Map / Robotの責務とLifetimeを維持し、MapにDebug AABB由来のLine Mesh Reference Rightを追加する。
+- **2026-10-31「Line MeshのColorをMesh単位からVertex単位へ移動し、大規模Voxel Grid描画に対応する」:** Debug AABBの赤色はLine GeometryのVertex Colorとして扱い、Mesh単位Color Uniformを復活させない。
+
+### Revisit Conditions
+
+- Debug Visualizationの種類が増え、Resource Mapでの派生Resourceの生成・Lifetime管理が肥大化した場合。
+- Debug AABBをRuntimeで有効化 / 無効化する際、Resourceの遅延生成・解放やGeometry更新が必要になった場合。
+- Animation / Deformation等により、GeometryのLocal AABB自体がRuntimeで変化する場合。
+- World Axis-Aligned Bounding Box、Collision Bounding Volume等、現在のLocal AABB可視化とは異なるSemanticが必要になった場合。
+- Composite Registry Key、Resource Hot Reload、Resource Identity変更等により、派生Debug Resourceの命名・共有契約を再検討する必要が生じた場合。
+
+### Related Documents
+
+- `design_notes.md`
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+- `application/model/model_resource_map.c`
+- `application/application.c`
+
+---
+
+## Decision: Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する
+
+**Status:** Accepted / Target Architecture（責務・配置方針の確定。Source移動および将来Moduleの実装完了を意味しない）  
+**Date:** 2026-11-02  
+**Scope:** Application Model Domain / Manufacturing Semantics / Assembly / Scene Boundary / Resource Ownership / Directory Structure
+
+### Decision
+
+GLCEのModel Frameworkは、**製造業における部品・組立・製品構成の考え方を主軸**として構築する。ただし、CAD / PLM / 製造管理Systemそのものを実装することは目的とせず、現時点で描画と組立状態の表現に必要なConceptだけを採用する。
+
+1. Application内のModel共通機構には`model_framework`という名称を維持し、その中心的な構成責務を`assembly/`へ置く。`model_framework`を一律に`model`または`assembly`へ改名しない。
+2. **独立した`part/`または`part_definition/` Moduleは設けない。** 部品形状の描画Resourceは、対応するMesh Import PipelineからGeometry Registryへ登録する。Geometry Registryは描画用GeometryとそのRuntime Identity / Ownershipを管理するのであって、部品の材質規格・加工指示・公差等を網羅する製造業のPart管理台帳ではない。
+3. Model Assemblyでは、組立図に相当する`model_assembly_config`、解決済みResource Reference RightとRuntime Bindingを保持する`model_resource_map`、Coordinate Hierarchyと姿勢計算を担う`model_transform_tree`を、既存の責務分離として維持する。これらの型・Lifetimeの詳細は2026-10-30のDecisionを基礎とし、本日決めたModel種別ごとの分離は後続Decisionで定義する。
+4. `sample_robot`のような**機種固有の個体表現**はModel Framework自身の責務ではなく、そのModelを利用するScene側の責務とする。LiDAR計測点群、床Grid、監視UI、Scene固有のLine / Point等の**Visualization**も、原則としてModel Frameworkの外に置く。
+5. Modelに所属するか否かは、描画Topologyや静的・動的という単純な属性だけでは判断しない。部品Geometryとそこから導出されたDebug AABBなど、設計対象に由来する表示はModel側の責務となり得る。一方、LiDAR本体の筐体はModelであっても、計測点群はSceneのVisualizationとなる。
+6. Renderer / EngineはPart、Assembly、Robot、顧客仕様、Scene等のDomain Meaningを解釈しない。Application側がそれらを解釈してRenderer FrontendへMeshと描画Matrixを渡す既存Boundaryを維持する。
+7. Product ConfigurationやAppearanceは製造業的な意味を持つが、塗装・Texture・UV・Material Assignment等を記述・生成する段階ではGraphics Domainの仕組みを利用する。**その境界を越えた外観情報の表現を、製造業のデータ構造へ無理に押し込まない。** 独立した`product_configuration/`や`appearance/`のRuntime合成Moduleを現時点では設けない。
+8. Sponza等の一般的なGraphics Assetへの対応は追加用途とする。対応のために製造業を主軸としたModel Domainを汎用Scene Graphへ置き換えたり、全Scene DataをModelへ所属させたりしない。
+
+上記はModel DomainとScene Domainの**責務上の境界**を定めるものであり、汎用Scene Graph、Scene Registry、Scene Owner Object等の新設を要求しない。具体的なScene Moduleの細分化は実際の用途に従う。
+
+### Context / Discovery Process
+
+#### 1. Resource Mapの肥大化という違和感から始まった
+
+当初は、Modelを汎用的な描画構成として捉え、Untextured / Line / Point / UI等のMesh種別を一つのModel Assembly ConfigおよびResource Mapで扱う方向を検討していた。
+
+Graphics Engineから見ると、この分類は自然である。RendererはMesh Type、Shader、Geometry Registry、Material等の描画方式に従ってResourceを分離しており、複数のMeshを組み合わせるScene / Modelも考えられるためである。
+
+しかしGLCEのModel利用対象を、Robot、産業機械、設備等の製品・装置と考えると、同じMesh Typeであっても一つの組立図へ含めることが不自然なDataが存在した。単にResource MapのCollectionが増えていたこと以上に、**Resourceの種類とDataが成立する責務を同じ分類軸で扱っていた**ことが問題だった。
+
+#### 2. 設計対象とScene表示の所属を具体例で検討した
+
+次の例を通して、描画形式だけではModelへの所属が決まらないことを確認した。
+
+| 対象 | 判断の根拠 | 基本的な所属 |
+|---|---|---|
+| RobotのLink / Housing | 部品・組立構成として設計される | Model |
+| Robot部品から算出したDebug AABB | そのGeometryに従属する診断用派生Data | Model由来のDebug Resource |
+| LiDARの筐体 | 製品・組立の設計対象 | Model |
+| LiDARが実際に計測したPoint Cloud | 運用時の計測結果であり、製品の組立図ではない | Scene / Visualization |
+| 操作Panelの筐体・固定表示面 | 製品設計で決定される部品・構成 | Model |
+| Panel画面に表示する動的Content | 装置の組立定義とは独立して変化する表示 | Scene / Visualization |
+| 床Grid・独立したGuide Line | Sceneの表示・補助情報 | Scene / Visualization |
+
+特にDebug AABBはLine Meshで描画されるが、ModelのUntextured Geometryから生成され、部品のCoordinateに追従する。よって「Line MeshであるからModel外」と機械的に分類しない。
+
+この区別は、2026-11-01「Debug AABBをModel Resource Mapで自動生成・所有し、Robot個体間で共有する」のOwnership Decisionと両立する。
+
+#### 3. 製造工程の異なる責務を整理した
+
+製造業では、Dataが必要になる理由と確定・変更される段階が異なる。
+
+```text
+Part / 部品設計
+    Geometry、物理的材質、必要に応じた表面処理等
+
+Assembly / 組立設計
+    部品の構成、Coordinate、親子関係、組付け
+
+Product Configuration / 顧客向け仕様
+    塗装、色、Logo、仕様差等
+
+As-maintained / 納品後の個体構成
+    実際の改造・再塗装・交換等
+
+Runtime State
+    関節姿勢、Sensor計測値、操作画面の内容等
+```
+
+この分類は製品の成り立ちを説明する上で有効だが、上記の各段階へ必ず一つずつGLCE ModuleやRuntime Objectを設けるという意味ではない。
+
+実際、現在のGLCEではPartの加工情報・公差管理・部品Revision追跡を必要としていない。描画用Geometryは既存のGeometry Pipeline / Registryで成立しており、Part Definitionを追加すると、必要性のない管理Objectが増える。
+
+同様に、顧客向け塗装の指定が存在することは、GLCEがRuntimeでその塗装を生成・合成するべきことを意味しない。
+
+#### 4. Manufacturing MaterialとRendering Materialは別の意味を持つ
+
+製造業における材質指定（鋼材、アルミニウム等）、表面処理・塗装指示、およびRendererが必要とするPhong反射値・Texture等は、それぞれ異なる情報である。
+
+Untextured Materialの色・反射値を、部品の基本的な見た目の近似として使うことはできる。しかしRendering Materialをそのまま物理的材質の完全な記録とは見なさない。
+
+さらに、塗装やLogoのような顧客向けAppearanceを実際に表現する際は、Graphics Toolが生成するUV、Texture、Material Assignment等の構造が自然に現れる。**設計対象の意味を定義するManufacturing Domainと、その外観を表示するGraphics Domainの情報構造を同一視しない**こととした。
+
+#### 5. 製造業の主軸を維持しつつ、一般Graphics Assetは追加経路とする
+
+OBJ / MTLによるSponza等の描画を検討する過程で、すべてのAssetをPart DefinitionやProduct Configurationへ正規化する汎用Model Frameworkを構想することもできた。
+
+しかし、そのためにManufacturing Domainの意味を曖昧にしたり、OBJを製造用部品図面として扱う必要はない。
+
+GLCEでは製造業の組立・製品データを中心的な利用対象とし、一般Graphics Assetはその描画能力を利用する追加経路として扱う。Importの具体的な分類とMixed Modelの制約は次のDecisionで定義する。
+
+#### 6. Frameworkと具体的なSceneを切り離した
+
+`sample_robot`はModel Frameworkの利用例であり、Robot固有Postureや現在の個体状態を扱う。そのModelをSceneのどこに表示し、Point Cloud、Grid、UI等をどう組み合わせるかもScene側の関心である。
+
+そのため、Model Frameworkを特定Robotや特定SceneのためのContainerにせず、必要なModel Assembly機構を提供する側へ限定することにした。
+
+### Rationale
+
+- 製造業の設計対象に対応した自然な概念境界を、GLCEの主要用途へ反映できる。
+- ModelをMesh Typeの単純な総集合とせず、製品・装置の組立という意味に集中させられる。
+- Part / Product Configuration等の概念を理解しながら、現時点で存在しないRequirementのためのFramework実装を避けられる。
+- Scene固有のVisualizationや機種固有PostureをModel Frameworkから分離できる。
+- Resource RegistryのOwnership / Identityと、部品・組立というDomain Meaningを混同せずに済む。
+- Renderer FrontendのMesh + Matrix Boundaryと、Mesh Typeごとの独立Vertical Sliceを維持できる。
+- 外観生成をGraphics Toolに任せる場合も、Manufacturing Domainの設計情報を無理にShader固有Dataへ置き換えずに済む。
+
+### Rejected / Deferred Alternatives
+
+- **すべてのMeshをModel Resource Mapへ集約する。** Scene由来Point / Line / UIと、組立対象Meshの成立理由やLifetimeが異なるため、Modelの責務が肥大化する。
+- **製造業の全段階を`part/`、`assembly/`、`product_configuration/`、`as_maintained/`等の必須Moduleへ一対一対応させる。** Domain上の分類は有効でも、現時点のGLCEに同数のRuntime Objectは必要ない。
+- **`part_definition`を描画用Geometry Registryの上位に設ける。** 加工・公差・Part Revision等を扱わない現状では、中間Objectだけが増える。
+- **`sample_robot`やScene固有VisualizationをModel Frameworkへ包含する。** Frameworkが具体的Scene・機種固有Semanticへ依存する。
+- **Sponzaを主たる設計対象として一般Scene GraphへModel Frameworkを作り替える。** 製造業由来のGLCE固有Domainを、一般Graphics Assetの都合に合わせて歪める。
+- **製造業のMaterialやProduct Configurationを、Renderer Material / TextureのData Modelと常に一対一に対応させる。** 材質指定、塗装仕様、描画上の表現には異なるMeaningとAuthorityがある。
+
+### Consequences / Target Boundary
+
+```text
+Application
+├── model_framework/
+│   └── assembly/              // 共通の組立機構とModel種別ごとの構成
+│
+└── scene/                     // 具体的なSceneの構成・使用例
+    ├── sample_robot/          // Model Frameworkを利用する機種固有Module
+    └── visualization/         // Model外のPoint / Line / UI等（必要時）
+
+Engine / Renderer
+└── Mesh / Geometry / Material / Texture Resource
+    // Model、Robot、SceneのDomain Meaningを持たない
+```
+
+このDirectoryは**Target Architectureの説明**であり、`scene/`の汎用実装や全Directoryの作成を直ちに要求しない。
+
+- `model_assembly_config_t`を組立図、`model_resource_map_t`をResource参照の共有Runtime定義、機種固有Instanceを個体状態とする三者分離は維持する。
+- Resource MapはRegistryのResource実体を所有せず、Import / AcquireしたReference Rightを所有する。Configから必要なBindingと初期Tree Templateを構築し、Configの早期破棄を可能にする現行Lifecycleは維持する。
+- Debug AABBは例外的なModel構成Partではなく、Model Geometryから派生するDiagnostic ResourceとしてMapが管理できる。
+- RendererにManufacturing / Scene固有Conceptを追加しない。
+- Source移動後のInclude Path、C Symbol名、共通Error Type等の物理的整理は、実装・Review時に確定する。
+
+### Revisit Conditions
+
+- 実際に公差、Part Revision、部品交換、設計BOM等のPart固有の永続Dataを管理するRequirementが生じた場合。
+- GLCE内部で顧客仕様の変更や塗装の動的合成を管理するRequirementが生じた場合。
+- Scene固有Moduleから共通Scene機構を抽出すべき具体的な重複・Ownership要求が確認された場合。
+- ModelとVisualizationの境界が、実際の産業用途に対して継続的な不自然さを生む場合。
+- 製造業以外のPrimary Use CaseへGLCEの目的そのものが変更された場合。
+
+### Related Decisions / Documents
+
+- 2026-10-27「Application–Engine間の描画InterfaceをMesh単位とし、Model概念をEngine全体から分離する」
+- 2026-10-28「Modelの組立図・Resource参照Map・個体状態を概念分離し、型名とApplication内の命名を再編する」
+- 2026-10-30「Model Assembly Configを『組立図』、Resource Mapを『製造準備済みの共有定義』、Robotを『個別の実機』とする」
+- 2026-11-01「Debug AABBをModel Resource Mapで自動生成・所有し、Robot個体間で共有する」
+- 本日付「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」
+- `design_notes.md`
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`
+
+---
+
+## Decision: AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する
+
+**Status:** Accepted / Target Architecture（Untextured Modelの既存実装を基礎とする。Textured ModelおよびDirectory再編は未実装）  
+**Date:** 2026-11-02  
+**Scope:** Application Model Framework / Assembly / Untextured Model / Textured Model / STL / OBJ / Resource Map / Mesh Pipeline / Import Policy
+
+### Decision
+
+1. Model FrameworkのAssemblyを、`untextured_model/`と`textured_model/`の**独立したModel Slice**へ分離する。名称は対応するShader、Mesh、Geometry Registry、Import Pipelineの`untextured` / `textured`と揃える。
+2. **一つのModel Assemblyを構成する通常のMesh Geometryは、UntexturedまたはTexturedのどちらか一方に限定する。** 同一Model内でSTL由来のUntextured MeshとOBJ由来のTextured Meshを混在させない。これはGLCEのModel Composition Policyであり、ファイル形式一般の制約ではない。
+3. Untextured Modelは、STLを基本的なGeometry Import経路として、Untextured Mesh / Geometry Registry / Materialを利用する。Textured Modelは、OBJ / MTL等を外観付きAssetの基本的なImport経路として、Textured Mesh / Geometry Registry / Material / Textureを利用する。
+4. 両Modelは**独立した完成済みModel**であり、Textured Modelの生成にUntextured Modelの構築・参照・変換を必須としない。同一の製品に由来していても、Base Geometryの共通Runtime Objectや、両Model間で共有するGeometry ID / VBOを要求しない。
+5. AssemblyのCoordinate Hierarchy、Transform Tree等、実際に共通するInfrastructureは共有してよい。ただし共有という理由でUntextured / TexturedのMesh Resource Registry、Material Registry、Importer、Resource Right Ownershipを統合しない。
+6. **混在禁止はModel Assemblyの境界に限る。** SceneではUntextured Model、Textured Model、Standalone Line / Point / UI等を並置できる。別Model間でCoordinateや関節姿勢を共有するためのCross-model Transform Bindingは現時点では導入しない。
+7. Model由来のDebug AABBをLine Meshで生成してResource Mapが所有することは、上記の混在禁止に抵触しない。Debug AABBは通常のAssembly構成Geometryではなく、Untextured Geometryから派生する診断用表示Resourceだからである。通常のPoint / Line / UI AssetをModel Assemblyへ一律に所属させる方針は撤回する。
+8. OBJ / MTLを「Product Configuration適用済み」、STLを「未適用」と捉えるのは**GLCEの利用・Import Policy上の解釈**であり、外部File Formatの定義ではない。OBJにはUVやMaterial指定がない場合もあり、STL自体は物理的材質情報を完全に表現しない。各Loaderが受け付ける必須属性・不完全なOBJの扱い等は、具体的なTextured Model実装時に定める。
+9. 今回、`base_model + appearance = configured_model`のRuntime合成、共通中間Model Object、汎用Geometry Source、Shader間のGeometry共有Frameworkは導入しない。Product Configurationが適用された外観Dataは、GLCE外部のCAD / Graphics Toolで生成された完成済みAssetとしてImportできる。
+
+### Target Directory Structure
+
+```text
+application/
+├── model_framework/
+│   └── assembly/
+│       ├── core/
+│       │   ├── model_types.h
+│       │   └── model_err_utils.h/.c
+│       │
+│       ├── model_transform_tree.h/.c
+│       │
+│       ├── untextured_model/
+│       │   ├── model_assembly_config.h/.c
+│       │   └── model_resource_map.h/.c
+│       │
+│       └── textured_model/                 [Future]
+│           ├── (Textured固有Assembly Config)
+│           └── (Textured固有Resource Map)
+│
+└── scene/
+    ├── sample_robot/
+    │   └── sample_robot.h/.c
+    └── visualization/                 [Future / Scene-specific]
+```
+
+- `model_framework`を親Directoryとし、`model_framework/assembly/`へ共通機構を配置する。
+- `untextured_model/`は既存の`model_assembly_config`および`model_resource_map`を整理する移行先である。
+- `textured_model/`は将来導入する。**Cのglobal Type / Function Symbolが既存Untextured側と衝突しない命名**を必要とするため、具体的なFile / API / Type名はTextured Model実装時に確定する。既存名称の一律改名は本Decisionの必須条件にしない。
+- 共通Transform Treeや共通Error Utility等は、両Sliceの需要が実在する限り共通Areaに残す。架空の将来用途だけを根拠に共通Moduleを増やさない。
+- `scene/`は具体的な利用側の所属先を示す。新たなGeneric Scene Frameworkの実装を意味しない。
+
+### Context / Design Evolution
+
+#### 1. 製品構成と描画Representationを一つのModel Objectへ押し込まない
+
+製造業のModelは、部品形状・組立構成と、顧客向けの塗装・仕上げ等を分けて理解できる。
+
+```text
+Base Definition + Appearance Specification = Configured Result
+```
+
+という関係は概念として自然であり、標準設計Dataと顧客向けDataの双方が存在することも不自然ではない。
+
+しかしこの関係をGLCEのRuntime Objectとして直接表現しようとすると、Base Modelの生成・所有、Appearanceとの対応付け、UV / Material Binding、Configured Modelへの変換、結果のReference RightとLifetimeなどを定義する必要がある。
+
+特に現在のModel Importで重要なのは、各Import経路がすでに固有の描画Representationへ向かうことである。**Textured ModelはPipelineの早期段階でTextured Geometryとして構築され、Untextured Modelを共有入力として利用しない。** この事実を無視して概念的な合成式をRuntime Architectureへ強制しない。
+
+#### 2. Vertex LayoutとOBJのIndex構造が異なる
+
+Untextured GeometryではPosition / Normal等を持つVertexを扱い、Textured GeometryではさらにUV等のAttributeが必要になる。
+
+OBJではPosition、Texture Coordinate、Normalが独立したIndexで参照され得る。同じPositionを複数のUVで使用するUV Seam等があるため、Textured Vertexへ展開するとUntextured VertexとElement数やIndex構造が一致するとは限らない。
+
+同じ製品に由来するGeometryだからという理由だけで、共通Vertex Array、同一Geometry ID、同一GPU VBOを要求すると、異なるRenderer SliceのRepresentationを調整するための新たな中間層や特別処理が必要になる。
+
+現在のGLCEでは、**論理的な製品形状の同一性と、描画用GPU Resourceの物理的共有を別問題として扱う**。UntexturedとTexturedは各々のImport Pipelineから必要なResourceを構築する。
+
+#### 3. Modelの分類名称を検討した
+
+一時は、Product Configurationの適用前後を表す`base_model` / `configured_model`、`unconfigured_model` / `configured_model`という名称を検討した。
+
+しかし`base_model`はTextured Modelにとって必須の入力であるという誤解を生みやすい。また、`configured`というDomain NamingとUntextured / Texturedという描画方式は完全には一致しない。例えば単色塗装はUntextured Shaderで描画でき、Textureを使う未塗装表面も存在し得る。
+
+GLCEの今回のDirectoryは、製品の工程段階そのものではなく、**完成済みModelを扱う描画Pipelineの違い**を示すことにした。これにより既存のShader、Mesh、Geometry Registryの命名と揃い、実際のOwnership / Import経路を読み取りやすくなる。
+
+#### 4. 同じAssembly内での混在を禁止する理由
+
+一つのAssemblyにUntextured / Textured Geometryを混在させると、Assembly Config、Resource Map、Import / Release、Validation、Resource Reference Right、Rollback等の組合せ管理が増える。
+
+また、製造業の標準設計成果物と顧客向けのGraphics Assetは、別々の成果物として取り扱うことができる。両者を一つの組立図へ同時に混在させることは、現在のGLCEで必要な操作ではない。
+
+そのため、**一つのModelは一つの主たるMesh Pipelineに属する**という制約を採用し、各Sliceの独立性・Lifecycleの局所性を優先する。
+
+なお、Mixed Modelの制約はScene全体へ適用しない。Sceneでは両Modelを組み合わせられる。ただし、その組合せによる共有関節・共通Coordinateの同期は未解決の将来課題であり、混在禁止のCostとして明示的に認識する。
+
+#### 5. Debug AABBは独立Pipeline利用の例外ではない
+
+Untextured ModelのDebug AABBはLine Meshであるが、Model内の別種の通常構成MeshとしてImportするのではなく、Untextured GeometryのLocal AABBから派生し、同じCoordinate Bindingを使用する診断用Resourceである。
+
+そのため、2026-11-01のDecisionで定めたResource Mapによる生成、Reference Right管理、個体間共有、Transform適用を維持する。Line / Point / UI等の一般Dataを一つのModelへ集約することとは区別する。
+
+### Accepted Import / Ownership Model
+
+```text
+製造業の設計Data
+    │
+    ├── STL等（基本形状のImport経路）
+    │       ↓
+    │   Untextured Model Assembly
+    │       ↓
+    │   Untextured Mesh Import / Geometry Registry
+    │       ↓
+    │   Untextured Model Resource Map
+    │
+    └── OBJ / MTL等（外観付きAssetのImport経路）
+            ↓
+        Textured Model Assembly       [Future]
+            ↓
+        Textured Mesh Import / Geometry Registry
+            ↓
+        Textured Model Resource Map   [Future]
+
+Scene
+    ├── Untextured Model Instance
+    ├── Textured Model Instance
+    └── Standalone Visualization (Point / Line / UI)
+
+Renderer Frontend
+    ← Mesh + World Matrix
+```
+
+上図はConceptとResource Operationの方向を表すものであり、`Resource Map`がGeometry Registryの実体をOwnするという意味ではない。**RegistryがResource実体を所有し、各Model Resource Mapは取得したReference RightをOwnする**。同型個体が同じModel Resource Mapを共有し、各々のTransform TreeとPostureを持つ従来の構造を維持する。
+
+### Rationale
+
+- Model内のResource Collectionを一つの主たるMesh Typeへ限定し、`model_resource_map`の責務・Validation・Release Pathを局所化できる。
+- Meshごとの独立Vertical SliceをApplication Model Frameworkまで維持できる。
+- Untextured / Texturedで異なるVertex LayoutやIndex展開を、共通Geometry Representationへ無理に押し込まない。
+- `base_model`という必須中間Objectを経由せず、それぞれのImport経路だけでModelを成立させられる。
+- 同じ製品に由来する標準設計Dataと外観付きDataを、異なる成果物として独立に保持できる。
+- Modelを組み合わせる自由度をScene側へ残し、RendererはMesh + Matrix Boundaryを維持できる。
+- Debug AABB等、Modelに由来する診断ResourceのOwnershipを保ちながら、Scene由来の通常Line / Pointを排除できる。
+
+### Rejected Alternatives
+
+- **Untextured / Textured / Point / Line / UIのすべてを単一Assembly Config / Resource Mapへ格納する。** 由来・描画経路・Lifetimeが異なるResource Collectionを同じModelへ集約することになる。
+- **Untextured Modelを必須のBase Objectとし、Appearanceを適用してTextured Modelを生成する。** 現行PipelineではTextured Geometryが最初から独立して構築されるため、実需要のない中間ObjectとConversion / Lifetime Contractを増やす。
+- **両Modelで同一Geometry Registry / VBOを強制的に共有する。** Vertex LayoutとOBJの属性Index / UV Seamの差を吸収するため、現在のVertical Slice境界を複雑化する。
+- **共通の汎用Geometry Source / Common Model Registry / Appearance Composition Frameworkを先行導入する。** 利用要求に先行して抽象化・中間Storage・責務・Validationを増やす。
+- **`base_model` / `configured_model`等の工程段階をModel Directory Nameとする。** Runtime実装では両Modelは対等であり、Shader / Geometry / Pipeline名に沿う`untextured` / `textured`の方が直接的である。
+- **一つのScene内でもUntextured / Texturedを混在禁止とする。** Scene固有の利用・Visualizationまで制約する必要はない。
+
+### Deferred: Base Definition + Appearance = Configured Model
+
+次のConceptは将来の有力な拡張候補として残すが、**本Decisionによって実装を約束しない**。
+
+```text
+製品の標準設計Data（Base Definition）
+              +
+顧客向け塗装・仕上げ・外観（Appearance）
+              ↓
+顧客向け完成外観（Configured Model）
+```
+
+この関係は製造業の製品構成を説明する上で自然であり、将来GLCEで同一製品の標準設計Dataと顧客向け外観Dataを関連付けることもできる。
+
+例えば以下の用途が考えられる。
+
+- **Base View:** 標準設計Dataを白色・単色等で表示し、形状・組立構造を確認する。
+- **Configured View:** 顧客向けTexture・塗装・Logo等を反映した完成外観を表示する。
+- 同じ製品に対応する2種類のModelを切り替える、またはGeometry差を比較する。
+
+単に白色表示へ切り替えるだけならTextured Geometryに単色Shader / Materialを適用する方式もあり、必ずしもBase Geometryを別保有する必要はない。一方、**標準図面と顧客向け完成Dataを異なる正本・成果物として比較する**用途では、Untextured / Textured双方のGeometryを独立保持する合理性がある。
+
+実現時には、設計Revision、Part / Coordinateの対応、Geometry差異、2種類のModelのIdentity、両ModelのLifecycle、Appearance適用方法、Sceneでの切替等を具体的に検討する。その要求が成立するまで、中間Model Objectや共通Geometry Sharingを先行導入しない。
+
+### Consequences / Implementation Scope
+
+- 現在の`model_framework`配下の既存Untextured Modelを、将来的に`assembly/untextured_model/`へ整理する。
+- 共通のCoordinate Tree / Error Utility等を`assembly/`の共通Areaへ残せるが、Textured側が必要とする具体的APIは新Sliceの実装時に決定する。
+- 通常のLine / Point / UIを`model_assembly_config_t`や`model_resource_map_t`へ横展開する方針を変更する。既存FieldやCodeの撤去は移行作業として別途実施し、現段階で削除完了とはしない。
+- Untextured ModelのDebug AABB生成・Ownershipは継続する。これは通常のLine Modelを組立図へ追加することと同義ではない。
+- Textured Modelは別途実装する。OBJ Loader、MTL / Textureの取り扱い、Geometry生成、Material / Reference Right / Rollback、Validation、Source Path等の具体仕様は、そのWorkで確定する。
+- Model内Mixed Geometryを要求する利用例が発生した場合は、Scene側CompositionやCross-model Transformの方が適切かを先に検討する。
+- 2026-10-30のConfig / Map / Instance三者分離、Config早期Destroy、MapのReference Right所有、Tree TemplateからのClone等の**成立済みLifecycle / Ownership契約は維持する**。
+- 今回のDecisionはTarget DirectoryとImport Policyの採用であり、Untextured / Texturedの全実装と移行完了を意味しない。
+
+### Revisit Conditions
+
+- 1つの製品Assembly内でUntextured / Textured Geometryを統合した共通Coordinate Hierarchyが実際に必要となり、Scene側のCompositionでは適切に表現できない場合。
+- Runtimeで顧客仕様を変更する、Appearanceを合成する、同一Geometryに異なるUV / Materialを適用する等の要件が明確になった場合。
+- Untextured / Textured双方で同一GeometryのCPU / GPU Storage重複が実測上問題となり、共有表現の導入価値が明確になった場合。
+- OBJ以外の3D Asset FormatやShader方式を導入し、Untextured / Texturedの2分類だけでは実際のModel Domainを表現できなくなった場合。
+- 大規模Scene、Animation、Robotの複合構成などでCross-model Transform Bindingが必要となった場合。
+- Debug / Derived Visualizationが増加し、現行Resource Map内での生成・Ownershipに独立した責務境界が必要となった場合。
+
+### Related Decisions / Documents
+
+- 本日付「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」
+- 2026-10-09「Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する」
+- 2026-10-27「Mesh ConfigのSemantic OwnerをMesh Moduleとし、Coordinate BindingをModel Configへ分離する」
+- 2026-10-27「Application–Engine間の描画InterfaceをMesh単位とし、Model概念をEngine全体から分離する」
+- 2026-10-30「Model Assembly Configを『組立図』、Resource Mapを『製造準備済みの共有定義』、Robotを『個別の実機』とする」
+- 2026-11-01「Debug AABBをModel Resource Mapで自動生成・所有し、Robot個体間で共有する」
+- `design_notes.md`
+- `glce_renderer_resource_model_workplan.md`
+- `glce_near_term_todo.md`

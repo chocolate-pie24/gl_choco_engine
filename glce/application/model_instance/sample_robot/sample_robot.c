@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "application/model/sample_robot/sample_robot.h"
+#include "application/model_instance/sample_robot/sample_robot.h"
+
+#include <stddef.h>
+#include <stdint.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -10,19 +13,17 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
-#include "engine/systems/renderer/resources/meshes/line_mesh.h"
-#include "engine/systems/renderer/resources/meshes/point_mesh.h"
-#include "engine/systems/renderer/resources/meshes/ui_mesh.h"
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 
-#include "application/model/core/model_types.h"
-#include "application/model/core/model_err_utils.h"
-#include "application/model/model_resource_map.h"
-#include "application/model/model_transform_tree.h"
-#include "application/model/model_assembly_config.h"
+#include "application/model_framework/assembly/core/model_framework_types.h"
+#include "application/model_framework/assembly/core/model_framework_err_utils.h"
+#include "application/model_framework/assembly/model_coordinate_config.h"
+#include "application/model_framework/assembly/model_transform_tree.h"
+#include "application/model_framework/assembly/untextured_model/model_assembly_config.h"
+#include "application/model_framework/assembly/untextured_model/model_resource_map.h"
 
-model_result_t sample_robot_create(const model_resource_map_t* resource_map_, sample_robot_t** out_robot_) {
-    model_result_t ret = MODEL_INVALID_ARGUMENT;
+model_framework_result_t sample_robot_create(const untextured_model_resource_map_t* resource_map_, sample_robot_t** out_robot_) {
+    model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
@@ -31,27 +32,27 @@ model_result_t sample_robot_create(const model_resource_map_t* resource_map_, sa
 
     sample_robot_posture_t default_posture = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "sample_robot_create", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "sample_robot_create", "out_robot_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, MODEL_BAD_OPERATION, model_result_to_str(MODEL_BAD_OPERATION), "sample_robot_create", "*out_robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "sample_robot_create", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "sample_robot_create", "out_robot_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "sample_robot_create", "*out_robot_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!model_resource_map_is_valid(resource_map_)) {
-        ret = MODEL_INVALID_ARGUMENT;
-        ERROR_MESSAGE("sample_robot_create(%s) - Provided resource_map_ is not valid.", model_result_to_str(ret));
+    if(!untextured_model_resource_map_is_valid(resource_map_)) {
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ERROR_MESSAGE("sample_robot_create(%s) - Provided resource_map_ is not valid.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 #endif
 
     ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_robot);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = model_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("sample_robot_create(%s) - general_allocator_allocate failed.", model_result_to_str(ret));
+        ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("sample_robot_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = model_resource_map_transform_tree_clone(resource_map_, &tmp_transform_tree);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_create(%s) - model_resource_map_transform_tree_clone failed.", model_result_to_str(ret));
+    ret = untextured_model_resource_map_transform_tree_clone(resource_map_, &tmp_transform_tree);
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_create(%s) - model_resource_map_transform_tree_clone failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
@@ -63,10 +64,10 @@ model_result_t sample_robot_create(const model_resource_map_t* resource_map_, sa
     tmp_transform_tree = NULL;
     tmp_robot = NULL;
 
-    ret = MODEL_SUCCESS;
+    ret = MODEL_FRAMEWORK_SUCCESS;
 
 cleanup:
-    if(MODEL_DATA_CORRUPTED == ret || MODEL_SUCCESS == ret) {
+    if(MODEL_FRAMEWORK_DATA_CORRUPTED == ret || MODEL_FRAMEWORK_SUCCESS == ret) {
         return ret;
     }
     if(NULL != tmp_transform_tree) {
@@ -86,24 +87,24 @@ void sample_robot_destroy(sample_robot_t** robot_) {
     general_allocator_free((void**)robot_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
-model_result_t sample_robot_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_t* robot_) {
-    model_result_t ret = MODEL_INVALID_ARGUMENT;
+model_framework_result_t sample_robot_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_t* robot_) {
+    model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "sample_robot_placement_set", "robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "sample_robot_placement_set", "robot_")
 
     ret = model_transform_tree_rotation_set(robot_->transform_tree, 14, rotation_);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_rotation_set failed.", model_result_to_str(ret));
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_rotation_set failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     ret = model_transform_tree_translate_set(robot_->transform_tree, 14, translate_);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_translate_set failed.", model_result_to_str(ret));
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_translate_set failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = MODEL_SUCCESS;
+    ret = MODEL_FRAMEWORK_SUCCESS;
 
 cleanup:
     return ret;
@@ -113,65 +114,65 @@ cleanup:
 // NOTE: MotorとCoordinate IDのbindingはAssembly Configに従う。
 // NOTE: 現状ではMotor AngleとLink Angleが一致すると仮定する。
 // NOTE: 可動範囲等の調整はまだ行わない。
-model_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_) {
-    model_result_t ret = MODEL_INVALID_ARGUMENT;
+model_framework_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_) {
+    model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     vec3f_t tmp_rotation = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "sample_robot_posture_update", "posture_")
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "sample_robot_posture_update", "robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "sample_robot_posture_update", "posture_")
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "sample_robot_posture_update", "robot_")
 
     // Base Motor (Yaw, Z-axis)
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->base_motor_angle);
     ret = model_transform_tree_rotation_set(robot_->transform_tree, 1, tmp_rotation);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_result_to_str(ret));
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     // Shoulder Motor (Pitch, Y-axis)
     tmp_rotation = vec3f_initialize(0.0f, posture_->shoulder_motor_angle, 0.0f);
     ret = model_transform_tree_rotation_set(robot_->transform_tree, 2, tmp_rotation);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_result_to_str(ret));
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     // Elbow Motor (Pitch, Y-axis)
     tmp_rotation = vec3f_initialize(0.0f, posture_->elbow_motor_angle, 0.0f);
     ret = model_transform_tree_rotation_set(robot_->transform_tree, 3, tmp_rotation);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_result_to_str(ret));
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     // Wrist Motor (Roll, X-axis)
     tmp_rotation = vec3f_initialize(posture_->wrist_motor_angle, 0.0f, 0.0f);
     ret = model_transform_tree_rotation_set(robot_->transform_tree, 4, tmp_rotation);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_result_to_str(ret));
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     // Left Finger
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->left_finger_angle);
     ret = model_transform_tree_rotation_set(robot_->transform_tree, 5, tmp_rotation);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_result_to_str(ret));
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     // Right Finger
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->right_finger_angle);
     ret = model_transform_tree_rotation_set(robot_->transform_tree, 6, tmp_rotation);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_result_to_str(ret));
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     robot_->posture = *posture_;
 
-    ret = MODEL_SUCCESS;
+    ret = MODEL_FRAMEWORK_SUCCESS;
 
 cleanup:
     return ret;
@@ -192,8 +193,8 @@ void sample_robot_posture_default_get(sample_robot_posture_t* posture_) {
 
 // NOTE: ChatGPT Generated.
 // NOTE: dummyの一時関数なので正式なエラー処理は一旦おいておく
-model_result_t sample_robot_dummy_config_loader(model_assembly_config_t** out_config_) {
-    model_result_t ret = MODEL_INVALID_ARGUMENT;
+model_framework_result_t sample_robot_dummy_config_loader(untextured_model_assembly_config_t** out_config_) {
+    model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     mesh_result_t ret_mesh = MESH_INVALID_ARGUMENT;
@@ -248,34 +249,34 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t** out_co
     const size_t untextured_mesh_count = sizeof(untextured_mesh_definitions) / sizeof(untextured_mesh_definitions[0]);
     size_t created_config_count = 0;
 
-    model_assembly_config_t* tmp_assembly_config = NULL;
+    untextured_model_assembly_config_t* tmp_assembly_config = NULL;
     model_coordinate_config_t* coordinates = NULL;
     untextured_mesh_config_t* untextured_mesh_configs = NULL;
     uint16_t* coordinate_ids = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_INVALID_ARGUMENT, model_result_to_str(MODEL_INVALID_ARGUMENT), "sample_robot_dummy_config_loader", "out_config_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, MODEL_BAD_OPERATION, model_result_to_str(MODEL_BAD_OPERATION), "sample_robot_dummy_config_loader", "*out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "sample_robot_dummy_config_loader", "out_config_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "sample_robot_dummy_config_loader", "*out_config_")
 
     // Prepare.
     ret_general_allocator = general_allocator_allocate(sizeof(*coordinates) * coordinate_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&coordinates);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = model_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate coordinates.", model_result_to_str(ret));
+        ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate coordinates.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     ret_general_allocator = general_allocator_allocate(sizeof(*untextured_mesh_configs) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&untextured_mesh_configs);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = model_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate mesh configs.", model_result_to_str(ret));
+        ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate mesh configs.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     ret_general_allocator = general_allocator_allocate(sizeof(*coordinate_ids) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&coordinate_ids);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = model_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate mesh coordinate IDs.", model_result_to_str(ret));
+        ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate mesh coordinate IDs.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
@@ -286,8 +287,8 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t** out_co
             vec3f_initialize(coordinate_definitions[i].translate[0], coordinate_definitions[i].translate[1], coordinate_definitions[i].translate[2]),
             vec3f_initialize(coordinate_definitions[i].rotation[0], coordinate_definitions[i].rotation[1], coordinate_definitions[i].rotation[2]),
             &coordinates[i]);
-        if(MODEL_SUCCESS != ret) {
-            ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - model_coordinate_config_initialize failed (index = %zu).", model_result_to_str(ret), i);
+        if(MODEL_FRAMEWORK_SUCCESS != ret) {
+            ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - model_coordinate_config_initialize failed (index = %zu).", model_framework_result_to_str(ret), i);
             goto cleanup;
         }
     }
@@ -303,23 +304,20 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t** out_co
             "untextured_mat",
             &untextured_mesh_configs[i]);
         if(MESH_SUCCESS != ret_mesh) {
-            ret = model_result_convert_mesh(ret_mesh);
-            ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - untextured_mesh_config_initialize failed (index = %zu).", model_result_to_str(ret), i);
+            ret = model_framework_result_convert_mesh(ret_mesh);
+            ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - untextured_mesh_config_initialize failed (index = %zu).", model_framework_result_to_str(ret), i);
             goto cleanup;
         }
         ++created_config_count;
     }
 
-    ret = model_assembly_config_create(
+    ret = untextured_model_assembly_config_create(
         coordinate_count,
         &coordinates,
-        0, NULL, NULL,
-        0, NULL, NULL,
-        0, NULL, NULL,
         untextured_mesh_count, &coordinate_ids, &untextured_mesh_configs,
         &tmp_assembly_config);
-    if(MODEL_SUCCESS != ret) {
-        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - model_assembly_config_create failed.", model_result_to_str(ret));
+    if(MODEL_FRAMEWORK_SUCCESS != ret) {
+        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - model_assembly_config_create failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
@@ -327,15 +325,15 @@ model_result_t sample_robot_dummy_config_loader(model_assembly_config_t** out_co
     *out_config_ = tmp_assembly_config;
     tmp_assembly_config = NULL;
 
-    ret = MODEL_SUCCESS;
+    ret = MODEL_FRAMEWORK_SUCCESS;
 
 cleanup:
-    if(MODEL_DATA_CORRUPTED == ret || MODEL_SUCCESS == ret) {
+    if(MODEL_FRAMEWORK_DATA_CORRUPTED == ret || MODEL_FRAMEWORK_SUCCESS == ret) {
         return ret;
     }
     // createが成功していれば上でOutputして終了する。以下は失敗時の局所Rollback。
     if(NULL != tmp_assembly_config) {
-        model_assembly_config_destroy(&tmp_assembly_config);
+        untextured_model_assembly_config_destroy(&tmp_assembly_config);
     }
     for(size_t i = 0; i != created_config_count; ++i) {
         untextured_mesh_config_deinitialize(&untextured_mesh_configs[i]);
