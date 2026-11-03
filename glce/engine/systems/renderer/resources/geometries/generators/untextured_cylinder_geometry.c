@@ -72,7 +72,7 @@ geometry_result_t untextured_cylinder_geometry_vertices_create(float radius_, fl
     }
     if(!size_mul_checked(vertex_count, sizeof(point_normal_vertex_t), &allocation_size)) {
         ret = GEOMETRY_OVERFLOW;
-        ERROR_MESSAGE("untextured_cylinder_geometry_vertices_create(%s) - Triangle count overflow.", geometry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_cylinder_geometry_vertices_create(%s) - Vertex array size overflow.", geometry_result_to_str(ret));
         goto cleanup;
     }
     ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vertices);
@@ -86,8 +86,9 @@ geometry_result_t untextured_cylinder_geometry_vertices_create(float radius_, fl
     z_upper = height_;
     z_lower = 0.0f;
     for(uint32_t i = 0; i < segment_count_; ++i) {
+        const uint32_t next = (i + 1) % segment_count_;
         const float angle1 = step * (float)i;
-        const float angle2 = step * (float)(i + 1);
+        const float angle2 = step * (float)next;
         const float c1 = cosf(CHOCO_DEG_TO_RAD(angle1));
         const float s1 = sinf(CHOCO_DEG_TO_RAD(angle1));
         const float c2 = cosf(CHOCO_DEG_TO_RAD(angle2));

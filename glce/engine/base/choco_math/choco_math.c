@@ -148,6 +148,16 @@ vec3f_t vec3f_component_max(vec3f_t v1_, vec3f_t v2_) {
     return tmp_v;
 }
 
+vec3f_t vec3f_cross(vec3f_t vec1_, vec3f_t vec2_) {
+    vec3f_t vec = { 0.0f };
+
+    vec.elem[0] = vec1_.elem[1] * vec2_.elem[2] - vec1_.elem[2] * vec2_.elem[1];
+    vec.elem[1] = vec1_.elem[2] * vec2_.elem[0] - vec1_.elem[0] * vec2_.elem[2];
+    vec.elem[2] = vec1_.elem[0] * vec2_.elem[1] - vec1_.elem[1] * vec2_.elem[0];
+
+    return vec;
+}
+
 vec4f_t vec4f_initialize(float x_, float y_, float z_, float w_) {
     vec4f_t ret = { 0.0f };
 
@@ -527,3 +537,4 @@ bool size_mul_checked(size_t a_, size_t b_, size_t* out_result_) {
     *out_result_ = a_ * b_;
     return true;
 }
+
