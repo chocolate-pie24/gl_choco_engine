@@ -22,6 +22,8 @@
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
+
 #include "application/core/application_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
@@ -362,6 +364,31 @@ application_result_t application_result_convert_model_framework(model_framework_
     case MODEL_FRAMEWORK_OVERFLOW:
         return APPLICATION_OVERFLOW;
     case MODEL_FRAMEWORK_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t application_result_convert_geometry(geometry_result_t result_) {
+    switch(result_) {
+    case GEOMETRY_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case GEOMETRY_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case GEOMETRY_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case GEOMETRY_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case GEOMETRY_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case GEOMETRY_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case GEOMETRY_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case GEOMETRY_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case GEOMETRY_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

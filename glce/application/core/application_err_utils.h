@@ -37,6 +37,7 @@ extern "C" {
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
 #include "application/model_framework/assembly/core/model_framework_types.h"
@@ -80,6 +81,8 @@ application_result_t application_result_convert_renderer_backend(renderer_backen
 application_result_t application_result_convert_mesh(mesh_result_t result_);
 
 application_result_t application_result_convert_model_framework(model_framework_result_t result_);
+
+application_result_t application_result_convert_geometry(geometry_result_t result_);
 
 #ifdef __cplusplus
 }

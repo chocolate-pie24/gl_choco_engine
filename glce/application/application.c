@@ -58,6 +58,7 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 
+#include "engine/systems/renderer/resources/geometries/generators/line_grid_geometry.h"
 #include "engine/systems/renderer/resources/meshes/line_mesh.h"
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 
@@ -129,6 +130,8 @@ typedef struct application_state {
     untextured_model_resource_map_t* sample_robot_resource_map;
     sample_robot_t* sample_robot1;
     sample_robot_t* sample_robot2;
+    line_mesh_t floor_grid_line_mesh;
+    mat4x4f_t floor_grid_model_matrix;
 
     // Texture ID
     // uint16_t tex_id_rabbit;
@@ -174,6 +177,7 @@ static application_result_t untextured_mesh_import(application_state_t* state_);
 
 static application_result_t directory_path_initialize(application_state_t* state_);
 static application_result_t sample_robot_initialize(application_state_t* state_);
+static application_result_t floor_grid_initialize(application_state_t* state_);
 
 application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
@@ -189,6 +193,7 @@ application_result_t application_create(void) {
     size_t subsystem_memory_pool_size = 0;
 
     application_state_t* tmp_state = NULL;
+    bool floor_grid_generated = false;
 
     // Preconditions
     if(NULL != s_application_state) {
@@ -302,6 +307,13 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - sample_robot_initialize failed.", application_result_to_str(ret));
         goto cleanup;
     }
+    ret = floor_grid_initialize(tmp_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - floor_grid_initialize failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    mat4f_identity(&tmp_state->floor_grid_model_matrix);
+    floor_grid_generated = true;
 
     application_diagnostics_status_report(tmp_state->subsystem_allocator);
 
@@ -316,6 +328,9 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_state) {
+        if(floor_grid_generated) {
+            renderer_frontend_line_mesh_release(tmp_state->renderer_frontend, &tmp_state->floor_grid_line_mesh);
+        }
         if(NULL != tmp_state->sample_robot2) {
             sample_robot_destroy(&tmp_state->sample_robot2);
         }
@@ -358,6 +373,7 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    renderer_frontend_line_mesh_release(s_application_state->renderer_frontend, &s_application_state->floor_grid_line_mesh);
     if(NULL != s_application_state->sample_robot2) {
         sample_robot_destroy(&s_application_state->sample_robot2);
     }
@@ -717,6 +733,13 @@ application_result_t application_run(void) {
                 ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
                 goto cleanup;
             }
+        }
+        // Floor Grid
+        ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &s_application_state->floor_grid_line_mesh, &s_application_state->floor_grid_model_matrix);
+        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+            ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+            ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
+            goto cleanup;
         }
 
         // ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
@@ -1168,6 +1191,51 @@ cleanup:
     }
     if(NULL != config) {
         untextured_model_assembly_config_destroy(&config);
+    }
+    return ret;
+}
+
+static application_result_t floor_grid_initialize(application_state_t* state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
+
+    line_vertex_t* tmp_vertices = NULL;
+    size_t tmp_vertex_count = 0;
+    line_mesh_t tmp_mesh = { 0 };
+
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "floor_grid_initialize", "state_")
+    if(NULL == state_->renderer_frontend) {
+        ret = APPLICATION_BAD_OPERATION;
+        ERROR_MESSAGE("floor_grid_initialize(%s) - Renderer Frontend is not initialized.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_geometry = line_grid_geometry_vertices_create(LINE_GRID_PLANE_XZ, vec4u8_initialize(128, 128, 128, 255), vec3f_initialize(-500.0f, 0.0f, -1300.0f), vec3f_initialize(500.0f, 0.0f, 100.0f), 50.0f, &tmp_vertices, &tmp_vertex_count);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = application_result_convert_geometry(ret_geometry);
+        ERROR_MESSAGE("floor_grid_initialize(%s) - line_grid_geometry_vertices_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_frontend = renderer_frontend_line_mesh_import_from_vertices(state_->renderer_frontend, "floor_grid_line", tmp_vertices, tmp_vertex_count, &tmp_mesh);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("floor_grid_initialize(%s) - renderer_frontend_line_mesh_import_from_vertices failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    state_->floor_grid_line_mesh = tmp_mesh;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_DATA_CORRUPTED == ret) {
+        return ret;
+    }
+    if(NULL != tmp_vertices) {
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
     return ret;
 }
