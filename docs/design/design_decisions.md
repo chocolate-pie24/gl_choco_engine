@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-02
+最終更新: 2026-11-03
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -7246,6 +7246,9 @@ Engine / Renderer
 
 - `model_assembly_config_t`を組立図、`model_resource_map_t`をResource参照の共有Runtime定義、機種固有Instanceを個体状態とする三者分離は維持する。
 - Resource MapはRegistryのResource実体を所有せず、Import / AcquireしたReference Rightを所有する。Configから必要なBindingと初期Tree Templateを構築し、Configの早期破棄を可能にする現行Lifecycleは維持する。
+- Modelに所属しないStandalone Line / Point / UI等のReference Rightは、Renderer Frontendを通じてImport / AcquireしたApplication / Scene側の利用Moduleが所有する。正常な利用終了時のReleaseと、部分失敗時のRollbackも当該Ownerが担当し、Model Resource MapへこれらのRightを移さない。
+- Standalone利用でもResource実体・Identity・Reference CountのAuthorityはRenderer内部のRegistryに残る。Standalone Meshを利用するためにModel Assembly Config、Model Resource Map、Model Transform Treeを生成する必要はない。
+- Model Resource Mapが所有するRightとApplication / Sceneが所有するStandalone Rightは、いずれもRenderer Frontendの終了前に返却する。Model由来のDebug AABBは従来どおりResource MapがReference Rightを所有し、通常のStandalone Visualizationとは区別する。
 - Debug AABBは例外的なModel構成Partではなく、Model Geometryから派生するDiagnostic ResourceとしてMapが管理できる。
 - RendererにManufacturing / Scene固有Conceptを追加しない。
 - Source移動後のInclude Path、C Symbol名、共通Error Type等の物理的整理は、実装・Review時に確定する。
