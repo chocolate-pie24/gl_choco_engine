@@ -60,7 +60,7 @@ struct untextured_model_resource_map {
 static model_framework_result_t model_resource_map_untextured_meshes_create(renderer_frontend_t* renderer_frontend_, const untextured_model_assembly_config_t* config_, const char* asset_root_path_, size_t* out_mesh_count_, untextured_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_);
 static model_framework_result_t model_resource_map_untextured_meshes_destroy(renderer_frontend_t* renderer_frontend_, size_t mesh_count_, untextured_mesh_t** meshes_, uint16_t** coordinate_ids_);
 
-static model_framework_result_t model_resource_map_debug_aabb_meshes_create(renderer_frontend_t* renderer_frontend_, const untextured_model_assembly_config_t* config_, const untextured_mesh_t* untextured_meshes_, const uint16_t* untextured_mesh_coordinate_ids_, size_t* out_mesh_count_, line_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_);
+static model_framework_result_t model_resource_map_debug_aabb_meshes_create(renderer_frontend_t* renderer_frontend_, const untextured_model_assembly_config_t* config_, const untextured_mesh_t* untextured_meshes_, const uint16_t* untextured_mesh_coordinate_ids_, vec4u8_t aabb_color_, size_t* out_mesh_count_, line_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_);
 static model_framework_result_t model_resource_map_debug_aabb_meshes_destroy(renderer_frontend_t* renderer_frontend_, size_t mesh_count_, line_mesh_t** meshes_, uint16_t** coordinate_ids_);
 
 static model_framework_result_t transform_tree_create_from_config(const untextured_model_assembly_config_t* config_, model_transform_tree_t** out_transform_tree_);
@@ -69,11 +69,20 @@ static model_framework_result_t debug_aabb_mesh_resource_name_create(const choco
 static model_framework_result_t debug_axis_vertices_create(vec3f_t rotation_, const cone_t* cone_, const cylinder_t* cylinder_, uint16_t segment_count_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_);
 static model_framework_result_t debug_axis_mesh_resource_name_create(const char* resource_map_name_, const char* resource_category_, const char* axis_name_, choco_string_t** out_string_);
 
-static model_framework_result_t model_resource_map_debug_axis_meshes_create(renderer_frontend_t* renderer_frontend_, const char* resource_map_name_, const untextured_model_assembly_config_t* config_, size_t* out_mesh_count_, untextured_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_);
+static model_framework_result_t model_resource_map_debug_axis_meshes_create(renderer_frontend_t* renderer_frontend_, const char* resource_map_name_, const untextured_model_assembly_config_t* config_, const cone_t* debug_axis_cone_, const cylinder_t* debug_axis_cylinder_, uint16_t debug_axis_segment_count_, size_t* out_mesh_count_, untextured_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_);
 static model_framework_result_t model_resource_map_debug_axis_meshes_destroy(renderer_frontend_t* renderer_frontend_, size_t mesh_count_, untextured_mesh_t** meshes_, uint16_t** coordinate_ids_);
 
-// NOTE: debug用AABB line meshの描画色は当面赤で固定
-model_framework_result_t untextured_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const char* resource_map_name_, const untextured_model_assembly_config_t* config_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_) {
+// NOTE: Debug Axis生成無効時はsegment_count_ = 0, debug_axis_cone_ = NULL, debug_axis_cylinder_ = NULLを許容するように変更しても良い, 当面は必須にする
+model_framework_result_t untextured_model_resource_map_create(
+    renderer_frontend_t* renderer_frontend_,
+    const char* resource_map_name_,
+    const untextured_model_assembly_config_t* config_,
+    const char* asset_root_path_,
+    vec4u8_t debug_aabb_color_,
+    const cone_t* debug_axis_cone_,
+    const cylinder_t* debug_axis_cylinder_,
+    uint16_t debug_axis_segment_count_,
+    untextured_model_resource_map_t** out_resource_map_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     model_framework_result_t ret_cleanup = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -101,6 +110,8 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
     IF_ARG_NULL_GOTO_CLEANUP(resource_map_name_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "resource_map_name_")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "config_")
     IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "asset_root_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(debug_axis_cone_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "debug_axis_cone_")
+    IF_ARG_NULL_GOTO_CLEANUP(debug_axis_cylinder_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "debug_axis_cylinder_")
     IF_ARG_NULL_GOTO_CLEANUP(out_resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "out_resource_map_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_resource_map_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "untextured_model_resource_map_create", "*out_resource_map_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -109,10 +120,25 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - Provided config_ is not valid.", model_framework_result_to_str(ret));
         goto cleanup;
     }
+    if(!cylinder_is_valid(debug_axis_cylinder_)) {
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ERROR_MESSAGE("untextured_model_resource_map_create(%s) - Provided debug_axis_cylinder_ is not valid.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!cone_is_valid(debug_axis_cone_)) {
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ERROR_MESSAGE("untextured_model_resource_map_create(%s) - Provided debug_axis_cone_ is not valid.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
 #endif
     if('\0' == resource_map_name_[0]) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - Provided resource_map_name_ is not valid.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+    if(0 == debug_axis_segment_count_) {
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ERROR_MESSAGE("untextured_model_resource_map_create(%s) - Provided debug_axis_segment_count_ is not valid.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
@@ -136,13 +162,13 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
         goto cleanup;
     }
 
-    ret = model_resource_map_debug_aabb_meshes_create(renderer_frontend_, config_, tmp_untextured_meshes, tmp_untextured_mesh_coordinate_ids, &tmp_debug_aabb_mesh_count, &tmp_debug_aabb_meshes, &tmp_debug_aabb_mesh_coordinate_ids);
+    ret = model_resource_map_debug_aabb_meshes_create(renderer_frontend_, config_, tmp_untextured_meshes, tmp_untextured_mesh_coordinate_ids, debug_aabb_color_, &tmp_debug_aabb_mesh_count, &tmp_debug_aabb_meshes, &tmp_debug_aabb_mesh_coordinate_ids);
     if(MODEL_FRAMEWORK_SUCCESS != ret) {
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - model_resource_map_debug_aabb_meshes_create failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = model_resource_map_debug_axis_meshes_create(renderer_frontend_, resource_map_name_, config_, &tmp_axis_mesh_count, &tmp_axis_meshes, &tmp_axis_mesh_coordinate_ids);
+    ret = model_resource_map_debug_axis_meshes_create(renderer_frontend_, resource_map_name_, config_, debug_axis_cone_, debug_axis_cylinder_, debug_axis_segment_count_, &tmp_axis_mesh_count, &tmp_axis_meshes, &tmp_axis_mesh_coordinate_ids);
     if(MODEL_FRAMEWORK_SUCCESS != ret) {
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - model_resource_map_debug_axis_meshes_create failed.", model_framework_result_to_str(ret));
         goto cleanup;
@@ -525,7 +551,7 @@ cleanup:
     return ret;
 }
 
-static model_framework_result_t model_resource_map_debug_aabb_meshes_create(renderer_frontend_t* renderer_frontend_, const untextured_model_assembly_config_t* config_, const untextured_mesh_t* untextured_meshes_, const uint16_t* untextured_mesh_coordinate_ids_, size_t* out_mesh_count_, line_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_) {
+static model_framework_result_t model_resource_map_debug_aabb_meshes_create(renderer_frontend_t* renderer_frontend_, const untextured_model_assembly_config_t* config_, const untextured_mesh_t* untextured_meshes_, const uint16_t* untextured_mesh_coordinate_ids_, vec4u8_t aabb_color_, size_t* out_mesh_count_, line_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -593,7 +619,7 @@ static model_framework_result_t model_resource_map_debug_aabb_meshes_create(rend
         }
 
         // AABBをLine MeshとしてImport
-        ret_renderer_frontend = renderer_frontend_line_mesh_import_from_aabb(renderer_frontend_, choco_string_c_str(tmp_resource_name), &tmp_aabb, vec4u8_initialize(255, 0, 0, 255), &tmp_meshes[i]);
+        ret_renderer_frontend = renderer_frontend_line_mesh_import_from_aabb(renderer_frontend_, choco_string_c_str(tmp_resource_name), &tmp_aabb, aabb_color_, &tmp_meshes[i]);
         if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
             ret = model_framework_result_convert_renderer_frontend(ret_renderer_frontend);
             ERROR_MESSAGE("model_resource_map_debug_aabb_meshes_create(%s) - renderer_frontend_line_mesh_import_from_aabb failed.", model_framework_result_to_str(ret));
@@ -1008,7 +1034,16 @@ cleanup:
     return ret;
 }
 
-static model_framework_result_t model_resource_map_debug_axis_meshes_create(renderer_frontend_t* renderer_frontend_, const char* resource_map_name_, const untextured_model_assembly_config_t* config_, size_t* out_mesh_count_, untextured_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_) {
+static model_framework_result_t model_resource_map_debug_axis_meshes_create(
+    renderer_frontend_t* renderer_frontend_,
+    const char* resource_map_name_,
+    const untextured_model_assembly_config_t* config_,
+    const cone_t* debug_axis_cone_,
+    const cylinder_t* debug_axis_cylinder_,
+    uint16_t debug_axis_segment_count_,
+    size_t* out_mesh_count_,
+    untextured_mesh_t** out_meshes_,
+    uint16_t** out_coordinate_ids_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -1040,25 +1075,17 @@ static model_framework_result_t model_resource_map_debug_axis_meshes_create(rend
         }
     };
 
-    // TODO: 仮で可変にする
-    const uint32_t segment_count = 32;
-    const cone_t cone = { .height = 10.0f, .radius = 10.0f };
-    const cylinder_t cylinder = { .height = 30.0f, .radius = 5.0f };
-
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "renderer_frontend_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_map_name_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "resource_map_name_")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "config_")
+    IF_ARG_NULL_GOTO_CLEANUP(debug_axis_cone_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "debug_axis_cone_")
+    IF_ARG_NULL_GOTO_CLEANUP(debug_axis_cylinder_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "debug_axis_cylinder_")
     IF_ARG_NULL_GOTO_CLEANUP(out_mesh_count_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "out_mesh_count_")
     IF_ARG_NULL_GOTO_CLEANUP(out_meshes_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "out_meshes_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_meshes_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "model_resource_map_debug_axis_meshes_create", "*out_meshes_")
     IF_ARG_NULL_GOTO_CLEANUP(out_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "out_coordinate_ids_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_coordinate_ids_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "model_resource_map_debug_axis_meshes_create", "*out_coordinate_ids_")
-    if(0 == config_->coordinate_count) {
-        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - Provided config_ is not valid.", model_framework_result_to_str(ret));
-        goto cleanup;
-    }
 
     // Resource Allocation.
     if(!size_mul_checked(sizeof(untextured_mesh_t) * 3, config_->coordinate_count, &allocation_size)) {
@@ -1100,7 +1127,7 @@ static model_framework_result_t model_resource_map_debug_axis_meshes_create(rend
             goto cleanup;
         }
 
-        ret = debug_axis_vertices_create(axis_rotations[i], &cone, &cylinder, segment_count, &tmp_vertex_count, &tmp_vertices);
+        ret = debug_axis_vertices_create(axis_rotations[i], debug_axis_cone_, debug_axis_cylinder_, debug_axis_segment_count_, &tmp_vertex_count, &tmp_vertices);
         if(MODEL_FRAMEWORK_SUCCESS != ret) {
             ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_vertices_create failed.", model_framework_result_to_str(ret));
             goto cleanup;

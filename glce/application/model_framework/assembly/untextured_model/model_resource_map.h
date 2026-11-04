@@ -12,6 +12,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "engine/base/choco_math/math_types.h"
+
 #include "application/model_framework/assembly/core/model_framework_types.h"
 
 typedef struct untextured_model_resource_map untextured_model_resource_map_t;
@@ -22,9 +24,21 @@ typedef struct line_mesh line_mesh_t;
 typedef struct untextured_mesh untextured_mesh_t;
 typedef struct model_transform_tree model_transform_tree_t;
 
+typedef struct cone cone_t;
+typedef struct cylinder cylinder_t;
+
 typedef struct renderer_frontend renderer_frontend_t;
 
-model_framework_result_t untextured_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const char* resource_map_name_, const untextured_model_assembly_config_t* config_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_);
+model_framework_result_t untextured_model_resource_map_create(
+    renderer_frontend_t* renderer_frontend_,
+    const char* resource_map_name_,
+    const untextured_model_assembly_config_t* config_,
+    const char* asset_root_path_,
+    vec4u8_t debug_aabb_color_,
+    const cone_t* debug_axis_cone_,
+    const cylinder_t* debug_axis_cylinder_,
+    uint16_t debug_axis_segment_count_,
+    untextured_model_resource_map_t** out_resource_map_);
 
 model_framework_result_t untextured_model_resource_map_destroy(renderer_frontend_t* renderer_frontend_, untextured_model_resource_map_t** resource_map_);
 

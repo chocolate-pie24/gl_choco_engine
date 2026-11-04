@@ -33,6 +33,8 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
+#include "engine/core/geometry_primitive/cone.h"
+#include "engine/core/geometry_primitive/cylinder.h"
 #include "engine/core/event/keyboard_event.h"
 
 #include "engine/io_utils/fs_path.h"
@@ -963,6 +965,11 @@ static application_result_t sample_robot_initialize(application_state_t* state_)
     sample_robot_t* robot1 = NULL;
     sample_robot_t* robot2 = NULL;
 
+    // Debug Axis Configuration.
+    const uint32_t segment_count = 32;
+    const cone_t cone = { .height = 10.0f, .radius = 10.0f };
+    const cylinder_t cylinder = { .height = 30.0f, .radius = 5.0f };
+
     IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_initialize", "state_")
 
     ret_model_framework = sample_robot_dummy_config_loader(&config);
@@ -971,7 +978,7 @@ static application_result_t sample_robot_initialize(application_state_t* state_)
         ERROR_MESSAGE("sample_robot_initialize(%s) - sample_robot_dummy_config_loader failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    ret_model_framework = untextured_model_resource_map_create(state_->renderer_frontend, "sample_robot_resource_map", config, fs_path_fullpath_get(state_->asset_root), &resource_map);
+    ret_model_framework = untextured_model_resource_map_create(state_->renderer_frontend, "sample_robot_resource_map", config, fs_path_fullpath_get(state_->asset_root), vec4u8_initialize(255, 0, 0, 255), &cone, &cylinder, segment_count, &resource_map);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = application_result_convert_model_framework(ret_model_framework);
         ERROR_MESSAGE("sample_robot_initialize(%s) - model_resource_map_create failed.", application_result_to_str(ret));
