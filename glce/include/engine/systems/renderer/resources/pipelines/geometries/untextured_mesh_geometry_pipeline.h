@@ -127,11 +127,13 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stddef.h>
 
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
 typedef struct vbo_manager vbo_manager_t;
 typedef struct untextured_mesh_geometry_registry untextured_mesh_geometry_registry_t; /**< 単色ライティング描画用ジオメトリレジストリのopaque型 */
+typedef struct point_normal_vertex point_normal_vertex_t;
 
 /**
  * @brief ASCII STLファイルからUntextured Mesh Geometryを生成し、
@@ -248,6 +250,8 @@ typedef struct untextured_mesh_geometry_registry untextured_mesh_geometry_regist
  * @post 入力ファイルとResource Full Pathのownershipは移転しない。
  */
 resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vbo_manager_t* vbo_manager_, untextured_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_geometry_id_);
+
+resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_vertices(vbo_manager_t* vbo_manager_, untextured_mesh_geometry_registry_t* geometry_registry_, const char* resource_name_, const point_normal_vertex_t* vertices_, size_t vertex_count_, uint16_t* out_geometry_id_);
 
 /**
  * @brief Untextured Mesh Geometryの利用権を1つ返却する。
