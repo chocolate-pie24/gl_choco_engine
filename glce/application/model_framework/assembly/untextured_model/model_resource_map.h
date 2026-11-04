@@ -38,11 +38,11 @@ model_framework_result_t untextured_model_resource_map_untextured_mesh_coordinat
 model_framework_result_t untextured_model_resource_map_untextured_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_);
 
 // for Debug AABB Line Mesh.
-model_framework_result_t untextured_model_resource_map_line_mesh_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, line_mesh_t* out_mesh_);
+model_framework_result_t untextured_model_resource_map_aabb_mesh_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, line_mesh_t* out_mesh_);
 
-model_framework_result_t untextured_model_resource_map_line_mesh_coordinate_id_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_);
+model_framework_result_t untextured_model_resource_map_aabb_mesh_coordinate_id_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_);
 
-model_framework_result_t untextured_model_resource_map_line_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_);
+model_framework_result_t untextured_model_resource_map_aabb_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_);
 
 // for Debug AXIS Untextured Mesh.
 model_framework_result_t untextured_model_resource_map_axis_mesh_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, untextured_mesh_t* out_mesh_);
