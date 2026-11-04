@@ -14,11 +14,12 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
+#include "engine/core/geometry_primitive/cylinder.h"
 
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/geometries/core/geometry_err_utils.h"
 
-geometry_result_t untextured_cylinder_geometry_vertices_create(float radius_, float height_, uint16_t segment_count_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_) {
+geometry_result_t untextured_cylinder_geometry_vertices_create(const cylinder_t* cylinder_, uint16_t segment_count_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_) {
     geometry_result_t ret = GEOMETRY_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -40,12 +41,13 @@ geometry_result_t untextured_cylinder_geometry_vertices_create(float radius_, fl
 
     point_normal_vertex_t* tmp_vertices = NULL;
 
+    IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cylinder_geometry_vertices_create", "cylinder_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cylinder_geometry_vertices_create", "out_vertices_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "untextured_cylinder_geometry_vertices_create", "*out_vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cylinder_geometry_vertices_create", "out_vertex_count_")
-    if(!isfinite(radius_) || !(radius_ > 0.0f) || !isfinite(height_) || !(height_ > 0.0f)) {
+    if(!cylinder_is_valid(cylinder_)) {
         ret = GEOMETRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_cylinder_geometry_vertices_create(%s) - Provided radius_ or height_ is not valid.", geometry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_cylinder_geometry_vertices_create(%s) - Provided cylinder_ is not valid.", geometry_result_to_str(ret));
         goto cleanup;
     }
     if(3 > segment_count_) {
@@ -83,7 +85,7 @@ geometry_result_t untextured_cylinder_geometry_vertices_create(float radius_, fl
     }
 
     step = 360.0f / (float)segment_count_;
-    z_upper = height_;
+    z_upper = cylinder_->height;
     z_lower = 0.0f;
     for(uint32_t i = 0; i < segment_count_; ++i) {
         const uint32_t next = (i + 1) % segment_count_;
@@ -94,11 +96,11 @@ geometry_result_t untextured_cylinder_geometry_vertices_create(float radius_, fl
         const float c2 = cosf(CHOCO_DEG_TO_RAD(angle2));
         const float s2 = sinf(CHOCO_DEG_TO_RAD(angle2));
 
-        x1 = radius_ * c1;
-        y1 = radius_ * s1;
+        x1 = cylinder_->radius * c1;
+        y1 = cylinder_->radius * s1;
 
-        x2 = radius_ * c2;
-        y2 = radius_ * s2;
+        x2 = cylinder_->radius * c2;
+        y2 = cylinder_->radius * s2;
 
         normal1 = vec4i8_initialize((int8_t)(127.0f * c1), (int8_t)(127.0f * s1), 0, 0);
         normal2 = vec4i8_initialize((int8_t)(127.0f * c2), (int8_t)(127.0f * s2), 0, 0);

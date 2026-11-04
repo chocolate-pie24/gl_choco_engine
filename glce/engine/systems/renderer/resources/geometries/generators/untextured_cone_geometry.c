@@ -14,12 +14,13 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
+#include "engine/core/geometry_primitive/cone.h"
 
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/geometries/core/geometry_err_utils.h"
 
 // TODO: 極端な寸法では外積のUnderflow/Overflowや正規化の失敗が発生する可能性がある。必要に応じて将来、数値的に安定した計算方式を検討する。
-geometry_result_t untextured_cone_geometry_vertices_create(float radius_, float height_, uint16_t segment_count_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_) {
+geometry_result_t untextured_cone_geometry_vertices_create(const cone_t* cone_, uint16_t segment_count_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_) {
     geometry_result_t ret = GEOMETRY_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -34,12 +35,13 @@ geometry_result_t untextured_cone_geometry_vertices_create(float radius_, float 
 
     point_normal_vertex_t* tmp_vertices = NULL;
 
+    IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cone_geometry_vertices_create", "cone_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cone_geometry_vertices_create", "out_vertices_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "untextured_cone_geometry_vertices_create", "*out_vertices_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cone_geometry_vertices_create", "out_vertex_count_")
-    if(!isfinite(radius_) || !(radius_ > 0.0f) || !isfinite(height_) || !(height_ > 0.0f)) {
+    if(!cone_is_valid(cone_)) {
         ret = GEOMETRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_cone_geometry_vertices_create(%s) - Provided radius_ or height_ is not valid.", geometry_result_to_str(ret));
+        ERROR_MESSAGE("untextured_cone_geometry_vertices_create(%s) - Provided cone_ is not valid.", geometry_result_to_str(ret));
         goto cleanup;
     }
     if(3 > segment_count_) {
@@ -71,16 +73,16 @@ geometry_result_t untextured_cone_geometry_vertices_create(float radius_, float 
     }
 
     step = 360.0f / (float)segment_count_;
-    z_upper = height_;
+    z_upper = cone_->height;
     z_lower = 0.0f;
     for(uint32_t i = 0; i < segment_count_; ++i) {
         const uint32_t next = (i + 1) % segment_count_;
         const float angle1 = step * (float)i;
         const float angle2 = step * (float)next;
-        const float x1 = radius_ * cosf(CHOCO_DEG_TO_RAD(angle1));
-        const float y1 = radius_ * sinf(CHOCO_DEG_TO_RAD(angle1));
-        const float x2 = radius_ * cosf(CHOCO_DEG_TO_RAD(angle2));
-        const float y2 = radius_ * sinf(CHOCO_DEG_TO_RAD(angle2));
+        const float x1 = cone_->radius * cosf(CHOCO_DEG_TO_RAD(angle1));
+        const float y1 = cone_->radius * sinf(CHOCO_DEG_TO_RAD(angle1));
+        const float x2 = cone_->radius * cosf(CHOCO_DEG_TO_RAD(angle2));
+        const float y2 = cone_->radius * sinf(CHOCO_DEG_TO_RAD(angle2));
 
         const vec3f_t edge1 = vec3f_initialize(x2 - x1, y2 - y1, 0.0f);
         const vec3f_t edge2 = vec3f_initialize(0.0f - x1, 0.0f - y1, z_upper);

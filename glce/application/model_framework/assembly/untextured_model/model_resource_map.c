@@ -12,6 +12,8 @@
 #include "engine/base/choco_math/choco_math.h"
 
 #include "engine/core/geometry_primitive/aabb_3d.h"
+#include "engine/core/geometry_primitive/cone.h"
+#include "engine/core/geometry_primitive/cylinder.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -20,6 +22,8 @@
 
 #include "engine/systems/renderer/resources/meshes/line_mesh.h"
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
+#include "engine/systems/renderer/resources/geometries/generators/untextured_cone_geometry.h"
+#include "engine/systems/renderer/resources/geometries/generators/untextured_cylinder_geometry.h"
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
@@ -31,6 +35,8 @@
 #include "application/model_framework/assembly/untextured_model/model_assembly_config.h"
 
 struct untextured_model_resource_map {
+    choco_string_t* resource_map_name;
+
     // 個体生成用の初期Transform Tree
     model_transform_tree_t* transform_tree;
 
@@ -43,6 +49,11 @@ struct untextured_model_resource_map {
     size_t line_mesh_count;
     line_mesh_t* line_meshes;
     uint16_t* line_mesh_coordinate_ids;
+
+    // Debug表示用Untextured Mesh Axis
+    size_t axis_mesh_count;
+    untextured_mesh_t* axis_meshes;
+    uint16_t* axis_mesh_coordinate_ids;
 };
 
 static model_framework_result_t model_resource_map_untextured_meshes_create(renderer_frontend_t* renderer_frontend_, const untextured_model_assembly_config_t* config_, const char* asset_root_path_, size_t* out_mesh_count_, untextured_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_);
@@ -54,12 +65,16 @@ static model_framework_result_t model_resource_map_debug_aabb_meshes_destroy(ren
 static model_framework_result_t transform_tree_create_from_config(const untextured_model_assembly_config_t* config_, model_transform_tree_t** out_transform_tree_);
 static model_framework_result_t debug_aabb_mesh_resource_name_create(const choco_string_t* source_resource_name_, choco_string_t** out_string_);
 
+static model_framework_result_t debug_axis_vertices_create(vec3f_t rotation_, const cone_t* cone_, const cylinder_t* cylinder_, uint16_t segment_count_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_);
+static model_framework_result_t debug_debug_axis_mesh_resource_name_create(const choco_string_t* source_resource_name_, const char* resource_category_, const char* axis_name_, const char* axis_number_, choco_string_t** out_string_);
+
 // NOTE: debug用AABB line meshの描画色は当面赤で固定
-model_framework_result_t untextured_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const untextured_model_assembly_config_t* config_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_) {
+model_framework_result_t untextured_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const char* resource_map_name_, const untextured_model_assembly_config_t* config_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     model_framework_result_t ret_cleanup = MODEL_FRAMEWORK_INVALID_ARGUMENT;
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     untextured_model_resource_map_t* tmp_resource_map = NULL;
     model_transform_tree_t* tmp_transform_tree = NULL;
@@ -67,10 +82,13 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
     untextured_mesh_t* tmp_untextured_meshes = NULL;
     uint16_t* tmp_line_mesh_coordinate_ids = NULL;
     uint16_t* tmp_untextured_mesh_coordinate_ids = NULL;
+    choco_string_t* tmp_resource_map_name = NULL;
 
     size_t tmp_untextured_mesh_count = 0;
     size_t tmp_line_mesh_count = 0;
 
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_name_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "resource_map_name_")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "config_")
     IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "asset_root_path_")
     IF_ARG_NULL_GOTO_CLEANUP(out_resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "out_resource_map_")
@@ -82,11 +100,23 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
         goto cleanup;
     }
 #endif
+    if('\0' == resource_map_name_[0]) {
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ERROR_MESSAGE("untextured_model_resource_map_create(%s) - Provided resource_map_name_ is not valid.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_resource_map_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_resource_map);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_create_from_c_string(resource_map_name_, &tmp_resource_map_name);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = model_framework_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("untextured_model_resource_map_create(%s) - choco_string_concat_from_c_string failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
@@ -109,6 +139,8 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
     }
 
     // Output.
+    tmp_resource_map->resource_map_name = tmp_resource_map_name;
+
     tmp_resource_map->line_mesh_coordinate_ids = tmp_line_mesh_coordinate_ids;
     tmp_resource_map->line_mesh_count = tmp_line_mesh_count;
     tmp_resource_map->line_meshes = tmp_line_meshes;
@@ -120,6 +152,7 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
     tmp_resource_map->transform_tree = tmp_transform_tree;
     *out_resource_map_ = tmp_resource_map;
 
+    tmp_resource_map_name = NULL;
     tmp_transform_tree = NULL;
     tmp_line_meshes = NULL;
     tmp_line_mesh_coordinate_ids = NULL;
@@ -152,6 +185,9 @@ cleanup:
     if(NULL != tmp_transform_tree) {
         model_transform_tree_destroy(&tmp_transform_tree);
     }
+    if(NULL != tmp_resource_map_name) {
+        choco_string_destroy(&tmp_resource_map_name);
+    }
     if(NULL != tmp_resource_map) {
         general_allocator_free((void**)&tmp_resource_map, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
@@ -182,6 +218,8 @@ model_framework_result_t untextured_model_resource_map_destroy(renderer_frontend
     if(NULL != (*resource_map_)->transform_tree) {
         model_transform_tree_destroy(&(*resource_map_)->transform_tree);
     }
+
+    choco_string_destroy(&(*resource_map_)->resource_map_name);
     general_allocator_free((void**)resource_map_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 
     ret = MODEL_FRAMEWORK_SUCCESS;
@@ -724,6 +762,183 @@ static model_framework_result_t debug_aabb_mesh_resource_name_create(const choco
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
         ret = model_framework_result_convert_choco_string(ret_choco_string);
         ERROR_MESSAGE("debug_aabb_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_string_ = tmp_string;
+    tmp_string = NULL;
+
+    ret = MODEL_FRAMEWORK_SUCCESS;
+
+cleanup:
+    if(MODEL_FRAMEWORK_DATA_CORRUPTED == ret || MODEL_FRAMEWORK_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != tmp_string) {
+        choco_string_destroy(&tmp_string);
+    }
+    return ret;
+}
+
+static model_framework_result_t debug_axis_vertices_create(vec3f_t rotation_, const cone_t* cone_, const cylinder_t* cylinder_, uint16_t segment_count_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_) {
+    model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
+
+    point_normal_vertex_t* tmp_vertices = NULL;
+    point_normal_vertex_t* tmp_cylinder_vertices = NULL;
+    point_normal_vertex_t* tmp_cone_vertices = NULL;
+
+    size_t allocation_size = 0;
+    size_t tmp_vertex_count = 0;
+    size_t tmp_cylinder_vertex_count = 0;
+    size_t tmp_cone_vertex_count = 0;
+    size_t index = 0;
+    mat4x4f_t model_mat = { 0 };
+
+    bool cylinder_generated = false;
+    bool cone_generated = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_axis_vertices_create", "cone_")
+    IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_axis_vertices_create", "cylinder_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_axis_vertices_create", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_axis_vertices_create", "out_vertices_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_axis_vertices_create", "*out_vertices_")
+    if(!cone_is_valid(cone_)) {
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - Provided cone_ is not valid.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!cylinder_is_valid(cylinder_)) {
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - Provided cylinder_ is not valid.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!vec3f_is_finite(rotation_)) {
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - Provided rotation_ is not valid.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_geometry = untextured_cylinder_geometry_vertices_create(cylinder_, segment_count_, &tmp_cylinder_vertices, &tmp_cylinder_vertex_count);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = model_framework_result_convert_geometry(ret_geometry);
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - untextured_cylinder_geometry_vertices_create failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+    cylinder_generated = true;
+
+    ret_geometry = untextured_cone_geometry_vertices_create(cone_, segment_count_, &tmp_cone_vertices, &tmp_cone_vertex_count);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = model_framework_result_convert_geometry(ret_geometry);
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - untextured_cone_geometry_vertices_create failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+    cone_generated = true;
+
+    if(!size_add_checked(tmp_cone_vertex_count, tmp_cylinder_vertex_count, &tmp_vertex_count)) {
+        ret = MODEL_FRAMEWORK_OVERFLOW;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - vertex count overflow.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!size_mul_checked(tmp_vertex_count, sizeof(point_normal_vertex_t), &allocation_size)) {
+        ret = MODEL_FRAMEWORK_OVERFLOW;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - allocation size overflow.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vertices);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+
+    for(size_t i = 0; i != tmp_cylinder_vertex_count; ++i) {
+        tmp_vertices[index] = tmp_cylinder_vertices[i];
+        index++;
+    }
+    for(size_t i = 0; i != tmp_cone_vertex_count; ++i) {
+        tmp_vertices[index] = tmp_cone_vertices[i];
+        index++;
+    }
+
+    mat4f_rot_xyz(CHOCO_DEG_TO_RAD(rotation_.elem[0]), CHOCO_DEG_TO_RAD(rotation_.elem[1]), CHOCO_DEG_TO_RAD(rotation_.elem[2]), &model_mat);
+    if(!point_normal_vertices_transform(tmp_vertices, tmp_vertex_count, &model_mat)) {
+        ret = MODEL_FRAMEWORK_RUNTIME_ERROR;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - point_normal_vertices_transform failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_vertex_count_ = tmp_vertex_count;
+    *out_vertices_ = tmp_vertices;
+    tmp_vertices = NULL;
+
+    ret = MODEL_FRAMEWORK_SUCCESS;
+
+cleanup:
+    if(MODEL_FRAMEWORK_DATA_CORRUPTED == ret) {
+        return ret;
+    }
+    if(cylinder_generated) {
+        general_allocator_free((void**)&tmp_cylinder_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(cone_generated) {
+        general_allocator_free((void**)&tmp_cone_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != tmp_vertices) {
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    return ret;
+}
+
+// NOTE: resource_category_ = material or geometry
+static model_framework_result_t debug_debug_axis_mesh_resource_name_create(const choco_string_t* source_resource_name_, const char* resource_category_, const char* axis_name_, const char* axis_number_, choco_string_t** out_string_) {
+    model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+
+    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
+
+    choco_string_t* tmp_string = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(source_resource_name_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_debug_axis_mesh_resource_name_create", "source_resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_category_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_debug_axis_mesh_resource_name_create", "resource_category_")
+    IF_ARG_NULL_GOTO_CLEANUP(axis_name_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_debug_axis_mesh_resource_name_create", "axis_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(axis_number_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_debug_axis_mesh_resource_name_create", "axis_number_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_debug_axis_mesh_resource_name_create", "out_string_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "debug_debug_axis_mesh_resource_name_create", "*out_string_")
+
+    ret_choco_string = choco_string_create_from_c_string(choco_string_c_str(source_resource_name_), &tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = model_framework_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_debug_axis_mesh_resource_name_create(%s) - choco_string_create_from_c_string failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_concat_from_c_string(resource_category_, tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = model_framework_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_debug_axis_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_concat_from_c_string("_debug_axis", tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = model_framework_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_debug_axis_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_concat_from_c_string(axis_name_, tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = model_framework_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_debug_axis_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_concat_from_c_string(axis_number_, tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = model_framework_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_debug_axis_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 

@@ -484,6 +484,68 @@ cleanup:
     return ret;
 }
 
+renderer_frontend_result_t renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* geometry_resource_name_, const char* material_resource_name_, const point_normal_vertex_t* vertices_, size_t vertex_count_, const untextured_mesh_material_t* material_, untextured_mesh_t* out_mesh_) {
+    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
+    resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
+
+    uint16_t tmp_geometry_id = 0;
+    uint16_t tmp_material_id = 0;
+
+    bool geometry_imported = false;
+    bool material_imported = false;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "geometry_resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "material_resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "material_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "out_mesh_")
+
+    ret_resource_pipeline = untextured_mesh_geometry_pipeline_import_from_vertices(renderer_frontend_->untextured_mesh_vbo_manager, renderer_frontend_->untextured_mesh_geometry_registry, geometry_resource_name_, vertices_, vertex_count_, &tmp_geometry_id);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = renderer_frontend_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_geometry_pipeline_import_from_vertices failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+    geometry_imported = true;
+
+    ret_resource_pipeline = untextured_mesh_material_pipeline_import_from_material(renderer_frontend_->untextured_mesh_material_registry, material_resource_name_, material_, &tmp_material_id);
+    if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+        ret = renderer_frontend_result_convert_resource_pipeline(ret_resource_pipeline);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_material_pipeline_import_from_material failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+    material_imported = true;
+
+    out_mesh_->geometry_id = tmp_geometry_id;
+    out_mesh_->material_id = tmp_material_id;
+
+    ret = RENDERER_FRONTEND_SUCCESS;
+
+cleanup:
+    if(RENDERER_FRONTEND_DATA_CORRUPTED == ret || RENDERER_FRONTEND_SUCCESS == ret) {
+        return ret;
+    }
+    if(geometry_imported) {
+        ret_resource_pipeline = untextured_mesh_geometry_pipeline_release(renderer_frontend_->untextured_mesh_vbo_manager, renderer_frontend_->untextured_mesh_geometry_registry, tmp_geometry_id);
+        if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+            ret = RENDERER_FRONTEND_DATA_CORRUPTED;
+            ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_geometry_pipeline_release failed.", renderer_frontend_result_to_str(ret));
+            return ret;
+        }
+    }
+    if(material_imported) {
+        ret_resource_pipeline = untextured_mesh_material_pipeline_release(renderer_frontend_->untextured_mesh_material_registry, tmp_material_id);
+        if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
+            ret = RENDERER_FRONTEND_DATA_CORRUPTED;
+            ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_material_pipeline_release failed.", renderer_frontend_result_to_str(ret));
+            return ret;
+        }
+    }
+    return ret;
+}
+
 renderer_frontend_result_t renderer_frontend_untextured_mesh_release(renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_) {
     renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
 

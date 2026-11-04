@@ -13,6 +13,7 @@ extern "C" {
 #include "engine/containers/choco_string.h"
 #include "engine/containers/ring_queue.h"
 
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
@@ -30,6 +31,8 @@ model_framework_result_t model_framework_result_convert_ring_queue(ring_queue_re
 model_framework_result_t model_framework_result_convert_renderer_frontend(renderer_frontend_result_t result_);
 
 model_framework_result_t model_framework_result_convert_mesh(mesh_result_t result_);
+
+model_framework_result_t model_framework_result_convert_geometry(geometry_result_t result_);
 
 #ifdef __cplusplus
 }

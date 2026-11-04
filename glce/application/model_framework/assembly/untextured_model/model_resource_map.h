@@ -24,7 +24,7 @@ typedef struct model_transform_tree model_transform_tree_t;
 
 typedef struct renderer_frontend renderer_frontend_t;
 
-model_framework_result_t untextured_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const untextured_model_assembly_config_t* config_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_);
+model_framework_result_t untextured_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const char* resource_map_name_, const untextured_model_assembly_config_t* config_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_);
 
 model_framework_result_t untextured_model_resource_map_destroy(renderer_frontend_t* renderer_frontend_, untextured_model_resource_map_t** resource_map_);
 

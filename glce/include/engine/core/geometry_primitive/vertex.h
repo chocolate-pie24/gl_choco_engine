@@ -18,6 +18,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "engine/base/choco_math/math_types.h"
 
@@ -65,6 +66,14 @@ typedef struct point_normal_vertex {
     vec3f_t position;   /**< 頂点座標 */
     vec4i8_t normal;    /**< [Nx, Ny, Nz] + padding(4byte境界に揃えるため) */
 } point_normal_vertex_t;
+
+bool line_vertices_transform(line_vertex_t* vertices_, size_t vertex_count_, const mat4x4f_t* transform_);
+
+bool point_vertices_transform(point_vertex_t* vertices_, size_t vertex_count_, const mat4x4f_t* transform_);
+
+bool ui_vertices_transform(ui_vertex_t* vertices_, size_t vertex_count_, const mat4x4f_t* transform_);
+
+bool point_normal_vertices_transform(point_normal_vertex_t* vertices_, size_t vertex_count_, const mat4x4f_t* transform_);
 
 bool ui_vertex_is_valid(const ui_vertex_t* vertex_);
 

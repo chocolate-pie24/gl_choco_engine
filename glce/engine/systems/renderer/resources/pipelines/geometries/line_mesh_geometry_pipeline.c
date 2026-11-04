@@ -207,7 +207,7 @@ resource_pipeline_result_t line_mesh_geometry_pipeline_import_from_vertices(vbo_
         ret_buffer_manager = vbo_manager_write(vbo_manager_, write_size, vertices_, &tmp_buffer_range.allocation_info);
         if(BUFFER_MANAGER_SUCCESS != ret_buffer_manager) {
             ret = resource_pipeline_result_convert_buffer_manager(ret_buffer_manager);
-            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import untextured mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
+            ERROR_MESSAGE("line_mesh_geometry_pipeline_import_from_vertices(%s) - Failed to import line mesh geometry. reason=vbo_write_failed, geometry_name='%s', vertex_count=%zu", resource_pipeline_result_to_str(ret), resource_name_, vertex_count_);
             goto cleanup;
         }
         vbo_written = true;

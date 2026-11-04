@@ -109,6 +109,7 @@ extern "C" {
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
 typedef struct untextured_mesh_material_registry untextured_mesh_material_registry_t;
+typedef struct untextured_mesh_material untextured_mesh_material_t;
 
 /**
  * @brief Configuration FileからUntextured Mesh Materialを生成し、
@@ -214,6 +215,8 @@ typedef struct untextured_mesh_material_registry untextured_mesh_material_regist
  * @post 入力文字列のownershipは移転しない。
  */
 resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_file(untextured_mesh_material_registry_t* material_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
+
+resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_material(untextured_mesh_material_registry_t* material_registry_, const char* resource_name_, const untextured_mesh_material_t* material_, uint16_t* out_material_id_);
 
 /**
  * @brief Untextured Mesh Materialの利用権を1つ返却する。

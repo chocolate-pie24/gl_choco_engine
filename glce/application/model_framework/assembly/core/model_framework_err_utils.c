@@ -171,3 +171,28 @@ model_framework_result_t model_framework_result_convert_mesh(mesh_result_t resul
         return MODEL_FRAMEWORK_UNDEFINED_ERROR;
     }
 }
+
+model_framework_result_t model_framework_result_convert_geometry(geometry_result_t result_) {
+    switch(result_) {
+    case GEOMETRY_SUCCESS:
+        return MODEL_FRAMEWORK_SUCCESS;
+    case GEOMETRY_NO_MEMORY:
+        return MODEL_FRAMEWORK_NO_MEMORY;
+    case GEOMETRY_RUNTIME_ERROR:
+        return MODEL_FRAMEWORK_RUNTIME_ERROR;
+    case GEOMETRY_INVALID_ARGUMENT:
+        return MODEL_FRAMEWORK_INVALID_ARGUMENT;
+    case GEOMETRY_DATA_CORRUPTED:
+        return MODEL_FRAMEWORK_DATA_CORRUPTED;
+    case GEOMETRY_BAD_OPERATION:
+        return MODEL_FRAMEWORK_BAD_OPERATION;
+    case GEOMETRY_OVERFLOW:
+        return MODEL_FRAMEWORK_OVERFLOW;
+    case GEOMETRY_LIMIT_EXCEEDED:
+        return MODEL_FRAMEWORK_LIMIT_EXCEEDED;
+    case GEOMETRY_UNDEFINED_ERROR:
+        return MODEL_FRAMEWORK_UNDEFINED_ERROR;
+    default:
+        return MODEL_FRAMEWORK_UNDEFINED_ERROR;
+    }
+}
