@@ -570,15 +570,9 @@ application_result_t application_run(void) {
             continue;
         }
         for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
-            ret_model_framework = untextured_model_resource_map_untextured_mesh_get(s_application_state->sample_robot_resource_map, i, &tmp_untextured_mesh);
+            ret_model_framework = untextured_model_resource_map_untextured_mesh_binding_get(s_application_state->sample_robot_resource_map, i, &tmp_untextured_mesh, &tmp_coordinate_id);
             if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
                 ERROR_MESSAGE("application_run - model_resource_map_untextured_mesh_get failed. continue...");
-                continue;
-            }
-
-            ret_model_framework = untextured_model_resource_map_untextured_mesh_coordinate_id_get(s_application_state->sample_robot_resource_map, i, &tmp_coordinate_id);
-            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-                ERROR_MESSAGE("application_run - model_resource_map_untextured_mesh_coordinate_id_get failed. continue...");
                 continue;
             }
 
@@ -610,21 +604,15 @@ application_result_t application_run(void) {
         }
 
         // Debug AABB Line描画
-        ret_model_framework = untextured_model_resource_map_aabb_mesh_count_get(s_application_state->sample_robot_resource_map, &tmp_mesh_count);
+        ret_model_framework = untextured_model_resource_map_debug_aabb_mesh_count_get(s_application_state->sample_robot_resource_map, &tmp_mesh_count);
         if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ERROR_MESSAGE("application_run - model_resource_map_debug_aabb_mesh_count_get failed. continue...");
+            ERROR_MESSAGE("application_run - untextured_model_resource_map_debug_aabb_mesh_count_get failed. continue...");
             continue;
         }
         for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
-            ret_model_framework = untextured_model_resource_map_aabb_mesh_get(s_application_state->sample_robot_resource_map, i, &tmp_line_mesh);
+            ret_model_framework = untextured_model_resource_map_debug_aabb_mesh_binding_get(s_application_state->sample_robot_resource_map, i, &tmp_line_mesh, &tmp_coordinate_id);
             if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-                ERROR_MESSAGE("application_run - model_resource_map_debug_aabb_mesh_get failed. continue...");
-                continue;
-            }
-
-            ret_model_framework = untextured_model_resource_map_aabb_mesh_coordinate_id_get(s_application_state->sample_robot_resource_map, i, &tmp_coordinate_id);
-            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-                ERROR_MESSAGE("application_run - model_resource_map_debug_aabb_mesh_coordinate_id_get failed. continue...");
+                ERROR_MESSAGE("application_run - untextured_model_resource_map_debug_aabb_mesh_binding_get failed. continue...");
                 continue;
             }
 
@@ -656,21 +644,15 @@ application_result_t application_run(void) {
         }
 
         // Debug AXIS描画
-        ret_model_framework = untextured_model_resource_map_axis_mesh_count_get(s_application_state->sample_robot_resource_map, &tmp_mesh_count);
+        ret_model_framework = untextured_model_resource_map_debug_axis_mesh_count_get(s_application_state->sample_robot_resource_map, &tmp_mesh_count);
         if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ERROR_MESSAGE("application_run - untextured_model_resource_map_axis_mesh_count_get failed. continue...");
+            ERROR_MESSAGE("application_run - untextured_model_resource_map_debug_axis_mesh_count_get failed. continue...");
             continue;
         }
         for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
-            ret_model_framework = untextured_model_resource_map_axis_mesh_get(s_application_state->sample_robot_resource_map, i, &tmp_untextured_mesh);
+            ret_model_framework = untextured_model_resource_map_debug_axis_mesh_binding_get(s_application_state->sample_robot_resource_map, i, &tmp_untextured_mesh, &tmp_coordinate_id);
             if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-                ERROR_MESSAGE("application_run - untextured_model_resource_map_axis_mesh_get failed. continue...");
-                continue;
-            }
-
-            ret_model_framework = untextured_model_resource_map_axis_mesh_coordinate_id_get(s_application_state->sample_robot_resource_map, i, &tmp_coordinate_id);
-            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-                ERROR_MESSAGE("application_run - untextured_model_resource_map_axis_mesh_coordinate_id_get failed. continue...");
+                ERROR_MESSAGE("application_run - untextured_model_resource_map_debug_axis_mesh_binding_get failed. continue...");
                 continue;
             }
 

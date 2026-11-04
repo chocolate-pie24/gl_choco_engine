@@ -47,9 +47,9 @@ struct untextured_model_resource_map {
     uint16_t* untextured_mesh_coordinate_ids;
 
     // Debug表示用AABB Line Mesh
-    size_t line_mesh_count;
-    line_mesh_t* line_meshes;
-    uint16_t* line_mesh_coordinate_ids;
+    size_t debug_aabb_mesh_count;
+    line_mesh_t* debug_aabb_meshes;
+    uint16_t* debug_aabb_mesh_coordinate_ids;
 
     // Debug表示用Untextured Mesh Axis
     size_t axis_mesh_count;
@@ -82,20 +82,21 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
 
     untextured_model_resource_map_t* tmp_resource_map = NULL;
     model_transform_tree_t* tmp_transform_tree = NULL;
-    line_mesh_t* tmp_line_meshes = NULL;
+    line_mesh_t* tmp_debug_aabb_meshes = NULL;
     untextured_mesh_t* tmp_untextured_meshes = NULL;
     untextured_mesh_t* tmp_axis_meshes = NULL;
 
-    uint16_t* tmp_line_mesh_coordinate_ids = NULL;
+    uint16_t* tmp_debug_aabb_mesh_coordinate_ids = NULL;
     uint16_t* tmp_untextured_mesh_coordinate_ids = NULL;
     uint16_t* tmp_axis_mesh_coordinate_ids = NULL;
 
     choco_string_t* tmp_resource_map_name = NULL;
 
     size_t tmp_untextured_mesh_count = 0;
-    size_t tmp_line_mesh_count = 0;
+    size_t tmp_debug_aabb_mesh_count = 0;
     size_t tmp_axis_mesh_count = 0;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "renderer_frontend_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_map_name_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "resource_map_name_")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "config_")
@@ -135,7 +136,7 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
         goto cleanup;
     }
 
-    ret = model_resource_map_debug_aabb_meshes_create(renderer_frontend_, config_, tmp_untextured_meshes, tmp_untextured_mesh_coordinate_ids, &tmp_line_mesh_count, &tmp_line_meshes, &tmp_line_mesh_coordinate_ids);
+    ret = model_resource_map_debug_aabb_meshes_create(renderer_frontend_, config_, tmp_untextured_meshes, tmp_untextured_mesh_coordinate_ids, &tmp_debug_aabb_mesh_count, &tmp_debug_aabb_meshes, &tmp_debug_aabb_mesh_coordinate_ids);
     if(MODEL_FRAMEWORK_SUCCESS != ret) {
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - model_resource_map_debug_aabb_meshes_create failed.", model_framework_result_to_str(ret));
         goto cleanup;
@@ -156,9 +157,9 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
     // Output.
     tmp_resource_map->resource_map_name = tmp_resource_map_name;
 
-    tmp_resource_map->line_mesh_coordinate_ids = tmp_line_mesh_coordinate_ids;
-    tmp_resource_map->line_mesh_count = tmp_line_mesh_count;
-    tmp_resource_map->line_meshes = tmp_line_meshes;
+    tmp_resource_map->debug_aabb_mesh_coordinate_ids = tmp_debug_aabb_mesh_coordinate_ids;
+    tmp_resource_map->debug_aabb_mesh_count = tmp_debug_aabb_mesh_count;
+    tmp_resource_map->debug_aabb_meshes = tmp_debug_aabb_meshes;
 
     tmp_resource_map->untextured_mesh_coordinate_ids = tmp_untextured_mesh_coordinate_ids;
     tmp_resource_map->untextured_mesh_count = tmp_untextured_mesh_count;
@@ -173,8 +174,8 @@ model_framework_result_t untextured_model_resource_map_create(renderer_frontend_
 
     tmp_resource_map_name = NULL;
     tmp_transform_tree = NULL;
-    tmp_line_meshes = NULL;
-    tmp_line_mesh_coordinate_ids = NULL;
+    tmp_debug_aabb_meshes = NULL;
+    tmp_debug_aabb_mesh_coordinate_ids = NULL;
     tmp_untextured_meshes = NULL;
     tmp_untextured_mesh_coordinate_ids = NULL;
     tmp_axis_meshes = NULL;
@@ -187,8 +188,8 @@ cleanup:
         return ret;
     }
 
-    if(NULL != tmp_line_mesh_coordinate_ids && NULL != tmp_line_meshes) {
-        ret_cleanup = model_resource_map_debug_aabb_meshes_destroy(renderer_frontend_, tmp_line_mesh_count, &tmp_line_meshes, &tmp_line_mesh_coordinate_ids);
+    if(NULL != tmp_debug_aabb_mesh_coordinate_ids && NULL != tmp_debug_aabb_meshes) {
+        ret_cleanup = model_resource_map_debug_aabb_meshes_destroy(renderer_frontend_, tmp_debug_aabb_mesh_count, &tmp_debug_aabb_meshes, &tmp_debug_aabb_mesh_coordinate_ids);
         if(MODEL_FRAMEWORK_SUCCESS != ret_cleanup) {
             ret_cleanup = MODEL_FRAMEWORK_DATA_CORRUPTED;
             ERROR_MESSAGE("untextured_model_resource_map_create(%s) - model_resource_map_debug_aabb_meshes_destroy failed.", model_framework_result_to_str(ret_cleanup));
@@ -238,7 +239,7 @@ model_framework_result_t untextured_model_resource_map_destroy(renderer_frontend
     }
 
     // debug line mesh
-    ret = model_resource_map_debug_aabb_meshes_destroy(renderer_frontend_, (*resource_map_)->line_mesh_count, &(*resource_map_)->line_meshes, &(*resource_map_)->line_mesh_coordinate_ids);
+    ret = model_resource_map_debug_aabb_meshes_destroy(renderer_frontend_, (*resource_map_)->debug_aabb_mesh_count, &(*resource_map_)->debug_aabb_meshes, &(*resource_map_)->debug_aabb_mesh_coordinate_ids);
     if(MODEL_FRAMEWORK_SUCCESS != ret) {
         ERROR_MESSAGE("untextured_model_resource_map_destroy(%s) - model_resource_map_debug_aabb_meshes_destroy failed.", model_framework_result_to_str(ret));
         goto cleanup;
@@ -283,37 +284,19 @@ cleanup:
     return ret;
 }
 
-model_framework_result_t untextured_model_resource_map_untextured_mesh_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, untextured_mesh_t* out_mesh_) {
+model_framework_result_t untextured_model_resource_map_untextured_mesh_binding_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, untextured_mesh_t* out_mesh_, uint16_t* out_coordinate_id_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_untextured_mesh_get", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_untextured_mesh_get", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_untextured_mesh_binding_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_coordinate_id_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_untextured_mesh_binding_get", "out_coordinate_id_")
     if(mesh_index_ >= resource_map_->untextured_mesh_count) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_resource_map_untextured_mesh_get(%s) - Provided mesh_index_ is not valid.", model_framework_result_to_str(ret));
+        ERROR_MESSAGE("untextured_model_resource_map_untextured_mesh_binding_get(%s) - Provided untextured_mesh_index_ is not valid.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     out_mesh_->geometry_id = resource_map_->untextured_meshes[mesh_index_].geometry_id;
     out_mesh_->material_id = resource_map_->untextured_meshes[mesh_index_].material_id;
-
-    return MODEL_FRAMEWORK_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-model_framework_result_t untextured_model_resource_map_untextured_mesh_coordinate_id_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_) {
-    model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_untextured_mesh_coordinate_id_get", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_coordinate_id_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_untextured_mesh_coordinate_id_get", "out_coordinate_id_")
-    if(mesh_index_ >= resource_map_->untextured_mesh_count) {
-        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_resource_map_untextured_mesh_coordinate_id_get(%s) - Provided untextured_mesh_index_ is not valid.", model_framework_result_to_str(ret));
-        goto cleanup;
-    }
-
     *out_coordinate_id_ = resource_map_->untextured_mesh_coordinate_ids[mesh_index_];
 
     return MODEL_FRAMEWORK_SUCCESS;
@@ -336,18 +319,19 @@ cleanup:
     return ret;
 }
 
-model_framework_result_t untextured_model_resource_map_aabb_mesh_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, line_mesh_t* out_mesh_) {
+model_framework_result_t untextured_model_resource_map_debug_aabb_mesh_binding_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, line_mesh_t* out_mesh_, uint16_t* out_coordinate_id_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_aabb_mesh_get", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_aabb_mesh_get", "out_mesh_")
-    if(mesh_index_ >= resource_map_->line_mesh_count) {
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_debug_aabb_mesh_binding_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_coordinate_id_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_debug_aabb_mesh_binding_get", "out_coordinate_id_")
+    if(mesh_index_ >= resource_map_->debug_aabb_mesh_count) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_resource_map_debug_aabb_mesh_get(%s) - Provided mesh_index_ is not valid.", model_framework_result_to_str(ret));
+        ERROR_MESSAGE("untextured_model_resource_map_debug_aabb_mesh_binding_get(%s) - Provided untextured_mesh_index_ is not valid.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
-    out_mesh_->geometry_id = resource_map_->line_meshes[mesh_index_].geometry_id;
+    out_mesh_->geometry_id = resource_map_->debug_aabb_meshes[mesh_index_].geometry_id;
+    *out_coordinate_id_ = resource_map_->debug_aabb_mesh_coordinate_ids[mesh_index_];
 
     return MODEL_FRAMEWORK_SUCCESS;
 
@@ -355,32 +339,13 @@ cleanup:
     return ret;
 }
 
-model_framework_result_t untextured_model_resource_map_aabb_mesh_coordinate_id_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_) {
+model_framework_result_t untextured_model_resource_map_debug_aabb_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_aabb_mesh_coordinate_id_get", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_coordinate_id_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_aabb_mesh_coordinate_id_get", "out_coordinate_id_")
-    if(mesh_index_ >= resource_map_->line_mesh_count) {
-        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-        ERROR_MESSAGE("model_resource_map_debug_aabb_mesh_coordinate_id_get(%s) - Provided untextured_mesh_index_ is not valid.", model_framework_result_to_str(ret));
-        goto cleanup;
-    }
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_debug_aabb_mesh_count_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_count_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_debug_aabb_mesh_count_get", "out_count_")
 
-    *out_coordinate_id_ = resource_map_->line_mesh_coordinate_ids[mesh_index_];
-
-    return MODEL_FRAMEWORK_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-model_framework_result_t untextured_model_resource_map_aabb_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_) {
-    model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_aabb_mesh_count_get", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_count_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_aabb_mesh_count_get", "out_count_")
-
-    *out_count_ = resource_map_->line_mesh_count;
+    *out_count_ = resource_map_->debug_aabb_mesh_count;
 
     ret = MODEL_FRAMEWORK_SUCCESS;
 
@@ -388,37 +353,19 @@ cleanup:
     return ret;
 }
 
-model_framework_result_t untextured_model_resource_map_axis_mesh_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, untextured_mesh_t* out_mesh_) {
+model_framework_result_t untextured_model_resource_map_debug_axis_mesh_binding_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, untextured_mesh_t* out_mesh_, uint16_t* out_coordinate_id_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_axis_mesh_get", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_axis_mesh_get", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_debug_axis_mesh_binding_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_coordinate_id_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_debug_axis_mesh_binding_get", "out_coordinate_id_")
     if(mesh_index_ >= resource_map_->axis_mesh_count) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_model_resource_map_axis_mesh_get(%s) - Provided mesh_index_ is not valid.", model_framework_result_to_str(ret));
+        ERROR_MESSAGE("untextured_model_resource_map_debug_axis_mesh_binding_get(%s) - Provided axis mesh index is not valid.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
     out_mesh_->geometry_id = resource_map_->axis_meshes[mesh_index_].geometry_id;
     out_mesh_->material_id = resource_map_->axis_meshes[mesh_index_].material_id;
-
-    return MODEL_FRAMEWORK_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-model_framework_result_t untextured_model_resource_map_axis_mesh_coordinate_id_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, uint16_t* out_coordinate_id_) {
-    model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_axis_mesh_coordinate_id_get", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_coordinate_id_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_axis_mesh_coordinate_id_get", "out_coordinate_id_")
-    if(mesh_index_ >= resource_map_->axis_mesh_count) {
-        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_model_resource_map_axis_mesh_coordinate_id_get(%s) - Provided axis mesh index is not valid.", model_framework_result_to_str(ret));
-        goto cleanup;
-    }
-
     *out_coordinate_id_ = resource_map_->axis_mesh_coordinate_ids[mesh_index_];
 
     return MODEL_FRAMEWORK_SUCCESS;
@@ -427,11 +374,11 @@ cleanup:
     return ret;
 }
 
-model_framework_result_t untextured_model_resource_map_axis_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_) {
+model_framework_result_t untextured_model_resource_map_debug_axis_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_axis_mesh_count_get", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_count_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_axis_mesh_count_get", "out_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_debug_axis_mesh_count_get", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_count_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_debug_axis_mesh_count_get", "out_count_")
 
     *out_count_ = resource_map_->axis_mesh_count;
 
@@ -889,6 +836,7 @@ static model_framework_result_t debug_axis_vertices_create(vec3f_t rotation_, co
     bool cylinder_generated = false;
     bool cone_generated = false;
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_axis_vertices_create", "cone_")
     IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_axis_vertices_create", "cylinder_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_axis_vertices_create", "out_vertex_count_")
@@ -910,6 +858,7 @@ static model_framework_result_t debug_axis_vertices_create(vec3f_t rotation_, co
         goto cleanup;
     }
 
+    // Generate Geometry.
     ret_geometry = untextured_cylinder_geometry_vertices_create(cylinder_, segment_count_, &tmp_cylinder_vertices, &tmp_cylinder_vertex_count);
     if(GEOMETRY_SUCCESS != ret_geometry) {
         ret = model_framework_result_convert_geometry(ret_geometry);
@@ -926,6 +875,7 @@ static model_framework_result_t debug_axis_vertices_create(vec3f_t rotation_, co
     }
     cone_generated = true;
 
+    // ConeをCylinderの上面に移動
     mat4f_translation(vec3f_initialize(0.0f, 0.0f, cylinder_->height), &model_mat);
     if(!point_normal_vertices_transform(tmp_cone_vertices, tmp_cone_vertex_count, &model_mat)) {
         ret = MODEL_FRAMEWORK_RUNTIME_ERROR;
@@ -933,6 +883,7 @@ static model_framework_result_t debug_axis_vertices_create(vec3f_t rotation_, co
         goto cleanup;
     }
 
+    // Cylinder, Coneを1つのGeometryにするため両方の頂点情報を格納する配列リソース確保
     if(!size_add_checked(tmp_cone_vertex_count, tmp_cylinder_vertex_count, &tmp_vertex_count)) {
         ret = MODEL_FRAMEWORK_OVERFLOW;
         ERROR_MESSAGE("debug_axis_vertices_create(%s) - vertex count overflow.", model_framework_result_to_str(ret));
@@ -950,6 +901,7 @@ static model_framework_result_t debug_axis_vertices_create(vec3f_t rotation_, co
         goto cleanup;
     }
 
+    // 頂点情報コピー
     for(size_t i = 0; i != tmp_cylinder_vertex_count; ++i) {
         tmp_vertices[index] = tmp_cylinder_vertices[i];
         index++;
@@ -959,6 +911,7 @@ static model_framework_result_t debug_axis_vertices_create(vec3f_t rotation_, co
         index++;
     }
 
+    // 各軸用に回転
     mat4f_rot_xyz(CHOCO_DEG_TO_RAD(rotation_.elem[0]), CHOCO_DEG_TO_RAD(rotation_.elem[1]), CHOCO_DEG_TO_RAD(rotation_.elem[2]), &model_mat);
     if(!point_normal_vertices_transform(tmp_vertices, tmp_vertex_count, &model_mat)) {
         ret = MODEL_FRAMEWORK_RUNTIME_ERROR;
@@ -1055,7 +1008,6 @@ cleanup:
     return ret;
 }
 
-// TODO: x, y, z軸の処理をループ化する
 static model_framework_result_t model_resource_map_debug_axis_meshes_create(renderer_frontend_t* renderer_frontend_, const char* resource_map_name_, const untextured_model_assembly_config_t* config_, size_t* out_mesh_count_, untextured_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -1071,18 +1023,29 @@ static model_framework_result_t model_resource_map_debug_axis_meshes_create(rend
     choco_string_t* tmp_geometry_resource_name = NULL;
     choco_string_t* tmp_material_resource_name = NULL;
 
-    untextured_mesh_material_t x_axis_material = { .diffuse = vec3f_initialize(1.0f, 0.0f, 0.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f) };
-    untextured_mesh_material_t y_axis_material = { .diffuse = vec3f_initialize(0.0f, 1.0f, 0.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f) };
-    untextured_mesh_material_t z_axis_material = { .diffuse = vec3f_initialize(0.0f, 0.0f, 1.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f) };
-
     size_t tmp_vertex_count = 0;
     point_normal_vertex_t* tmp_vertices = NULL;
+
+    const char* axis_names[3] = { "x", "y", "z" };
+    const vec3f_t axis_rotations[3] = { vec3f_initialize(0.0f, 90.0f, 0.0f), vec3f_initialize(-90.0f, 0.0f, 0.0f), vec3f_initialize(0.0f, 0.0f, 0.0f) };
+    const untextured_mesh_material_t axis_materials[3] = {
+        {
+            .diffuse = vec3f_initialize(1.0f, 0.0f, 0.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f)
+        },
+        {
+            .diffuse = vec3f_initialize(0.0f, 1.0f, 0.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f)
+        },
+        {
+            .diffuse = vec3f_initialize(0.0f, 0.0f, 1.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f)
+        }
+    };
 
     // TODO: 仮で可変にする
     const uint32_t segment_count = 32;
     const cone_t cone = { .height = 10.0f, .radius = 10.0f };
     const cylinder_t cylinder = { .height = 30.0f, .radius = 5.0f };
 
+    // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "renderer_frontend_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_map_name_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "resource_map_name_")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_resource_map_debug_axis_meshes_create", "config_")
@@ -1097,6 +1060,7 @@ static model_framework_result_t model_resource_map_debug_axis_meshes_create(rend
         goto cleanup;
     }
 
+    // Resource Allocation.
     if(!size_mul_checked(sizeof(untextured_mesh_t) * 3, config_->coordinate_count, &allocation_size)) {
         ret = MODEL_FRAMEWORK_OVERFLOW;
         ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - allocation overflow.", model_framework_result_to_str(ret));
@@ -1121,99 +1085,41 @@ static model_framework_result_t model_resource_map_debug_axis_meshes_create(rend
         goto cleanup;
     }
 
-    for(size_t i = 0; i != config_->coordinate_count; ++i) {
-        // x軸
-        ret = debug_axis_mesh_resource_name_create(resource_map_name_, "geometry", "x", &tmp_geometry_resource_name);
+    // Generate Geometry, Mesh Import.
+    for(size_t i = 0; i != 3; ++i) {    // X, Y, Z各軸ループ
+        // Geometry, Materialは共有するので生成は各軸1回でok
+        ret = debug_axis_mesh_resource_name_create(resource_map_name_, "geometry", axis_names[i], &tmp_geometry_resource_name);
         if(MODEL_FRAMEWORK_SUCCESS != ret) {
             ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_mesh_resource_name_create failed.", model_framework_result_to_str(ret));
             goto cleanup;
         }
 
-        ret = debug_axis_mesh_resource_name_create(resource_map_name_, "material", "x", &tmp_material_resource_name);
+        ret = debug_axis_mesh_resource_name_create(resource_map_name_, "material", axis_names[i], &tmp_material_resource_name);
         if(MODEL_FRAMEWORK_SUCCESS != ret) {
             ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_mesh_resource_name_create failed.", model_framework_result_to_str(ret));
             goto cleanup;
         }
 
-        ret = debug_axis_vertices_create(vec3f_initialize(0.0f, 90.0f, 0.0f), &cone, &cylinder, segment_count, &tmp_vertex_count, &tmp_vertices);
+        ret = debug_axis_vertices_create(axis_rotations[i], &cone, &cylinder, segment_count, &tmp_vertex_count, &tmp_vertices);
         if(MODEL_FRAMEWORK_SUCCESS != ret) {
             ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_vertices_create failed.", model_framework_result_to_str(ret));
             goto cleanup;
         }
 
-        ret_renderer_frontend = renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_, choco_string_c_str(tmp_geometry_resource_name), choco_string_c_str(tmp_material_resource_name), tmp_vertices, tmp_vertex_count, &x_axis_material, &tmp_meshes[imported_mesh_count]);
-        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-            ret = model_framework_result_convert_renderer_frontend(ret_renderer_frontend);
-            ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - renderer_frontend_untextured_mesh_import_from_vertices failed.", model_framework_result_to_str(ret));
-            goto cleanup;
+        for(size_t j = 0; j != config_->coordinate_count; ++j) {
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_, choco_string_c_str(tmp_geometry_resource_name), choco_string_c_str(tmp_material_resource_name), tmp_vertices, tmp_vertex_count, &axis_materials[i], &tmp_meshes[imported_mesh_count]);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = model_framework_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - renderer_frontend_untextured_mesh_import_from_vertices failed.", model_framework_result_to_str(ret));
+                goto cleanup;
+            }
+            tmp_coordinate_ids[imported_mesh_count] = config_->coordinate_configs[j].coordinate_id;
+            imported_mesh_count++;
         }
+
         general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
         choco_string_destroy(&tmp_geometry_resource_name);
         choco_string_destroy(&tmp_material_resource_name);
-        tmp_coordinate_ids[imported_mesh_count] = config_->coordinate_configs[i].coordinate_id;
-        imported_mesh_count++;
-
-        // y軸
-        ret = debug_axis_mesh_resource_name_create(resource_map_name_, "geometry", "y", &tmp_geometry_resource_name);
-        if(MODEL_FRAMEWORK_SUCCESS != ret) {
-            ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_mesh_resource_name_create failed.", model_framework_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret = debug_axis_mesh_resource_name_create(resource_map_name_, "material", "y", &tmp_material_resource_name);
-        if(MODEL_FRAMEWORK_SUCCESS != ret) {
-            ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_mesh_resource_name_create failed.", model_framework_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret = debug_axis_vertices_create(vec3f_initialize(-90.0f, 0.0f, 0.0f), &cone, &cylinder, segment_count, &tmp_vertex_count, &tmp_vertices);
-        if(MODEL_FRAMEWORK_SUCCESS != ret) {
-            ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_vertices_create failed.", model_framework_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_renderer_frontend = renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_, choco_string_c_str(tmp_geometry_resource_name), choco_string_c_str(tmp_material_resource_name), tmp_vertices, tmp_vertex_count, &y_axis_material, &tmp_meshes[imported_mesh_count]);
-        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-            ret = model_framework_result_convert_renderer_frontend(ret_renderer_frontend);
-            ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - renderer_frontend_untextured_mesh_import_from_vertices failed.", model_framework_result_to_str(ret));
-            goto cleanup;
-        }
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-        choco_string_destroy(&tmp_geometry_resource_name);
-        choco_string_destroy(&tmp_material_resource_name);
-        tmp_coordinate_ids[imported_mesh_count] = config_->coordinate_configs[i].coordinate_id;
-        imported_mesh_count++;
-
-        // z軸
-        ret = debug_axis_mesh_resource_name_create(resource_map_name_, "geometry", "z", &tmp_geometry_resource_name);
-        if(MODEL_FRAMEWORK_SUCCESS != ret) {
-            ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_mesh_resource_name_create failed.", model_framework_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret = debug_axis_mesh_resource_name_create(resource_map_name_, "material", "z", &tmp_material_resource_name);
-        if(MODEL_FRAMEWORK_SUCCESS != ret) {
-            ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_mesh_resource_name_create failed.", model_framework_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret = debug_axis_vertices_create(vec3f_initialize(0.0f, 0.0f, 0.0f), &cone, &cylinder, segment_count, &tmp_vertex_count, &tmp_vertices);
-        if(MODEL_FRAMEWORK_SUCCESS != ret) {
-            ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - debug_axis_vertices_create failed.", model_framework_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_renderer_frontend = renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_, choco_string_c_str(tmp_geometry_resource_name), choco_string_c_str(tmp_material_resource_name), tmp_vertices, tmp_vertex_count, &z_axis_material, &tmp_meshes[imported_mesh_count]);
-        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-            ret = model_framework_result_convert_renderer_frontend(ret_renderer_frontend);
-            ERROR_MESSAGE("model_resource_map_debug_axis_meshes_create(%s) - renderer_frontend_untextured_mesh_import_from_vertices failed.", model_framework_result_to_str(ret));
-            goto cleanup;
-        }
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-        choco_string_destroy(&tmp_geometry_resource_name);
-        choco_string_destroy(&tmp_material_resource_name);
-        tmp_coordinate_ids[imported_mesh_count] = config_->coordinate_configs[i].coordinate_id;
-        imported_mesh_count++;
     }
 
     // Output.
