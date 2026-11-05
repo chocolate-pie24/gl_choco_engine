@@ -49,12 +49,15 @@ static void mock_glBindVertexArray(GLuint array_);
 static void mock_glVertexAttribPointer(GLuint index_, GLint size_, GLenum type_, GLboolean normalized_, GLsizei stride_, const void * pointer_);
 static void mock_glEnableVertexAttribArray(GLuint index_);
 
+static bool gl33_vao_is_valid(const renderer_backend_vao_t* vao_);
+
 static const renderer_vao_vtable_t s_gl33_vao_vtable = {
     .vao_create = gl33_vao_create,
     .vao_destroy = gl33_vao_destroy,
     .vao_bind = gl33_vao_bind,
     .vao_unbind = gl33_vao_unbind,
     .vao_attribute_set = gl33_vao_attribute_set,
+    .vao_is_valid = gl33_vao_is_valid,
 };  /**< OpenGL3.3用VAO操作仮想関数テーブル */
 
 const renderer_vao_vtable_t* gl33_vao_vtable_get(void) {
@@ -223,4 +226,15 @@ static void NO_COVERAGE mock_glVertexAttribPointer(GLuint index_, GLint size_, G
 
 static void NO_COVERAGE mock_glEnableVertexAttribArray(GLuint index_) {
     glEnableVertexAttribArray(index_);
+}
+
+static bool gl33_vao_is_valid(const renderer_backend_vao_t* vao_) {
+    if(NULL == vao_) {
+        return false;
+    }
+    if(0 == vao_->vao_handle) {
+        return false;
+    }
+
+    return true;
 }

@@ -13,6 +13,7 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vbo.h"
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include <GL/glew.h>
 
@@ -48,6 +49,8 @@ static void mock_glDeleteBuffers(GLsizei n_, const GLuint* buffer_);
 static void mock_glBufferData(GLenum target_, GLsizeiptr size_, const void* data_, GLenum usage_);
 static void mock_glBufferSubData(GLenum target, GLintptr offset_, GLsizeiptr size_, const void * data_);
 
+static bool gl33_vbo_is_valid(const renderer_backend_vbo_t* vbo_);
+
 static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
     .vbo_create = gl33_vbo_create,
     .vbo_destroy = gl33_vbo_destroy,
@@ -55,6 +58,7 @@ static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
     .vbo_unbind = gl33_vbo_unbind,
     .vbo_vertex_load = gl33_vbo_vertex_load,
     .vbo_vertex_subload = gl33_vbo_vertex_subload,
+    .vbo_is_valid = gl33_vbo_is_valid,
 };  /**< OpenGL3.3用VBO操作仮想関数テーブル */
 
 const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
@@ -248,4 +252,15 @@ static void NO_COVERAGE mock_glBufferData(GLenum target_, GLsizeiptr size_, cons
 
 static void NO_COVERAGE mock_glBufferSubData(GLenum target, GLintptr offset_, GLsizeiptr size_, const void * data_) {
     glBufferSubData(target, offset_, size_, data_);
+}
+
+static bool gl33_vbo_is_valid(const renderer_backend_vbo_t* vbo_) {
+    if(NULL == vbo_) {
+        return false;
+    }
+    if(0 == vbo_->vbo_handle) {
+        return false;
+    }
+
+    return true;
 }

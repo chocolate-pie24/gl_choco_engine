@@ -48,7 +48,6 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
 static renderer_backend_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_);
 static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
 static renderer_backend_result_t gl33_texture_pixel_upload(int32_t width_, int32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
-static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_handle_);
 
 static bool resolve_min_filter_config(texture_min_filter_config_t src_, GLint* dst_);
 static bool resolve_mag_filter_config(texture_mag_filter_config_t src_, GLint* dst_);
@@ -63,6 +62,8 @@ static void mock_glTexParameteri(GLenum target_, GLenum pname_, GLint param_);
 static void mock_glDeleteTextures(GLsizei n_, const GLuint* textures_);
 static void mock_glPixelStorei(GLenum pname_, GLint param_);
 static void mock_glTexImage2D(GLenum target_, GLint level_, GLint internalformat_, GLsizei width_, GLsizei height_, GLint border_, GLenum format_, GLenum type_, const void* data_);
+
+static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_handle_);
 
 static const renderer_texture_vtable_t s_gl33_texture_vtable = {
     .renderer_texture_create = gl33_texture_create,
@@ -278,31 +279,6 @@ cleanup:
     return ret;
 }
 
-static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_handle_) {
-    if(NULL == texture_handle_) {
-        return false;
-    }
-    if(0 > texture_handle_->unit_number) {
-        return false;
-    }
-    if(0 == texture_handle_->handle) {
-        return false;
-    }
-    if(!texture_min_filter_config_is_valid(texture_handle_->min_filter_config)) {
-        return false;
-    }
-    if(!texture_mag_filter_config_is_valid(texture_handle_->mag_filter_config)) {
-        return false;
-    }
-    if(!texture_wrap_config_is_valid(texture_handle_->wrap_config_s_axis)) {
-        return false;
-    }
-    if(!texture_wrap_config_is_valid(texture_handle_->wrap_config_t_axis)) {
-        return false;
-    }
-    return true;
-}
-
 /**
  * @brief テクスチャ縮小表示時の表示設定値をGLCE設定値からOpenGL設定値に変換する
  *
@@ -453,4 +429,29 @@ static void NO_COVERAGE mock_glPixelStorei(GLenum pname_, GLint param_) {
 
 static void NO_COVERAGE mock_glTexImage2D(GLenum target_, GLint level_, GLint internalformat_, GLsizei width_, GLsizei height_, GLint border_, GLenum format_, GLenum type_, const void* data_) {
     glTexImage2D(target_, level_, internalformat_, width_, height_, border_, format_, type_, data_);
+}
+
+static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_handle_) {
+    if(NULL == texture_handle_) {
+        return false;
+    }
+    if(0 > texture_handle_->unit_number) {
+        return false;
+    }
+    if(0 == texture_handle_->handle) {
+        return false;
+    }
+    if(!texture_min_filter_config_is_valid(texture_handle_->min_filter_config)) {
+        return false;
+    }
+    if(!texture_mag_filter_config_is_valid(texture_handle_->mag_filter_config)) {
+        return false;
+    }
+    if(!texture_wrap_config_is_valid(texture_handle_->wrap_config_s_axis)) {
+        return false;
+    }
+    if(!texture_wrap_config_is_valid(texture_handle_->wrap_config_t_axis)) {
+        return false;
+    }
+    return true;
 }

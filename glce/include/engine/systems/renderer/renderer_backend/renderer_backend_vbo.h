@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -127,6 +128,8 @@ renderer_backend_result_t renderer_backend_vbo_vertex_load(const renderer_backen
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
 renderer_backend_result_t renderer_backend_vbo_vertex_subload(const renderer_backend_context_t* backend_context_, size_t offset_, size_t size_, const void* load_data_);
+
+bool renderer_backend_vbo_is_valid(const renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vbo_);
 
 #ifdef __cplusplus
 }

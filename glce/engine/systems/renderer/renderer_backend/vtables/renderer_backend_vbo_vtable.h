@@ -24,6 +24,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -35,6 +36,7 @@ typedef renderer_backend_result_t (*pfn_vbo_bind)(const renderer_backend_vbo_t* 
 typedef renderer_backend_result_t (*pfn_vbo_unbind)(void);    /**< renderer_vbo_vtableが保持するvbo_unbindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_vbo_vertex_load)(size_t load_size_, const void* load_data_, buffer_usage_t usage_); /**< renderer_vbo_vtableが保持するvbo_vertex_loadの前方宣言 */
 typedef renderer_backend_result_t (*pfn_vbo_vertex_subload)(size_t offset_, size_t size_, const void* load_data_);  /**< renderer_vbo_vtableが保持するvbo_vertex_subloadの前方宣言 */
+typedef bool (*pfn_vbo_is_valid)(const renderer_backend_vbo_t* vbo_);
 
 /**
  * @brief VBO機能仮想関数テーブル
@@ -115,6 +117,8 @@ typedef struct renderer_vbo_vtable {
      * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_vbo_vertex_subload vbo_vertex_subload;
+
+    pfn_vbo_is_valid vbo_is_valid;
 } renderer_vbo_vtable_t;
 
 #ifdef __cplusplus

@@ -36,6 +36,7 @@ typedef void (*pfn_vao_destroy)(renderer_backend_vao_t** vao_);   /**< renderer_
 typedef renderer_backend_result_t (*pfn_vao_bind)(const renderer_backend_vao_t* vao_); /**< renderer_vao_vtableが保持するvao_bindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_vao_unbind)(void);  /**< renderer_vao_vtableが保持するvao_unbindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_vao_attribute_set)(uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_); /**< renderer_vao_vtableが保持するvao_attribute_setの前方宣言 */
+typedef bool (*pfn_vao_is_valid)(const renderer_backend_vao_t* vao_);
 
 /**
  * @brief VAO機能仮想関数テーブル
@@ -100,6 +101,8 @@ typedef struct renderer_vao_vtable {
      * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_vao_attribute_set vao_attribute_set;
+
+    pfn_vao_is_valid vao_is_valid;
 } renderer_vao_vtable_t;
 
 #ifdef __cplusplus

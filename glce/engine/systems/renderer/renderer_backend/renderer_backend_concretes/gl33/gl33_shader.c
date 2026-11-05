@@ -88,6 +88,8 @@ static void mock_glUniform1f(GLint location_, GLfloat value_);
 static void mock_glUniform4fv(GLint location_, GLsizei count_, const GLfloat* value_);
 static GLint mock_glGetUniformLocation(GLuint program_, const GLchar *name_);
 
+static bool gl33_shader_is_valid(const renderer_backend_shader_t* shader_);
+
 static const renderer_shader_vtable_t s_gl33_shader_vtable = {
     .renderer_shader_create = gl33_shader_create,
     .renderer_shader_destroy = gl33_shader_destroy,
@@ -99,6 +101,7 @@ static const renderer_shader_vtable_t s_gl33_shader_vtable = {
     .renderer_shader_vec3f_uniform_set = gl33_vec3f_uniform_set,
     .renderer_shader_float_uniform_set = gl33_float_uniform_set,
     .renderer_shader_vec4u8_uniform_set = gl33_vec4u8_uniform_set,
+    .renderer_shader_is_valid = gl33_shader_is_valid,
 };  /**< OpenGL3.3用シェーダー操作仮想関数テーブル */
 
 const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
@@ -656,4 +659,21 @@ static void NO_COVERAGE mock_glUniform4fv(GLint location_, GLsizei count_, const
 
 static GLint NO_COVERAGE mock_glGetUniformLocation(GLuint program_, const GLchar *name_) {
     return glGetUniformLocation(program_, name_);
+}
+
+static bool gl33_shader_is_valid(const renderer_backend_shader_t* shader_) {
+    if(NULL == shader_) {
+        return false;
+    }
+
+    if(0 != shader_->program_id) {
+        if(0 == shader_->vertex_shader_handle) {
+            return false;
+        }
+        if(0 == shader_->fragment_shader_handle) {
+            return false;
+        }
+    }
+
+    return true;
 }

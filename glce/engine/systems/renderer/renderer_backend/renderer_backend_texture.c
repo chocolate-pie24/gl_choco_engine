@@ -3,12 +3,16 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_texture.h"
 
-#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
+#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_texture_vtable.h"
 
 renderer_backend_result_t renderer_backend_texture_create(const renderer_backend_context_t* backend_context_, int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_) {
@@ -101,10 +105,10 @@ cleanup:
 }
 
 bool renderer_backend_texture_is_valid(const renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_) {
-    if(NULL == backend_context_ || NULL == texture_handle_) {
+    if(NULL == texture_handle_) {
         return false;
     }
-    if(NULL == backend_context_->texture_vtable) {
+    if(!renderer_backend_is_valid(backend_context_)) {
         return false;
     }
     if(!backend_context_->texture_vtable->renderer_texture_is_valid(texture_handle_)) {

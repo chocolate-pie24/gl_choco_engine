@@ -172,6 +172,8 @@ renderer_backend_result_t renderer_backend_shader_float_uniform_set(const render
  */
 renderer_backend_result_t renderer_backend_shader_vec4u8_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const uint8_t* data_);
 
+bool renderer_backend_shader_is_valid(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_);
+
 #ifdef __cplusplus
 }
 #endif

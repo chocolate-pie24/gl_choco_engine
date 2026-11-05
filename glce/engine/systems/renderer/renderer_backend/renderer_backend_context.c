@@ -2,7 +2,6 @@
 // Copyright (c) 2026 chocolate-pie24
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
-#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -15,13 +14,9 @@
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
+#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
-
-#include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_shader_vtable.h"
-#include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_vao_vtable.h"
-#include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_vbo_vtable.h"
-#include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_texture_vtable.h"
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vao.h"
@@ -108,6 +103,27 @@ void renderer_backend_deinitialize(renderer_backend_context_t* backend_context_)
     // 現状では特に必要な処理はなし(リニアロケータによるメモリ確保のため、backend_context_のリソース解放は不要)
 cleanup:
     return;
+}
+
+bool renderer_backend_is_valid(const renderer_backend_context_t* backend_context_) {
+    if(NULL == backend_context_) {
+        return false;
+    }
+
+    if(NULL == shader_vtable_get() || backend_context_->shader_vtable != shader_vtable_get()) {
+        return false;
+    }
+    if(NULL == vao_vtable_get() || backend_context_->vao_vtable != vao_vtable_get()) {
+        return false;
+    }
+    if(NULL == vbo_vtable_get() || backend_context_->vbo_vtable != vbo_vtable_get()) {
+        return false;
+    }
+    if(NULL == texture_vtable_get() || backend_context_->texture_vtable != texture_vtable_get()) {
+        return false;
+    }
+
+    return true;
 }
 
 static const renderer_shader_vtable_t* shader_vtable_get(void) {

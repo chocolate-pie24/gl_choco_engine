@@ -3,12 +3,17 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vao.h"
 
-#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
+#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_vao_vtable.h"
 
 renderer_backend_result_t renderer_backend_vao_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** out_vao_) {
@@ -84,4 +89,17 @@ renderer_backend_result_t renderer_backend_vao_attribute_set(const renderer_back
 
 cleanup:
     return ret;
+}
+
+bool renderer_backend_vao_is_valid(const renderer_backend_context_t* backend_context_, const renderer_backend_vao_t* vao_) {
+    if(NULL == vao_) {
+        return false;
+    }
+    if(!renderer_backend_is_valid(backend_context_)) {
+        return false;
+    }
+    if(!backend_context_->vao_vtable->vao_is_valid(vao_)) {
+        return false;
+    }
+    return true;
 }

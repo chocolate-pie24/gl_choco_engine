@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< renderer_backend_context内部情報管理構造体前方宣言 */
@@ -27,6 +29,8 @@ typedef struct subsystem_allocator subsystem_allocator_t;
 renderer_backend_result_t renderer_backend_create(subsystem_allocator_t* allocator_, renderer_backend_context_t** out_backend_context_);
 
 void renderer_backend_deinitialize(renderer_backend_context_t* backend_context_);
+
+bool renderer_backend_is_valid(const renderer_backend_context_t* backend_context_);
 
 #ifdef __cplusplus
 }

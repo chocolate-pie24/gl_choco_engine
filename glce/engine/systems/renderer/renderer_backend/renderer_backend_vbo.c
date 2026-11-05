@@ -3,12 +3,16 @@
 
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vbo.h"
 
-#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
+#include <stddef.h>
+#include <stdbool.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
+#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_vbo_vtable.h"
 
 renderer_backend_result_t renderer_backend_vbo_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** out_vbo_) {
@@ -102,4 +106,17 @@ renderer_backend_result_t renderer_backend_vbo_vertex_subload(const renderer_bac
 
 cleanup:
     return ret;
+}
+
+bool renderer_backend_vbo_is_valid(const renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vbo_) {
+    if(NULL == vbo_) {
+        return false;
+    }
+    if(!renderer_backend_is_valid(backend_context_)) {
+        return false;
+    }
+    if(!backend_context_->vbo_vtable->vbo_is_valid(vbo_)) {
+        return false;
+    }
+    return true;
 }

@@ -130,6 +130,8 @@ renderer_backend_result_t renderer_backend_vao_unbind(const renderer_backend_con
  */
 renderer_backend_result_t renderer_backend_vao_attribute_set(const renderer_backend_context_t* backend_context_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
+bool renderer_backend_vao_is_valid(const renderer_backend_context_t* backend_context_, const renderer_backend_vao_t* vao_);
+
 #ifdef __cplusplus
 }
 #endif

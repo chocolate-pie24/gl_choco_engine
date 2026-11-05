@@ -39,6 +39,7 @@ typedef renderer_backend_result_t (*pfn_renderer_shader_mat4f_uniform_set)(int32
 typedef renderer_backend_result_t (*pfn_renderer_shader_vec3f_uniform_set)(int32_t location_, const float* data_);
 typedef renderer_backend_result_t (*pfn_renderer_shader_float_uniform_set)(int32_t location_, float data_);
 typedef renderer_backend_result_t (*pfn_renderer_shader_vec4u8_uniform_set)(int32_t location_, const uint8_t* data_);   /**< renderer_shader_vtableが保持するrenderer_shader_vec4u8_uniform_setの前方宣言 */
+typedef bool (*pfn_renderer_shader_is_valid)(const renderer_backend_shader_t* shader_);
 
 /**
  * @brief シェーダー機能仮想関数テーブル
@@ -152,6 +153,8 @@ typedef struct renderer_shader_vtable {
      * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
      */
     pfn_renderer_shader_vec4u8_uniform_set renderer_shader_vec4u8_uniform_set;
+
+    pfn_renderer_shader_is_valid renderer_shader_is_valid;
 } renderer_shader_vtable_t;
 
 #ifdef __cplusplus
