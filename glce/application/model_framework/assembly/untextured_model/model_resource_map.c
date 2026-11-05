@@ -35,6 +35,64 @@
 #include "application/model_framework/coordinates/model_coordinate_config.h"
 #include "application/model_framework/coordinates/model_transform_tree.h"
 
+/*
+ * Module Internal Contract
+ *
+ * Canonical State:
+ * - resource_map_nameはNULLではなく、General Allocator上のlive allocationである。
+ * - resource_map_nameはcanonical validityを満たす空でないChoco Stringである。
+ * - transform_treeはNULLではなく、General Allocator上のlive allocationである。
+ * - transform_treeはModel Transform Treeとしてcanonical validityを満たす。
+ *
+ * Mesh Binding Representation:
+ * - Mesh BindingはMesh配列とCoordinate ID配列の同一Indexによって表現する。
+ * - 各Mesh群はMesh Count、Mesh配列、Coordinate ID配列を一組として保持する。
+ * - Mesh配列とCoordinate ID配列は、それぞれ独立したAllocationである。
+ * - 各配列は対応するMesh Count個の要素を保持できるStorageとして確保される。
+ * - 各配列はNULLではなく、General Allocator上のlive allocationである。
+ * - Mesh Countと各要素型のsizeofの積はsize_tで表現可能である。
+ *
+ * Mesh Count Invariants:
+ * - untextured_mesh_countは0より大きい。
+ * - debug_aabb_mesh_countはuntextured_mesh_countと等しい。
+ * - axis_mesh_countは0より大きく、3の倍数である。
+ *
+ * Mesh Binding Construction:
+ * - 通常Untextured MeshはAssembly ConfigのMesh定義から生成する。
+ * - Debug AABB Meshは通常Untextured Meshと1対1で生成する。
+ * - Debug AABB Meshは対応する通常Meshと同じCoordinate IDを保持する。
+ * - Debug Axis Meshは各CoordinateについてX / Y / Zの3つを生成する。
+ * - Debug Axis Mesh配列はX、Y、Zの順に構築し、
+ *   各軸内ではAssembly ConfigのCoordinate定義順に配置する。
+ * - 同じ軸に対応するDebug Axis MeshはGeometryとMaterial Resourceを共有する。
+ *
+ * Ownership / Resource Management:
+ * - Resource MapはResource Map Name、初期Transform Tree、
+ *   3種類のMesh配列とCoordinate ID配列のStorageを所有する。
+ * - Meshに格納するGeometry IDおよびMaterial IDは、
+ *   Renderer Frontendが管理するResourceへの識別子である。
+ * - Resource MapはImportしたMesh ResourceについてRelease責務を持つが、
+ *   Renderer FrontendおよびRegistry自身は所有しない。
+ * - 初期Transform TreeはResource Mapが所有し、
+ *   Model個体へはCloneした独立のTreeを提供する。
+ *
+ * Construction / Destruction:
+ * - Create中の未完成ResourceはLocal Temporary Variableで管理する。
+ * - Mesh群の構築ではImport成功数を追跡し、
+ *   Recoverable Failure時にはImport済みResourceのみをReleaseする。
+ * - Resource Mapの全Fieldが完成するまでCallerへ公開しない。
+ * - 完成したResult Candidateを確認した後、OwnershipをCallerへ移転する。
+ * - Destroyでは各Mesh群のRelease後に、初期Transform Tree、
+ *   Resource Map NameおよびResource Map自身のStorageを解放する。
+ * - Destroy途中でReleaseに失敗した場合、
+ *   Resource MapがCanonical Stateを維持する保証はない。
+ *
+ * AI支援:
+ * - 本セクションはChatGPTを用いて草案を作成し、
+ *   プロジェクト作成者が実装との整合性を確認・修正した。
+ * - 実装コードはプロジェクト作成者が作成した。
+ */
+
 // ============================================================
 // Private Type Definitions
 // ============================================================
@@ -84,7 +142,18 @@ static model_framework_result_t transform_tree_create_from_config(const untextur
 // ============================================================
 // Public API
 // ============================================================
-// NOTE: Debug Axis生成無効時はsegment_count_ = 0, debug_axis_cone_ = NULL, debug_axis_cylinder_ = NULLを許容するように変更しても良い, 当面は必須にする
+/*
+ * Validation Policy:
+ * - 必須Pointer、Resource Map Nameの非空条件、Debug Axis Segment Countの
+ *   下限をBuild Modeによらず検証する。
+ * - DEBUG / TESTでは入力Assembly ConfigのCanonical Validityを検証する。
+ * - RELEASEではAssembly Configの内部Semanticを成立済みの入力契約として扱う。
+ * - Cone / CylinderのSemantic Validationは、それらを直接Consumeする
+ *   debug_axis_vertices_create()に委譲する。
+ * - DEBUG / TESTでは、完成したResource MapをCallerへ公開する前に
+ *   Canonical Result Validationを行う。
+ * - Result Validation失敗は内部構築結果の異常としてDATA_CORRUPTEDとする。
+ */
 model_framework_result_t untextured_model_resource_map_create(
     renderer_frontend_t* renderer_frontend_,
     const char* resource_map_name_,
@@ -118,6 +187,7 @@ model_framework_result_t untextured_model_resource_map_create(
     size_t tmp_axis_mesh_count = 0;
 
     // Preconditions.
+    // NOTE: Debug Axis生成無効時はsegment_count_ = 0, debug_axis_cone_ = NULL, debug_axis_cylinder_ = NULLを許容するように変更しても良い, 当面は必須にする
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "renderer_frontend_")
     IF_ARG_NULL_GOTO_CLEANUP(resource_map_name_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "resource_map_name_")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_resource_map_create", "config_")
@@ -138,7 +208,7 @@ model_framework_result_t untextured_model_resource_map_create(
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - Provided resource_map_name_ is not valid.", model_framework_result_to_str(ret));
         goto cleanup;
     }
-    if(0 == debug_axis_segment_count_) {
+    if(3 > debug_axis_segment_count_) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - Provided debug_axis_segment_count_ is not valid.", model_framework_result_to_str(ret));
         goto cleanup;
@@ -263,6 +333,17 @@ cleanup:
     return ret;
 }
 
+/*
+ * Validation Policy:
+ * - 必須PointerをBuild Modeによらず検証する。
+ * - DEBUG / TESTではOwned ResourceのRelease前に
+ *   Resource MapのCanonical Validityを検証する。
+ * - Canonical Validation失敗は成立済み内部状態の破損として
+ *   DATA_CORRUPTEDとし、Destroyを開始しない。
+ * - 各Mesh ResourceのReleaseに必要なSemantic Validationは
+ *   Renderer Frontendへ委譲する。
+ * - Logical Lifetime終了後のPostcondition Validationは行わない。
+ */
 model_framework_result_t untextured_model_resource_map_destroy(renderer_frontend_t* renderer_frontend_, untextured_model_resource_map_t** resource_map_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -311,6 +392,15 @@ cleanup:
     return ret;
 }
 
+/*
+ * Validation Policy:
+ * - 必須PointerとOutput先の未使用状態をBuild Modeによらず検証する。
+ * - Resource Map全体のCanonical Validationは行わない。
+ * - Clone対象となるTransform TreeのSemantic Validationは
+ *   model_transform_tree_clone()へ委譲する。
+ * - Resource Map自身のStateを変更しないため、
+ *   Postcondition Validationは行わない。
+ */
 model_framework_result_t untextured_model_resource_map_transform_tree_clone(const untextured_model_resource_map_t* resource_map_, model_transform_tree_t** out_transform_tree_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -330,6 +420,13 @@ cleanup:
     return ret;
 }
 
+/*
+ * Validation Policy:
+ * - 必須PointerとMesh IndexのRangeをBuild Modeによらず検証する。
+ * - Resource Map全体のCanonical Validationは行わない。
+ * - Geometry ID、Material IDのRegistry上のSemantic Validityは検証しない。
+ * - Read-only OperationのためPostcondition Validationは行わない。
+ */
 model_framework_result_t untextured_model_resource_map_untextured_mesh_binding_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, untextured_mesh_t* out_mesh_, uint16_t* out_coordinate_id_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -352,6 +449,11 @@ cleanup:
     return ret;
 }
 
+/*
+ * Validation Policy:
+ * - 必須PointerのみをBuild Modeによらず検証する。
+ * - Resource Map全体のCanonical Validationは行わない。
+ */
 model_framework_result_t untextured_model_resource_map_untextured_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -366,6 +468,13 @@ cleanup:
     return ret;
 }
 
+/*
+ * Validation Policy:
+ * - 必須PointerとMesh IndexのRangeをBuild Modeによらず検証する。
+ * - Resource Map全体のCanonical Validationは行わない。
+ * - Geometry IDのRegistry上のSemantic Validityは検証しない。
+ * - Read-only OperationのためPostcondition Validationは行わない。
+ */
 model_framework_result_t untextured_model_resource_map_debug_aabb_mesh_binding_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, line_mesh_t* out_mesh_, uint16_t* out_coordinate_id_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -387,6 +496,11 @@ cleanup:
     return ret;
 }
 
+/*
+ * Validation Policy:
+ * - 必須PointerのみをBuild Modeによらず検証する。
+ * - Resource Map全体のCanonical Validationは行わない。
+ */
 model_framework_result_t untextured_model_resource_map_debug_aabb_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -401,6 +515,13 @@ cleanup:
     return ret;
 }
 
+/*
+ * Validation Policy:
+ * - 必須PointerとMesh IndexのRangeをBuild Modeによらず検証する。
+ * - Resource Map全体のCanonical Validationは行わない。
+ * - Geometry ID、Material IDのRegistry上のSemantic Validityは検証しない。
+ * - Read-only OperationのためPostcondition Validationは行わない。
+ */
 model_framework_result_t untextured_model_resource_map_debug_axis_mesh_binding_get(const untextured_model_resource_map_t* resource_map_, uint16_t mesh_index_, untextured_mesh_t* out_mesh_, uint16_t* out_coordinate_id_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -423,6 +544,11 @@ cleanup:
     return ret;
 }
 
+/*
+ * Validation Policy:
+ * - 必須PointerのみをBuild Modeによらず検証する。
+ * - Resource Map全体のCanonical Validationは行わない。
+ */
 model_framework_result_t untextured_model_resource_map_debug_axis_mesh_count_get(const untextured_model_resource_map_t* resource_map_, size_t* out_count_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -437,6 +563,19 @@ cleanup:
     return ret;
 }
 
+/*
+ * Validation Policy:
+ * - 本APIはResource MapのCanonical Validatorであり、
+ *   Build Modeによらず同一のValidation Semanticsを持つ。
+ * - Root PointerについてはNULLのみを検証し、
+ *   Root自身のAllocation ValidityはCallerの責務とする。
+ * - Owned StringとTransform TreeについてはAllocation Validityを確認した後、
+ *   各Owner ModuleのCanonical Validatorへ委譲する。
+ * - Mesh配列とCoordinate ID配列については、Countの整合性、
+ *   Allocation Sizeの表現可能性、PointerのAllocation Validityを検証する。
+ * - Mesh配列のActual Allocation Sizeや各ElementのRegistry登録状態、
+ *   Coordinate IDとTransform Treeの参照整合性は検証対象としない。
+ */
 bool untextured_model_resource_map_is_valid(const untextured_model_resource_map_t* resource_map_) {
     if(NULL == resource_map_) {
         return false;
