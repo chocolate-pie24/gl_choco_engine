@@ -361,7 +361,7 @@ cleanup:
         if(NULL != tmp_state->sample_robot_resource_map) {
             ret_cleanup = sample_robot_model_resource_map_destroy(tmp_state->renderer_frontend, &tmp_state->sample_robot_resource_map);
             if(APPLICATION_DATA_CORRUPTED == ret_cleanup) {
-                ERROR_MESSAGE("application_create(%s) - sample_robot_model_resource_map_destroy failed.", application_result_to_str(ret));
+                ERROR_MESSAGE("application_create(%s) - sample_robot_model_resource_map_destroy failed.", application_result_to_str(ret_cleanup));
                 return ret_cleanup;
             }
         }
