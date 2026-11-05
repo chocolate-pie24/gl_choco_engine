@@ -76,10 +76,10 @@
 #include "application/renderer/application_renderer.h"
 #include "application/diagnostics/application_diagnostics.h"
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_types.h"
 #include "application/model_framework/assembly/untextured_model/model_assembly_config.h"
 #include "application/model_framework/assembly/untextured_model/model_resource_map.h"
-#include "application/model_framework/assembly/model_transform_tree.h"
+#include "application/model_framework/coordinates/model_transform_tree.h"
 #include "application/model_instance/sample_robot/sample_robot.h"
 
 /**

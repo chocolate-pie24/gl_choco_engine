@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "application/model_framework/assembly/model_coordinate_config.h"
+#include "application/model_framework/coordinates/model_coordinate_config.h"
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -10,8 +10,8 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
-#include "application/model_framework/assembly/core/model_framework_err_utils.h"
+#include "application/model_framework/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_err_utils.h"
 
 model_framework_result_t model_coordinate_config_initialize(uint16_t coordinate_id_, uint16_t parent_coordinate_id_, vec3f_t translate_, vec3f_t rotation_, model_coordinate_config_t* out_config_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;

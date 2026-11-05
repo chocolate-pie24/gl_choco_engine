@@ -15,10 +15,10 @@
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
-#include "application/model_framework/assembly/core/model_framework_err_utils.h"
-#include "application/model_framework/assembly/model_coordinate_config.h"
-#include "application/model_framework/assembly/model_transform_tree.h"
+#include "application/model_framework/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_err_utils.h"
+#include "application/model_framework/coordinates/model_coordinate_config.h"
+#include "application/model_framework/coordinates/model_transform_tree.h"
 #include "application/model_framework/assembly/untextured_model/model_assembly_config.h"
 #include "application/model_framework/assembly/untextured_model/model_resource_map.h"
 

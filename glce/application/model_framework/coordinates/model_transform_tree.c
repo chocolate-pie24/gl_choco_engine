@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "application/model_framework/assembly/model_transform_tree.h"
+#include "application/model_framework/coordinates/model_transform_tree.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -14,8 +14,8 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
-#include "application/model_framework/assembly/core/model_framework_err_utils.h"
+#include "application/model_framework/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_err_utils.h"
 
 /*
  * Module Internal Contract

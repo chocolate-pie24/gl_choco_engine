@@ -50,8 +50,8 @@
  *   プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#ifndef GLCE_APPLICATION_MODEL_FRAMEWORK_ASSEMBLY_MODEL_TRANSFORM_TREE_H
-#define GLCE_APPLICATION_MODEL_FRAMEWORK_ASSEMBLY_MODEL_TRANSFORM_TREE_H
+#ifndef GLCE_APPLICATION_MODEL_FRAMEWORK_COORDINATES_MODEL_TRANSFORM_TREE_H
+#define GLCE_APPLICATION_MODEL_FRAMEWORK_COORDINATES_MODEL_TRANSFORM_TREE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +62,7 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_types.h"
 
 /**
  * @brief Model内の階層座標系とLocal Transformを所有するOpaque Object

@@ -40,7 +40,7 @@ extern "C" {
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_types.h"
 
 /**
  * @brief アプリケーションレイヤー実行結果コードを文字列に変換する

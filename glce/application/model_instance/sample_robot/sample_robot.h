@@ -10,7 +10,7 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_types.h"
 
 typedef struct untextured_model_resource_map untextured_model_resource_map_t;
 typedef struct model_transform_tree model_transform_tree_t;

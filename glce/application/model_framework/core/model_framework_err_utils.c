@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "application/model_framework/assembly/core/model_framework_err_utils.h"
+#include "application/model_framework/core/model_framework_err_utils.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -10,7 +10,7 @@
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";
 static const char* const s_result_str_no_memory = "NO_MEMORY";

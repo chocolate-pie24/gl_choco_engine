@@ -12,7 +12,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_types.h"
 
 typedef struct model_coordinate_config model_coordinate_config_t;
 typedef struct untextured_mesh_config untextured_mesh_config_t;

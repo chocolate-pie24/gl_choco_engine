@@ -18,7 +18,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
-#include "application/model_framework/assembly/core/model_framework_types.h"
+#include "application/model_framework/core/model_framework_types.h"
 
 const char* model_framework_result_to_str(model_framework_result_t result_);
 
