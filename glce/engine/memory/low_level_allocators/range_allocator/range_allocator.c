@@ -431,7 +431,6 @@ static void set_node_to_free(node_t* target_, node_t* prev_, node_t* next_);
 static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_);
 
 // Validation
-static bool range_allocator_is_valid(const range_allocator_t* allocator_);            // deep validation
 static bool range_allocator_is_valid_shallow(const range_allocator_t* allocator_);    // shallow validation
 static bool node_is_valid(const node_t* node_);
 
@@ -830,6 +829,194 @@ bool range_allocation_is_valid(const range_allocation_t* allocation_) {
         return false;
     }
     if(NULL == allocation_->owner) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * @brief Range Allocator全体の内部整合性を検証する
+ *
+ * @details
+ * allocator_is_valid_shallow()によって基本管理値を検証した後、
+ * range listとnode poolを走査し、両者の内容と管理値が一致することを検証する。
+ *
+ * range listについて、次の条件を検証する。
+ *
+ * - range list headがNULLではない
+ * - list走査node数がmax node countを超えない
+ * - list上の各nodeがnode poolに所属する
+ * - list上の各nodeが局所的不変条件を満たす
+ * - list上の各nodeがFREEまたはALLOCATED状態である
+ * - 各nodeのprevが直前に走査したnodeと一致する
+ * - 先頭nodeのprevがNULLである
+ * - 各nodeのoffsetが直前rangeの終端と一致する
+ * - 各nodeのoffsetがbase alignment境界にある
+ * - range終端の計算がオーバーフローしない
+ * - 各rangeがmemory pool内に収まる
+ * - ALLOCATED nodeのblock sizeがbase alignmentの倍数である
+ * - 隣接する二つのnodeがともにFREEではない
+ * - range listの末尾がmemory poolの末尾と一致する
+ * - ALLOCATED nodeのblock size合計がtotal allocated sizeと一致する
+ *
+ * expected offsetを0から各nodeの終端へ更新することで、
+ * range間のgap、overlap、およびmemory pool内の未管理rangeを検出する。
+ *
+ * node poolについて、次の条件を検証する。
+ *
+ * - 全nodeがstateに対応する局所的不変条件を満たす
+ * - public API境界で許可されないTRANSITIONING nodeが存在しない
+ * - ALLOCATED node数がallocation countと一致する
+ * - NOT_USED node数がunused node countと一致する
+ * - FREE／ALLOCATED node数がrange listの走査node数と一致する
+ * - FREE、ALLOCATED、NOT_USEDの各node数の合計がmax node countと一致する
+ *
+ * range list上の全nodeがnode poolに所属することと、
+ * node pool内のFREE／ALLOCATED node数がrange listの走査node数と
+ * 一致することを照合し、range listから切断された安定状態のnodeが
+ * 存在しないことを検証する。
+ *
+ * @param[in] allocator_
+ * 検証するRange Allocator。NULLの場合は不正と判定する。
+ *
+ * @retval true
+ * 基本管理値、node pool、range list、range情報、および各管理値が
+ * 相互に整合している。
+ *
+ * @retval false
+ * allocator_がNULL、または内部フィールド、node pool、
+ * node state、range list接続、range、alignment、node数、
+ * allocation数、もしくはtotal allocated sizeに不整合がある。
+ *
+ * @note
+ * 本関数は不整合の種類を結果コードとして区別しない。
+ * public APIはfalseを内部データ破損として扱う。
+ *
+ * @note
+ * 本関数はRange Allocator、node pool、range list、および
+ * 各管理値を変更しない。
+ *
+ * @par 計算量
+ * range list上の各nodeについてnode poolへの所属を線形探索するため、
+ * node pool内のnode数をnとしたとき、最悪時間計算量はO(n^2)である。
+ * 本関数は動的メモリ確保を行わない。
+ *
+ * @par AI支援
+ * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
+ * プロジェクト作成者が実装との整合性を確認・修正した。
+ */
+bool range_allocator_is_valid(const range_allocator_t* allocator_) {
+    node_t* node = NULL;
+    node_t* prev = NULL;
+    size_t loop_count = 0;
+    size_t expected_offset = 0;
+    size_t expected_total_allocated_size = 0;
+    size_t end_offset = 0;
+    bool found = false;
+
+    if(NULL == allocator_) {
+        return false;
+    }
+    if(!range_allocator_is_valid_shallow(allocator_)) {
+        return false;
+    }
+
+    if(NULL == allocator_->range_list_head) {
+        return false;
+    }
+    node = allocator_->range_list_head;
+    // NOTE: 以下はrange_allocatorの動作実績が増えたらDEBUG_BUILD, TEST_BUILDのみで動かす
+    while(NULL != node) {
+        if(loop_count >= allocator_->max_node_count) {
+            return false;
+        }
+        found = false;
+        for(size_t i = 0; i != allocator_->max_node_count; ++i) {
+            if(&allocator_->node_pool[i] == node) {
+                found = true;
+                break;
+            }
+        }
+        if(!found) {
+            return false;
+        }
+        if(!node_is_valid(node)) {
+            return false;
+        }
+        if(NODE_STATE_ALLOCATED != node->node_state && NODE_STATE_FREE != node->node_state) {
+            return false;
+        }
+        if(node->prev != prev) {
+            return false;
+        }
+        if(node->offset != expected_offset) {
+            return false;
+        }
+        if(0 != (node->offset % allocator_->base_align)) {
+            return false;
+        }
+        if(!size_add_checked(node->block_size, node->offset, &end_offset)) {
+            return false;
+        }
+        if(allocator_->memory_pool_size < end_offset) {
+            return false;
+        }
+        if(NODE_STATE_ALLOCATED == node->node_state && 0 != (node->block_size % allocator_->base_align)) {
+            return false;
+        }
+        if(NULL != node->prev) {
+            if(NODE_STATE_FREE == node->node_state && NODE_STATE_FREE == node->prev->node_state) {
+                return false;
+            }
+        }
+        if(NODE_STATE_ALLOCATED == node->node_state) {
+            if(!size_add_checked(node->block_size, expected_total_allocated_size, &expected_total_allocated_size)) {
+                return false;
+            }
+        }
+        expected_offset = end_offset;
+        prev = node;
+        node = node->next;
+        loop_count++;
+        found = false;
+    }
+    if(expected_offset != allocator_->memory_pool_size) { // memory_pool全体がALLOCATED / FREEノードで隙間がないため、末尾は必ずmemory_pool_sizeに等しい
+        return false;
+    }
+    if(expected_total_allocated_size != allocator_->total_allocated_size) {
+        return false;
+    }
+
+    size_t allocated_count = 0;
+    size_t free_count = 0;
+    size_t unused_count = 0;
+    for(size_t i = 0; i != allocator_->max_node_count; ++i) {
+        if(!node_is_valid(&allocator_->node_pool[i])) {
+            return false;
+        }
+        if(NODE_STATE_TRANSITIONING == allocator_->node_pool[i].node_state) {
+            return false;
+        }
+        if(NODE_STATE_ALLOCATED == allocator_->node_pool[i].node_state) {
+            allocated_count++;
+        }
+        if(NODE_STATE_FREE == allocator_->node_pool[i].node_state) {
+            free_count++;
+        }
+        if(NODE_STATE_NOT_USED == allocator_->node_pool[i].node_state) {
+            unused_count++;
+        }
+    }
+    if(allocated_count != allocator_->allocation_count) {
+        return false;
+    }
+    if(allocator_->unused_node_count != unused_count) {
+        return false;
+    }
+    if((free_count + allocated_count) != loop_count) {
+        return false;
+    }
+    if((free_count + allocated_count + unused_count) != allocator_->max_node_count) {
         return false;
     }
     return true;
@@ -3075,194 +3262,6 @@ static void set_node_to_allocated(node_t* target_, node_t* prev_, node_t* next_)
     target_->prev = prev_;
     target_->next = next_;
     target_->node_state = NODE_STATE_ALLOCATED;
-}
-
-/**
- * @brief Range Allocator全体の内部整合性を検証する
- *
- * @details
- * allocator_is_valid_shallow()によって基本管理値を検証した後、
- * range listとnode poolを走査し、両者の内容と管理値が一致することを検証する。
- *
- * range listについて、次の条件を検証する。
- *
- * - range list headがNULLではない
- * - list走査node数がmax node countを超えない
- * - list上の各nodeがnode poolに所属する
- * - list上の各nodeが局所的不変条件を満たす
- * - list上の各nodeがFREEまたはALLOCATED状態である
- * - 各nodeのprevが直前に走査したnodeと一致する
- * - 先頭nodeのprevがNULLである
- * - 各nodeのoffsetが直前rangeの終端と一致する
- * - 各nodeのoffsetがbase alignment境界にある
- * - range終端の計算がオーバーフローしない
- * - 各rangeがmemory pool内に収まる
- * - ALLOCATED nodeのblock sizeがbase alignmentの倍数である
- * - 隣接する二つのnodeがともにFREEではない
- * - range listの末尾がmemory poolの末尾と一致する
- * - ALLOCATED nodeのblock size合計がtotal allocated sizeと一致する
- *
- * expected offsetを0から各nodeの終端へ更新することで、
- * range間のgap、overlap、およびmemory pool内の未管理rangeを検出する。
- *
- * node poolについて、次の条件を検証する。
- *
- * - 全nodeがstateに対応する局所的不変条件を満たす
- * - public API境界で許可されないTRANSITIONING nodeが存在しない
- * - ALLOCATED node数がallocation countと一致する
- * - NOT_USED node数がunused node countと一致する
- * - FREE／ALLOCATED node数がrange listの走査node数と一致する
- * - FREE、ALLOCATED、NOT_USEDの各node数の合計がmax node countと一致する
- *
- * range list上の全nodeがnode poolに所属することと、
- * node pool内のFREE／ALLOCATED node数がrange listの走査node数と
- * 一致することを照合し、range listから切断された安定状態のnodeが
- * 存在しないことを検証する。
- *
- * @param[in] allocator_
- * 検証するRange Allocator。NULLの場合は不正と判定する。
- *
- * @retval true
- * 基本管理値、node pool、range list、range情報、および各管理値が
- * 相互に整合している。
- *
- * @retval false
- * allocator_がNULL、または内部フィールド、node pool、
- * node state、range list接続、range、alignment、node数、
- * allocation数、もしくはtotal allocated sizeに不整合がある。
- *
- * @note
- * 本関数は不整合の種類を結果コードとして区別しない。
- * public APIはfalseを内部データ破損として扱う。
- *
- * @note
- * 本関数はRange Allocator、node pool、range list、および
- * 各管理値を変更しない。
- *
- * @par 計算量
- * range list上の各nodeについてnode poolへの所属を線形探索するため、
- * node pool内のnode数をnとしたとき、最悪時間計算量はO(n^2)である。
- * 本関数は動的メモリ確保を行わない。
- *
- * @par AI支援
- * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
- * プロジェクト作成者が実装との整合性を確認・修正した。
- */
-static bool range_allocator_is_valid(const range_allocator_t* allocator_) {
-    node_t* node = NULL;
-    node_t* prev = NULL;
-    size_t loop_count = 0;
-    size_t expected_offset = 0;
-    size_t expected_total_allocated_size = 0;
-    size_t end_offset = 0;
-    bool found = false;
-
-    if(NULL == allocator_) {
-        return false;
-    }
-    if(!range_allocator_is_valid_shallow(allocator_)) {
-        return false;
-    }
-
-    if(NULL == allocator_->range_list_head) {
-        return false;
-    }
-    node = allocator_->range_list_head;
-    // NOTE: 以下はrange_allocatorの動作実績が増えたらDEBUG_BUILD, TEST_BUILDのみで動かす
-    while(NULL != node) {
-        if(loop_count >= allocator_->max_node_count) {
-            return false;
-        }
-        found = false;
-        for(size_t i = 0; i != allocator_->max_node_count; ++i) {
-            if(&allocator_->node_pool[i] == node) {
-                found = true;
-                break;
-            }
-        }
-        if(!found) {
-            return false;
-        }
-        if(!node_is_valid(node)) {
-            return false;
-        }
-        if(NODE_STATE_ALLOCATED != node->node_state && NODE_STATE_FREE != node->node_state) {
-            return false;
-        }
-        if(node->prev != prev) {
-            return false;
-        }
-        if(node->offset != expected_offset) {
-            return false;
-        }
-        if(0 != (node->offset % allocator_->base_align)) {
-            return false;
-        }
-        if(!size_add_checked(node->block_size, node->offset, &end_offset)) {
-            return false;
-        }
-        if(allocator_->memory_pool_size < end_offset) {
-            return false;
-        }
-        if(NODE_STATE_ALLOCATED == node->node_state && 0 != (node->block_size % allocator_->base_align)) {
-            return false;
-        }
-        if(NULL != node->prev) {
-            if(NODE_STATE_FREE == node->node_state && NODE_STATE_FREE == node->prev->node_state) {
-                return false;
-            }
-        }
-        if(NODE_STATE_ALLOCATED == node->node_state) {
-            if(!size_add_checked(node->block_size, expected_total_allocated_size, &expected_total_allocated_size)) {
-                return false;
-            }
-        }
-        expected_offset = end_offset;
-        prev = node;
-        node = node->next;
-        loop_count++;
-        found = false;
-    }
-    if(expected_offset != allocator_->memory_pool_size) { // memory_pool全体がALLOCATED / FREEノードで隙間がないため、末尾は必ずmemory_pool_sizeに等しい
-        return false;
-    }
-    if(expected_total_allocated_size != allocator_->total_allocated_size) {
-        return false;
-    }
-
-    size_t allocated_count = 0;
-    size_t free_count = 0;
-    size_t unused_count = 0;
-    for(size_t i = 0; i != allocator_->max_node_count; ++i) {
-        if(!node_is_valid(&allocator_->node_pool[i])) {
-            return false;
-        }
-        if(NODE_STATE_TRANSITIONING == allocator_->node_pool[i].node_state) {
-            return false;
-        }
-        if(NODE_STATE_ALLOCATED == allocator_->node_pool[i].node_state) {
-            allocated_count++;
-        }
-        if(NODE_STATE_FREE == allocator_->node_pool[i].node_state) {
-            free_count++;
-        }
-        if(NODE_STATE_NOT_USED == allocator_->node_pool[i].node_state) {
-            unused_count++;
-        }
-    }
-    if(allocated_count != allocator_->allocation_count) {
-        return false;
-    }
-    if(allocator_->unused_node_count != unused_count) {
-        return false;
-    }
-    if((free_count + allocated_count) != loop_count) {
-        return false;
-    }
-    if((free_count + allocated_count + unused_count) != allocator_->max_node_count) {
-        return false;
-    }
-    return true;
 }
 
 /**

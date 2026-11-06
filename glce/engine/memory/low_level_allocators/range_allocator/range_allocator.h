@@ -835,6 +835,8 @@ void range_allocator_debug_print(const range_allocator_t* allocator_);
 
 bool range_allocation_is_valid(const range_allocation_t* allocation_);
 
+bool range_allocator_is_valid(const range_allocator_t* allocator_);
+
 #ifdef __cplusplus
 }
 #endif

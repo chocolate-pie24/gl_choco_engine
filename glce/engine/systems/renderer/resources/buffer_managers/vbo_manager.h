@@ -822,6 +822,8 @@ const renderer_backend_vbo_t* vbo_manager_vbo_get(const vbo_manager_t* vbo_manag
  */
 bool vbo_manager_config_is_valid(const vbo_manager_config_t* config_);
 
+bool vbo_manager_is_valid(const vbo_manager_t* vbo_manager_);
+
 /**
  * @brief VBO Managerの基本状態を標準出力へ表示する
  *
