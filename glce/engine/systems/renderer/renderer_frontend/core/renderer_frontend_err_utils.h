@@ -10,6 +10,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
+#include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/io_utils/fs_path.h"
@@ -24,6 +25,7 @@ extern "C" {
 
 const char* renderer_frontend_result_to_str(renderer_frontend_result_t result_);
 
+renderer_frontend_result_t renderer_frontend_result_convert_general_allocator(general_allocator_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_subsystem_allocator(subsystem_allocator_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_renderer_backend(renderer_backend_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_resource_registry(resource_registry_result_t result_);

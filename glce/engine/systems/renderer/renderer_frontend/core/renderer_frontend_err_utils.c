@@ -47,6 +47,29 @@ const char* renderer_frontend_result_to_str(renderer_frontend_result_t result_) 
     }
 }
 
+renderer_frontend_result_t renderer_frontend_result_convert_general_allocator(general_allocator_result_t result_) {
+    switch(result_) {
+    case GENERAL_ALLOCATOR_SUCCESS:
+        return RENDERER_FRONTEND_SUCCESS;
+    case GENERAL_ALLOCATOR_DATA_CORRUPTED:
+        return RENDERER_FRONTEND_DATA_CORRUPTED;
+    case GENERAL_ALLOCATOR_BAD_OPERATION:
+        return RENDERER_FRONTEND_BAD_OPERATION;
+    case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
+        return RENDERER_FRONTEND_INVALID_ARGUMENT;
+    case GENERAL_ALLOCATOR_NO_MEMORY:
+        return RENDERER_FRONTEND_NO_MEMORY;
+    case GENERAL_ALLOCATOR_OVERFLOW:
+        return RENDERER_FRONTEND_OVERFLOW;
+    case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
+        return RENDERER_FRONTEND_LIMIT_EXCEEDED;
+    case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    default:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    }
+}
+
 renderer_frontend_result_t renderer_frontend_result_convert_subsystem_allocator(subsystem_allocator_result_t result_) {
     switch(result_) {
     case SUBSYSTEM_ALLOCATOR_SUCCESS:
