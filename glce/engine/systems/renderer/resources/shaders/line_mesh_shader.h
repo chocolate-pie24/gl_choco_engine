@@ -85,7 +85,6 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
@@ -301,6 +300,8 @@ shader_result_t line_mesh_shader_view_matrix_set(const renderer_backend_context_
  * @post 成功時、Projection MatrixのUniform送信が完了する。
  */
 shader_result_t line_mesh_shader_projection_matrix_set(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
+
+bool line_mesh_shader_is_valid(const renderer_backend_context_t* backend_context_, const line_mesh_shader_t* shader_);
 
 #ifdef __cplusplus
 }

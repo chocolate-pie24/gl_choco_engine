@@ -312,6 +312,8 @@ shader_result_t ui_mesh_shader_view_matrix_set(const renderer_backend_context_t*
  */
 shader_result_t ui_mesh_shader_projection_matrix_set(const renderer_backend_context_t* backend_context_, const ui_mesh_shader_t* shader_, const mat4x4f_t* projection_matrix_, bool should_transpose_);
 
+bool ui_mesh_shader_is_valid(const renderer_backend_context_t* backend_context_, const ui_mesh_shader_t* shader_);
+
 #ifdef __cplusplus
 }
 #endif

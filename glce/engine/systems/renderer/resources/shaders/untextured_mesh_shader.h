@@ -502,6 +502,8 @@ shader_result_t untextured_mesh_shader_ambient_light_color_intensity_set(const r
  */
 shader_result_t untextured_mesh_shader_material_set(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_, const untextured_mesh_material_t* material_);
 
+bool untextured_mesh_shader_is_valid(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_);
+
 #ifdef __cplusplus
 }
 #endif
