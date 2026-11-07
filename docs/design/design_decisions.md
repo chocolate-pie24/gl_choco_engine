@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-03
+最終更新: 2026-11-08
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -7480,3 +7480,183 @@ Renderer Frontend
 - `design_notes.md`
 - `glce_renderer_resource_model_workplan.md`
 - `glce_near_term_todo.md`
+
+---
+
+## Decision: ValidatorをObject単位に一本化し、ENABLE_VALID_DEEPで検証範囲を制御する
+
+**Status:** Accepted  
+**Date:** 2026-11-08  
+**Scope:** Validation Architecture / Build Configuration / Performance / Diagnostics
+
+### Decision
+
+GLCEでは、同一Objectに対してValidation Depthの異なる複数のObject Validatorを設ける構造を廃止し、原則として`*_is_valid()`へ一本化する。
+
+Validatorは対象型のCanonical Modelを検証対象とするが、実際に実行するValidationはCompile-time Configurationである`ENABLE_VALID_DEEP`によって制御する。
+
+- `ENABLE_VALID_DEEP = 0`：O(1)のValidationのみ実行する。
+- `ENABLE_VALID_DEEP = 1`：O(1)およびO(n)以上のValidationを実行する。
+
+計算量は、Validator自身の処理だけでなく、呼び出すHelperやAPIの内部処理も含めて判断する。
+
+Memory SafetyやBounded Executionを目的とするValidationについても、O(n)以上の場合は例外なく`ENABLE_VALID_DEEP`による制御対象とする。
+
+一方、API本来のOperationやChecked Preconditionは、計算量だけを理由として無効化しない。
+
+ValidatorのCallerはValidation Depthを選択しない。DEBUG_BUILD / TEST_BUILD等のBuild ModeとAPI固有Policyに基づいてValidatorを呼び出すかどうかを決定し、検証範囲の制御はValidator内部に閉じ込める。
+
+Canonical ModelそのものはBuild Configurationによって変更しない。`ENABLE_VALID_DEEP = 0`では検証範囲が限定されるため、Validatorの成功はFull Validationの成功を意味しない。
+
+### Context
+
+従来のGLCEでは、Shallow ValidatorとCanonical Validatorを分離し、Public APIのOperation Semanticsや計算量に応じてCallerがどちらを使用するか決定していた。
+
+この方式は、軽量なValidationと完全なOwnership Closure Validationを区別できる一方、同一Objectに複数のValidatorが存在する。
+
+ObjectのInternal RepresentationやInvariantを変更する場合、それぞれのValidatorにどの条件を反映するか検討する必要があり、Validator間の責務分担や検証順序も変更対象となる。
+
+また、Sponzaのような大規模Modelを扱う段階で、Validation Costがより重要な課題となった。
+
+例えば、大量のNodeを持つTransform Treeに対して、個々のOperationのたびにTree全体のCanonical Validationを実行すると、Operation自体の計算量よりValidation Costが支配的になる可能性がある。
+
+特に、TEST_BUILDで大規模Modelを描画・操作したい場合、DEBUG / TESTというBuild ModeだけでDeep Validationの実行を決定する構造では、通常の動作テストが現実的な時間で実行できなくなる可能性がある。
+
+そこで、Build ModeとValidation Costを独立させることを検討した。
+
+当初はCanonical Validatorを常にFull Validationとして維持し、Caller側でDeep Validationの実行を切り替える案も検討した。
+
+しかし、この方式ではValidation Depthの制御が各Callerへ分散し、Shallow / Canonicalの使い分けに関する判断も残る。
+
+最終的に、ObjectのInvariantを検証する入口を一本化し、その内部で検証コストを制御する方式を採用した。
+
+### Rationale
+
+- 一つのObjectについて、検証条件を原則一箇所から把握できる。
+- ObjectのRepresentation変更時に、複数のValidator間で検証条件を同期させる必要がなくなる。
+- CallerがValidation Depthを選択する責務を持たずに済む。
+- Validator内部の変更がCallerの実装へ波及しにくくなる。
+- DEBUG / TESTとValidation Depthを独立して設定できる。
+- Sponza等の大規模ModelをTEST_BUILDで実行しやすくなる。
+- Full Validationが必要な場合は、`ENABLE_VALID_DEEP = 1`によって診断能力を高められる。
+- Memory Safetyを理由とした例外規則を設けず、計算量による分類を一貫して適用できる。
+
+特に、Validation Architectureの単純化を重視する。
+
+従来方式では、CallerがOperationごとにValidation Depthを判断していた。新方式では、CallerはValidatorを実行する必要性だけを判断する。
+
+この責務分離によって、Validation Costの調整をObject Validator内部に局所化する。
+
+### Rejected Alternatives
+
+- **Shallow ValidatorとCanonical Validatorを併存させる。** 同じObjectのInvariantが複数のValidatorに分散し、変更時の整合性管理が必要になる。
+- **Canonical Validatorを常にFull Validationとし、Callerが実行を切り替える。** Validation Depthの制御がCallerへ分散し、Object Validatorの一本化による効果が弱くなる。
+- **TEST_BUILDでは必ずFull Validationを実行する。** 大規模Modelの通常動作テストに対する実行コストが大きくなる。
+- **Memory Safetyに必要なO(n)以上のValidationだけは常時実行する。** 計算量による分類に例外が生まれ、検証範囲の判断が再び複雑になる。
+- **Runtime ParameterでValidation Depthを選択する。** Validatorの動作をRuntimeで切り替える必要はなく、Compile-time Configurationで目的を達成できる。
+
+### Consequences
+
+- 既存のShallow ValidatorはCanonical Validatorへ順次統合する。
+- O(n)以上の診断用Validationは、Validator内部で`ENABLE_VALID_DEEP`によって条件付きコンパイルする。
+- Private Validation Helperへの分割は引き続き許容するが、Validation Depth別のObject Validatorは設けない。
+- `ENABLE_VALID_DEEP = 0`では、破損したObjectに対するMemory SafetyやBounded Executionを完全には保証しない。
+- Build Configurationに関係なく、正しく実装されたOperationがCanonical Modelを維持するという契約は変更しない。
+- Validation Report等でValidator結果を提示する際は、Full Validationの実施有無を区別する必要がある。
+- 既存Moduleを一括変更することは要求せず、変更対象Moduleから順次新方式へ移行する。
+
+具体的なValidation Cost Classification、条件付きコンパイル、Automatic ValidationおよびFail-stopの規則は`validation_policy.md`を正本とする。
+
+### Revisit Conditions
+
+- 大規模Modelで`ENABLE_VALID_DEEP = 0`でもValidation Costが実測上問題となる場合。
+- Deep Validationを無効化したことによるCorruption Detectionの遅延が、特定Moduleで許容できない問題となる場合。
+- Build Configuration単位ではなく、対象ObjectやOperation単位でValidation Depthを制御する具体的な要件が発生した場合。
+
+### Related Documents
+
+- `validation_policy.md`
+- `config/build_config.h`
+- `glce_near_term_todo.md`
+
+---
+
+## Decision: Callerが保証する内部契約に基づくINVALID_ARGUMENTの再分類を許容する
+
+**Status:** Accepted  
+**Date:** 2026-11-08  
+**Scope:** Validation / Result Classification / Internal Integrity / Fail-stop
+
+**Updates:** 2026-10-03「caller-controlled input failureとestablished internal state corruptionを区別し、`DATA_CORRUPTED`をvalidator failureから機械的に導出しない」の内部Module間Result Propagationに関する判断を限定的に改訂する。
+
+### Decision
+
+Calleeは、自身が観測できるInput Contractに従ってError Classificationを行う。
+
+Callerから渡されたInputがRequired Validityを満たさない場合、CalleeはそのInputの生成元やCallerの内部状態を推測せず、通常どおり`INVALID_ARGUMENT`等を返す。
+
+一方、Callerは、自身が保証するEstablished Internal Stateまたは成立済みInternal Contractに照らして、下位APIから返された`INVALID_ARGUMENT`が通常のOperationでは成立し得ず、内部整合性の破綻を示すと判断できる場合、当該Call Siteで`DATA_CORRUPTED`へ再分類してよい。
+
+この再分類はCall Siteごとの明確な根拠を必要とする。
+
+汎用Result Converterによる一律変換は行わない。
+
+### Context
+
+従来のResult Classificationでは、CalleeがCallerのContextやValue Provenanceを推測して`INVALID_ARGUMENT`を`DATA_CORRUPTED`へ再分類しない方針を採用していた。
+
+この考え方は、Module間の責務境界を明確にする上で有効である。
+
+しかし、Model FrameworkのAssembly ConfigやTransform Treeの構築・複製を検討する中で、別の問題が明らかになった。
+
+Calleeが受け取るInputについて、Caller側ではすでにValidであることが内部契約として保証されている場合がある。
+
+このとき下位APIから`INVALID_ARGUMENT`が返されたなら、Caller側では成立済み内部契約が破綻した可能性を判断できる。
+
+それにもかかわらず、単純に`INVALID_ARGUMENT`を伝播すると、CallerはRecoverable FailureとしてCleanupへ進む可能性がある。
+
+しかし、内部状態の整合性を信頼できない場合、そのCleanup自体が二次破壊を引き起こす危険がある。
+
+そこで、CalleeのInput Classificationを維持しながら、Caller自身が保証する契約に限ってResult Classificationを変更できる方式を採用した。
+
+### Rationale
+
+- CalleeはCallerの内部事情を知らず、自身のInput Contractだけを扱えばよい。
+- Callerは自身が保証するEstablished Internal StateやInternal Contractを根拠として、Failureの意味をより正確に判断できる。
+- Recoverable FailureとInternal Integrity Failureを区別できる。
+- Internal Integrity Failureを検出した際にFail-stopへ移行し、危険なCleanupを回避できる。
+- 汎用Result ConverterへContext依存の判定を持ち込まずに済む。
+- 再分類の根拠を個々のCall Siteで確認できる。
+
+### Rejected Alternatives
+
+- **CalleeがCallerのContextを推測して再分類する。** Calleeの責務外にある情報を要求することになる。
+- **すべての`INVALID_ARGUMENT`を`DATA_CORRUPTED`へ変換する。** 通常のInput FailureまでInternal Corruptionとして誤分類する。
+- **汎用Result Converterへ再分類を追加する。** Call Site固有の契約を汎用変換処理では判断できない。
+- **Callerでも常に`INVALID_ARGUMENT`をそのまま伝播する。** Caller自身が内部契約の破綻を判断できる場合にもRecoverable Cleanupへ進む可能性がある。
+
+### Consequences
+
+- Resultの再分類は個別のCall Siteで行う。
+- `INVALID_ARGUMENT`が返されたという事実だけでは再分類しない。
+- Temporary Valueの生成ミス等、Established Internal Stateの破損を示す根拠がないFailureは、機械的に`DATA_CORRUPTED`へ変換しない。
+- `DATA_CORRUPTED`へ再分類した場合は、通常のFail-stop規則に従う。
+- 既存のResult Propagationを一括変更せず、変更対象Moduleから順次適用する。
+
+2026-10-03のDecisionで採用した、Caller-controlled InputとEstablished Internal Stateを区別する原則、およびCalleeがInput Provenanceを推測しない原則は維持する。
+
+変更するのは、Caller自身が成立済み内部契約の違反を判断できる場合に、そのCall Siteでの限定的な再分類を許容する点である。
+
+詳細なResult ClassificationとFail-stopの規則は`validation_policy.md`を正本とする。
+
+### Revisit Conditions
+
+- 同じ再分類処理が多数のCall Siteへ広がり、明確な共通Contractが抽出できる場合。
+- Result Codeだけでは内部契約違反と通常のInput Failureを識別できず、追加のError Contextが必要となる場合。
+- Process IsolationやIPC導入により、ResultとFailure Contextの伝播方式を再設計する必要が生じた場合。
+
+### Related Documents
+
+- `validation_policy.md`
+- 2026-10-03「caller-controlled input failureとestablished internal state corruptionを区別し、`DATA_CORRUPTED`をvalidator failureから機械的に導出しない」
+- `boundary_model.md`

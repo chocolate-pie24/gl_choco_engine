@@ -82,6 +82,18 @@
  */
 #define GLCE_BUILD_MEMORY_POOL_SIZE (256ULL * 1024ULL * 1024ULL)
 
+/* =========================================================================
+ * Validation
+ * =========================================================================
+ *
+ * O(n)以上のdiagnostic validationの実行を制御する。
+ *
+ * 0: O(1) validationのみ実行
+ * 1: O(n)以上のvalidationも実行
+ *
+ * BUILD_MODEとは独立した設定とする。
+ */
+#define ENABLE_VALID_DEEP 1
 
 /* =========================================================================
  * Configuration validation
@@ -111,6 +123,10 @@
 
 #if GLCE_BUILD_MEMORY_POOL_SIZE <= 0
 #error "GLCE memory pool size must be greater than zero."
+#endif
+
+#if ENABLE_VALID_DEEP != 0 && ENABLE_VALID_DEEP != 1
+#error "ENABLE_VALID_DEEP must be 0 or 1."
 #endif
 
 #endif
