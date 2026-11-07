@@ -57,8 +57,6 @@
 // Renderer System
 #include "engine/systems/renderer/core/renderer_types.h"
 
-#include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
-
 #include "engine/systems/renderer/resources/geometries/generators/line_grid_geometry.h"
 #include "engine/systems/renderer/resources/meshes/line_mesh.h"
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
@@ -115,9 +113,8 @@ typedef struct application_state {
     ambient_light_t ambient_light;
 
     // Renderer System
-    renderer_frontend_t* renderer_frontend;
-    renderer_backend_context_t* renderer_backend_context;
     renderer_frontend_config_t renderer_frontend_config;
+    renderer_frontend_t* renderer_frontend;
 
     // Frame State
     application_frame_state_t frame_state;
@@ -161,7 +158,6 @@ application_result_t application_create(void) {
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
     light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
-    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     size_t subsystem_memory_pool_size = 0;
@@ -252,18 +248,9 @@ application_result_t application_create(void) {
     }
 
     // Renderer Backend / Frontend
-    INFO_MESSAGE("Creating renderer backend...");
-    ret_renderer_backend = renderer_backend_create(tmp_state->subsystem_allocator, &tmp_state->renderer_backend_context);
-    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = application_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("application_create(%s) - Failed to create renderer backend.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("renderer backend created successfully.");
-
     INFO_MESSAGE("Creating renderer frontend...");
     renderer_frontend_config_initialize(&tmp_state->renderer_frontend_config);
-    ret_renderer_frontend = renderer_frontend_create(&tmp_state->renderer_frontend_config, tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", tmp_state->renderer_backend_context, &tmp_state->renderer_frontend);
+    ret_renderer_frontend = renderer_frontend_create(&tmp_state->renderer_frontend_config, tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_state->renderer_frontend);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("application_create(%s) - renderer_frontend_create failed.", application_result_to_str(ret));
@@ -346,10 +333,7 @@ cleanup:
             }
         }
         if(NULL != tmp_state->renderer_frontend) {
-            renderer_frontend_deinitialize(tmp_state->renderer_backend_context, tmp_state->renderer_frontend);
-        }
-        if(NULL != tmp_state->renderer_backend_context) {
-            renderer_backend_deinitialize(tmp_state->renderer_backend_context);
+            renderer_frontend_deinitialize(tmp_state->renderer_frontend);
         }
         if(NULL != tmp_state->flight_camera) {
             application_flight_camera_deinitialize(tmp_state->flight_camera);
@@ -404,10 +388,7 @@ void application_destroy(void) {
         }
     }
     if(NULL != s_application_state->renderer_frontend) {
-        renderer_frontend_deinitialize(s_application_state->renderer_backend_context, s_application_state->renderer_frontend);
-    }
-    if(NULL != s_application_state->renderer_backend_context) {
-        renderer_backend_deinitialize(s_application_state->renderer_backend_context);
+        renderer_frontend_deinitialize(s_application_state->renderer_frontend);
     }
     if(NULL != s_application_state->flight_camera) {
         application_flight_camera_deinitialize(s_application_state->flight_camera);
@@ -481,7 +462,7 @@ application_result_t application_run(void) {
     s_application_state->frame_state.projection_dirty = true;
     s_application_state->frame_state.view_dirty = true;
     s_application_state->frame_state.window_resized = true;
-    ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
+    ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_render_update failed.", application_result_to_str(ret));
@@ -565,7 +546,7 @@ application_result_t application_run(void) {
                 continue;
             }
 
-            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_untextured_mesh, &tmp_model_matrix);
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, &tmp_untextured_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
                 ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
                 ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
@@ -578,7 +559,7 @@ application_result_t application_run(void) {
                 continue;
             }
 
-            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_untextured_mesh, &tmp_model_matrix);
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, &tmp_untextured_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
                 ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
                 ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
@@ -605,7 +586,7 @@ application_result_t application_run(void) {
                 continue;
             }
 
-            ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_line_mesh, &tmp_model_matrix);
+            ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, &tmp_line_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
                 ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
                 ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
@@ -618,7 +599,7 @@ application_result_t application_run(void) {
                 continue;
             }
 
-            ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_line_mesh, &tmp_model_matrix);
+            ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, &tmp_line_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
                 ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
                 ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
@@ -645,7 +626,7 @@ application_result_t application_run(void) {
                 continue;
             }
 
-            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_untextured_mesh, &tmp_model_matrix);
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, &tmp_untextured_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
                 ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
                 ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
@@ -658,7 +639,7 @@ application_result_t application_run(void) {
                 continue;
             }
 
-            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &tmp_untextured_mesh, &tmp_model_matrix);
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, &tmp_untextured_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
                 ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
                 ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
@@ -667,7 +648,7 @@ application_result_t application_run(void) {
         }
 
         // Floor Grid
-        ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, s_application_state->floor_grid_line_mesh, &s_application_state->floor_grid_model_matrix);
+        ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, s_application_state->floor_grid_line_mesh, &s_application_state->floor_grid_model_matrix);
         if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
             ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
             ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
@@ -721,14 +702,14 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
-    ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
+    ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("app_state_update(%s) - renderer_frontend_untextured_mesh_render_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_renderer_frontend = renderer_frontend_line_mesh_render_update(s_application_state->renderer_frontend, s_application_state->renderer_backend_context, &s_application_state->view_matrix, &s_application_state->projection_matrix);
+    ret_renderer_frontend = renderer_frontend_line_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("app_state_update(%s) - renderer_frontend_line_mesh_render_update failed.", application_result_to_str(ret));

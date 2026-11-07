@@ -10,6 +10,7 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/base/choco_math/math_types.h"
 
@@ -22,7 +23,6 @@ typedef struct renderer_frontend renderer_frontend_t;
 typedef struct subsystem_allocator subsystem_allocator_t;
 typedef struct directional_light directional_light_t;
 typedef struct ambient_light ambient_light_t;
-typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct untextured_mesh_config untextured_mesh_config_t;
 typedef struct untextured_mesh untextured_mesh_t;
 typedef struct line_vertex line_vertex_t;
@@ -54,9 +54,9 @@ typedef struct {
     untextured_mesh_resource_config_t untextured_mesh_resource_config;
 } renderer_frontend_config_t;
 
-renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_config_t* config_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, renderer_backend_context_t* backend_context_, renderer_frontend_t** out_renderer_frontend_);
+renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_config_t* config_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, renderer_frontend_t** out_renderer_frontend_);
 
-void renderer_frontend_deinitialize(renderer_backend_context_t* backend_context_, renderer_frontend_t* renderer_frontend_);
+void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_);
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // for Untexture Mesh
@@ -82,7 +82,7 @@ void renderer_frontend_deinitialize(renderer_backend_context_t* backend_context_
  * @retval RENDERER_FRONTEND_OVERFLOW Draw Rangeの算術計算でoverflowを検出
  * @return その他、Shader操作の失敗を変換したResult
  */
-renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_frontend_t* renderer_frontend_, const renderer_backend_context_t* backend_context_, const untextured_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
+renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
 
 /**
  * @brief Untextured Mesh描画用のView / Projection MatrixおよびLightを更新する
@@ -104,7 +104,7 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_front
  * @retval RENDERER_FRONTEND_INVALID_ARGUMENT 引数不正
  * @return その他、Shader操作の失敗を変換したResult
  */
-renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(renderer_frontend_t* renderer_frontend_, const renderer_backend_context_t* backend_context_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_);
+renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_, const directional_light_t* directional_light_, const ambient_light_t* ambient_light_);
 
 renderer_frontend_result_t renderer_frontend_untextured_mesh_import(renderer_frontend_t* renderer_frontend_, const untextured_mesh_config_t* config_, const char* asset_root_path_, untextured_mesh_t* out_mesh_);
 
@@ -117,15 +117,17 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_local_aabb_get(cons
 //////////////////////////////////////////////////////////////////////////////////////////
 // for Line Mesh
 //////////////////////////////////////////////////////////////////////////////////////////
-renderer_frontend_result_t renderer_frontend_line_mesh_draw(renderer_frontend_t* renderer_frontend_, const renderer_backend_context_t* backend_context_, const line_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
+renderer_frontend_result_t renderer_frontend_line_mesh_draw(renderer_frontend_t* renderer_frontend_, const line_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
 
-renderer_frontend_result_t renderer_frontend_line_mesh_render_update(renderer_frontend_t* renderer_frontend_, const renderer_backend_context_t* backend_context_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
+renderer_frontend_result_t renderer_frontend_line_mesh_render_update(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
 
 renderer_frontend_result_t renderer_frontend_line_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const line_vertex_t* vertices_, size_t vertex_count_, line_mesh_t* out_mesh_);
 
 renderer_frontend_result_t renderer_frontend_line_mesh_import_from_aabb(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const aabb_3d_t* aabb_, vec4u8_t color_, line_mesh_t* out_mesh_);
 
 renderer_frontend_result_t renderer_frontend_line_mesh_release(renderer_frontend_t* renderer_frontend_, const line_mesh_t* mesh_);
+
+bool renderer_frontend_is_valid(const renderer_frontend_t* renderer_frontend_);
 
 #ifdef __cplusplus
 }
