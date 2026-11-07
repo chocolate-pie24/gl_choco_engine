@@ -9,6 +9,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
@@ -40,7 +41,7 @@ mesh_result_t untextured_mesh_config_initialize(
 
 void untextured_mesh_config_deinitialize(untextured_mesh_config_t* config_);
 
-// TODO: validator追加
+bool untextured_mesh_config_is_valid(const untextured_mesh_config_t* config_);
 
 #ifdef __cplusplus
 }

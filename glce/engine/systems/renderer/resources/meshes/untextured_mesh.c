@@ -3,11 +3,13 @@
 
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+
+#include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/containers/choco_string.h"
 
@@ -141,6 +143,12 @@ void untextured_mesh_config_deinitialize(untextured_mesh_config_t* config_) {
     if(NULL == config_) {
         return;
     }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!untextured_mesh_config_is_valid(config_)) {
+        ERROR_MESSAGE("untextured_mesh_config_deinitialize(%s) - Precondition validation failed for 'config_'.", mesh_result_to_str(MESH_DATA_CORRUPTED));
+        return;
+    }
+#endif
     if(NULL != config_->geometry_subdirectory) {
         choco_string_destroy(&config_->geometry_subdirectory);
     }
@@ -160,4 +168,36 @@ void untextured_mesh_config_deinitialize(untextured_mesh_config_t* config_) {
     if(NULL != config_->material_extension) {
         choco_string_destroy(&config_->material_extension);
     }
+}
+
+bool untextured_mesh_config_is_valid(const untextured_mesh_config_t* config_) {
+    if(NULL == config_) {
+        return false;
+    }
+
+    const choco_string_t* strings[] = {
+        config_->geometry_subdirectory,
+        config_->geometry_resource_name,
+        config_->geometry_extension,
+        config_->material_subdirectory,
+        config_->material_resource_name,
+        config_->material_extension
+    };
+
+    const size_t string_count = sizeof(strings) / sizeof(strings[0]);
+    for(size_t i = 0; i != string_count; ++i) {
+        if(NULL == strings[i]) {
+            return false;
+        }
+
+        if(!general_allocator_ptr_is_allocated(strings[i])) {
+            return false;
+        }
+
+        if(!choco_string_is_valid(strings[i])) {
+            return false;
+        }
+    }
+
+    return true;
 }

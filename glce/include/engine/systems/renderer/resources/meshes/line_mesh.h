@@ -9,19 +9,31 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
-#include "engine/base/choco_math/math_types.h"
+#include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
 typedef struct choco_string choco_string_t;
 
 typedef struct line_mesh_config {
     choco_string_t* geometry_subdirectory;  // assetsからの相対パス
     choco_string_t* geometry_resource_name;
+    choco_string_t* geometry_extension;
 } line_mesh_config_t;
 
 typedef struct line_mesh {
     uint16_t geometry_id;
 } line_mesh_t;
+
+mesh_result_t line_mesh_config_initialize(
+    const char* geometry_subdirectory_,
+    const char* geometry_resource_name_,
+    const char* geometry_extension_,
+    line_mesh_config_t* out_config_);
+
+void line_mesh_config_deinitialize(line_mesh_config_t* config_);
+
+bool line_mesh_config_is_valid(const line_mesh_config_t* config_);
 
 #ifdef __cplusplus
 }
