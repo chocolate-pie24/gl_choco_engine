@@ -12,6 +12,7 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
 
+#include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/core/geometry_primitive/aabb_3d.h"
@@ -44,6 +45,15 @@
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_err_utils.h"
 
+/*
+ * Module validation policy.
+ * Renderer Frontendは、ResourceのSemantic Validationを各下位モジュールへ委譲する。
+ * create()およびdeinitialize()では、Frontend全体のOwnership Closureを検証するため、DEBUG / TESTにおいてCanonical Validatorを実行する。
+ * その他の公開APIでは、Frontend全体のCanonical Validatorを実行しない。
+ * 各APIは自身のPrecondition、Orchestrationに固有の整合条件、RollbackおよびCommitの成立条件を検証する。
+ * RELEASEでは、APIを安全かつ有界に実行するために必要な条件を検証し、内部Invariantの診断を目的とするCanonical Validationは実行しない。
+ */
+
 // 将来的にrenderer_frontend/render_resourcesに移しても良い(ただしapplicationには非公開とし、窓口はあくまでrenderer_frontendにする)
 typedef struct {
     line_mesh_shader_t* shader;
@@ -72,6 +82,10 @@ static void line_mesh_render_resource_deinitialize(renderer_backend_context_t* b
 static renderer_frontend_result_t untextured_mesh_render_resource_create(subsystem_allocator_t* allocator_, const untextured_mesh_resource_config_t *config_, renderer_backend_context_t* backend_context_, const char* executable_directory_, const char* shader_dir_, untextured_mesh_render_resource_t** out_render_resource_);
 static void untextured_mesh_render_resource_deinitialize(renderer_backend_context_t* backend_context_, untextured_mesh_render_resource_t* render_resource_);
 
+// Validators.
+static bool untextured_mesh_render_resource_is_valid(const renderer_backend_context_t* backend_context_, const untextured_mesh_render_resource_t* render_resource_);
+static bool line_mesh_render_resource_is_valid(const renderer_backend_context_t* backend_context_, const line_mesh_render_resource_t* render_resource_);
+
 renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_config_t* config_, subsystem_allocator_t* allocator_, const char* executable_directory_, const char* shader_dir_, renderer_frontend_t** out_renderer_frontend_) {
     renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
@@ -94,9 +108,6 @@ renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_conf
     IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_create", "shader_dir_")
     IF_ARG_NULL_GOTO_CLEANUP(out_renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_create", "out_renderer_frontend_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_frontend_, ret, RENDERER_FRONTEND_BAD_OPERATION, renderer_frontend_result_to_str(RENDERER_FRONTEND_BAD_OPERATION), "renderer_frontend_create", "*out_renderer_frontend_")
-    if(!subsystem_allocator_is_valid(allocator_)) {
-        // TODO: 追加
-    }
 
     // Prepare.
     ret_subsystem_allocator = subsystem_allocator_rollback_point_get(allocator_, &rollback_point);
@@ -141,7 +152,13 @@ renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_conf
     tmp_line_mesh_render_resource = NULL;
     tmp_untextured_mesh_render_resource = NULL;
 
-    // TODO: validation
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!renderer_frontend_is_valid(tmp_renderer_frontend)) {
+        ret = RENDERER_FRONTEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_frontend_create(%s) - Result validation failed for 'tmp_renderer_frontend'.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     // Output.
     *out_renderer_frontend_ = tmp_renderer_frontend;
@@ -160,6 +177,9 @@ cleanup:
     if(NULL != tmp_untextured_mesh_render_resource && NULL != tmp_renderer_backend) {
         untextured_mesh_render_resource_deinitialize(tmp_renderer_backend, tmp_untextured_mesh_render_resource);
     }
+    if(NULL != tmp_renderer_backend) {
+        renderer_backend_deinitialize(tmp_renderer_backend);
+    }
 
     if(rollback_point_created) {
         ret_subsystem_allocator = subsystem_allocator_rollback(allocator_, &rollback_point);
@@ -176,12 +196,21 @@ void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_) {
     if(NULL == renderer_frontend_) {
         return;
     }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!renderer_frontend_is_valid(renderer_frontend_)) {
+        ERROR_MESSAGE("renderer_frontend_deinitialize(%s) - Precondition validation failed for renderer_frontend_''.", renderer_frontend_result_to_str(RENDERER_FRONTEND_DATA_CORRUPTED));
+        return;
+    }
+#endif
 
     if(NULL != renderer_frontend_->line_mesh_render_resource && NULL != renderer_frontend_->renderer_backend_context) {
         line_mesh_render_resource_deinitialize(renderer_frontend_->renderer_backend_context, renderer_frontend_->line_mesh_render_resource);
     }
     if(NULL != renderer_frontend_->untextured_mesh_render_resource && NULL != renderer_frontend_->renderer_backend_context) {
         untextured_mesh_render_resource_deinitialize(renderer_frontend_->renderer_backend_context, renderer_frontend_->untextured_mesh_render_resource);
+    }
+    if(NULL != renderer_frontend_->renderer_backend_context) {
+        renderer_backend_deinitialize(renderer_frontend_->renderer_backend_context);
     }
 }
 
@@ -701,6 +730,26 @@ bool renderer_frontend_is_valid(const renderer_frontend_t* renderer_frontend_) {
     if(NULL == renderer_frontend_) {
         return false;
     }
+
+    if(NULL == renderer_frontend_->renderer_backend_context ||
+       NULL == renderer_frontend_->line_mesh_render_resource ||
+       NULL == renderer_frontend_->untextured_mesh_render_resource) {
+        return false;
+    }
+
+    // Owned Backend ContextのCanonical Validity
+    if(!renderer_backend_is_valid(renderer_frontend_->renderer_backend_context)) {
+        return false;
+    }
+
+    if(!line_mesh_render_resource_is_valid(renderer_frontend_->renderer_backend_context, renderer_frontend_->line_mesh_render_resource)) {
+        return false;
+    }
+
+    if(!untextured_mesh_render_resource_is_valid(renderer_frontend_->renderer_backend_context, renderer_frontend_->untextured_mesh_render_resource)) {
+        return false;
+    }
+
     return true;
 }
 
@@ -988,4 +1037,74 @@ static void untextured_mesh_render_resource_deinitialize(renderer_backend_contex
     if(NULL != render_resource_->vbo_manager && NULL != backend_context_) {
         vbo_manager_destroy(&render_resource_->vbo_manager);
     }
+}
+
+static bool line_mesh_render_resource_is_valid(const renderer_backend_context_t* backend_context_, const line_mesh_render_resource_t* render_resource_) {
+
+    if(NULL == backend_context_ || NULL == render_resource_) {
+        return false;
+    }
+
+    if(NULL == render_resource_->shader ||
+       NULL == render_resource_->geometry_registry ||
+       NULL == render_resource_->vbo_manager) {
+        return false;
+    }
+
+    // General Allocator管理のOwned Resource
+    if(!general_allocator_ptr_is_allocated(render_resource_->shader)) {
+        return false;
+    }
+    if(!general_allocator_ptr_is_allocated(render_resource_->vbo_manager)) {
+        return false;
+    }
+
+    if(!vbo_manager_is_valid(render_resource_->vbo_manager)) {
+        return false;
+    }
+    if(!line_mesh_shader_is_valid(backend_context_, render_resource_->shader)) {
+        return false;
+    }
+    if(!line_mesh_geometry_registry_is_valid(render_resource_->geometry_registry)) {
+        return false;
+    }
+
+    return true;
+}
+
+static bool untextured_mesh_render_resource_is_valid(const renderer_backend_context_t* backend_context_, const untextured_mesh_render_resource_t* render_resource_) {
+
+    if(NULL == backend_context_ || NULL == render_resource_) {
+        return false;
+    }
+
+    if(NULL == render_resource_->shader ||
+       NULL == render_resource_->geometry_registry ||
+       NULL == render_resource_->material_registry ||
+       NULL == render_resource_->vbo_manager) {
+        return false;
+    }
+
+    // General Allocator管理のOwned Resource
+    if(!general_allocator_ptr_is_allocated(render_resource_->shader)) {
+        return false;
+    }
+    if(!general_allocator_ptr_is_allocated(render_resource_->vbo_manager)) {
+        return false;
+    }
+
+    if(!vbo_manager_is_valid(render_resource_->vbo_manager)) {
+        return false;
+    }
+    if(!untextured_mesh_shader_is_valid(backend_context_, render_resource_->shader)) {
+        return false;
+    }
+    if(!untextured_mesh_geometry_registry_is_valid(render_resource_->geometry_registry)) {
+        return false;
+    }
+    if(!untextured_mesh_material_registry_is_valid(render_resource_->material_registry)) {
+        return false;
+    }
+
+    return true;
 }
