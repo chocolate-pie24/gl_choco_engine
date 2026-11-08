@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "config/build_config.h"
+
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
@@ -32,6 +34,10 @@ model_framework_result_t untextured_model_assembly_config_create(
 
     untextured_model_assembly_config_t* tmp_config = NULL;
 
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    untextured_model_assembly_config_t input = { 0 };   // for Preconditions
+#endif
+
     IF_ARG_NULL_GOTO_CLEANUP(coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "coordinate_configs_")
     IF_ARG_NULL_GOTO_CLEANUP(*coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "*coordinate_configs_")
     IF_ARG_NULL_GOTO_CLEANUP(mesh_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "mesh_coordinate_ids_")
@@ -50,10 +56,25 @@ model_framework_result_t untextured_model_assembly_config_create(
         ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - Provided mesh_count_ is not valid.", model_framework_result_to_str(ret));
         goto cleanup;
     }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    input.coordinate_count = coordinate_count_;
+    input.coordinate_configs = *coordinate_configs_;
+    input.mesh_count = mesh_count_;
+    input.mesh_coordinate_ids = *mesh_coordinate_ids_;
+    input.mesh_configs = *mesh_configs_;
+    if(!untextured_model_assembly_config_is_valid(&input)) {
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - Precondition validation failed.", model_framework_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_assembly_config_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_config);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
+            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        }
         ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -64,15 +85,6 @@ model_framework_result_t untextured_model_assembly_config_create(
     tmp_config->mesh_count = mesh_count_;
     tmp_config->mesh_coordinate_ids = *mesh_coordinate_ids_;
     tmp_config->mesh_configs = *mesh_configs_;
-
-    // Result validation.
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!untextured_model_assembly_config_is_valid(tmp_config)) {
-        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - Result validation failed for 'tmp_config'.", model_framework_result_to_str(ret));
-        goto cleanup;
-    }
-#endif
 
     *out_config_ = tmp_config;
     tmp_config = NULL;
@@ -88,13 +100,15 @@ cleanup:
 }
 
 void untextured_model_assembly_config_destroy(untextured_model_assembly_config_t** config_) {
-    if(NULL == config_) {
+    if(NULL == config_ || NULL == *config_) {
         return;
     }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!untextured_model_assembly_config_is_valid(*config_)) {
         ERROR_MESSAGE("untextured_model_assembly_config_destroy(%s) - Provided config_ is corrupted.", model_framework_result_to_str(MODEL_FRAMEWORK_DATA_CORRUPTED));
         return;
     }
+#endif
     for(size_t i = 0; i != (*config_)->coordinate_count; ++i) {
         model_coordinate_config_deinitialize(&(*config_)->coordinate_configs[i]);
     }
@@ -122,8 +136,6 @@ bool untextured_model_assembly_config_is_valid(const untextured_model_assembly_c
         return false;
     }
 
-    bool found_parent = false;
-
     // coordinate
     if(!general_allocator_ptr_is_allocated(config_->coordinate_configs)) {
         return false;
@@ -134,6 +146,8 @@ bool untextured_model_assembly_config_is_valid(const untextured_model_assembly_c
     if(NULL == config_->coordinate_configs) {
         return false;
     }
+#if ENABLE_VALID_DEEP == 1
+    bool found_parent = false;
     for(size_t i = 0; i != config_->coordinate_count; ++i) {
         if(!model_coordinate_config_is_valid(&config_->coordinate_configs[i])) {
             return false;
@@ -162,6 +176,7 @@ bool untextured_model_assembly_config_is_valid(const untextured_model_assembly_c
             return false;
         }
     }
+#endif
 
     if(0 == config_->mesh_count) {
         return false;
@@ -175,6 +190,13 @@ bool untextured_model_assembly_config_is_valid(const untextured_model_assembly_c
     if(!general_allocator_ptr_is_allocated(config_->mesh_configs)) {
         return false;
     }
+#if ENABLE_VALID_DEEP == 1
+    for(size_t i = 0; i != config_->mesh_count; ++i) {
+        if(!untextured_mesh_config_is_valid(&config_->mesh_configs[i])) {
+            return false;
+        }
+    }
+#endif
 
     return true;
 }

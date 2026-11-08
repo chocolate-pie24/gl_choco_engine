@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "config/build_config.h"
+
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
@@ -218,6 +220,9 @@ model_framework_result_t untextured_model_resource_map_create(
     ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_resource_map_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_resource_map);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
+            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        }
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -225,6 +230,9 @@ model_framework_result_t untextured_model_resource_map_create(
     ret_choco_string = choco_string_create_from_c_string(resource_map_name_, &tmp_resource_map_name);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
         ret = model_framework_result_convert_choco_string(ret_choco_string);
+        if(CHOCO_STRING_INVALID_ARGUMENT == ret_choco_string) {
+            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        }
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - choco_string_create_from_c_string failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -643,6 +651,15 @@ bool untextured_model_resource_map_is_valid(const untextured_model_resource_map_
     if(!general_allocator_ptr_is_allocated(resource_map_->debug_aabb_meshes) || !general_allocator_ptr_is_allocated(resource_map_->debug_aabb_mesh_coordinate_ids)) {
         return false;
     }
+
+    // Untextured MeshとDebug AABB Meshの整合性
+#if ENABLE_VALID_DEEP == 1
+    for(size_t i = 0; i != resource_map_->untextured_mesh_count; ++i) {
+        if(resource_map_->untextured_mesh_coordinate_ids[i] != resource_map_->debug_aabb_mesh_coordinate_ids[i]) {
+            return false;
+        }
+    }
+#endif
 
     // Debug Axis Mesh.
     if(NULL == resource_map_->axis_meshes || NULL == resource_map_->axis_mesh_coordinate_ids) {

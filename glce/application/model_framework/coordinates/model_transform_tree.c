@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "config/build_config.h"
+
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/math_types.h"
@@ -57,7 +59,6 @@ struct model_transform_tree {
 // Private Function Declarations
 // ============================================================
 static model_transform_node_t* node_find_by_id(model_transform_node_t* node_, uint16_t coordinate_id_);
-static bool is_valid_shallow(const model_transform_tree_t* transform_tree_);
 
 // ============================================================
 // Public API
@@ -100,6 +101,9 @@ model_framework_result_t model_transform_tree_create(uint16_t coordinate_id_, mo
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_tree_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_tree);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
+            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        }
         ERROR_MESSAGE("model_transform_tree_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -107,6 +111,9 @@ model_framework_result_t model_transform_tree_create(uint16_t coordinate_id_, mo
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_root_node);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
+            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        }
         ERROR_MESSAGE("model_transform_tree_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -326,17 +333,12 @@ model_framework_result_t model_transform_tree_add_child(model_transform_tree_t* 
     IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_add_child", "transform_tree_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_add_child(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
-        goto cleanup;
-    }
-#else
-    if(!is_valid_shallow(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
         ERROR_MESSAGE("model_transform_tree_add_child(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 #endif
+
     if(NULL != node_find_by_id(transform_tree_->root, coordinate_id_)) {
         ret = MODEL_FRAMEWORK_BAD_OPERATION;
         ERROR_MESSAGE("model_transform_tree_add_child(%s) - Provided coordinate_id_ is already registered.", model_framework_result_to_str(ret));
@@ -353,6 +355,9 @@ model_framework_result_t model_transform_tree_add_child(model_transform_tree_t* 
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&child);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
+        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
+            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        }
         ERROR_MESSAGE("model_transform_tree_add_child(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -412,17 +417,12 @@ model_framework_result_t model_transform_tree_rotation_set(model_transform_tree_
     IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_rotation_set", "transform_tree_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_rotation_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
-        goto cleanup;
-    }
-#else
-    if(!is_valid_shallow(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
         ERROR_MESSAGE("model_transform_tree_rotation_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 #endif
+
     node = node_find_by_id(transform_tree_->root, coordinate_id_);
     if(NULL == node) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -464,17 +464,12 @@ model_framework_result_t model_transform_tree_translate_set(model_transform_tree
     IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_translate_set", "transform_tree_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_translate_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
-        goto cleanup;
-    }
-#else
-    if(!is_valid_shallow(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
         ERROR_MESSAGE("model_transform_tree_translate_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 #endif
+
     node = node_find_by_id(transform_tree_->root, coordinate_id_);
     if(NULL == node) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -527,17 +522,12 @@ model_framework_result_t model_transform_tree_world_matrix_get(const model_trans
     IF_ARG_NULL_GOTO_CLEANUP(out_matrix_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_world_matrix_get", "out_matrix_")
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        ERROR_MESSAGE("model_transform_tree_world_matrix_get(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
-        goto cleanup;
-    }
-#else
-    if(!is_valid_shallow(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
+        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
         ERROR_MESSAGE("model_transform_tree_world_matrix_get(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 #endif
+
     node = node_find_by_id(transform_tree_->root, coordinate_id_);
     if(NULL == node) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -585,21 +575,11 @@ cleanup:
 bool model_transform_tree_is_valid(const model_transform_tree_t* transform_tree_) {
     // Generated by ChatGPT
     const model_transform_node_t* root = NULL;
-    const model_transform_node_t* node = NULL;
-    const model_transform_node_t* next = NULL;
-
-    const size_t max_nodes = (size_t)UINT16_MAX + 1U;
-
-    size_t visited_count = 0;
-    size_t backtrack_count = 0;
 
     if(NULL == transform_tree_) {
         return false;
     }
-    if(!general_allocator_ptr_is_allocated(transform_tree_)) {
-        return false;
-    }
-    if(!is_valid_shallow(transform_tree_)) {
+    if(NULL == transform_tree_->root) {
         return false;
     }
 
@@ -610,9 +590,20 @@ bool model_transform_tree_is_valid(const model_transform_tree_t* transform_tree_
     if(NULL != root->parent || NULL != root->next) {
         return false;
     }
+    if(!vec3f_is_finite(root->translate) || !vec3f_is_finite(root->rotation)) {
+        return false;
+    }
+
+#if ENABLE_VALID_DEEP == 1
+    const model_transform_node_t* node = NULL;
+    const model_transform_node_t* next = NULL;
+
+    const size_t max_nodes = (size_t)UINT16_MAX + 1U;
+
+    size_t visited_count = 0;
+    size_t backtrack_count = 0;
 
     node = root;
-
     while(NULL != node) {
         if(++visited_count > max_nodes) {
             return false;
@@ -660,8 +651,8 @@ bool model_transform_tree_is_valid(const model_transform_tree_t* transform_tree_
         }
         node = next;
     }
-
-    return false;
+#endif
+    return true;
 }
 
 /*
@@ -710,27 +701,4 @@ static model_transform_node_t* node_find_by_id(model_transform_node_t* node_, ui
     }
 
     return NULL;
-}
-
-/*
- * is_valid_shallow() Validation
- *
- * Purpose:
- * - TreeのRootが存在することを確認し、
- *   後続処理がRootを起点としたOperationを開始できるようにする。
- *
- * Validation Scope:
- * - transform_tree_がNULLではないこと。
- * - transform_tree_->rootがNULLではないこと。
- * - Rootが指すStorageはDereferenceしない。
- * - Allocation生存状態やNode間のStructural Relationは検証しない。
- */
-static bool is_valid_shallow(const model_transform_tree_t* transform_tree_) {
-    if(NULL == transform_tree_) {
-        return false;
-    }
-    if(NULL == transform_tree_->root) {
-        return false;
-    }
-    return true;
 }

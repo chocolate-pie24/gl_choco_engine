@@ -13,6 +13,7 @@
 #include "application/model_framework/core/model_framework_types.h"
 #include "application/model_framework/core/model_framework_err_utils.h"
 
+// NOTE: translate_, rotation_のfiniteチェックはfile I/Oのところで実行するためここではチェックは行わない(一方、validatorでは破損チェックのためにチェックを行う)
 model_framework_result_t model_coordinate_config_initialize(uint16_t coordinate_id_, uint16_t parent_coordinate_id_, vec3f_t translate_, vec3f_t rotation_, model_coordinate_config_t* out_config_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
