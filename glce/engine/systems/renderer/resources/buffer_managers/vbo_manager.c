@@ -84,14 +84,13 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/memory/low_level_allocators/range_allocator/range_allocator.h"
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_vbo.h"
-
-#include "engine/systems/renderer/resources/allocators/range_allocator.h"
 
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_err_utils.h"
@@ -135,8 +134,6 @@ struct vbo_manager {
     renderer_backend_vbo_t* vbo;            /**< 所有するRenderer Backend VBO */
 };
 
-static bool vbo_manager_is_valid(const vbo_manager_t* vbo_manager_);
-
 buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_context_, const vbo_manager_config_t* config_, vbo_manager_t** out_vbo_manager_) {
     buffer_manager_result_t ret = BUFFER_MANAGER_INVALID_ARGUMENT;
 
@@ -148,14 +145,17 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
     range_allocator_t* tmp_allocator = NULL;
     renderer_backend_vbo_t* tmp_vbo = NULL;
 
-    bool vbo_created = false;
     bool vbo_bound = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "backend_context_")
     IF_ARG_NULL_GOTO_CLEANUP(config_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "config_")
     IF_ARG_NULL_GOTO_CLEANUP(out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "out_vbo_manager_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "*out_vbo_manager_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_config_is_valid(config_), ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_result_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "config_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_manager_, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_result_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "*out_vbo_manager_")
+    if(!vbo_manager_config_is_valid(config_)) {
+        ret = BUFFER_MANAGER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("vbo_manager_create(%s) - Provided config_ is not valid.", buffer_manager_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret_general_allocator = general_allocator_allocate(sizeof(vbo_manager_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -177,7 +177,6 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
         ERROR_MESSAGE("vbo_manager_create(%s) - Failed to create VBO Manager. reason=renderer_backend_vbo_create_failed, renderer_result=%d", buffer_manager_result_to_str(ret), (int)ret_renderer_backend);
         goto cleanup;
     }
-    vbo_created = true;
 
     ret_renderer_backend = renderer_backend_vbo_bind(backend_context_, tmp_vbo);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
@@ -207,27 +206,41 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
     tmp_vbo_manager->vbo = tmp_vbo;
     tmp_vbo_manager->backend_context = backend_context_;
 
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!vbo_manager_is_valid(tmp_vbo_manager)) {
+        ret = BUFFER_MANAGER_DATA_CORRUPTED;
+        ERROR_MESSAGE("vbo_manager_create(%s) - Result validation failed for 'tmp_vbo_manager'.", buffer_manager_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
     *out_vbo_manager_ = tmp_vbo_manager;
+    tmp_vbo_manager = NULL;
+    tmp_allocator = NULL;
+    tmp_vbo = NULL;
 
     ret = BUFFER_MANAGER_SUCCESS;
 
 cleanup:
-    if(BUFFER_MANAGER_SUCCESS != ret) {
-        if(vbo_created) {
-            if(vbo_bound) {
-                ret_renderer_backend = renderer_backend_vbo_unbind(backend_context_);
-                if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-                    ERROR_MESSAGE("vbo_manager_create(%s) - Failed to rollback VBO Manager creation. reason=renderer_backend_vbo_unbind_failed, original_result=%s, renderer_result=%d", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_result_to_str(ret), (int)ret_renderer_backend);
-                    ret = BUFFER_MANAGER_DATA_CORRUPTED;
-                }
-            }
-            renderer_backend_vbo_destroy(backend_context_, &tmp_vbo);
+    if(BUFFER_MANAGER_DATA_CORRUPTED == ret || BUFFER_MANAGER_SUCCESS == ret) {
+        return ret;
+    }
+    if(vbo_bound) {
+        ret_renderer_backend = renderer_backend_vbo_unbind(backend_context_);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ERROR_MESSAGE("vbo_manager_create(%s) - Failed to rollback VBO Manager creation. reason=renderer_backend_vbo_unbind_failed, original_result=%s, renderer_result=%d", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_result_to_str(ret), (int)ret_renderer_backend);
+            ret = BUFFER_MANAGER_DATA_CORRUPTED;
+            return ret;
         }
-
+    }
+    if(NULL != tmp_vbo) {
+        renderer_backend_vbo_destroy(backend_context_, &tmp_vbo);
+    }
+    if(NULL != tmp_allocator) {
         range_allocator_destroy(&tmp_allocator);
-        if(NULL != tmp_vbo_manager) {
-            general_allocator_free((void**)&tmp_vbo_manager, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-        }
+    }
+    if(NULL != tmp_vbo_manager) {
+        general_allocator_free((void**)&tmp_vbo_manager, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
     return ret;
 }
@@ -239,6 +252,12 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_) {
     if(NULL == *vbo_manager_) {
         return;
     }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!vbo_manager_is_valid(*vbo_manager_)) {
+        ERROR_MESSAGE("vbo_manager_destroy(%s) - Precondition validation failed for '*vbo_manager_'.", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED));
+        return;
+    }
+#endif
     renderer_backend_vbo_destroy((*vbo_manager_)->backend_context, &(*vbo_manager_)->vbo);
     range_allocator_destroy(&(*vbo_manager_)->range_allocator);
 
@@ -254,14 +273,23 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t si
     range_allocation_t tmp_allocation = { 0 };
 
     bool allocate_success = false;
-    bool load_success = false;
     bool vbo_bound = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "vbo_manager_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "write_data_")
     IF_ARG_NULL_GOTO_CLEANUP(out_allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "out_allocation_handle_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_write", "vbo_manager_")
+    if(0 == size_) {
+        ret = BUFFER_MANAGER_INVALID_ARGUMENT;
+        ERROR_MESSAGE("vbo_manager_write(%s) - Provided size_ is not valid.", buffer_manager_result_to_str(ret));
+        goto cleanup;
+    }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!vbo_manager_is_valid(vbo_manager_)) {
+        ret = BUFFER_MANAGER_DATA_CORRUPTED;
+        ERROR_MESSAGE("vbo_manager_write(%s) - Precondition validation failed for 'vbo_manager_'.", buffer_manager_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     if(0 != (size_ % vbo_manager_->config.base_align)) {
         ret = BUFFER_MANAGER_BAD_OPERATION;
@@ -291,7 +319,6 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t si
         ERROR_MESSAGE("vbo_manager_write(%s) - Failed to write vertex data. reason=renderer_backend_vbo_vertex_subload_failed, write_offset=%zu, write_size=%zu, renderer_result=%d", buffer_manager_result_to_str(ret), tmp_allocation.offset, size_, (int)ret_renderer_backend);
         goto cleanup;
     }
-    load_success = true;
 
     ret_renderer_backend = renderer_backend_vbo_unbind(vbo_manager_->backend_context);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
@@ -301,27 +328,38 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t si
     }
     vbo_bound = false;
 
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!vbo_manager_is_valid(vbo_manager_)) {
+        ret = BUFFER_MANAGER_DATA_CORRUPTED;
+        ERROR_MESSAGE("vbo_manager_write(%s) - Postcondition validation failed for 'vbo_manager_'.", buffer_manager_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
     *out_allocation_handle_ = tmp_allocation;
 
     ret = BUFFER_MANAGER_SUCCESS;
 
 cleanup:
+    if(BUFFER_MANAGER_DATA_CORRUPTED == ret || BUFFER_MANAGER_SUCCESS == ret) {
+        return ret;
+    }
     if(allocate_success) {
-        if(!load_success || vbo_bound) {    // vbo_bindに失敗 or subloadに失敗 or vbo_unbindに失敗
-            // range_allocatorの内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
-            ret_range_allocator = range_allocator_free(vbo_manager_->range_allocator, &tmp_allocation);
-            if(RANGE_ALLOCATOR_SUCCESS != ret_range_allocator) {
-                ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=range_allocator_free_failed, original_result=%s, allocation_offset=%zu, allocation_size=%zu, range_allocator_result=%d", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_result_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_range_allocator);
-                ret = BUFFER_MANAGER_DATA_CORRUPTED;
-            }
+        // range_allocatorの内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
+        ret_range_allocator = range_allocator_free(vbo_manager_->range_allocator, &tmp_allocation);
+        if(RANGE_ALLOCATOR_SUCCESS != ret_range_allocator) {
+            ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=range_allocator_free_failed, original_result=%s, allocation_offset=%zu, allocation_size=%zu, range_allocator_result=%d", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_result_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_range_allocator);
+            ret = BUFFER_MANAGER_DATA_CORRUPTED;
+            return ret;
         }
-        if(vbo_bound) {
-            // backend_context_の内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
-            ret_renderer_backend = renderer_backend_vbo_unbind(vbo_manager_->backend_context);
-            if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-                ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=renderer_backend_vbo_unbind_failed, previous_result=%s, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_result_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
-                ret = BUFFER_MANAGER_DATA_CORRUPTED;
-            }
+    }
+    if(vbo_bound) {
+        // backend_context_の内部状態破損がなければ成功するはず。失敗はDATA_CORRUPTEDとする
+        ret_renderer_backend = renderer_backend_vbo_unbind(vbo_manager_->backend_context);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ERROR_MESSAGE("vbo_manager_write(%s) - Failed to rollback vertex data write. reason=renderer_backend_vbo_unbind_failed, previous_result=%s, allocation_offset=%zu, allocation_size=%zu, renderer_result=%d", buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), buffer_manager_result_to_str(ret), tmp_allocation.offset, tmp_allocation.allocated_size, (int)ret_renderer_backend);
+            ret = BUFFER_MANAGER_DATA_CORRUPTED;
+            return ret;
         }
     }
 
@@ -335,17 +373,18 @@ buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const rang
 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "vbo_manager_")
     IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "allocation_handle_")
-
-    if(!range_allocation_is_valid(allocation_handle_)) {
-        ret = BUFFER_MANAGER_BAD_OPERATION;
+    if(!range_allocation_is_valid(allocation_handle_)) {    // NOTE: O(1)なのと、API誤用がありうるため全ビルドで実行
+        ret = BUFFER_MANAGER_INVALID_ARGUMENT;
         ERROR_MESSAGE("vbo_manager_free(%s) - Provided allocation_handle_ is not valid.", buffer_manager_result_to_str(ret));
         goto cleanup;
     }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!vbo_manager_is_valid(vbo_manager_)) {
         ret = BUFFER_MANAGER_DATA_CORRUPTED;
-        ERROR_MESSAGE("vbo_manager_free(%s) - Provided vbo_manager_ is corrupted.", buffer_manager_result_to_str(ret));
+        ERROR_MESSAGE("vbo_manager_free(%s) - Precondition validation failed for 'vbo_manager_'.", buffer_manager_result_to_str(ret));
         goto cleanup;
     }
+#endif
 
     // NOTE:
     // - range_allocatorの内部データ不整合: DATA_CORRUPTED
@@ -356,6 +395,14 @@ buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const rang
         ERROR_MESSAGE("vbo_manager_free(%s) - Failed to free vertex allocation. reason=range_allocator_free_failed, allocation_offset=%zu, allocation_size=%zu, range_allocator_result=%d", buffer_manager_result_to_str(ret), allocation_handle_->offset, allocation_handle_->allocated_size, (int)ret_range_allocator);
         goto cleanup;
     }
+
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!vbo_manager_is_valid(vbo_manager_)) {
+        ret = BUFFER_MANAGER_DATA_CORRUPTED;
+        ERROR_MESSAGE("vbo_manager_free(%s) - Postcondition validation failed for 'vbo_manager_'.", buffer_manager_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     ret = BUFFER_MANAGER_SUCCESS;
 
@@ -369,7 +416,13 @@ buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_) {
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_bind", "vbo_manager_")
-    IF_ARG_FALSE_GOTO_CLEANUP(vbo_manager_is_valid(vbo_manager_), ret, BUFFER_MANAGER_DATA_CORRUPTED, buffer_manager_result_to_str(BUFFER_MANAGER_DATA_CORRUPTED), "vbo_manager_bind", "vbo_manager_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(NULL == vbo_manager_->backend_context || NULL == vbo_manager_->vbo) {
+        ret = BUFFER_MANAGER_DATA_CORRUPTED;
+        ERROR_MESSAGE("vbo_manager_bind(%s) - Provided vbo_manager_ is corrupted.", buffer_manager_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     ret_renderer_backend = renderer_backend_vbo_bind(vbo_manager_->backend_context, vbo_manager_->vbo);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
@@ -390,6 +443,13 @@ buffer_manager_result_t vbo_manager_unbind(const vbo_manager_t* vbo_manager_) {
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_unbind", "vbo_manager_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(NULL == vbo_manager_->backend_context) {
+        ret = BUFFER_MANAGER_DATA_CORRUPTED;
+        ERROR_MESSAGE("vbo_manager_unbind(%s) - Provided vbo_manager_ is corrupted.", buffer_manager_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
 
     ret_renderer_backend = renderer_backend_vbo_unbind(vbo_manager_->backend_context);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
@@ -402,6 +462,13 @@ buffer_manager_result_t vbo_manager_unbind(const vbo_manager_t* vbo_manager_) {
 
 cleanup:
     return ret;
+}
+
+const renderer_backend_vbo_t* vbo_manager_vbo_get(const vbo_manager_t* vbo_manager_) {
+    if(NULL == vbo_manager_) {
+        return NULL;
+    }
+    return vbo_manager_->vbo;
 }
 
 bool vbo_manager_config_is_valid(const vbo_manager_config_t* config_) {
@@ -420,6 +487,63 @@ bool vbo_manager_config_is_valid(const vbo_manager_config_t* config_) {
     if(!buffer_usage_is_valid(config_->buffer_usage)) {
         return false;
     }
+    return true;
+}
+
+bool vbo_manager_is_valid(const vbo_manager_t* vbo_manager_) {
+    range_allocator_status_t status = { 0 };
+
+    if(NULL == vbo_manager_) {
+        return false;
+    }
+
+    if(NULL == vbo_manager_->backend_context) {
+        return false;
+    }
+
+    if(NULL == vbo_manager_->range_allocator || NULL == vbo_manager_->vbo) {
+        return false;
+    }
+
+    if(!vbo_manager_config_is_valid(&vbo_manager_->config)) {
+        return false;
+    }
+
+    // Owned ResourceのAllocation Validity
+    if(!general_allocator_ptr_is_allocated(vbo_manager_->range_allocator)) {
+        return false;
+    }
+
+    if(!general_allocator_ptr_is_allocated(vbo_manager_->vbo)) {
+        return false;
+    }
+
+    // Owned ResourceのCanonical Validity
+    if(!range_allocator_is_valid(vbo_manager_->range_allocator)) {
+        return false;
+    }
+
+    if(!renderer_backend_vbo_is_valid(
+        vbo_manager_->backend_context,
+        vbo_manager_->vbo)) {
+        return false;
+    }
+
+    // ConfigとRange Allocatorの整合性
+    range_allocator_status_get(vbo_manager_->range_allocator, &status);
+
+    if(vbo_manager_->config.vbo_size != status.memory_pool_size) {
+        return false;
+    }
+
+    if(vbo_manager_->config.max_allocation_count != status.max_allocation_count) {
+        return false;
+    }
+
+    if(vbo_manager_->config.base_align != status.base_align) {
+        return false;
+    }
+
     return true;
 }
 
@@ -465,65 +589,4 @@ void vbo_manager_debug_print(const vbo_manager_t* vbo_manager_) {
     if(valid) {
         range_allocator_debug_print(vbo_manager_->range_allocator);
     }
-}
-
-/**
- * @brief VBO Managerの基本的な内部状態を検証する
- *
- * @details
- * vbo_manager_が保持する内部リソースへのpointerと、
- * 生成時にコピーされたconfigの基本的な事前条件を検証する。
- *
- * 本関数はVBO Managerのshallow validationだけを行う。
- * Range Allocator内部のrange listやnode poolに対するdeep validation、
- * Renderer Backend VBOの内部状態、および実際のGPU側VBOの状態は検証しない。
- *
- * また、configに記録された値と、Range AllocatorまたはGPU側VBOの
- * 実際の生成条件が一致しているかどうかは検証しない。
- *
- * configの基本的な有効性は、
- * vbo_manager_config_is_valid()を使用して検証する。
- *
- * 本関数はVBO Managerおよび内部リソースの状態を変更しない。
- *
- * @param[in] vbo_manager_
- * 検証対象のVBO Manager。NULLを指定した場合はfalseを返す。
- *
- * @retval true
- * 次のすべてが成立している。
- * - vbo_manager_がNULLではない
- * - range_allocatorがNULLではない
- * - vboがNULLではない
- * - vbo_manager_config_is_valid(&vbo_manager_->config)がtrueを返す
- *
- * @retval false
- * 上記条件のいずれかが成立していない。
- *
- * @par 計算量
- * 時間計算量はO(1)である。
- * 本関数は動的メモリ確保および動的メモリ解放を行わない。
- *
- * @todo Range Allocatorのvalidation API公開後、本関数の検証範囲および公開API化を再検討する。
- *
- * @par AI支援
- * このドキュメントはChatGPT Work（OpenAI Codex）を用いて草案を生成し、
- * プロジェクト作成者が内容を確認・修正した。
- */
-static bool vbo_manager_is_valid(const vbo_manager_t* vbo_manager_) {
-    if(NULL == vbo_manager_) {
-        return false;
-    }
-    if(NULL == vbo_manager_->range_allocator) {
-        return false;
-    }
-    if(NULL == vbo_manager_->vbo) {
-        return false;
-    }
-    if(NULL == vbo_manager_->backend_context) {
-        return false;
-    }
-    if(!vbo_manager_config_is_valid(&vbo_manager_->config)) {
-        return false;
-    }
-    return true;
 }

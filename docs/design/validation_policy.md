@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-10-05
+最終更新: 2026-11-08
 
 ## 1. 文書の位置づけ
 
@@ -39,12 +39,13 @@ Boundaryの分類、Boundary Owner、Outside / Inside、trust / authorityの切�
 - contract違反をruntimeで検査するか、callerが成立させるtrusted contractとして扱うか
 - validatorそのものが何を意味するか
 - public APIが通常実行時にどのconditionをautomaticに検査するか
-- DEBUG／TESTでどのinternal validationを自動実行するか
+- BUILD_MODEによるautomatic validationの呼出し制御
+- `ENABLE_VALID_DEEP`によるvalidator内部の検証範囲の制御
 - validation failureをどのresult／system behaviorへ変換するか
 
 contract responsibilityを持つことと、そのconditionを毎回runtimeで検査することは同義ではない。
 
-canonical validatorの意味はBUILD_MODEによって変更しない。BUILD_MODEによって変えるのは、主としてautomatic validationの実行位置とdepthである。
+canonical model（型が満たすべきinvariantの集合）はBUILD_MODEおよび`ENABLE_VALID_DEEP`によって変更しない。一方、canonical validatorが実際に検証する条件は`ENABLE_VALID_DEEP`によって変化する。BUILD_MODEは主としてautomatic validationを呼び出すかどうかを制御し、Callerは`ENABLE_VALID_DEEP`を意識しない。
 
 Runtime Status ReportとValidation Reportは異なるdiagnostic responsibilityとして分離する。Runtime Status Reportは現在のruntime stateを観測するためのものであり、Validation Reportはvalidatorを明示的に実行してcontract上のvalidityを診断するためのものとする。
 
@@ -65,9 +66,9 @@ GLCEのvalidationは、次を目的とする。
 
 すべてのcontractを通常実行経路で常時再検査すること、またはすべての潜在的bugを通常実行経路で検出することは目的としない。validationによってengineが実用不能になることを避け、検出能力、memory safety、計算量および実行頻度のバランスを取る。
 
-validatorは、corruption状態に対しても、可能な限りmemory-safeかつboundedに検査を行い、不正なmemory accessを起こす前にfailureとして検出することを目指す。
+validatorは、実行する検査について、可能な限りmemory-safeかつboundedに処理し、不正なmemory accessを起こす前にfailureを検出することを目指す。ただし`ENABLE_VALID_DEEP`が無効な場合は、Memory SafetyまたはBounded Executionに関わる条件であっても、O(n)以上の診断用Validationを省略する。この設定ではcorrupted objectに対する後続operationの安全性・有限実行を保証しない。
 
-pointer、size、count、capacity、allocation metadata、ownership情報等を利用してdereference前に安全性を確認できる場合は、その確認を行ってから対象memoryへアクセスすることを候補とする。ただし、そのconditionがtrusted／hard preconditionとして定義されている場合は、RELEASE_BUILDでのruntime checkを一律には要求しない。
+pointer、size、count、capacity、allocation metadata、ownership情報等を利用してdereference前に安全性を確認できる場合は、検証条件の計算量と実行設定を踏まえて、適用可能な確認を行ってから対象memoryへアクセスすることを候補とする。ただし、そのconditionがtrusted／hard preconditionとして定義されている場合は、RELEASE_BUILDでのruntime checkを一律には要求しない。
 
 C言語および現在利用可能なruntime informationだけでは安全性を確認できない場合、またはその確認機構を構築・維持するための複雑性や実行コストが得られる安全性に対して過大となる場合は、完全なmemory-safe validationを要求しない。この判断は一般則として機械的に適用せず、対象となるdata structure、operation semantics、corruption時の影響、実装複雑性および実行コストを踏まえて、その都度検討する。
 
@@ -77,7 +78,7 @@ C言語および現在利用可能なruntime informationだけでは安全性を
 
 ## 3. Validation model
 
-GLCEでは、contract responsibilityとvalidation depthを別軸として扱う。
+GLCEでは、contract responsibility、automatic validationの実行判断、およびvalidator内部の検証コスト制御を別軸として扱う。
 
 ```text
 operation semantics
@@ -88,15 +89,18 @@ contract responsibility / semantic ownership
         ↓
 checked precondition or trusted / hard precondition
         ↓
-必要な場合のみautomatic validation
+必要な場合のみruntime check / automatic validation
         ↓
-direct condition check / shallow validation / canonical validation
+direct condition check または対象型のcanonical validator
+                                      ↓
+                             ENABLE_VALID_DEEP
+                                      ↓
+                          O(1) / Full Validation
 ```
 
-API contract、shallow validation、canonical validationは単純な強弱関係ではない。
-
 - API contractは、callerとcalleeの間で何が成立している必要があるかを定義する。
-- shallow／canonicalは、objectまたはvalueのvalidityをどのdepthで確認するかを定義する。
+- 対象型のObject Validatorは原則一つのcanonical validatorに統一する。Callerはshallow／canonicalというdepthを選択しない。
+- `ENABLE_VALID_DEEP`はvalidator内部の診断用Validationの実行範囲を制御する。
 - contractが存在することは、そのcontractを毎回automaticにruntime validationすることを意味しない。
 
 ### 3.1 Semantic consumptionとoperation responsibility
@@ -185,26 +189,41 @@ caller-providedなcontainer／arrayについては、containerとしてのstruct
 
 ここで「elementを読むこと」と「elementのsemanticをconsumeすること」は区別する。単純なcopy、storeまたはforwardはelement dataをreadする場合があるが、その型固有のsemantic validityにoperation結果、安全性または成立条件が依存しない限り、それだけを理由としてsemantic consumptionとはみなさない。
 
-### 3.4 Shallow validation
+### 3.4 Validation cost classification
 
-shallow validationは、対象objectを取り扱うために必要なroot fieldおよび局所的なstructural invariantだけを確認する。
+Object Validator内の診断用Validationを、対象規模に対する計算量で分類する。
 
-原則としてO(1)で完了し、owned array、linked structure、可変長collection、およびowned child全体の走査は行わない。
+- O(1)のValidationは`ENABLE_VALID_DEEP`の設定に関係なく実行する。
+- O(n)以上のValidationは`ENABLE_VALID_DEEP`が有効な場合だけ実行する。O(n log n)、O(n²)等も対象となる。
+- 計算量は直接記述された処理だけでなく、呼び出すvalidation helperやAPIの内部処理も含めて判定する。
+- 検査対象の要素数が型・compile-time contractによって固定される場合、loopを使用してもO(1)として扱ってよい。
+- Memory SafetyまたはBounded Executionを目的とするValidationも、O(n)以上なら例外なく`ENABLE_VALID_DEEP`の対象とする。
 
-代表例:
+O(1)に分類される代表例:
 
 - size、count、capacityの基本関係
 - NULL／non-NULLのfield間関係
-- 後続処理で使用する加算や乗算がoverflowしないこと
-- root objectだけで判定できるstate関係
-- canonical validationを開始するためのstructural precondition
-- compile-timeまたはtype contract上で小さな固定値に限定されるfield／fixed-size arrayの局所検査
+- overflowしないことを確認する局所計算
+- root objectだけから判定できるstate関係
+- compile-timeで要素数が固定された小配列の局所検査
 
-固定長の小配列など、要素数が型として固定され実質的にO(1)である検査については、実装上loopを使用してよい。
+O(n)以上に分類される代表例:
+
+- 可変長array／collectionの全要素Validation
+- linked structure全体のtraversal／membership Validation
+- 所有childを可変個数だけ辿るOwnership Closure Validation
+- 内部で可変長の探索や走査を行うallocation query等を、診断用Validationとして利用する場合
+
+ここで制御するのは**validator内の診断用Validation**である。APIが本来提供する検索、allocation-state query、変換、構築等のoperationや、checked preconditionとして仕様化された入力受理処理を、O(n)以上という理由だけで無効化しない。通常APIをvalidator内部から診断目的で呼び出す場合は、その呼出しを含めてValidation Costを判定する。
 
 ### 3.5 Canonical validation
 
-canonical validationは、対象object自身の責務とownership closureについて、その型が保証するcanonical model全体を検査するdeep／full validationである。
+canonical modelは、対象object自身の責務とownership closureについて、その型が保証するinvariant全体を表す。canonical validatorは、そのcanonical modelに対応する原則唯一のObject Validatorであり、`ENABLE_VALID_DEEP`に従って実際の検証範囲を決定する。
+
+- `ENABLE_VALID_DEEP = 0`ではO(1)のValidationだけを実行する。
+- `ENABLE_VALID_DEEP = 1`ではO(1)およびO(n)以上のValidationを実行し、canonical model全体を対象とするFull Validationを行う。
+- `ENABLE_VALID_DEEP = 0`でvalidatorがtrueを返しても、canonical model全体のvalidityを保証したことにはならない。
+- いずれの設定でも、型が保証するcanonical model自体と正常終了時のstable state contractは変化しない。
 
 ここでいう「対象object自身」は、そのobjectが定義するinternal representation、semantic state、およびfield間relationを指す。
 
@@ -212,9 +231,7 @@ validatorへroot argumentとして渡されたobject自身のstorage validity、
 
 root objectをowned pointerとして保持するownerが存在する場合、そのstorage validityはowner側のownership closureとして扱う。独立したownerを持たずcaller-provided storage上に存在するobjectについては、root objectをdereference可能なlifetime中のstorageとして渡すことをcaller contractとして扱う。
 
-本書ではdeep validationとfull validationを同じ意味で使用する。
-
-代表例:
+Full Validationの対象例:
 
 - owned arrayの使用中要素
 - linked structureのnodeと接続関係
@@ -224,15 +241,13 @@ root objectをowned pointerとして保持するownerが存在する場合、そ
 - aggregate invariant
 - stable stateにtransient／transitioning stateが残っていないこと
 
-一般にO(n)以上のコストを持ち、対象構造によってはO(n^2)となる場合もある。
-
-ここでいうfullはprocess内の全到達objectを検査するという意味ではない。「対象object自身の責務とownership closureについて完全に検査する」という意味である。
+Full Validationは一般にO(n)以上のコストを持ち、対象構造によってはO(n²)となる場合もある。ここでいうfullはprocess内の全到達objectを検査するという意味ではない。「対象object自身の責務とownership closureについて完全に検査する」という意味である。
 
 canonical validatorの存在は、次を意味しない。
 
-- その型を受け取るすべてのAPIがcanonical validatorをautomaticに実行すること
+- その型を受け取るすべてのAPIがvalidatorをautomaticに実行すること
 - constructor／initializerが完成valueを毎回self-validationすること
-- private shallow validatorが必ず存在すること
+- 対象型のprivate processing contextに独立validatorを必ず設けること
 
 private temporaryやderived processing contextについて、成功したchecked constructor／initializer／transformationだけを生成経路とし、独立したpublic lifecycleや任意mutationを持たない場合は、standalone canonical validatorを設けずvalid-by-constructionとして扱ってよい。
 
@@ -244,9 +259,9 @@ caller-controlledな可変長bufferやarrayについて、element validatorが�
 
 array全体のstructural validationと、各elementのsemantic validationを区別する。arrayを走査するoperationがpointer、count、size relation等を検証することは、各elementについてcanonical validatorを実行することを意味しない。element validationの要否はsemantic consumption、semantic ownership、trust boundaryおよびvalidation costから個別に決定する。
 
-RELEASE_BUILDでは、diagnosticを目的とした可変長buffer／arrayの全要素validationを自動実行しない。
+可変長buffer／arrayの全要素Validationがcanonical validator内部の診断処理である場合は、O(n)以上のValidationとして`ENABLE_VALID_DEEP`で制御する。DEBUG_BUILD／TEST_BUILDでも`ENABLE_VALID_DEEP = 0`なら、その診断処理を実行しない。
 
-DEBUG_BUILD／TEST_BUILDで全要素validationを自動実行するかどうかは、そのoperationが各要素のsemanticをどのようにconsumeするか、semantic owner、trust boundary、およびvalidation costを考慮して判断する。
+そのvalidatorをどのAPIでautomaticに呼ぶかは、operationが各要素のsemanticをどのようにconsumeするか、semantic owner、trust boundary、およびvalidationの必要性から個別に決定する。RELEASE_BUILDでは診断目的のautomatic validationを原則として要求しない。
 
 判断時には、必要に応じて次を考慮する。
 
@@ -257,7 +272,7 @@ DEBUG_BUILD／TEST_BUILDで全要素validationを自動実行するかどうか�
 - validatorの計算量
 - validationによる漸近計算量の悪化
 
-ただし、operation自体の成立、安全な実行、またはexternal inputをtrusted internal representationとして受理するために全要素の処理・検査が本質的に必要な場合は、ここでいうdiagnostic目的のautomatic validationとは区別する。
+ただし、operation自体の成立、安全な実行、またはexternal inputをtrusted internal representationとして受理するために全要素の処理・検査が本質的に必要な場合は、ここでいうdiagnostic目的のautomatic validationとは区別する。API自身の本来の処理やchecked preconditionを、`ENABLE_VALID_DEEP`によって機械的に無効化しない。
 
 pointer + countで表現されるstorage extentについて、allocator metadata等からruntime verificationできる場合がある。ただし、そのvalidationを可能にするためだけに、特定allocator由来であることをAPI contractへ追加してcallerが利用可能なstorage provenanceを不要に制限しない。allocation provenance自体がmodule boundary contractとして必要な場合に限り、allocator authorityを利用したallocation identity／range validationを検討する。
 
@@ -317,19 +332,30 @@ Engineがcaller-controlled inputをvalidationし、必要に応じてcopy / norm
 
 #### 3.7.3 Engine内部module間のinput
 
-Engine内部module Aが生成したvalueをmodule Bへinputとして渡す場合でも、Bはそのvalueのprovenanceを推測してerror categoryを変更しない。Bから観測できる事実が「API inputが要求validityを満たさない」であるなら、Bは自身のcontractに従って`INVALID_ARGUMENT`等を返してよい。
+Engine内部module Aが生成したvalueをmodule Bへinputとして渡す場合でも、BはそのvalueのprovenanceやAの利用文脈を推測してerror categoryを変更しない。Bから観測できる事実が「API inputが要求validityを満たさない」であるなら、Bは自身のcontractに従って`INVALID_ARGUMENT`等を返してよい。
 
 ```text
 Module A
-    ↓ invalid value
+    ↓ input value
 Module B
     ↓ input validation failure
 INVALID_ARGUMENT
+    ↓ Aのcall siteでcontextを評価
+INVALID_ARGUMENTの伝播 または DATA_CORRUPTEDへの再分類
 ```
 
-この場合、Aのimplementation bugがその場で`DATA_CORRUPTED`として分類されない可能性は許容する。Aがestablished stateを破壊している場合はA自身のcanonical validation、Result validation、Postcondition validationまたは明示的diagnostic validationがcorruption detection pointとなり得る。Aが一時的temporary valueを誤生成しただけでestablished stateを破壊していない場合、通常operation failureとして局所化されることを許容する。
+一方、A自身が保証するestablished internal stateまたは成立済みinternal contractに照らし、Bから返された`INVALID_ARGUMENT`が正常なoperationでは成立し得ず、内部整合性の破綻を示すと判断できる場合、Aは**当該call siteに限って**`DATA_CORRUPTED`へ再分類してよい。
 
-この方針は、result propagationを単純に保ち、caller contextやprovenanceに基づく複雑な再分類を避けるためのものである。
+- 再分類の判断責務は、下位API Bではなく、そのcontextを知るCaller Aに置く。
+- Bは通常どおり自身のAPI contractに従ってresultを返す。
+- 汎用result converterへ`INVALID_ARGUMENT`から`DATA_CORRUPTED`への一律変換を追加しない。
+- caller-controlled inputに起因する正当な`INVALID_ARGUMENT`を、内部corruptionとして扱わない。
+- 一時的temporary valueの誤生成や単なるprogramming errorだけで、established internal stateのintegrity failureが確認できない場合は、機械的に`DATA_CORRUPTED`へ再分類しない。
+- `DATA_CORRUPTED`へ再分類した時点からSection 7.3のFail-stopを適用する。
+
+Aのimplementation bugがその場で`DATA_CORRUPTED`として分類されない可能性は引き続き許容する。Aがestablished stateを破壊している場合はA自身のvalidator、Result validation、Postcondition validationまたは明示的diagnostic validationがcorruption detection pointとなり得る。
+
+この方式は、calleeの入力分類を単純に維持しつつ、Callerだけが知る確立済み契約の違反を必要な箇所でFail-stopへ接続するためのものである。既存call siteへの横断的な一括変更は要求せず、変更対象となるmoduleから順次適用してよい。
 
 #### 3.7.4 Established internal state
 
@@ -378,7 +404,7 @@ Runtime Status Reportは、対象moduleまたはsystemが現在保持してい�
 
 Runtime Status Reportは、そのstateがcontract上validであるかどうかを表すものではない。
 
-Validation Reportは、shallow validator、canonical validator、または将来追加されるdiagnostic validationを明示的に実行し、その結果を診断情報として提示する責務を持つ。
+Validation Reportは、canonical validatorまたは将来追加されるdiagnostic validationを明示的に実行し、その結果を診断情報として提示する責務を持つ。canonical validatorの検証範囲は実行binaryの`ENABLE_VALID_DEEP`設定に従うため、`ENABLE_VALID_DEEP = 0`でのtrueをFull Validationの成功として提示しない。
 
 このため、runtime statusを表すstatus structureへ`is_valid`等のvalidation resultを組み込まない。
 
@@ -396,7 +422,7 @@ automatic validationは、Section 3およびSection 6の判断規則に基づき
 
 ### 4.1 Canonical validator
 
-validationが必要な型には、原則として一つのcanonical validatorを設ける。
+validationが必要な型には、原則として一つのcanonical validator（`*_is_valid`）を設ける。shallow／canonicalのDepth別Object Validatorは設けない。
 
 canonical validatorは、その型のdata structure、ownership、およびpublic lifecycleが確定したstable object modelに対して定義する。value typeでは、その型が明示的に保証するsemantic modelに対して定義してよい。
 
@@ -407,8 +433,9 @@ canonical validatorは、その型のdata structure、ownership、およびpubli
 - boolを返す妥当性判定は`*_is_valid`を基本とする。
 - 対象は原則として`const`で受け取る。
 - NULL-safeとし、対象pointerがNULLの場合はfalseを返す。
-- validatorの意味はBUILD_MODEによって変更しない。
-- runtimeのbool引数によってshallow／canonicalを切り替えない。
+- 対応するcanonical modelはBUILD_MODEによって変更しない。実際の検証範囲は`ENABLE_VALID_DEEP`に従う。
+- ValidatorのCallerにはValidation Depth選択を要求しない。
+- runtimeのbool引数によってValidation Depthを切り替えない。
 - validator自身は対象を変更しない。
 - repairを行わない。
 - 原則としてdynamic memory allocationを行わない。
@@ -423,31 +450,48 @@ canonical validatorが検査する条件は、その型のdata structure、owner
 
 APIごとに`is_valid_for_*`形式のvalidatorを機械的に増やさない。特定operationだけに必要な条件はAPI contractまたは意味の明確なstate predicateとして扱う。
 
-### 4.2 Shallow validator
+### 4.2 `ENABLE_VALID_DEEP`とValidator内部の制御
 
-private shallow validatorは、module内にshallow validation depthを必要とする実際のcall siteが存在する場合に設ける。
+`ENABLE_VALID_DEEP`はcompile-timeの0／1設定とし、canonical validator内の診断用Validationの実行範囲を制御する。
 
-canonical validatorを持つことだけを理由として、private `*_is_valid_shallow`を機械的に追加しない。
+- `ENABLE_VALID_DEEP = 0`: O(1)のValidationのみを実行する。
+- `ENABLE_VALID_DEEP = 1`: O(1)およびO(n)以上のValidationを実行する。
+- 直接・間接の計算量を含めてSection 3.4の基準で分類する。
+- O(n)以上のValidationは、Validator自身（またはその内部で利用するvalidation helper）の条件付きコンパイルで無効化できる構造にする。
+- ValidatorのCallerは`ENABLE_VALID_DEEP`を参照しない。同じ`*_is_valid`を呼び出し、automaticに呼び出すかどうかはBUILD_MODEとAPI固有Policyによって決める。
+- O(1)とO(n)以上の検査は、処理上の依存関係に応じて適切な順序で配置する。O(1)をすべて先頭に集めることは要求しない。
 
-対象型に対するoperationが存在していても、そのoperationがautomatic shallow validationを必要としない場合はshallow validatorを省略してよい。
+基本形:
 
-逆に、現在のcanonical validatorとshallow validatorの検査内容が実質同一であっても、operation call siteがshallow depthを意味として必要とする場合は分離して保持してよい。これはcall siteが要求するvalidation depthをコード上で明示するためである。
+```c
+bool xxx_is_valid(const xxx_t* object_) {
+    if(NULL == object_) {
+        return false;
+    }
 
-shallow validatorが存在する場合でも、canonical validator内でshallow validatorを最初に実行することはproject-wideには要求しない。validationの実行順序は、各validationが安全に実行できるためのdependency、dereference前に必要なallocation-level validity、およびmodule固有のmemory safety requirementに従って決定する。
+    // O(1) Validation.
 
-shallow validationとownership closure validationの間に固定した順序は設けない。例えばowned childのallocation validityを確認した後にshallow validationを行う構成も、shallow validationによってchild pointerを安全に参照できることを確認した後にownership closureを検証する構成も、各validatorのdependencyが満たされていれば許容する。
+#if ENABLE_VALID_DEEP
+    // O(n)以上のValidation.
+#endif
 
-shallow validatorが存在しない場合、canonical validatorが対象型のcanonical conditionを直接検査する。
+    return true;
+}
+```
 
-`*_is_valid_shallow`をpublic APIとして公開する必要はない。public validatorはcanonicalな`*_is_valid`を基本とする。
+例示コードは典型形であり、実際のValidatorでは依存関係やreturn pathに応じて構成してよい。
 
-shallow以外のprivate validator／validation helperを設けるかどうか、その粒度、名称および分割方法はmoduleごとのdata structureとoperation semanticsに応じて決定する。project-wide policyでは固定しない。
+子Objectに独立したcanonical validatorがある場合は、親Validatorが必要に応じてそのValidatorを呼び出す。子のValidatorも自身の`ENABLE_VALID_DEEP`規則に従う。可変個数の子を走査する処理自体はDeep Validationに分類する。
+
+複雑な実装ではprivate validation helperへ分割してよいが、Object ValidatorをDepth別に二重化しない。各Helperの粒度、名称および分割方法はmoduleに委ねる。
+
+既存のshallow validatorは移行時に`*_is_valid`へ統合する。全moduleを一括変更することは要求せず、変更対象moduleから順次適用する。
 
 ### 4.3 Ownershipとborrow
 
-parent objectのcanonical validationは、そのparentがlifetimeを所有するchildをownership closureとして検査する。
+parent objectのcanonical modelには、そのparentがlifetimeを所有するchildのownership closureを含める。実際にchildを検証するかどうかは各検査の計算量と`ENABLE_VALID_DEEP`に従う。
 
-owned childをpointerとして保持し、そのpointerについてMemory moduleからallocation-level validityを確認できる場合、parent canonical validatorはchildをdereferenceまたはchild canonical validatorへ渡す前に、そのallocation validityを確認することを候補とする。
+owned childをpointerとして保持し、そのpointerについてMemory moduleからallocation-level validityを確認できる場合、parent canonical validatorはchildをdereferenceまたはchild canonical validatorへ渡す前に、そのallocation validityを確認することを候補とする。ただし、そのallocation queryが間接的にO(n)以上の探索を行う場合は、診断用Validationとしての呼出しを`ENABLE_VALID_DEEP`の対象とする。
 
 owned childが独立したcanonical validatorを持つ場合、parentは必要なallocation-level validityを確認した後、child内部のcanonical validationをchild canonical validatorへ委譲してよい。
 
@@ -457,7 +501,7 @@ embedded valueのように独立したallocationを持たないchildについて
 
 owned arrayやowned collectionについて、canonical validator内部をどのprivate helperへ分割するかはmodule実装に委ねる。project-wide policyではraw array専用validatorの有無やhelper構成を規定しない。
 
-borrowed pointerの参照先全体はborrowerのownership closureに含めない。borrowed objectのfull validationは、そのobjectのownerまたはsystem側validatorが担当する。
+borrowed pointerの参照先全体はborrowerのownership closureに含めない。borrowed objectのcanonical modelに関するValidationは、そのobjectのownerまたはsystem側validatorが担当する。
 
 borrower側では、必要に応じて次のようなborrower自身から判定できるconditionについてcontractを定義する。
 
@@ -473,14 +517,16 @@ borrowerのcanonical validatorは、pointer値だけから借用先のliveness�
 
 ### 4.4 Memory-safe and bounded validation
 
-canonical validatorは、corruption状態でも可能な範囲でmemory-safeかつ有限時間でfalseを返すように設計する。
+canonical validatorは、実際に有効化された検査について、可能な範囲でmemory-safeかつ有限時間でfalseを返すように設計する。`ENABLE_VALID_DEEP = 0`では、Memory SafetyやBounded Executionの確認に必要なO(n)以上の診断用Validationも省略するため、corrupted objectに対する安全性・有限実行は保証されない。
+
+以下の基本方針は、有効化された検査の内部で適用する。O(n)以上の診断を無効化する規則を例外扱いにはしない。
 
 基本方針:
 
 - NULL、count、size、capacity、overflow等、dereference前に確認できるconditionを先に検査する。
 - traversalには管理上限または明確な終端条件を設ける。
 - cycleが存在し得るstructureでは無限loopを防止する。
-- 対象objectが所有するraw pointerについてallocation metadata等から安全性を確認できる場合は、dereference前に確認する。
+- 対象objectが所有するraw pointerについてallocation metadata等から安全性を確認できる場合は、検証コストと有効化設定に従う範囲で、dereference前に確認する。
 - validatorへroot argumentとして渡されたobject自身のstorage validityは、そのvalidator自身ではなく、そのstorageを所有するownerまたはcaller側のcontract responsibilityとして扱う。
 - linkage pointer等のmetadataが破損し得る場合、そのpointerを次のdereference先として無条件に使用しない。
 - 既知の安全なrangeやphysical layoutから検査位置を導出できる場合は、その方法を優先してよい。
@@ -585,7 +631,7 @@ Result validation failureのresult classificationはcandidateのtrust stateと�
 - external / caller-controlled representationをtrusted internal representationへ昇格させる前のcandidateがrequired validityを満たさない場合は、trust promotionを拒否するrecoverable failureとして扱う。file loaderであれば`UNSUPPORTED_FILE`等を使用し、candidateがinvalidであることだけを理由として`DATA_CORRUPTED`へ分類しない。
 - validated / trusted inputと成立済みinternal contractを前提としてmodule自身が構築したresult candidateがdiagnostic validationに失敗し、そのfailureがmodule implementationまたはinternal invariantの破損を示す場合は`DATA_CORRUPTED`候補となる。
 
-Result validationを設けるか、どのvalidation depthを使用するか、どのvalidator / helperへ委譲するかはmodule／operationごとに決定する。
+Result validationを設けるか、どのvalidator / helperへ委譲するかはmodule／operationごとに決定する。対象型のcanonical validatorを使用する場合、CallerはValidation Depthを選択せず、そのvalidator内部の`ENABLE_VALID_DEEP`設定に従う。
 
 ---
 
@@ -593,7 +639,7 @@ Result validationを設けるか、どのvalidation depthを使用するか、�
 
 ### 6.1 基本原則
 
-canonical validator、shallow validator、またはその他のvalidation helperが存在することと、それを通常API内でautomaticに実行するかどうかを分離する。
+canonical validatorまたはその他のvalidation helperが存在することと、それを通常API内でautomaticに実行するかどうかを分離する。
 
 automatic validationはAPI categoryから機械的に決定しない。次の順序で判断する。
 
@@ -601,7 +647,7 @@ automatic validationはAPI categoryから機械的に決定しない。次の順
 2. そのconditionのsemantic owner／contract ownerを特定する。
 3. そのcontractをchecked preconditionとしてruntime validationするか、trusted／hard preconditionとして扱うかを決定する。
 4. checked preconditionとは別に、DEBUG／TESTでinternal invariantのautomatic diagnostic validationを行う価値があるかを判断する。
-5. validationを行う場合、direct condition check、shallow、canonicalのうち必要なdepthを選択する。
+5. validationを行う場合、operation-specificなdirect condition check、または対象型のcanonical validatorを使用するかを決定する。Callerはcanonical validatorのValidation Depthを選択しない。
 
 判断時には、必要に応じて次を考慮する。
 
@@ -621,7 +667,7 @@ automatic validationはAPI categoryから機械的に決定しない。次の順
 - bug局所化の価値
 - trust boundary
 
-値またはobjectを単に受け取ること、転送すること、copyすること、または既存stateを読まず全面上書きすることだけを理由としてshallow／canonical validationを追加しない。
+値またはobjectを単に受け取ること、転送すること、copyすること、または既存stateを読まず全面上書きすることだけを理由としてcanonical validationを追加しない。
 
 ただし、そのoperationがuntrusted representationをtrusted internal representationとして受理するtrust boundaryを形成する場合は、copy、storeまたはforwardのみを行うoperationであっても、boundary以降で成立済みとみなすsemantic conditionについてvalidationを行ってよい。したがって、automatic validationの要否はsemantic consumptionだけでは決定せず、trust boundaryとしての役割も独立して考慮する。
 
@@ -629,9 +675,25 @@ automatic validationはAPI categoryから機械的に決定しない。次の順
 
 producer／converterがdocumented preconditionを前提としてvalidなoutputを生成する場合、そのoutput guaranteeを確認するためだけにcanonical validatorをautomaticに実行しない。
 
-一方、operationが対象型のsemanticを実際にconsumeし、そのvalidityがoperationの意味または安全性に必要である場合は、direct condition check、shallowまたはcanonicalを必要に応じて使用する。
+一方、operationが対象型のsemanticを実際にconsumeし、そのvalidityがoperationの意味または安全性に必要である場合は、direct condition checkまたはcanonical validatorを必要に応じて使用する。canonical validator内部の検証範囲は`ENABLE_VALID_DEEP`で決まる。
 
-### 6.2 BUILD_MODE
+### 6.2 BUILD_MODEと`ENABLE_VALID_DEEP`
+
+BUILD_MODEと`ENABLE_VALID_DEEP`は独立したcompile-time設定として扱う。
+
+- **BUILD_MODE:** APIごとのPolicyに従ってautomatic validationを呼び出すかどうかを制御する。
+- **`ENABLE_VALID_DEEP`:** canonical validator内部でO(n)以上の診断用Validationを実行するかどうかを制御する。
+
+`ENABLE_VALID_DEEP`は0／1で定義する。値が0でも定義されているため、条件分岐には`#ifdef ENABLE_VALID_DEEP`ではなく`#if ENABLE_VALID_DEEP`を使用する。未定義値や0／1以外の設定の扱いはBuild Configのcompile-time contractで明確化する。
+
+| BUILD_MODE | `ENABLE_VALID_DEEP` | Automatic Validator呼出し | 呼ばれたValidatorの検証範囲 |
+|---|---|---|---|
+| DEBUG_BUILD | 0 | API固有Policyによる | O(1) |
+| DEBUG_BUILD | 1 | API固有Policyによる | Full Validation |
+| TEST_BUILD | 0 | API固有Policyによる | O(1) |
+| TEST_BUILD | 1 | API固有Policyによる | Full Validation |
+| RELEASE_BUILD | 0 | 原則として診断目的では省略 | 明示的に呼ばれた場合はO(1) |
+| RELEASE_BUILD | 1 | 原則として診断目的では省略 | 明示的に呼ばれた場合はFull Validation |
 
 #### RELEASE_BUILD
 
@@ -655,11 +717,13 @@ producer／converterがdocumented preconditionを前提としてvalidなoutput�
 
 checked preconditionはRELEASE_BUILDと同じsemanticで検査する。
 
-trusted／hard preconditionおよびinternal invariantについて、bug局所化やsafety上の価値がある場合はassertion、direct check、shallow、canonical等をautomaticに実行してよい。
+trusted／hard preconditionおよびinternal invariantについて、bug局所化やsafety上の価値がある場合はassertion、direct check、canonical validator等をautomaticに実行してよい。
 
-DEBUG_BUILD／TEST_BUILDであることだけを理由に、対象value／objectのshallowまたはcanonical validationを機械的に追加しない。
+DEBUG_BUILD／TEST_BUILDであることだけを理由に、対象value／objectのcanonical validationを機械的に追加しない。
 
-TEST_BUILDであることだけを理由に、DEBUG_BUILDより機械的に深いprecondition validationを追加しない。
+TEST_BUILDであることだけを理由に、DEBUG_BUILDより機械的に深いprecondition validationを追加しない。canonical validatorを呼んだ場合の検証範囲は同じ`ENABLE_VALID_DEEP`設定によって決まる。
+
+`ENABLE_VALID_DEEP = 0`のTEST_BUILDでも、大規模Modelに対する通常operationやtest executionを実行可能とすることを目的の一つとする。ただし、診断対象の破損を検出できない場合があること、破損したstateでのmemory safetyを保証しないことは明示的に許容する。
 
 ### 6.3 Common patterns
 
@@ -680,15 +744,14 @@ TEST_BUILDであることだけを理由に、DEBUG_BUILDより機械的に深�
 
 現在、この規則の対象はFree List AllocatorおよびLinear Allocatorである。
 
-このため、DEBUG_BUILD / TEST_BUILDでは、initialized allocator stateを受け取り、そのstateに依存するPublic APIについて、API contract validationを行った後、state-dependentなoperationへ入る前にcanonical validatorを使用して現在のallocator state全体を確認する。
+このため、DEBUG_BUILD / TEST_BUILDでは、initialized allocator stateを受け取り、そのstateに依存するPublic APIについて、API contract validationを行った後、state-dependentなoperationへ入る前にcanonical validatorを呼び出す。検証範囲は`ENABLE_VALID_DEEP`に従い、`ENABLE_VALID_DEEP = 0`ではAllocator全体のO(n)以上の診断は実行しない。
 
 これは一般的なoperation semanticsだけでは要求されない場合でも、allocation-level trust rootとしてbug局所化とmemory safetyを優先するmodule-specific policyである。
 
 この方針を採用する理由は次のとおりである。
 
-- Low-level Allocatorは上位moduleのallocation validityおよびmemory safetyの土台になるため、corruptedなallocator stateを前提として処理を続行するより、Public API boundaryでcanonical stateを確認して早期にfailureとすることを優先する。
-- low-level allocatorではcanonical validationのcostが十分小さい場合が多い。
-- 将来canonical validatorへ検査項目が追加された場合も、Public API側を変更せず「Low-level AllocatorのPublic API boundaryではcanonical validationを行う」という一貫したboundary policyを維持できる。
+- Low-level Allocatorは上位moduleのallocation validityおよびmemory safetyの土台になるため、Public API boundaryで有効化されたinvariantを確認して早期にfailureとすることを優先する。
+- 将来canonical validatorへ検査項目が追加された場合も、Public API側を変更せず「Low-level AllocatorのPublic API boundaryではcanonical validatorを呼ぶ」という一貫したboundary policyを維持できる。
 
 General AllocatorやSubsystem Allocator等のhigh-level Allocatorには、この特例を適用しない。これらのmoduleではSection 6.1の一般policyに従い、各operationが自身でconsumeするstateについて必要なvalidationを行い、owned low-level allocator固有のsemanticは対応するAPIへ委譲する。
 
@@ -700,15 +763,15 @@ canonical validator自身、およびinitialized allocator stateを受け取ら�
 
 ### 6.4 Hot pathとvalidation cost
 
-毎frame、objectごと、elementごと、またはtight loop内で呼ばれるAPIでは、validation costと実行頻度を明示的に検討する。
+毎frame、objectごと、elementごと、またはtight loop内で呼ばれるAPIでは、automatic validation自体を呼び出すかどうかと、その実行頻度をoperation semanticsに基づいて判断する。
 
-checked preconditionまたはoperationを安全に実行するために必要と判断したvalidationを、hot pathであることだけを理由に機械的に削除しない。
+canonical validatorを呼ぶと決めた場合、そのCallerがValidation Depthを個別に選択することはない。診断用Validationのコスト制御はValidator内部の`ENABLE_VALID_DEEP`に委ねる。
 
-validation costが問題になる場合は、operation semantics、実行頻度、対象規模、実測performance等を踏まえてその都度検討する。
+checked preconditionや通常operationに必要な処理は、hot pathであることやO(n)以上であることだけを理由に削除しない。
 
-検討の結果、現時点では強いvalidationを維持し、将来的にperformance問題が顕在化した場合にdata structure／traversal方式を見直す、またはvalidationを弱めることをTODOとして残してよい。
+`ENABLE_VALID_DEEP = 0`は、Sponza等の大規模ModelをDEBUG_BUILD／TEST_BUILDで扱うため、診断用Validationの規模依存コストを明示的に省略する手段である。Full Validationが必要な診断時には`ENABLE_VALID_DEEP = 1`で検証する。
 
-安全な実行には不要なdiagnostic validationについては、stable batch boundary、unit test、failure injection、sanitizer、明示的self-diagnostics等へ移すことを検討してよい。
+性能問題がなお存在する場合は、validator呼出し頻度、operation自身の計算量、data structure、実測performance等をもとに個別に検討する。unit test、failure injection、sanitizer、明示的self-diagnostics等も補助的な検出手段とする。
 
 ---
 
@@ -726,7 +789,7 @@ validatorはfailure時に次を直接行わない。
 - repair
 - resource解放
 
-falseを受け取った呼び出し側が、API result、diagnostic log、test failure、将来のFATAL transitionまたはdiagnostic reportへ変換する。
+falseを受け取った呼び出し側が、API result、diagnostic log、test failure、将来のFATAL transitionまたはdiagnostic reportへ変換する。`ENABLE_VALID_DEEP = 0`でtrueが返ったことをFull Validation成功として扱わない。
 
 validator failureのresult classificationは、`is_valid() == false`という事実だけでは決定しない。**何を検査していたか、誰がそのstateを制御しているか、trust promotionの前後どちらか**を確認する。
 
@@ -738,7 +801,9 @@ validator failureのresult classificationは、`is_valid() == false`という事
 - validated / trusted inputからmodule自身が構築したresult candidateについて、Result validationのdiagnostic canonical validationが失敗し、そのfailureがmodule implementation / internal invariantの破損を示す場合は`DATA_CORRUPTED`へ分類してよい。Commit後のestablished internal stateに対するPostcondition validation failureも、同様にinternal integrity failureの根拠となり得る。
 - trusted / hard preconditionをDEBUG / TESTで診断してfailureした場合の扱いは、そのAPIのdiagnostic policyに従う。recoverable contractとして定義されていないconditionを、機械的に通常errorへ変換しない。
 
-Engine内部producerが生成したvalueを別moduleがinputとして受け取る場合、consumerはproducer provenanceを推測して`INVALID_ARGUMENT`を`DATA_CORRUPTED`へ再分類しない。consumerは自身が観測できるinput contractに従ってresultを返し、producer側のinternal bug detectionはproducer自身のstable-boundary validationまたはdiagnosticsへ委ねてよい。
+Engine内部producerが生成したvalueを別moduleがinputとして受け取る場合、calleeはcaller contextやproducer provenanceを推測して`INVALID_ARGUMENT`を`DATA_CORRUPTED`へ再分類しない。calleeは自身が観測できるinput contractに従ってresultを返す。
+
+一方、そのcalleeを呼び出したCallerが、established internal stateまたは成立済み内部契約を根拠に`INVALID_ARGUMENT`が通常は成立し得ないと判断できる場合は、当該call siteで`DATA_CORRUPTED`へ再分類してよい。汎用result converterでの一律変換は行わない。再分類する根拠がない場合は元のresult classificationを維持する（Section 3.7.3）。
 
 ### 7.2 `DATA_CORRUPTED`
 
@@ -761,13 +826,13 @@ Engine内部producerが生成したvalueを別moduleがinputとして受け取�
 - malformed fileまたはunsupported format
 - external device / OS / libraryから取得したdataやstatusの異常
 - trust promotion前candidateがinternal representationとして受理できない
-- Engine内部producer由来である可能性があるvalueをconsumerがinputとして受け取り、そのinput validity checkに失敗しただけの場合
+- Engine内部producer由来である可能性があるvalueをconsumerがinputとして受け取り、そのinput validity checkに失敗しただけで、Callerが成立済み内部契約の破綻を示す根拠を持たない場合
 
 caller-controlled inputのinvalidityを`DATA_CORRUPTED`へ過剰分類すると、Application側のbugやrecoverable input failureをFATAL方向へ誤って伝播させることになる。`DATA_CORRUPTED`がfail-stopを伴う重いsignalであることを踏まえ、分類には「成立済みinternal stateのintegrityが失われている」という追加根拠を要求する。
 
-一方、internal producer bugがconsumer側では`INVALID_ARGUMENT`として観測され、`DATA_CORRUPTED`として即時分類されない場合があることは許容する。producer自身がestablished stateを破壊している場合はproducer側canonical validation等で検出できる可能性があり、temporary valueの誤生成だけでestablished stateが破壊されていない場合はoperation failureとして局所化される。
+一方、internal producer bugがconsumer側では`INVALID_ARGUMENT`として観測され、`DATA_CORRUPTED`として即時分類されない場合があることは許容する。Callerが自身のestablished internal stateまたは成立済み内部契約の破綻を根拠として当該call siteで`DATA_CORRUPTED`へ再分類した場合は、その時点からFail-stopを適用する。temporary valueの誤生成だけでestablished stateが破壊されていない場合は、通常operation failureとして局所化されることを許容する。
 
-DEBUG / TESTのstable-boundary canonical validationによって、完成したはずのestablished internal objectがcanonical stateを満たさないことが判明した場合は、stable-boundary failureとして`DATA_CORRUPTED`へ分類してよい。
+DEBUG / TESTのstable-boundary canonical validatorによって、完成したはずのestablished internal objectが有効化されたinvariantを満たさないことが判明した場合は、stable-boundary failureとして`DATA_CORRUPTED`へ分類してよい。`ENABLE_VALID_DEEP = 0`で検査されなかった条件については、validator成功を根拠にintegrityを証明しない。
 
 value construction / conversionでsource側のtrusted / hard preconditionが違反していたことに起因するinvalid outputは正常系contract外である。これを一律に`DATA_CORRUPTED`へ分類する規則は設けない。
 
@@ -823,12 +888,12 @@ trusted／hard precondition違反はrecoverable cleanup contractの対象外で�
 
 - Validation Reportのstructured representation
 - system-wide self-diagnosticsの具体的な実行方式
-- diagnostic validationで使用するvalidation depthと実行対象の選択方式
+- Validation Reportにおける`ENABLE_VALID_DEEP`設定表示・Full Validationの実行運用
 - 共通validation macro／helperの最終形
 - trusted／hard preconditionをDEBUG／TESTで表現するassertion／diagnostic mechanismの統一方針
 - FATAL state transition API
 - FATAL後のgraceful shutdownと即時abortの境界
 - subsystem stateとapplication stateの関係
-- 独立した`INVARIANTS`相当build optionの要否
+- `ENABLE_VALID_DEEP`導入後の性能実測と既存Validator移行順序
 
 個別moduleへのvalidator実装状況、適用順序および保留事項は`glce_near_term_todo.md`を正本とする。

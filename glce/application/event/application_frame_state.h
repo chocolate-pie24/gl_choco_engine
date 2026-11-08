@@ -10,6 +10,7 @@ extern "C" {
 
 #include <stdbool.h>
 
+// TODO: light_dirtyをframe_stateに追加する(light操作インターフェイス追加後)
 typedef struct application_frame_state {
     int framebuffer_width;
     int framebuffer_height;

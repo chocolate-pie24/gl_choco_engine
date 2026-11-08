@@ -1,14 +1,40 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
+/** @ingroup renderer
+ *
+ * @file renderer_backend_shader.c
+ * @author chocolate-pie24
+ * @brief Renderer Backendのシェーダー操作APIの実装
+ *
+ * @details
+ * Renderer Backend Contextが保持するShader vtableを介して、
+ * Concrete側のシェーダー操作を呼び出す。
+ *
+ * 以下の機能を提供する。
+ * - シェーダー管理Objectの生成と破棄
+ * - シェーダーソースコードのコンパイル
+ * - シェーダープログラムのリンクと使用
+ * - ユニフォーム変数のLocation取得と値の設定
+ * - シェーダー管理Objectの妥当性検証
+ *
+ * @note GPU Resourceに対する具体的な操作はConcrete側が担当する。
+ *
+ * @date 2026-02-23
+ *
+ */
 #include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
 
-#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
+#include "engine/systems/renderer/renderer_backend/internal/renderer_backend_context_internal.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
 #include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_shader_vtable.h"
 
 renderer_backend_result_t renderer_backend_shader_create(renderer_backend_context_t* backend_context_, renderer_backend_shader_t** out_shader_handle_) {
@@ -173,4 +199,18 @@ renderer_backend_result_t renderer_backend_shader_vec4u8_uniform_set(const rende
 
 cleanup:
     return ret;
+}
+
+bool renderer_backend_shader_is_valid(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_) {
+    if(NULL == shader_) {
+        return false;
+    }
+    if(!renderer_backend_is_valid(backend_context_)) {
+        return false;
+    }
+    if(!backend_context_->shader_vtable->renderer_shader_is_valid(shader_)) {
+        return false;
+    }
+
+    return true;
 }

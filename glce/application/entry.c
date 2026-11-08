@@ -66,11 +66,14 @@ int main(int argc_, char** argv_) {
     }
 
 cleanup:
-    if(application_created) {
-        application_destroy();
+    if(APPLICATION_DATA_CORRUPTED != ret_application) {
+        if(application_created) {
+            application_destroy();
+        }
+        if(general_allocator_created) {
+            general_allocator_destroy();
+        }
     }
-    if(general_allocator_created) {
-        general_allocator_destroy();
-    }
+
     return 0;
 }

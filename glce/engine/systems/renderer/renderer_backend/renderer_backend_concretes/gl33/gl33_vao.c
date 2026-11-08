@@ -5,7 +5,19 @@
  *
  * @file gl33_vao.c
  * @author chocolate-pie24
- * @brief OpenGL固有の型やAPIを使用せず、VAOを使用するためのラッパーAPIの実装
+ * @brief OpenGL 3.3によるRenderer Backend VAOのConcrete実装
+ *
+ * @details
+ * Renderer Backend VAOのvtableに対応する
+ * OpenGL 3.3固有の処理を提供する。
+ *
+ * VAO Handleの生成、削除、bind、unbind、および
+ * Vertex Attributeの設定を担当する。
+ *
+ * VAOの内部表現にはOpenGLのGLuintを使用する。
+ *
+ * 現在の実装では、個々のOpenGL API呼び出しに対して
+ * glGetError()による実行結果の検証を行わない。
  *
  * @date 2025-12-19
  *
@@ -49,12 +61,15 @@ static void mock_glBindVertexArray(GLuint array_);
 static void mock_glVertexAttribPointer(GLuint index_, GLint size_, GLenum type_, GLboolean normalized_, GLsizei stride_, const void * pointer_);
 static void mock_glEnableVertexAttribArray(GLuint index_);
 
+static bool gl33_vao_is_valid(const renderer_backend_vao_t* vao_);
+
 static const renderer_vao_vtable_t s_gl33_vao_vtable = {
     .vao_create = gl33_vao_create,
     .vao_destroy = gl33_vao_destroy,
     .vao_bind = gl33_vao_bind,
     .vao_unbind = gl33_vao_unbind,
     .vao_attribute_set = gl33_vao_attribute_set,
+    .vao_is_valid = gl33_vao_is_valid,
 };  /**< OpenGL3.3用VAO操作仮想関数テーブル */
 
 const renderer_vao_vtable_t* gl33_vao_vtable_get(void) {
@@ -63,18 +78,47 @@ const renderer_vao_vtable_t* gl33_vao_vtable_get(void) {
 }
 
 /**
- * @brief VAO構造体インスタンスのメモリを確保し、VAOハンドルを生成する
+ * @brief VAO管理Objectを確保し、OpenGL VAO Handleの生成を要求する
  *
- * @param[out] out_vao_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
+ * @details
+ * General Allocatorからrenderer_backend_vao_tのStorageを取得し、
+ * glGenVertexArrays()を呼び出してVAO Handleの生成を要求する。
  *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - out_vao_がNULL
- * - *out_vao_が非NULL
- * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_BACKEND_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
- * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
- * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
- * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ * 現在の実装では、glGenVertexArrays()の実行結果および
+ * 生成されたVAO Handleの妥当性を検証しない。
+ *
+ * したがって、SUCCESSはGeneral Allocatorによる
+ * 管理Objectの確保とOpenGL APIの呼び出しが完了したことを表し、
+ * OpenGL側のResource Stateの正常性までは保証しない。
+ *
+ * @param[out] out_vao_
+ * 生成されたVAO管理Objectの格納先。
+ * 呼び出し前に*out_vao_はNULLでなければならない。
+ *
+ * @retval RENDERER_BACKEND_SUCCESS
+ * VAO管理Objectの生成処理が成功した
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT
+ * out_vao_がNULL、または*out_vao_がNULLではない。
+ * 下位Allocator由来の引数不正も含む。
+ *
+ * @retval RENDERER_BACKEND_NO_MEMORY
+ * 管理ObjectのStorageを確保できなかった
+ *
+ * @retval RENDERER_BACKEND_BAD_OPERATION
+ * 下位Allocatorの操作条件を満たしていない
+ *
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED
+ * 下位Allocatorの管理上限を超えた
+ *
+ * @retval RENDERER_BACKEND_OVERFLOW
+ * 下位Allocatorで算術overflowが検出された
+ *
+ * @retval RENDERER_BACKEND_DATA_CORRUPTED
+ * 下位Allocatorで内部データ破損が検出された
+ *
+ * @retval RENDERER_BACKEND_UNDEFINED_ERROR
+ * 下位Allocatorから未定義または変換対象外の結果を受け取った
  */
 static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** out_vao_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -103,9 +147,25 @@ cleanup:
 }
 
 /**
- * @brief renderer_backend_vao_t構造体インスタンスのメモリを解放し、OpenGLContext内のVAOも削除する
+ * @brief VAO管理Objectを破棄し、OpenGL VAO Handleの削除を要求する
  *
- * @param[in,out] vao_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
+ * @details
+ * 現在BindされているVAOのunbindを試みた後、
+ * glDeleteVertexArrays()によって対象VAO Handleの削除を要求する。
+ *
+ * unbindが失敗した場合はWarningを出力するが、
+ * 後続のVAO削除処理と管理Objectのメモリ解放を継続する。
+ *
+ * 管理Objectの解放にはGeneral Allocatorを使用し、
+ * 最後に*vao_をNULLへ設定する。
+ *
+ * vao_または*vao_がNULLの場合は、何も行わない。
+ *
+ * 現在の実装では、OpenGL側の削除結果および
+ * General Allocatorによる解放結果をCallerへ通知しない。
+ *
+ * @param[in,out] vao_
+ * 破棄対象のVAO管理Objectを保持するPointerの格納先
  */
 static void gl33_vao_destroy(renderer_backend_vao_t** vao_) {
     if(NULL == vao_) {
@@ -223,4 +283,32 @@ static void NO_COVERAGE mock_glVertexAttribPointer(GLuint index_, GLint size_, G
 
 static void NO_COVERAGE mock_glEnableVertexAttribArray(GLuint index_) {
     glEnableVertexAttribArray(index_);
+}
+
+/**
+ * @brief OpenGL3.3用VAO GPUリソース内部状態管理構造体の妥当性を検証する
+ *
+ * @details
+ * VAO管理構造体がNULLではないことと、
+ * 保持するOpenGL VAOハンドルが0ではないことを確認する。
+ *
+ * @note OpenGL APIを使用したGPUリソースの存在確認や、
+ * VAOのBind状態の確認は行わない。
+ *
+ * @param[in] vao_ 検証対象のVAO GPUリソース内部状態管理構造体インスタンス
+ *
+ * @retval true 内部状態が妥当
+ * @retval false 以下のいずれか
+ * - vao_がNULL
+ * - vao_handleが0
+ */
+static bool gl33_vao_is_valid(const renderer_backend_vao_t* vao_) {
+    if(NULL == vao_) {
+        return false;
+    }
+    if(0 == vao_->vao_handle) {
+        return false;
+    }
+
+    return true;
 }

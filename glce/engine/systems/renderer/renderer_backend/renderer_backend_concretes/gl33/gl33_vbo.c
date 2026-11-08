@@ -1,18 +1,31 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
-/** @ingroup renderer
+/**
+ * @ingroup renderer
  *
  * @file gl33_vbo.c
  * @author chocolate-pie24
- * @brief OpenGL固有の型やAPIを使用せず、VBOを使用するためのラッパーAPIの実装
+ * @brief OpenGL 3.3によるRenderer Backend VBOのConcrete実装
+ *
+ * @details
+ * Renderer Backend VBOのvtableに対応する
+ * OpenGL 3.3固有の処理を提供する。
+ *
+ * VBO Handleの生成、削除、bind、unbind、
+ * buffer領域の確保、および頂点データ転送を担当する。
+ *
+ * VBOの内部表現にはOpenGLのGLuintを使用する。
+ *
+ * 現在の実装では、個々のOpenGL API呼び出しに対して
+ * glGetError()による実行結果の検証を行わない。
  *
  * @date 2025-12-19
- *
  */
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vbo.h"
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include <GL/glew.h>
 
@@ -48,6 +61,8 @@ static void mock_glDeleteBuffers(GLsizei n_, const GLuint* buffer_);
 static void mock_glBufferData(GLenum target_, GLsizeiptr size_, const void* data_, GLenum usage_);
 static void mock_glBufferSubData(GLenum target, GLintptr offset_, GLsizeiptr size_, const void * data_);
 
+static bool gl33_vbo_is_valid(const renderer_backend_vbo_t* vbo_);
+
 static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
     .vbo_create = gl33_vbo_create,
     .vbo_destroy = gl33_vbo_destroy,
@@ -55,6 +70,7 @@ static const renderer_vbo_vtable_t s_gl33_vbo_vtable = {
     .vbo_unbind = gl33_vbo_unbind,
     .vbo_vertex_load = gl33_vbo_vertex_load,
     .vbo_vertex_subload = gl33_vbo_vertex_subload,
+    .vbo_is_valid = gl33_vbo_is_valid,
 };  /**< OpenGL3.3用VBO操作仮想関数テーブル */
 
 const renderer_vbo_vtable_t* gl33_vbo_vtable_get(void) {
@@ -248,4 +264,32 @@ static void NO_COVERAGE mock_glBufferData(GLenum target_, GLsizeiptr size_, cons
 
 static void NO_COVERAGE mock_glBufferSubData(GLenum target, GLintptr offset_, GLsizeiptr size_, const void * data_) {
     glBufferSubData(target, offset_, size_, data_);
+}
+
+/**
+ * @brief OpenGL3.3用VBO GPUリソース内部状態管理構造体の妥当性を検証する
+ *
+ * @details
+ * VBO管理構造体がNULLではないことと、
+ * 保持するOpenGL VBOハンドルが0ではないことを確認する。
+ *
+ * @note OpenGL APIを使用したGPUリソースの存在確認や、
+ * VBOのBind状態、Buffer容量の確認は行わない。
+ *
+ * @param[in] vbo_ 検証対象のVBO GPUリソース内部状態管理構造体インスタンス
+ *
+ * @retval true 内部状態が妥当
+ * @retval false 以下のいずれか
+ * - vbo_がNULL
+ * - vbo_handleが0
+ */
+static bool gl33_vbo_is_valid(const renderer_backend_vbo_t* vbo_) {
+    if(NULL == vbo_) {
+        return false;
+    }
+    if(0 == vbo_->vbo_handle) {
+        return false;
+    }
+
+    return true;
 }

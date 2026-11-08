@@ -19,6 +19,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include "engine/base/choco_math/math_types.h"
 
@@ -155,6 +156,23 @@ vec3f_t vec3f_component_min(vec3f_t v1_, vec3f_t v2_);
  * @return vec3f_t v1_, v2_の各要素の大きい方を格納したvec3f_t
  */
 vec3f_t vec3f_component_max(vec3f_t v1_, vec3f_t v2_);
+
+/**
+ * @brief 3次元ベクトルの外積を計算する
+ *
+ * @details
+ * vec1_ × vec2_を計算する。
+ * 結果の方向は右手系に従う。
+ *
+ * @note 入力ベクトルの各要素はfiniteであることを
+ * callerが保証する。
+ *
+ * @param[in] vec1_ 外積の左側のベクトル
+ * @param[in] vec2_ 外積の右側のベクトル
+ *
+ * @return 外積の計算結果
+ */
+vec3f_t vec3f_cross(vec3f_t vec1_, vec3f_t vec2_);
 
 /**
  * @brief 4次元ベクトルxyzwを初期化する

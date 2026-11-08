@@ -30,20 +30,17 @@ extern "C" {
 
 #include "engine/systems/camera/camera_registries/core/camera_registry_types.h"
 
-#include "engine/resource/core/resource_types.h"
-
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "engine/systems/event_system/core/event_system_types.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
-#include "engine/systems/renderer/render_resources/core/render_resource_types.h"
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
+#include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
-// NOTE: engine/systems/renderer/resources/shaders/core/shader_resource_types.hのincludeについて
-// Applicationからengine内部headerを直接includeするのは本来layering違反であるが暫定的に許可する。
-// 将来Renderer Frontendを導入し、Shaderおよびその内部型をApplicationから隠した時点で削除する予定。
-#include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
+#include "application/model_framework/core/model_framework_types.h"
 
 /**
  * @brief アプリケーションレイヤー実行結果コードを文字列に変換する
@@ -67,30 +64,25 @@ application_result_t application_result_convert_platform_system(platform_system_
  */
 application_result_t application_result_convert_ring_queue(ring_queue_result_t result_);
 
-application_result_t application_result_convert_renderer_backend(renderer_backend_result_t result_);
-
-/**
- * @brief Resourceレイヤーの実行結果コードをアプリケーションレイヤー実行結果コードに変換する
- *
- * @param[in] result_ Resourceレイヤー実行結果コード
- *
- * @return application_result_t 変換されたアプリケーションレイヤー実行結果コード
- */
-application_result_t application_result_convert_resource(resource_result_t result_);
-
-application_result_t application_result_convert_shader(shader_result_t result_);
-
 application_result_t application_result_convert_camera_registry(camera_registry_result_t result_);
 
 application_result_t application_result_convert_camera(camera_result_t result_);
 
 application_result_t application_result_convert_fs_path(fs_path_result_t result_);
 
-application_result_t application_result_convert_render_resource(render_resource_result_t result_);
-
 application_result_t application_result_convert_event_system(event_system_result_t result_);
 
 application_result_t application_result_convert_general_allocator(general_allocator_result_t result_);
+
+application_result_t application_result_convert_renderer_frontend(renderer_frontend_result_t result_);
+
+application_result_t application_result_convert_renderer_backend(renderer_backend_result_t result_);
+
+application_result_t application_result_convert_mesh(mesh_result_t result_);
+
+application_result_t application_result_convert_model_framework(model_framework_result_t result_);
+
+application_result_t application_result_convert_geometry(geometry_result_t result_);
 
 #ifdef __cplusplus
 }

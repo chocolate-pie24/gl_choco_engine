@@ -5,8 +5,9 @@
 
 #include <stdbool.h>
 
+#include "engine/memory/low_level_allocators/range_allocator/range_allocator.h"
+
 #include "engine/systems/renderer/core/renderer_types.h"
-#include "engine/systems/renderer/resources/allocators/range_allocator.h"
 
 bool vbo_range_is_valid(const vbo_range_t* vbo_range_) {
     if(NULL == vbo_range_) {

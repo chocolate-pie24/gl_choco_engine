@@ -17,6 +17,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdalign.h>
 
 #include <time.h>   // for nanosleep TODO: remove this!!
 
@@ -32,6 +33,8 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
+#include "engine/core/geometry_primitive/cone.h"
+#include "engine/core/geometry_primitive/cylinder.h"
 #include "engine/core/event/keyboard_event.h"
 
 #include "engine/io_utils/fs_path.h"
@@ -53,7 +56,13 @@
 
 // Renderer System
 #include "engine/systems/renderer/core/renderer_types.h"
-#include "engine/systems/renderer/config/renderer_config.h"
+
+#include "engine/systems/renderer/resources/geometries/generators/line_grid_geometry.h"
+#include "engine/systems/renderer/resources/meshes/line_mesh.h"
+#include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
+
+#include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
+#include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
 
 // Application Layer
 #include "application/core/application_types.h"
@@ -61,8 +70,13 @@
 
 #include "application/event/application_frame_state.h"
 #include "application/cameras/application_flight_camera.h"
-#include "application/renderer/application_renderer.h"
 #include "application/diagnostics/application_diagnostics.h"
+
+#include "application/model_framework/core/model_framework_types.h"
+#include "application/model_framework/assembly/untextured_model/model_assembly_config.h"
+#include "application/model_framework/assembly/untextured_model/model_resource_map.h"
+#include "application/model_framework/coordinates/model_transform_tree.h"
+#include "application/model_instance/sample_robot/sample_robot.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -70,21 +84,18 @@
  */
 typedef struct application_state {
     // SubSystem Configuration
-    renderer_config_t renderer_config;
     platform_system_config_t platform_system_config;
     event_system_config_t event_system_config;
     application_diagnostics_config_t diag_config;
 
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
-    int window_width;           /**< ウィンドウ幅 */
-    int window_height;          /**< ウィンドウ高さ */
 
-    // 実行ファイルパス
+    // ファイルパス
     fs_path_t* executable_directory;
+    fs_path_t* asset_root;
 
     // Subsystem Allocator
-    size_t subsystem_memory_pool_size;
     subsystem_allocator_t* subsystem_allocator;
 
     // Platform System
@@ -102,40 +113,21 @@ typedef struct application_state {
     ambient_light_t ambient_light;
 
     // Renderer System
-    application_renderer_t* renderer;
+    renderer_frontend_config_t renderer_frontend_config;
+    renderer_frontend_t* renderer_frontend;
 
     // Frame State
     application_frame_state_t frame_state;
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
-    mat4x4f_t model_matrix;
-    mat4x4f_t penguin_model_matrix;
 
-    // Texture ID
-    uint16_t tex_id_rabbit;
-    uint16_t tex_id_frog;
-    uint16_t tex_id_green;
-
-    // Material ID
-    uint16_t material_id_penguin;
-
-    // Geometry ID
-    bool should_draw_penguin_aabb;
-    uint16_t geometry_id_test_points;
-    uint16_t geometry_id_penguin;
-    uint16_t geometry_id_small_icon;
-    uint16_t geometry_id_large_icon;
-    uint16_t geometry_id_penguin_aabb;
-    uint16_t geometry_id_test_line;
-
-    // Line Material
-    vec4u8_t penguin_aabb_color;
-    vec4u8_t test_line_color;
-
-    mat4x4f_t rabbit_mesh_model_mat;
-    mat4x4f_t frog_mesh_model_mat;
-    mat4x4f_t green_mesh_model_mat;
-    // end temporary
+    // Render model
+    // Sample Robot scene
+    untextured_model_resource_map_t* sample_robot_resource_map;
+    sample_robot_t* sample_robot1;
+    sample_robot_t* sample_robot2;
+    line_mesh_t* floor_grid_line_mesh;
+    mat4x4f_t floor_grid_model_matrix;
 } application_state_t;
 
 static application_state_t* s_application_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
@@ -146,24 +138,29 @@ static void app_state_begin_frame(void);
 // subsystem configuration
 static void platform_system_config_initialize(platform_system_config_t* config_);
 static void event_system_config_initialize(event_system_config_t* config_);
-static void renderer_config_initialize(renderer_config_t* config_);
+static void renderer_frontend_config_initialize(renderer_frontend_config_t* config_);
 
-static application_result_t point_mesh_geometry_import(application_state_t* state_);        // TODO: remove this!!
-static application_result_t ui_mesh_geometry_import(application_state_t* state_);
-static application_result_t untextured_mesh_import(application_state_t* state_);
-static application_result_t ui_mesh_textures_import(application_state_t* state_);
+static application_result_t directory_path_initialize(application_state_t* state_);
 
-static application_result_t executable_directory_get(application_state_t* state_);
+static application_result_t sample_robot_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_);
+static application_result_t sample_robot_model_resource_map_destroy(renderer_frontend_t* renderer_frontend_, untextured_model_resource_map_t** resource_map_);
+
+static application_result_t floor_grid_mesh_create(renderer_frontend_t* renderer_frontend_, line_mesh_t** out_mesh_);
+static application_result_t floor_grid_mesh_destroy(renderer_frontend_t* renderer_frontend_, line_mesh_t** mesh_);
 
 application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
+    application_result_t ret_cleanup = APPLICATION_RUNTIME_ERROR;
 
     subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
-
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
     light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
+    model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+
+    size_t subsystem_memory_pool_size = 0;
 
     application_state_t* tmp_state = NULL;
 
@@ -184,8 +181,8 @@ application_result_t application_create(void) {
     }
 
     // Subsystem Allocator
-    tmp_state->subsystem_memory_pool_size = 128 * KIB;
-    ret_subsystem_allocator = subsystem_allocator_create(tmp_state->subsystem_memory_pool_size, &tmp_state->subsystem_allocator);
+    subsystem_memory_pool_size = 128 * KIB;
+    ret_subsystem_allocator = subsystem_allocator_create(subsystem_memory_pool_size, &tmp_state->subsystem_allocator);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = application_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for subsystem allocator.", application_result_to_str(ret));
@@ -193,18 +190,15 @@ application_result_t application_create(void) {
     }
 
     // 実行ファイルパス取得
-    ret = executable_directory_get(tmp_state);
+    ret = directory_path_initialize(tmp_state);
     if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - executable_directory_get failed.", application_result_to_str(ret));
+        ERROR_MESSAGE("application_create(%s) - directory_path_initialize failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
     // Platform System
     INFO_MESSAGE("Creating platform system...");
     platform_system_config_initialize(&tmp_state->platform_system_config);
-
-    tmp_state->window_width = 1024;
-    tmp_state->window_height = 768;
 
     ret_platform_system = platform_system_create(&tmp_state->platform_system_config, tmp_state->subsystem_allocator, &tmp_state->frame_state.framebuffer_width, &tmp_state->frame_state.framebuffer_height, &tmp_state->platform_system);
     if(PLATFORM_SYSTEM_SUCCESS != ret_platform_system) {
@@ -240,7 +234,7 @@ application_result_t application_create(void) {
     // direction: 正面から少し斜め上の光で、面の違いが見やすい
     // color: 白色光。色による影響を除外できる
     // intensity: 明るさの計算と結果を比較しやすい
-    ret_light_result = directional_light_initialize(vec3f_initialize(0.4f, 0.8f, 1.0f), vec3f_initialize(1.0f, 1.0f, 1.0f), 5.0f, &tmp_state->directional_light);
+    ret_light_result = directional_light_initialize(vec3f_initialize(0.4f, 0.8f, 1.0f), vec3f_initialize(1.0f, 1.0f, 1.0f), 1.0f, &tmp_state->directional_light);
     if(LIGHT_SUCCESS != ret_light_result) {
         ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
         ERROR_MESSAGE("application_create(%s) - directional_light_initialize failed.", application_result_to_str(ret));
@@ -253,19 +247,57 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    // application renderer
-    INFO_MESSAGE("Creating renderer system...");
-    renderer_config_initialize(&tmp_state->renderer_config);
-    ret = application_renderer_create(&tmp_state->renderer_config, tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_state->renderer);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - application_renderer_create failed.", application_result_to_str(ret));
+    // Renderer Backend / Frontend
+    INFO_MESSAGE("Creating renderer frontend...");
+    renderer_frontend_config_initialize(&tmp_state->renderer_frontend_config);
+    ret_renderer_frontend = renderer_frontend_create(&tmp_state->renderer_frontend_config, tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_state->renderer_frontend);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("application_create(%s) - renderer_frontend_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("renderer system created successfully.");
+    INFO_MESSAGE("renderer frontend created successfully.");
 
     // diagnostic config
     tmp_state->diag_config.runtime_status_report = KEY_1;
     tmp_state->diag_config.validation_report = KEY_2;
+
+    // sample robot scene
+    ret = sample_robot_model_resource_map_create(tmp_state->renderer_frontend, fs_path_fullpath_get(tmp_state->asset_root), &tmp_state->sample_robot_resource_map);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - sample_robot_model_resource_map_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_model_framework = sample_robot_create(tmp_state->sample_robot_resource_map, &tmp_state->sample_robot1);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ret = application_result_convert_model_framework(ret_model_framework);
+        ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_model_framework = sample_robot_placement_set(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->sample_robot1);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ret = application_result_convert_model_framework(ret_model_framework);
+        ERROR_MESSAGE("application_create(%s) - sample_robot_placement_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_model_framework = sample_robot_create(tmp_state->sample_robot_resource_map, &tmp_state->sample_robot2);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ret = application_result_convert_model_framework(ret_model_framework);
+        ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_model_framework = sample_robot_placement_set(vec3f_initialize(150.0f, 0.0f, -1000.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->sample_robot2);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ret = application_result_convert_model_framework(ret_model_framework);
+        ERROR_MESSAGE("sample_robot_initialize(%s) - sample_robot_placement_set failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    ret = floor_grid_mesh_create(tmp_state->renderer_frontend, &tmp_state->floor_grid_line_mesh);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - floor_grid_mesh_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    mat4f_identity(&tmp_state->floor_grid_model_matrix);
 
     application_diagnostics_status_report(tmp_state->subsystem_allocator);
 
@@ -276,26 +308,50 @@ application_result_t application_create(void) {
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    if(APPLICATION_SUCCESS != ret) {
-        if(NULL != tmp_state) {
-            if(NULL != tmp_state->renderer) {
-                application_renderer_deinitialize(tmp_state->renderer);
+    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != tmp_state) {
+        if(NULL != tmp_state->floor_grid_line_mesh && NULL != tmp_state->renderer_frontend) {
+            ret_cleanup = floor_grid_mesh_destroy(tmp_state->renderer_frontend, &tmp_state->floor_grid_line_mesh);
+            if(APPLICATION_DATA_CORRUPTED == ret_cleanup) {
+                ERROR_MESSAGE("application_create(%s) - floor_grid_mesh_destroy failed.", application_result_to_str(ret_cleanup));
+                return ret_cleanup;
             }
-            if(NULL != tmp_state->flight_camera) {
-                application_flight_camera_deinitialize(tmp_state->flight_camera);
-            }
-            if(NULL != tmp_state->event_system) {
-                event_system_deinitialize(tmp_state->event_system);
-            }
-            if(NULL != tmp_state->platform_system) {
-                platform_system_deinitialize(tmp_state->platform_system);
-            }
-            if(NULL != tmp_state->executable_directory) {
-                fs_path_destroy(&tmp_state->executable_directory);
-            }
-            subsystem_allocator_destroy(&tmp_state->subsystem_allocator);
-            general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
         }
+        if(NULL != tmp_state->sample_robot2) {
+            sample_robot_destroy(&tmp_state->sample_robot2);
+        }
+        if(NULL != tmp_state->sample_robot1) {
+            sample_robot_destroy(&tmp_state->sample_robot1);
+        }
+        if(NULL != tmp_state->sample_robot_resource_map) {
+            ret_cleanup = sample_robot_model_resource_map_destroy(tmp_state->renderer_frontend, &tmp_state->sample_robot_resource_map);
+            if(APPLICATION_DATA_CORRUPTED == ret_cleanup) {
+                ERROR_MESSAGE("application_create(%s) - sample_robot_model_resource_map_destroy failed.", application_result_to_str(ret_cleanup));
+                return ret_cleanup;
+            }
+        }
+        if(NULL != tmp_state->renderer_frontend) {
+            renderer_frontend_deinitialize(tmp_state->renderer_frontend);
+        }
+        if(NULL != tmp_state->flight_camera) {
+            application_flight_camera_deinitialize(tmp_state->flight_camera);
+        }
+        if(NULL != tmp_state->event_system) {
+            event_system_deinitialize(tmp_state->event_system);
+        }
+        if(NULL != tmp_state->platform_system) {
+            platform_system_deinitialize(tmp_state->platform_system);
+        }
+        if(NULL != tmp_state->executable_directory) {
+            fs_path_destroy(&tmp_state->executable_directory);
+        }
+        if(NULL != tmp_state->asset_root) {
+            fs_path_destroy(&tmp_state->asset_root);
+        }
+        subsystem_allocator_destroy(&tmp_state->subsystem_allocator);
+        general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     }
 
     return ret;
@@ -303,14 +359,36 @@ cleanup:
 
 // TODO: test
 void application_destroy(void) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
     INFO_MESSAGE("Starting application shutdown...");
     if(NULL == s_application_state) {
         goto cleanup;
     }
 
     // begin cleanup all systems.
-    if(NULL != s_application_state->renderer) {
-        application_renderer_deinitialize(s_application_state->renderer);
+    if(NULL != s_application_state->floor_grid_line_mesh && NULL != s_application_state->renderer_frontend) {
+        ret = floor_grid_mesh_destroy(s_application_state->renderer_frontend, &s_application_state->floor_grid_line_mesh);
+        if(APPLICATION_DATA_CORRUPTED == ret) {
+            ERROR_MESSAGE("application_destroy(%s) - floor_grid_mesh_destroy failed.", application_result_to_str(ret));
+            return;
+        }
+    }
+    if(NULL != s_application_state->sample_robot2) {
+        sample_robot_destroy(&s_application_state->sample_robot2);
+    }
+    if(NULL != s_application_state->sample_robot1) {
+        sample_robot_destroy(&s_application_state->sample_robot1);
+    }
+    if(NULL != s_application_state->sample_robot_resource_map && NULL != s_application_state->renderer_frontend) {
+        ret = sample_robot_model_resource_map_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_resource_map);
+        if(APPLICATION_DATA_CORRUPTED == ret) {
+            ERROR_MESSAGE("application_destroy(%s) - sample_robot_model_resource_map_destroy failed.", application_result_to_str(ret));
+            return;
+        }
+    }
+    if(NULL != s_application_state->renderer_frontend) {
+        renderer_frontend_deinitialize(s_application_state->renderer_frontend);
     }
     if(NULL != s_application_state->flight_camera) {
         application_flight_camera_deinitialize(s_application_state->flight_camera);
@@ -323,6 +401,9 @@ void application_destroy(void) {
     }
     if(NULL != s_application_state->executable_directory) {
         fs_path_destroy(&s_application_state->executable_directory);
+    }
+    if(NULL != s_application_state->asset_root) {
+        fs_path_destroy(&s_application_state->asset_root);
     }
 
     application_diagnostics_status_report(s_application_state->subsystem_allocator);
@@ -340,16 +421,16 @@ cleanup:
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
 
-    // penguin AABB
-    aabb_3d_t penguin_aabb = { 0 };
-
-    line_vertex_t tmp_vertices[2] = { 0 };
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+    model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     struct timespec  req = {0, 1000000};
 
-    float penguin_rotation_angle = 0.0f;
-    mat4x4f_t penguin_orientation = { 0 };
-    mat4x4f_t penguin_rotation = { 0 };
+    mat4x4f_t tmp_model_matrix = { 0 };
+    untextured_mesh_t tmp_untextured_mesh = { 0 };
+    line_mesh_t tmp_line_mesh = { 0 };
+    size_t tmp_mesh_count = 0;
+    uint16_t tmp_coordinate_id = 0;
 
     if(NULL == s_application_state) {
         ret = APPLICATION_RUNTIME_ERROR;
@@ -362,15 +443,8 @@ application_result_t application_run(void) {
     glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
 
     // MVP Matrix
-    mat4f_identity(&s_application_state->model_matrix);
-    mat4f_rot_x(CHOCO_DEG_TO_RAD(-90.0f), &penguin_orientation);
-    mat4f_identity(&s_application_state->rabbit_mesh_model_mat);
-    mat4f_identity(&s_application_state->frog_mesh_model_mat);
-    mat4f_identity(&s_application_state->green_mesh_model_mat);
     mat4f_identity(&s_application_state->projection_matrix);
     mat4f_identity(&s_application_state->view_matrix);
-    mat4f_translation(vec3f_initialize(2.5f, 0.0f, 0.0f), &s_application_state->green_mesh_model_mat);
-    mat4f_translation(vec3f_initialize(0.0f, -2.5f, 0.0f), &s_application_state->frog_mesh_model_mat);
 
     ret = application_flight_camera_perspective_matrix_get(s_application_state->flight_camera, &s_application_state->projection_matrix);
     if(APPLICATION_SUCCESS != ret) {
@@ -388,74 +462,48 @@ application_result_t application_run(void) {
     s_application_state->frame_state.projection_dirty = true;
     s_application_state->frame_state.view_dirty = true;
     s_application_state->frame_state.window_resized = true;
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light, &s_application_state->frame_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - application_renderer_update failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = ui_mesh_textures_import(s_application_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run - ui_mesh_textures_import failed.");
-        goto cleanup;
-    }
-
-    ret = untextured_mesh_import(s_application_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run - Failed to import untextured mesh.");
-        goto cleanup;
-    }
-
-    ret = point_mesh_geometry_import(s_application_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - Failed to import point mesh geometry.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // ペンギンAABB pipeline import
-    s_application_state->should_draw_penguin_aabb = true;
-    s_application_state->penguin_aabb_color = vec4u8_initialize(255, 0, 0, 255);
-    if(s_application_state->should_draw_penguin_aabb) {
-        ret = application_renderer_untextured_mesh_geometry_convert_to_aabb_3d(s_application_state->renderer, s_application_state->geometry_id_penguin, &penguin_aabb);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_untextured_mesh_geometry_convert_to_aabb_3d failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret = application_renderer_line_mesh_geometry_import_from_aabb(s_application_state->renderer, "penguin_aabb", &penguin_aabb, &s_application_state->geometry_id_penguin_aabb);
-        if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_geometry_import_from_aabb failed.", application_result_to_str(ret));
-        goto cleanup;
-        }
-    }
-
-    // テスト線分 pipeline import
-    tmp_vertices[0].position = vec3f_initialize(1.0f, 2.0f, -3.0f);
-    tmp_vertices[1].position = vec3f_initialize(4.0f, 5.0f, -6.0f);
-    s_application_state->test_line_color = vec4u8_initialize(0, 255, 0, 255);
-    ret = application_renderer_line_mesh_geometry_import_from_vertices(s_application_state->renderer, "test_line", tmp_vertices, 2, &s_application_state->geometry_id_test_line);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_geometry_import_from_vertices failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // UI pipeline import
-    // アイコンサイズはUI描画用projection, viewができたら整える
-    ret = ui_mesh_geometry_import(s_application_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_run - Failed to import ui mesh geometry.");
+    ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_render_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
     // TODO: window NULLチェック
     // end temporary
     while(!s_application_state->window_should_close) {
-        penguin_rotation_angle += 0.001f;
-        mat4f_rot_z(penguin_rotation_angle, &penguin_rotation);
+        s_application_state->sample_robot1->posture.base_motor_angle += 0.1f;
+        if(s_application_state->sample_robot1->posture.base_motor_angle >= 360.0f) {
+            s_application_state->sample_robot1->posture.base_motor_angle = 0.0f;
+        }
+        s_application_state->sample_robot1->posture.shoulder_motor_angle -= 0.1f;
+        if(s_application_state->sample_robot1->posture.shoulder_motor_angle <= -45.0f) {
+            s_application_state->sample_robot1->posture.shoulder_motor_angle = 0.0f;
+        }
 
-        mat4f_mul(&penguin_orientation, &penguin_rotation, &s_application_state->penguin_model_matrix);
+        s_application_state->sample_robot2->posture.wrist_motor_angle += 0.1f;
+        if(s_application_state->sample_robot2->posture.wrist_motor_angle >= 360.0f) {
+            s_application_state->sample_robot2->posture.wrist_motor_angle = 0.0f;
+        }
+        s_application_state->sample_robot2->posture.elbow_motor_angle += 0.1f;
+        if(s_application_state->sample_robot2->posture.elbow_motor_angle >= 45.0f) {
+            s_application_state->sample_robot2->posture.elbow_motor_angle = 0.0f;
+        }
+        s_application_state->sample_robot2->posture.left_finger_angle += 0.1f;
+        if(s_application_state->sample_robot2->posture.left_finger_angle >= 45.0f) {
+            s_application_state->sample_robot2->posture.left_finger_angle = 0.0f;
+        }
+        s_application_state->sample_robot2->posture.right_finger_angle -= 0.1f;
+        if(s_application_state->sample_robot2->posture.right_finger_angle <= -45.0f) {
+            s_application_state->sample_robot2->posture.right_finger_angle = 0.0f;
+        }
+
+        if(MODEL_FRAMEWORK_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot1->posture, s_application_state->sample_robot1)) {
+            ERROR_MESSAGE("sample_robot_posture_update failed.");
+        }
+        if(MODEL_FRAMEWORK_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot2->posture, s_application_state->sample_robot2)) {
+            ERROR_MESSAGE("sample_robot_posture_update failed.");
+        }
 
         app_state_begin_frame();
 
@@ -479,49 +527,131 @@ application_result_t application_run(void) {
         glEnable(GL_DEPTH_TEST);
         glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
 
-        // UI描画
-        ret = application_renderer_ui_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_small_icon, s_application_state->tex_id_rabbit, &s_application_state->rabbit_mesh_model_mat);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_ui_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret = application_renderer_ui_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_large_icon, s_application_state->tex_id_frog, &s_application_state->frog_mesh_model_mat);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_ui_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret = application_renderer_ui_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_small_icon, s_application_state->tex_id_green, &s_application_state->green_mesh_model_mat);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_ui_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        // 線分描画
-        ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin_aabb, &s_application_state->penguin_model_matrix, s_application_state->penguin_aabb_color.elem);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret = application_renderer_line_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_test_line, &s_application_state->model_matrix, s_application_state->test_line_color.elem);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_line_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        // ポイント描画
-        ret = application_renderer_point_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_test_points, &s_application_state->model_matrix);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_point_mesh_draw failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
         // STL描画
-        ret = application_renderer_untextured_mesh_draw(s_application_state->renderer, s_application_state->geometry_id_penguin, s_application_state->material_id_penguin, &s_application_state->penguin_model_matrix);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_untextured_mesh_draw failed.", application_result_to_str(ret));
+        ret_model_framework = untextured_model_resource_map_untextured_mesh_count_get(s_application_state->sample_robot_resource_map, &tmp_mesh_count);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ERROR_MESSAGE("application_run - model_resource_map_untextured_mesh_count_get failed. continue...");
+            continue;
+        }
+        for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
+            ret_model_framework = untextured_model_resource_map_untextured_mesh_binding_get(s_application_state->sample_robot_resource_map, i, &tmp_untextured_mesh, &tmp_coordinate_id);
+            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+                ERROR_MESSAGE("application_run - model_resource_map_untextured_mesh_get failed. continue...");
+                continue;
+            }
+
+            ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, &tmp_untextured_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+
+            ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, &tmp_untextured_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+        }
+
+        // Debug AABB Line描画
+        ret_model_framework = untextured_model_resource_map_debug_aabb_mesh_count_get(s_application_state->sample_robot_resource_map, &tmp_mesh_count);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ERROR_MESSAGE("application_run - untextured_model_resource_map_debug_aabb_mesh_count_get failed. continue...");
+            continue;
+        }
+        for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
+            ret_model_framework = untextured_model_resource_map_debug_aabb_mesh_binding_get(s_application_state->sample_robot_resource_map, i, &tmp_line_mesh, &tmp_coordinate_id);
+            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+                ERROR_MESSAGE("application_run - untextured_model_resource_map_debug_aabb_mesh_binding_get failed. continue...");
+                continue;
+            }
+
+            ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, &tmp_line_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+
+            ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, &tmp_line_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+        }
+
+        // Debug AXIS描画
+        ret_model_framework = untextured_model_resource_map_debug_axis_mesh_count_get(s_application_state->sample_robot_resource_map, &tmp_mesh_count);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ERROR_MESSAGE("application_run - untextured_model_resource_map_debug_axis_mesh_count_get failed. continue...");
+            continue;
+        }
+        for(uint16_t i = 0; i != (uint16_t)tmp_mesh_count; ++i) {
+            ret_model_framework = untextured_model_resource_map_debug_axis_mesh_binding_get(s_application_state->sample_robot_resource_map, i, &tmp_untextured_mesh, &tmp_coordinate_id);
+            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+                ERROR_MESSAGE("application_run - untextured_model_resource_map_debug_axis_mesh_binding_get failed. continue...");
+                continue;
+            }
+
+            ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, &tmp_untextured_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+
+            ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+            if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+                ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+                continue;
+            }
+
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_draw(s_application_state->renderer_frontend, &tmp_untextured_mesh, &tmp_model_matrix);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+                ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_draw failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+        }
+
+        // Floor Grid
+        ret_renderer_frontend = renderer_frontend_line_mesh_draw(s_application_state->renderer_frontend, s_application_state->floor_grid_line_mesh, &s_application_state->floor_grid_model_matrix);
+        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+            ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+            ERROR_MESSAGE("application_run(%s) - renderer_frontend_line_mesh_draw failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
@@ -538,6 +668,7 @@ static application_result_t app_state_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     if(NULL == s_application_state) {
         ret = APPLICATION_BAD_OPERATION;
@@ -571,9 +702,17 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
-    ret = application_renderer_update(s_application_state->renderer, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light, &s_application_state->frame_state);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("app_state_update(%s) - application_renderer_update failed.", application_result_to_str(ret));
+    ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("app_state_update(%s) - renderer_frontend_untextured_mesh_render_update failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_frontend = renderer_frontend_line_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("app_state_update(%s) - renderer_frontend_line_mesh_render_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
@@ -620,235 +759,212 @@ static void event_system_config_initialize(event_system_config_t* config_) {
     config_->max_window_event_count = 8;
 }
 
-static void renderer_config_initialize(renderer_config_t* config_) {
-    config_->ui_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    config_->ui_mesh_shader_config.max_allocation_count = 512;
-    config_->ui_mesh_shader_config.vbo_size = 1024;
+static void renderer_frontend_config_initialize(renderer_frontend_config_t* config_) {
+    config_->line_mesh_resource_config.max_geometry_count = 128;
+    config_->line_mesh_resource_config.vbo_config.base_align = alignof(float);
+    config_->line_mesh_resource_config.vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
+    config_->line_mesh_resource_config.vbo_config.max_allocation_count = 512;
+    config_->line_mesh_resource_config.vbo_config.vbo_size = 1 * MIB;
 
-    config_->line_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    config_->line_mesh_shader_config.max_allocation_count = 512;
-    config_->line_mesh_shader_config.vbo_size = 1024;
-
-    config_->point_mesh_shader_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
-    config_->point_mesh_shader_config.max_allocation_count = 128;
-    config_->point_mesh_shader_config.vbo_size = 1 * KIB;
-
-    config_->untextured_mesh_shader_config.buffer_usage = BUFFER_USAGE_STATIC;
-    config_->untextured_mesh_shader_config.max_allocation_count = 512;
-    config_->untextured_mesh_shader_config.vbo_size = 1 * GIB;
+    config_->untextured_mesh_resource_config.max_geometry_count = 128;
+    config_->untextured_mesh_resource_config.max_material_count = 128;
+    config_->untextured_mesh_resource_config.vbo_config.base_align = alignof(max_align_t);
+    config_->untextured_mesh_resource_config.vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
+    config_->untextured_mesh_resource_config.vbo_config.max_allocation_count = 512;
+    config_->untextured_mesh_resource_config.vbo_config.vbo_size = 1 * GIB;
 }
 
-// TODO: remove this!!
-static application_result_t point_mesh_geometry_import(application_state_t* state_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    point_vertex_t tmp_vertices[8] = { 0 };
-
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "point_mesh_geometry_import", "state_")
-
-    tmp_vertices[0].position = vec3f_initialize(-0.5, -0.5f, -3.0f);
-    tmp_vertices[1].position = vec3f_initialize(-0.4f, -0.4f, -3.0f);
-    tmp_vertices[2].position = vec3f_initialize(-0.3f, -0.3f, -3.0f);
-    tmp_vertices[3].position = vec3f_initialize(-0.2f, -0.2f, -3.0f);
-    tmp_vertices[4].position = vec3f_initialize(-0.1f, -0.1f, -3.0f);
-    tmp_vertices[5].position = vec3f_initialize(0.1f, 0.1f, -3.0f);
-    tmp_vertices[6].position = vec3f_initialize(0.2f, 0.2f, -3.0f);
-    tmp_vertices[7].position = vec3f_initialize(0.3f, 0.3f, -3.0f);
-
-    tmp_vertices[0].color = vec4u8_initialize(255, 0, 0, 255);
-    tmp_vertices[1].color = vec4u8_initialize(255, 255, 0, 255);
-    tmp_vertices[2].color = vec4u8_initialize(255, 0, 255, 255);
-    tmp_vertices[3].color = vec4u8_initialize(0, 255, 0, 255);
-    tmp_vertices[4].color = vec4u8_initialize(255, 255, 0, 255);
-    tmp_vertices[5].color = vec4u8_initialize(255, 255, 0, 255);
-    tmp_vertices[6].color = vec4u8_initialize(255, 255, 0, 255);
-    tmp_vertices[7].color = vec4u8_initialize(255, 255, 0, 255);
-
-    ret = application_renderer_point_mesh_geometry_import_from_vertices(state_->renderer, "test_points", tmp_vertices, 8, &state_->geometry_id_test_points);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("point_mesh_geometry_import(%s) - application_renderer_point_mesh_geometry_import_from_vertices failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-static application_result_t ui_mesh_geometry_import(application_state_t* state_) {
+static application_result_t directory_path_initialize(application_state_t* state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
 
-    fs_path_t* small_icon_path = NULL;
-    fs_path_t* large_icon_path = NULL;
+    fs_path_t* executable_directory_path = NULL;
+    fs_path_t* asset_root_path = NULL;
 
-    static const char* const small_icon_name = "small_icon";
-    static const char* const large_icon_name = "large_icon";
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "directory_path_initialize", "state_")
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_geometry_import", "state_")
-
-    ret_fs_path = fs_path_create(&small_icon_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/geometries/", small_icon_name, "ui_geom");
+    ret_fs_path = fs_path_create_from_executable_directory(&executable_directory_path);
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
-        ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+        ret = application_result_convert_fs_path(ret_fs_path);
+        ERROR_MESSAGE("directory_path_initialize(%s) - fs_path_create_from_executable_directory failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = application_renderer_ui_mesh_geometry_import_from_file(state_->renderer, small_icon_name, fs_path_fullpath_get(small_icon_path), &state_->geometry_id_small_icon);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_geometry_import - application_renderer_ui_mesh_geometry_import_from_file failed.");
-        goto cleanup;
-    }
-
-    ret_fs_path = fs_path_create(&large_icon_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/geometries/", large_icon_name, "ui_geom");
+    ret_fs_path = fs_path_create(&asset_root_path, fs_path_fullpath_get(executable_directory_path), "../..", "assets", NULL);
     if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
-        ERROR_MESSAGE("ui_mesh_geometry_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+        ret = application_result_convert_fs_path(ret_fs_path);
+        ERROR_MESSAGE("directory_path_initialize(%s) - fs_path_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = application_renderer_ui_mesh_geometry_import_from_file(state_->renderer, large_icon_name, fs_path_fullpath_get(large_icon_path), &state_->geometry_id_large_icon);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_geometry_import - application_renderer_ui_mesh_geometry_import_from_file failed.");
-        goto cleanup;
-    }
+    state_->executable_directory = executable_directory_path;
+    state_->asset_root = asset_root_path;
+    executable_directory_path = NULL;
+    asset_root_path = NULL;
 
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    fs_path_destroy(&small_icon_path);
-    fs_path_destroy(&large_icon_path);
-
+    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != executable_directory_path) {
+        fs_path_destroy(&executable_directory_path);
+    }
+    if(NULL != asset_root_path) {
+        fs_path_destroy(&asset_root_path);
+    }
     return ret;
 }
 
-static application_result_t untextured_mesh_import(application_state_t* state_) {
+static application_result_t sample_robot_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    application_result_t ret_cleanup = APPLICATION_INVALID_ARGUMENT;
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+    model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    fs_path_t* penguin_material_path = NULL;
-    fs_path_t* penguin_geometry_path = NULL;
+    untextured_model_assembly_config_t* config = NULL;
+    untextured_model_resource_map_t* tmp_resource_map = NULL;
 
-    static const char* const penguin_material_name = "penguin";
-    static const char* const penguin_geometry_name = "glce_lowpoly_penguin_ascii";
+    // Debug Axis Configuration.
+    const uint32_t segment_count = 32;
+    const cone_t cone = { .height = 10.0f, .radius = 10.0f };
+    const cylinder_t cylinder = { .height = 30.0f, .radius = 5.0f };
 
-    bool material_imported = false;
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_create", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_create", "asset_root_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_map_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_create", "out_resource_map_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_resource_map_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_create", "*out_resource_map_")
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "untextured_mesh_import", "state_")
-
-    ret_fs_path = fs_path_create(&penguin_material_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/materials/", penguin_material_name, "untextured_mat");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
-        ERROR_MESSAGE("untextured_mesh_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+    ret_model_framework = sample_robot_dummy_config_loader(&config);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ret = application_result_convert_model_framework(ret_model_framework);
+        ERROR_MESSAGE("sample_robot_model_resource_map_create(%s) - sample_robot_dummy_config_loader failed.", application_result_to_str(ret));
         goto cleanup;
     }
-
-    ret_fs_path = fs_path_create(&penguin_geometry_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/stl/glce_lowpoly_animal_stl_ascii/", penguin_geometry_name, "stl");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // 正式な実行結果コード変換は後でやる
-        ERROR_MESSAGE("untextured_mesh_import(%s) - fs_path_create failed.", application_result_to_str(ret));
+    ret_model_framework = untextured_model_resource_map_create(renderer_frontend_, "sample_robot_resource_map", config, asset_root_path_, vec4u8_initialize(255, 0, 0, 255), &cone, &cylinder, segment_count, &tmp_resource_map);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ret = application_result_convert_model_framework(ret_model_framework);
+        ERROR_MESSAGE("sample_robot_model_resource_map_create(%s) - model_resource_map_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
+    untextured_model_assembly_config_destroy(&config);
 
-    ret = application_renderer_untextured_material_import_from_file(state_->renderer, penguin_material_name, fs_path_fullpath_get(penguin_material_path), &state_->material_id_penguin);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("untextured_mesh_import(%s) - application_renderer_untextured_material_import_from_file failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    material_imported = true;
-
-    ret = application_renderer_untextured_mesh_geometry_import_from_file(state_->renderer, penguin_geometry_name, fs_path_fullpath_get(penguin_geometry_path), &state_->geometry_id_penguin);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("untextured_mesh_import(%s) - application_renderer_untextured_mesh_geometry_import_from_file failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
+    *out_resource_map_ = tmp_resource_map;
+    tmp_resource_map = NULL;
 
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    if(APPLICATION_DATA_CORRUPTED != ret) {
-        fs_path_destroy(&penguin_material_path);
-        fs_path_destroy(&penguin_geometry_path);
-        if(material_imported && APPLICATION_SUCCESS != ret) {
-            ret_cleanup = application_renderer_untextured_material_release(state_->renderer, state_->material_id_penguin);
-            if(APPLICATION_SUCCESS != ret_cleanup) {
-                ret = APPLICATION_DATA_CORRUPTED;   // importに成功しているのにreleaseに失敗するのはDATA_CORRUPTED
-                ERROR_MESSAGE("untextured_mesh_import(%s) - application_renderer_untextured_material_release failed.", application_result_to_str(ret_cleanup));
-            }
+    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != tmp_resource_map && NULL != renderer_frontend_) {
+        ret_model_framework = untextured_model_resource_map_destroy(renderer_frontend_, &tmp_resource_map);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ret = APPLICATION_DATA_CORRUPTED;
+            ERROR_MESSAGE("sample_robot_model_resource_map_create(%s) - untextured_model_resource_map_destroy failed.", application_result_to_str(ret));
+            return ret;
         }
     }
-
+    if(NULL != config) {
+        untextured_model_assembly_config_destroy(&config);
+    }
     return ret;
 }
 
-static application_result_t ui_mesh_textures_import(application_state_t* state_) {
+static application_result_t sample_robot_model_resource_map_destroy(renderer_frontend_t* renderer_frontend_, untextured_model_resource_map_t** resource_map_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+    model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    fs_path_t* rabbit_path = NULL;
-    fs_path_t* frog_path = NULL;
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_destroy", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_destroy", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(*resource_map_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_destroy", "*resource_map_")
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "ui_mesh_textures_import", "state_")
-
-    ret_fs_path = fs_path_create(&rabbit_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/textures/", "rabbit_512", "bmp");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = application_renderer_ui_mesh_texture_import_from_bmp(state_->renderer, 0, "rabbit_512", fs_path_fullpath_get(rabbit_path), &state_->tex_id_rabbit);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_fs_path = fs_path_create(&frog_path, fs_path_fullpath_get(state_->executable_directory), "../../assets/textures/", "frog_512", "bmp");
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - fs_path_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = application_renderer_ui_mesh_texture_import_from_bmp(state_->renderer, 0, "frog_512", fs_path_fullpath_get(frog_path), &state_->tex_id_frog);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_bmp failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = application_renderer_ui_mesh_texture_import_from_solid_color(state_->renderer, 0, "test_texture_green", 0, 255, 0, &state_->tex_id_green);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("ui_mesh_textures_import(%s) - application_renderer_ui_mesh_texture_import_from_solid_color failed.", application_result_to_str(ret));
-        goto cleanup;
+    ret_model_framework = untextured_model_resource_map_destroy(renderer_frontend_, resource_map_);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("sample_robot_model_resource_map_destroy(%s) - untextured_model_resource_map_destroy failed.", application_result_to_str(ret));
+        return ret;
     }
 
     ret = APPLICATION_SUCCESS;
 
 cleanup:
-    fs_path_destroy(&frog_path);
-    fs_path_destroy(&rabbit_path);
-
     return ret;
 }
 
-static application_result_t executable_directory_get(application_state_t* state_) {
+static application_result_t floor_grid_mesh_create(renderer_frontend_t* renderer_frontend_, line_mesh_t** out_mesh_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "executable_directory_get", "state_")
+    line_vertex_t* tmp_vertices = NULL;
+    size_t tmp_vertex_count = 0;
+    line_mesh_t* tmp_mesh = NULL;
 
-    ret_fs_path = fs_path_create_from_executable_directory(&state_->executable_directory);
-    if(FS_PATH_SUCCESS != ret_fs_path) {
-        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
-        ERROR_MESSAGE("executable_directory_get(%s) - fs_path_create_from_executable_directory failed.", application_result_to_str(ret));
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "floor_grid_mesh_create", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "floor_grid_mesh_create", "out_mesh_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_mesh_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "floor_grid_mesh_create", "*out_mesh_")
+
+    ret_general_allocator = general_allocator_allocate(sizeof(line_mesh_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_mesh);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = application_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("floor_grid_mesh_create(%s) - general_allocator_allocate failed.", application_result_to_str(ret));
         goto cleanup;
     }
+
+    ret_geometry = line_grid_geometry_vertices_create(LINE_GRID_PLANE_XZ, vec4u8_initialize(128, 128, 128, 255), vec3f_initialize(-500.0f, 0.0f, -1300.0f), vec3f_initialize(500.0f, 0.0f, 100.0f), 50.0f, &tmp_vertices, &tmp_vertex_count);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = application_result_convert_geometry(ret_geometry);
+        ERROR_MESSAGE("floor_grid_mesh_create(%s) - line_grid_geometry_vertices_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_frontend = renderer_frontend_line_mesh_import_from_vertices(renderer_frontend_, "floor_grid_line", tmp_vertices, tmp_vertex_count, tmp_mesh);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("floor_grid_mesh_create(%s) - renderer_frontend_line_mesh_import_from_vertices failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_mesh_ = tmp_mesh;
+    tmp_mesh = NULL;
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    if(APPLICATION_DATA_CORRUPTED == ret) {
+        return ret;
+    }
+    if(NULL != tmp_vertices) {
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != tmp_mesh) {
+        general_allocator_free((void**)&tmp_mesh, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    return ret;
+}
+
+static application_result_t floor_grid_mesh_destroy(renderer_frontend_t* renderer_frontend_, line_mesh_t** mesh_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "floor_grid_mesh_destroy", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "floor_grid_mesh_destroy", "mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(*mesh_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "floor_grid_mesh_destroy", "*mesh_")
+
+    ret_renderer_frontend = renderer_frontend_line_mesh_release(renderer_frontend_, *mesh_);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("floor_grid_mesh_destroy(%s) - renderer_frontend_line_mesh_release failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    general_allocator_free((void**)mesh_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 
     ret = APPLICATION_SUCCESS;
 
