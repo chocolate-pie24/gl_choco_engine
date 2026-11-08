@@ -19,7 +19,7 @@ GLCEのコードを新規作成、レビュー、リファクタリングする�
 
 実装経験からより適切な規則が得られた場合は、必要に応じて関連するDesign Decisionを残した上で本書を更新します。
 
-最終更新: 2026-10-13
+最終更新: 2026-11-09
 
 ## 目的
 
@@ -53,18 +53,18 @@ GLCE全体で、ディレクトリ構成、命名、API設計、include、Doxyge
 避けたい例:
 
 ```text
-resource_pipelines/geometries/untextured_mesh_geometry.h
-resource_pipelines_untextured_mesh_geometry_import_from_file()
+resources/pipelines/geometries/untextured_mesh_geometry.h
+resources_pipelines_untextured_mesh_geometry_import_from_file()
 ```
 
-この場合、`resource_pipelines`は配置カテゴリであり、公開API prefixへ転写しない。
+この場合、`resources/pipelines/`は配置カテゴリであり、公開API prefixへ転写しない。
 
 ただし、`pipeline`、`registry`、`shader`、`loader`のように、モジュールの役割を表す語はファイル名や公開API prefixへ含めてよい。
 
 許容する例:
 
 ```text
-resource_pipelines/geometries/untextured_mesh_geometry_pipeline.h
+resources/pipelines/geometries/untextured_mesh_geometry_pipeline.h
 untextured_mesh_geometry_pipeline_import_from_file()
 ```
 
@@ -188,21 +188,14 @@ Concreteが一種類しか存在しない場合でも、親モジュール直下
 
 #### Rendererへの適用例
 
-Applicationを含むEngine利用者へ公開するRenderer APIは、次のように配置する。
+Rendererの配置は、Application向け公開契約とEngine内部実装を分離した上で、Backend、Frontend、およびResourceの責務ごとに整理する。以下は、現行の配置を示す代表例である（すべてのfileを列挙したinventoryではない）。
+
+Applicationを含むEngine利用者へ公開するRenderer APIは、例えば次のように配置する。
 
 ```text
 include/engine/systems/renderer/
-├── config/
-│   └── renderer_config.h
 ├── core/
 │   └── renderer_types.h
-├── render_resources/
-│   ├── core/
-│   │   └── render_resource_types.h
-│   ├── line_mesh_render_resource.h
-│   ├── point_mesh_render_resource.h
-│   ├── ui_mesh_render_resource.h
-│   └── untextured_mesh_render_resource.h
 ├── renderer_backend/
 │   ├── core/
 │   │   └── renderer_backend_types.h
@@ -211,162 +204,107 @@ include/engine/systems/renderer/
 │   ├── renderer_backend_texture.h
 │   ├── renderer_backend_vao.h
 │   └── renderer_backend_vbo.h
-├── resource_pipelines/
+├── renderer_frontend/
 │   ├── core/
-│   │   └── resource_pipeline_types.h
-│   ├── geometries/
-│   │   ├── line_mesh_geometry_pipeline.h
-│   │   ├── point_mesh_geometry_pipeline.h
-│   │   ├── ui_mesh_geometry_pipeline.h
-│   │   └── untextured_mesh_geometry_pipeline.h
-│   ├── materials/
-│   │   └── untextured_material_pipeline.h
-│   └── texture/
-│       └── texture_pipeline.h
-├── resource_registries/
-│   ├── core/
-│   │   └── resource_registry_types.h
-│   ├── geometries/
-│   │   ├── line_mesh_geometry_registry.h
-│   │   ├── point_mesh_geometry_registry.h
-│   │   ├── ui_mesh_geometry_registry.h
-│   │   └── untextured_mesh_geometry_registry.h
-│   ├── material/
-│   │   └── untextured_material_registry.h
-│   └── texture/
-│       └── texture_registry.h
+│   │   └── renderer_frontend_types.h
+│   └── renderer_frontend.h
 └── resources/
-    ├── material/
+    ├── geometries/
+    │   ├── core/
+    │   │   └── geometry_types.h
+    │   └── untextured_mesh_geometry.h
+    ├── loaders/
+    │   └── stl_ascii_loader.h
+    ├── materials/
     │   └── material_types.h
-    └── texture/
-        ├── texture_gpu_resource_types.h
-        └── texture_gpu_resource.h
+    ├── meshes/
+    │   ├── core/
+    │   │   └── mesh_types.h
+    │   ├── line_mesh.h
+    │   └── untextured_mesh.h
+    ├── pipelines/
+    │   └── geometries/
+    │       └── untextured_mesh_geometry_pipeline.h
+    ├── registries/
+    │   ├── geometries/
+    │   │   └── untextured_mesh_geometry_registry.h
+    │   └── model/
+    │       └── model_registry.h
+    └── textures/
+        └── texture_cpu_resource.h
 ```
 
-Engine内部のRenderer実装は、次のように配置する。
+Engine内部のRenderer実装は、例えば次のように配置する。
 
 ```text
 engine/systems/renderer/
-├── config/
-│   └── renderer_config.c
 ├── core/
 │   └── renderer_types.c
-├── render_resources/
-│   ├── core/
-│   │   ├── render_resource_err_utils.c
-│   │   └── render_resource_err_utils.h
-│   ├── line_mesh_render_resource.c
-│   ├── point_mesh_render_resource.c
-│   ├── ui_mesh_render_resource.c
-│   └── untextured_mesh_render_resource.c
 ├── renderer_backend/
 │   ├── core/
-│   │   ├── renderer_backend_err_utils.c
-│   │   └── renderer_backend_err_utils.h
+│   │   └── renderer_backend_err_utils.c
 │   ├── internal/
 │   │   └── renderer_backend_context_internal.h
 │   ├── renderer_backend_concretes/
 │   │   └── gl33/
 │   │       ├── gl33_shader.c
-│   │       ├── gl33_shader.h
-│   │       ├── gl33_texture.c
-│   │       ├── gl33_texture.h
-│   │       ├── gl33_vao.c
-│   │       ├── gl33_vao.h
-│   │       ├── gl33_vbo.c
-│   │       └── gl33_vbo.h
+│   │       └── gl33_shader.h
 │   ├── renderer_backend_context.c
-│   ├── renderer_backend_shader.c
-│   ├── renderer_backend_texture.c
-│   ├── renderer_backend_vao.c
-│   ├── renderer_backend_vbo.c
 │   └── vtables/
-│       ├── renderer_backend_shader_vtable.h
-│       ├── renderer_backend_texture_vtable.h
-│       ├── renderer_backend_vao_vtable.h
-│       └── renderer_backend_vbo_vtable.h
-├── resource_pipelines/
+│       └── renderer_backend_shader_vtable.h
+├── renderer_frontend/
 │   ├── core/
-│   │   ├── resource_pipeline_err_utils.c
-│   │   └── resource_pipeline_err_utils.h
-│   ├── geometries/
-│   │   ├── line_mesh_geometry_pipeline.c
-│   │   ├── point_mesh_geometry_pipeline.c
-│   │   ├── ui_mesh_geometry_pipeline.c
-│   │   └── untextured_mesh_geometry_pipeline.c
-│   ├── materials/
-│   │   └── untextured_material_pipeline.c
-│   └── texture/
-│       └── texture_pipeline.c
-├── resource_registries/
-│   ├── core/
-│   │   ├── resource_registry_err_utils.c
-│   │   └── resource_registry_err_utils.h
-│   ├── geometries/
-│   │   ├── line_mesh_geometry_registry.c
-│   │   ├── point_mesh_geometry_registry.c
-│   │   ├── ui_mesh_geometry_registry.c
-│   │   └── untextured_mesh_geometry_registry.c
-│   ├── material/
-│   │   └── untextured_material_registry.c
-│   └── texture/
-│       └── texture_registry.c
+│   │   ├── renderer_frontend_err_utils.c
+│   │   └── renderer_frontend_err_utils.h
+│   └── renderer_frontend.c
 └── resources/
-    ├── allocators/
-    │   ├── range_allocator.c
-    │   └── range_allocator.h
     ├── buffer_managers/
     │   ├── core/
-    │   │   ├── buffer_manager_err_utils.c
-    │   │   ├── buffer_manager_err_utils.h
     │   │   └── buffer_manager_types.h
     │   ├── vbo_manager.c
     │   └── vbo_manager.h
-    ├── material/
+    ├── geometries/
+    │   └── untextured_mesh_geometry.c
+    ├── loaders/
+    │   └── stl_ascii_loader.c
+    ├── materials/
     │   └── material_types.c
+    ├── meshes/
+    │   └── untextured_mesh.c
+    ├── pipelines/
+    │   └── geometries/
+    │       └── untextured_mesh_geometry_pipeline.c
+    ├── registries/
+    │   └── geometries/
+    │       └── untextured_mesh_geometry_registry.c
     ├── shaders/
     │   ├── core/
-    │   │   ├── shader_err_utils.c
-    │   │   ├── shader_err_utils.h
-    │   │   ├── shader_program_builder.c
-    │   │   ├── shader_program_builder.h
-    │   │   ├── shader_resource_types.c
-    │   │   └── shader_resource_types.h
-    │   ├── line_mesh_shader.c
-    │   ├── line_mesh_shader.h
-    │   ├── point_mesh_shader.c
-    │   ├── point_mesh_shader.h
-    │   ├── ui_mesh_shader.c
-    │   ├── ui_mesh_shader.h
+    │   │   └── shader_program_builder.c
     │   ├── untextured_mesh_shader.c
     │   └── untextured_mesh_shader.h
-    └── texture/
-        ├── texture_gpu_resource_err_utils.c
-        ├── texture_gpu_resource_err_utils.h
+    └── textures/
         └── texture_gpu_resource.c
 ```
 
-この構成では、`include/engine/`側に公開契約だけを置き、Engine内部の共有表現、補助実装、Strategy契約およびConcrete実装を`engine/`側へ置く。公開側と内部側のディレクトリを機械的に完全一致させず、それぞれの公開範囲と所有者に必要なファイルだけを配置する。
+`include/engine/`側にはEngine利用者へ公開する契約だけを配置し、Engine内部でのみ使用する型、補助処理、Shader実装等は`engine/`側へ配置する。公開側と内部側でディレクトリ構造を機械的に一致させず、それぞれの公開範囲と所有者に必要なfileを配置する。
 
-`material_types.h`は、Applicationを含むEngine利用者がMaterial valueを構築・参照するため、`include/engine/systems/renderer/resources/material/`へ配置する。対応する`material_types.c`はEngine内部へ配置する。
+Renderer Frontendは、Backend Contextとmesh種別ごとのRender Resourceのlifetimeを管理し、描画、import、release等をApplication側へ提供する窓口となる。現在のRender ResourceはFrontend実装内のprivate表現であり、以前のような独立した`render_resources/`公開module群ではない。RendererのResource Ownershipに関する設計判断は`design_decisions.md`を正本とする。
 
-個別のShader Header（`line_mesh_shader.h`、`point_mesh_shader.h`、`ui_mesh_shader.h`、`untextured_mesh_shader.h`）は、Render Resource等のEngine内部モジュールが使用する契約であり、Applicationから直接操作する必要がない。このため、対応する`.c`と同じ`engine/systems/renderer/resources/shaders/`へ配置する。Shader Headerの公開範囲変更は、Shader ResourceのOwnership変更を意味しない。
+Geometry、Material、Mesh、Texture、RegistryおよびImport Pipelineは`resources/`以下に責務別に配置する。Pipelineは短命なimport orchestrationを担当し、Registryは登録済みresourceのidentityや保持関係を管理する。これらは一つの巨大なresource moduleへ統合せず、各semantic ownerの責務を維持する。
 
-Range Allocator、VBO ManagerおよびShaderの内部共通型はEngine内部の実装契約であり、Application向け公開APIへ置かない。Application向け公開contractから内部allocation descriptorまたはallocatorへのpointerが必要になる場合は、それらを公開するのではなく、上位APIの責務を見直す。
+`material_types.h`は、Applicationを含むEngine利用者がMaterial valueを構築・参照するため、`include/engine/systems/renderer/resources/materials/`へ配置する。対応する`material_types.c`はEngine内部へ配置する。
 
-`resources/`直下の`allocators/`、`buffer_managers/`、`shaders/`および`texture/`には依存関係上の高低差があるが、ディレクトリ階層は呼び出し順序ではなく、Rendererが所有するリソース責務の分類を表す。ShaderがBuffer Managerを使用することだけを理由に、両者を同じモジュールへ統合したり、実行時依存をそのままディレクトリ階層へ転写したりしない。
+個別のShader Header（`line_mesh_shader.h`、`point_mesh_shader.h`、`ui_mesh_shader.h`、`untextured_mesh_shader.h`）は、Engine内部モジュールが使用する契約であり、Applicationへ直接公開しない。対応する`.c`と同じ`engine/systems/renderer/resources/shaders/`へ配置する。Shader Headerの公開範囲とShader resourceのownershipを混同しない。
 
-`render_resources/`は、ShaderやRegistryなどの下位resourceをtopology単位のlifetime／ownershipとして束ねる長寿命module群を置く。具体的なRenderer ownership設計と判断理由は`design_decisions.md`を正本とする。
+Range AllocatorはRenderer専用のresourceではなくMemory基盤のlow-level allocatorであるため、`engine/memory/low_level_allocators/range_allocator/`へ配置する。VBO ManagerおよびShaderの内部共通型も、利用者向けの公開contractへ露出させない。
 
-`resource_pipelines/`は複数の下位リソース操作を編成して構築処理を実行し、`resource_registries/`は構築済みリソースの検索および保持を担当する。これらは単一のGPUリソース実装ではないため、`resources/`の外へ独立したRenderer上位カテゴリとして置く。
+Renderer Backendでは、公開操作API、privateな表現、Graphics API非依存のStrategy契約、ConcreteカテゴリおよびGL33固有実装を、それぞれ異なる責務として配置する。`vtables/`は契約、`renderer_backend_concretes/gl33/`はその実装を所有する。
 
-Renderer Backendでは、公開操作API、親モジュールのprivateな表現、Graphics API非依存のStrategy契約、ConcreteカテゴリおよびGL33固有実装を、それぞれ異なる所有者として表現する。`vtables/`は契約を所有し、`renderer_backend_concretes/gl33/`はそのOpenGL 3.3実装を所有する。
+Renderer Backendの現在の契約ではOpenGLのVAO/VBO概念を採用しているため、対応するmodule名には`vao` / `vbo`を用いる。将来のGraphics APIを予測して`vertex_array` / `vertex_buffer`へ一般化せず、実際に異なる抽象化が必要になった時点で契約ごと再設計する。
 
-Renderer Backendの現在の契約はOpenGLのVAO/VBO概念を採用しているため、対応するモジュール名には`vao` / `vbo`を用いる。将来のGraphics APIを予測して`vertex_array` / `vertex_buffer`へ一般化せず、実際に異なる抽象化が必要になった時点で契約ごと再設計する。
+`vao`はOpenGLのVertex Array Objectを指す場合にのみ使用する。CPU側の頂点配列やそのバイト数には`vertex_array` / `vertex_data`を使用し、機械的に`vao`へ置換しない。同様に、`vbo`はOpenGLのVertex Buffer Objectまたはそれを直接管理するresourceを指す。
 
-`vao`はOpenGLのVertex Array Objectを指す場合にのみ使用する。CPU側の頂点配列やそのバイト数には`vertex_array` / `vertex_data`を使用し、機械的に`vao`へ置換しない。同様に、`vbo`はOpenGLのVertex Buffer Objectまたはそれを直接管理するリソースを指す。
-
-`vtables/`にheaderしか存在しないのはheader専用ディレクトリだからではなく、現時点のvtableが型と契約だけを持つためである。将来、vtable共通の検証処理などが必要になり、その処理をvtableが所有する場合は、対応する`.c`を`vtables/`へ置く。
+`vtables/`にheaderしか存在しないのはheader専用ディレクトリだからではなく、現時点のvtableが型と契約だけを持つためである。将来、その契約を所有する共通処理が必要になった場合は、対応する`.c`を`vtables/`へ追加してよい。
 
 ### ファイル名
 
@@ -399,7 +337,7 @@ Renderer Backendの現在の契約はOpenGLのVAO/VBO概念を採用している
 
 | 避けたい形 | 方針 |
 |---|---|
-| `resource_pipelines_untextured_mesh_geometry_import_from_file` | ディレクトリ名をprefixへ転写しない |
+| `resources_pipelines_untextured_mesh_geometry_import_from_file` | ディレクトリ名をprefixへ転写しない |
 | `untextured_mesh_geometry_import_from_file` | geometry本体APIとpipeline APIが混ざる場合は役割名を含める |
 | `untextured_mesh_geometry_registry_geometry_register` | `geometry`の重複を避ける |
 | `*_valid_check` | boolの意味が分かる名前にする |
@@ -478,7 +416,7 @@ range_allocator_t* allocator_;
 renderer_backend_context_t* backend_context_;
 engine_event_view_t* event_view_;
 application_flight_camera_t* flight_camera_;
-application_renderer_t* renderer_;
+renderer_frontend_t* renderer_;
 ```
 
 この原則は、名前を単に短くするための規則ではない。具体型が持つmodule ownership、implementation specificity、または具体的なkindを一段だけ外し、そのscopeで必要なsemantic informationを保持することを目的とする。
@@ -532,7 +470,7 @@ manager   // avoid: 何を管理するmanagerかが失われる
 qualifierを取り除いてもobjectの基本的な役割が保たれる場合は、直接上位のsemantic abstractionを変数名として使用する。
 
 ```text
-application_renderer
+renderer_frontend
     → renderer
 
 application_flight_camera
@@ -584,7 +522,7 @@ line_mesh_shader_config_t* config_;
 ```c
 renderer_config_t* renderer_config_;
 linear_allocator_t* linear_allocator_;
-application_renderer_t* application_renderer_;
+renderer_frontend_t* renderer_frontend_;
 engine_event_view_t* engine_event_view_;
 ```
 
@@ -747,7 +685,7 @@ Backend Contextのようにsystem初期化後から終了直前まで存在す�
 - 単純なポインタ存在条件と、値、状態、所有関係または複数引数間の意味的条件を区別する。
 - 定型的なNULL検証による記述量を抑えるため、`IF_ARG_NULL_GOTO_CLEANUP`および`IF_ARG_NOT_NULL_GOTO_CLEANUP`は用途を限定して使用してよい。
 - 任意のbool式を受け取る`IF_ARG_FALSE_GOTO_CLEANUP`は、新規コードおよび今回の改修範囲では使用しない。既存の定義および呼び出しは、各モジュールを改修する際に通常の`if`文へ段階的に置き換え、最終的に削除する。`REQUIRE`など、任意条件を受け取る同種の汎用マクロへ置き換えない。
-- 意味的な事前条件は通常の`if`文で明示し、条件に対応するresult code、処理後状態および具体的なエラーメッセージを呼び出し側に記述する。
+- 意味的な事前条件は通常の`if`文で明示し、条件に対応するresult codeおよび具体的なエラーメッセージを呼び出し側に記述する。
 - private preconditions helperは例外的な整理手段とし、public APIごとに機械的に作成しない。
 
 ### NULL検証マクロの責務
@@ -762,7 +700,7 @@ NULL検証マクロは、次のポインタ存在条件だけを表す。
 - マクロ名には`GOTO_CLEANUP`を含め、呼び出し元の制御フローを変更することを明示する。
 - マクロは、呼び出し側が指定したresult codeの設定、ポインタ存在条件に対応する診断、および`cleanup`への分岐だけを行う。
 - マクロ自身は、失敗を`INVALID_ARGUMENT`、`BAD_OPERATION`または`DATA_CORRUPTED`のいずれに分類するかを推測しない。分類はAPI契約を知る呼び出し側が指定する。
-- マクロ自身は、コンポーネント状態を変更せず、`component_result_t.state_after`を決定しない。状態遷移および処理後状態は呼び出し側が明示する。
+- マクロ自身は、result code分類、resource操作、ownership変更または状態遷移を判断しない。
 - 関数名と引数式は、可能な限り`__func__`および`#argument`によって取得し、関数名や引数名の文字列を呼び出し側から重複して渡さない。
 - 各実引数は1回だけ評価する。副作用を持つ式を実引数として渡さない。
 - マクロ本体は`do { ... } while(0)`形式とし、定義末尾にセミコロンを含めない。呼び出し側が通常の文と同様にセミコロンを付ける。
@@ -772,7 +710,7 @@ GLCEでは、制御フローを変更するマクロを全面的に許容する�
 
 ### 意味的な事前条件
 
-値を引数として受け取ること自体は、その値のsemantic validationをそのAPIまたはmoduleが所有することを意味しない。semantic conditionは、その意味を所有するmoduleで検証し、上位のforwarding／facade／orchestration layerでは重複検証しない。semantic ownership、build mode別validation、canonical／shallow／deep validationの詳細は`validation_policy.md`を正本とする。
+値を引数として受け取ること自体は、その値のsemantic validationをそのAPIまたはmoduleが所有することを意味しない。semantic conditionは、その意味を所有するmoduleで検証し、上位のforwarding／facade／orchestration layerでは重複検証しない。semantic ownership、BUILD_MODE別のautomatic validation、`ENABLE_VALID_DEEP`による検査範囲の制御は`validation_policy.md`を正本とする。
 
 値の範囲、列挙値、サイズ、alignment、複数引数間の関係、初期化状態、登録状態、所有関係および内部不変条件は、NULL検証マクロの対象にしない。
 
@@ -787,20 +725,16 @@ GLCEでは、制御フローを変更するマクロを全面的に許容する�
 この区別を維持するため、意味的条件は具体的な`if`文として記述する。
 
 ```c
-if(!size_is_power_of_two(req_align_)) {
-    ret.code = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
-    ret.state_after = allocator_->state;
-    ERROR_MESSAGE(
-        "%s(INVALID_ARGUMENT) - Alignment must be a power of two. "
-        "req_align=%zu",
-        __func__, req_align_);
+if(0 == coordinate_count_) {
+    ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+    ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - Provided coordinate_count_ is not valid.", model_framework_result_to_str(ret));
     goto cleanup;
 }
 ```
 
 - エラーメッセージには、単なる`Argument is not valid`ではなく、満たさなかった条件と診断に必要な値を記録する。
 - 呼び出し側が与え得る事前条件違反は、回復可能なAPIエラーとして処理する。
-- 内部不変条件の破損は、通常の引数不正と混同しない。対応する重大エラーコード、コンポーネント状態遷移、およびDEBUG / TESTビルドでのassertを検討する。
+- 内部不変条件の破損は、通常の引数不正と混同しない。`DATA_CORRUPTED`等への分類と検出後のFail-stopは`validation_policy.md`を正本とする。
 
 ### private preconditions helper
 
@@ -936,8 +870,6 @@ if((unsigned int)value >= (unsigned int)EXAMPLE_MAX) {
 ### result型
 
 - モジュールまたはサブシステムごとに、その責務に応じたresult codeを定義する。
-- 状態を持つコンポーネントの実行結果は、baseレイヤーで定義する共通の`component_result_t`にresult codeと処理終了後のコンポーネント状態を格納して返すことを基本とする。
-- 状態を持たないUtility、単純な値操作、数学関数、`bool`または値を直接返す照会関数には、`component_result_t`を機械的に適用しない。
 - 下位レイヤーのresult codeは、上位レイヤーのresult codeへ変換して返す。
 - 実行結果コードを表す名称には`result`を使用し、`rslt`は使用しない。
 - result型は`<module>_result_t`を基本とする。
@@ -949,7 +881,7 @@ if((unsigned int)value >= (unsigned int)EXAMPLE_MAX) {
 ```c
 application_result_t ret;
 
-memory_system_result_t ret_memory_system;
+general_allocator_result_t ret_general_allocator;
 linear_allocator_result_t ret_linear_allocator;
 renderer_backend_result_t ret_renderer_backend;
 resource_registry_result_t ret_resource_registry;
@@ -973,115 +905,9 @@ shader_result_t ret_cleanup;
 
 `ret_<module>`は「result型であること」を表すためだけの機械的prefixではなく、現在の関数自身のresultと、下位moduleから受け取ったresultを区別するために使用する。
 
-### 共通コンポーネント状態
-
-GLCE全体で、状態を持つコンポーネントが使用する共通状態型をbaseレイヤーに定義する。
-
-```c
-typedef enum {
-    COMPONENT_STATE_UNINITIALIZED = 0,
-    COMPONENT_STATE_READY,
-    COMPONENT_STATE_DEGRADED,
-    COMPONENT_STATE_FAULTED
-} component_state_t;
-```
-
-各状態の意味は以下とする。
-
-| 状態 | 意味 |
-|---|---|
-| `UNINITIALIZED` | 所有権および内部状態が未確立であり、通常操作を開始できない |
-| `READY` | 内部不変条件と公開API契約を満たし、全ての通常機能を使用できる |
-| `DEGRADED` | 内部整合性は維持されているが、一部機能または性能を利用できない |
-| `FAULTED` | 内部整合性または必須機能を失い、通常操作を継続してはならない |
-
-#### 状態の保持単位
-
-- 状態はGLCE全体で1個のグローバル変数として保持せず、独立して利用停止、破棄または再初期化できる障害隔離単位ごとに保持する。
-- Application、Subsystem、Backend Context、Manager、Registry、Allocator、長寿命Resourceなど、永続的な可変状態を持ち、障害後の再利用を防止する必要があるコンポーネントを主な適用対象とする。
-- 小さな値オブジェクト、状態を持たないUtility、および障害隔離単位にならないモジュールへ状態フィールドを機械的に追加しない。
-- 状態の変更権限は、その状態を所有するコンポーネント自身に持たせる。上位レイヤーが下位コンポーネントの状態を任意に書き換えるpublic APIは設けない。
-- 外部へ状態を公開する必要がある場合は、読み取り専用のgetterまたは`component_result_t`の`state_after`を使用する。
-
-#### 状態遷移
-
-状態遷移は以下を基本とする。
-
-| 事象 | 遷移 |
-|---|---|
-| 初期化成功 | `UNINITIALIZED -> READY` |
-| 初期化失敗かつrollback成功 | `UNINITIALIZED`を維持 |
-| 初期化失敗かつrollback失敗 | `UNINITIALIZED -> FAULTED` |
-| 一部機能または性能の継続的な喪失 | `READY -> DEGRADED` |
-| 機能回復 | `DEGRADED -> READY` |
-| 内部整合性または必須機能の喪失 | `READY / DEGRADED -> FAULTED` |
-| 正常なrelease、deinitializeまたはreset | `READY / DEGRADED -> UNINITIALIZED` |
-| 成立済み状態の解放失敗 | `READY / DEGRADED -> FAULTED` |
-
-- `NO_MEMORY`、`LIMIT_EXCEEDED`、`INVALID_ARGUMENT`など、処理は失敗してもコンポーネントの内部整合性を維持している場合は、状態を機械的に`DEGRADED`または`FAULTED`へ遷移させない。
-- `FAULTED -> READY`への直接遷移は行わない。完全な再初期化によって不変条件、所有権および依存関係を再確立できた場合に限り、通常運転へ復帰してよい。
-- `FAULTED`状態から安全に解放または再初期化できない場合は、通常運転への復帰を試みず、Application側のFATAL処置対象とする。
-- `FATAL`はコンポーネント状態ではなく、Fault Policyが決定する処置とする。ApplicationがFATAL処置を決定した場合、Application自身を`FAULTED`へ遷移させたうえで終了処理を行う。
-- `destroy`によってオブジェクト自身の生存期間が終了する場合、破棄後のオブジェクト状態は存在しない。所有ポインタをNULLにする契約によって破棄済みを表し、`UNINITIALIZED`への状態遷移とは区別する。
-
-### 共通component result
-
-状態を持つコンポーネントの実行結果を共通形式で返すため、baseレイヤーに`component_result_t`を定義する。
-
-```c
-typedef struct {
-    int32_t code;
-    component_state_t state_after;
-} component_result_t;
-```
-
-#### フィールドの意味
-
-- `code`は今回の関数呼び出し結果を表す。値には、その公開APIを所有するモジュールまたはサブシステムが定義したresult codeを格納する。
-- result codeの格納型は、C実装およびABIによる`int`サイズの差異を避けるため、固定幅整数型の`int32_t`を基本とする。
-- `state_after`は状態変数そのものではなく、関数呼び出し終了時点における主要操作対象コンポーネントの状態のスナップショットを表す。
-- コンポーネントの現在状態は、コンポーネント自身が内部に永続保持する。`component_result_t`の`code`を「最後に発生したエラー」としてコンポーネント内部へ永続保持することは基本としない。
-- `component_result_t`を返すAPIは、どのコンポーネントの状態を`state_after`へ格納するかを一意に定める。複数の操作対象が存在して主要対象を定められないAPIには、`component_result_t`を機械的に適用しない。
-- `create`または`initialize`がコンポーネントの公開前に失敗した場合、`state_after`には、有効なコンポーネントが生成または初期化されなかったことを表す`UNINITIALIZED`を格納する。部分初期化状態を安全にrollbackできなかった場合は`FAULTED`とする。
-- 主要操作対象がNULLで状態を読み取れない引数不正の場合、対象コンポーネントが存在しないことを表す`UNINITIALIZED`を格納する。主要操作対象が有効で、その他の引数だけが不正な場合は、主要操作対象の実際の状態を格納する。
-
-#### result codeと状態の独立性
-
-result codeとコンポーネント状態は独立した情報として扱う。
-
-- 処理が失敗しても、failure atomicまたはrollbackによって内部状態が維持されていれば、エラーコードと`READY`を返してよい。
-- 処理が成功しても、既知の機能制限を抱えたまま運転を継続している場合は、`SUCCESS`と`DEGRADED`を返してよい。
-- rollback失敗、成立済み所有関係の破損または内部不変条件の喪失を検出した場合は、対応する重大エラーコードと`FAULTED`を返す。
-- エラーコードだけから状態を機械的に決定しない。同じresult codeでも、実行した操作、rollback結果、代替機能の有無および障害範囲によって処理後状態は異なり得る。
-
-例:
-
-```c
-/* 容量不足だがAllocator自体は正常 */
-return (component_result_t){
-    .code = LINEAR_ALLOCATOR_NO_MEMORY,
-    .state_after = COMPONENT_STATE_READY
-};
-
-/* rollbackにも失敗し、以後の通常利用を禁止 */
-allocator_->state = COMPONENT_STATE_FAULTED;
-return (component_result_t){
-    .code = LINEAR_ALLOCATOR_DATA_CORRUPTED,
-    .state_after = allocator_->state
-};
-```
-
-#### レイヤー境界での扱い
-
-- 上位モジュールは、下位`component_result_t`の`code`を、従来どおり上位モジュールの責務と公開APIから見たresult codeへ意味変換する。
-- 下位コンポーネントの`state_after`を、上位コンポーネントの`state_after`へ機械的にコピーしない。上位コンポーネントは、障害を隔離できるか、代替機能があるか、必須依存かを判断して自身の状態を決定する。
-- 下位コンポーネントが`FAULTED`でも、原因が内部state corruptionではなく、かつ上位がその下位コンポーネントを安全に隔離できる場合は、上位が`DEGRADED`または`READY`を維持できる余地を残す。ただし`DATA_CORRUPTED`は内部canonical stateの信頼喪失を表すため、上位都合で`DEGRADED`へ降格せずFATAL方向へ伝播する。
-- Applicationは、報告されたコンポーネント状態に加えて、そのコンポーネントの重要性、代替手段、再初期化可能性および現在の運転モードを考慮し、通常運転継続、DEGRADED運転またはFATAL処置を決定する。
-- `component_result_t`を汎用Fault Handlerへ渡し、呼び出し元APIから発生元を判別できない場合は、component domainまたは発生元識別子を別途付加する。`int32_t code`だけをモジュール横断で解釈しない。
-
 ### result型の変換
 
-GLCEでは、モジュールまたはサブシステムごとに固有のresult codeを持ち、レイヤー境界では下位result codeを上位モジュールの操作結果へ意味変換する。状態を持つコンポーネントでは、変換後のresult codeと上位コンポーネント自身の処理後状態を共通の`component_result_t`へ格納する。
+GLCEでは、モジュールまたはサブシステムごとに固有のresult codeを持ち、必要に応じて下位result codeを上位モジュールの公開操作から見たresult codeへ意味変換する。
 
 #### Result utilityの命名
 
@@ -1096,7 +922,7 @@ result codeを文字列へ変換するpublic utilityは、次の形式を基本�
 ```c
 application_result_to_str();
 renderer_backend_result_to_str();
-resource_result_to_str();
+mesh_result_to_str();
 ```
 
 一つの`.c`内だけで使用するprivate utilityでは、module prefixを省略してよい。
@@ -1114,9 +940,9 @@ static const char* result_to_str(...);
 例:
 
 ```c
-application_result_convert_linear_allocator();
-renderer_backend_result_convert_linear_allocator();
-resource_result_convert_fs_stream();
+application_result_convert_general_allocator();
+renderer_backend_result_convert_subsystem_allocator();
+resource_pipeline_result_convert_fs_stream();
 ```
 
 一つの`.c`内だけで使用するprivate converterでは、destination module prefixを省略する。
@@ -1128,7 +954,6 @@ result_convert_<source_module>()
 例:
 
 ```c
-static filesystem_result_t result_convert_memory_system(...);
 static fs_stream_result_t result_convert_filesystem(...);
 static fs_stream_result_t result_convert_choco_string(...);
 ```
@@ -1144,8 +969,8 @@ converterの引数名は`result_`を基本とする。
 
 ```c
 application_result_t
-application_result_convert_linear_allocator(
-    linear_allocator_result_t result_);
+application_result_convert_general_allocator(
+    general_allocator_result_t result_);
 ```
 
 result utilityでも`rslt`略称は使用しない。
@@ -1154,8 +979,8 @@ result utilityでも`rslt`略称は使用しない。
 application_result_to_str();              // use
 application_rslt_to_str();                // avoid
 
-application_result_convert_resource();    // use
-application_rslt_convert_resource();      // avoid
+application_result_convert_general_allocator();    // use
+application_rslt_convert_general_allocator();      // avoid
 ```
 
 #### 基本方針
@@ -1257,7 +1082,7 @@ application_rslt_convert_resource();      // avoid
 #### Module Validation Policy
 
 - そのmoduleでvalidationをどのように適用するかというmodule固有のpolicyを記述する。
-- canonical／shallow validatorの役割、public APIごとのvalidation配置、transient stateの扱い等、共通`validation_policy.md`だけでは決まらない事項を書く。
+- API単位へ局所化できないmodule共通のvalidation strategyやtransient stateの扱い等、共通`validation_policy.md`だけでは決まらない事項を書く。Object Validatorの構成、Validation Depth、automatic executionの一般規則は`validation_policy.md`を正本とする。
 - 共通Validation Policyを全文複製しない。
 - Doxygenではなく通常のblock commentとして記述する。
 
@@ -1297,7 +1122,7 @@ application_rslt_convert_resource();      // avoid
 
 #### Validators
 
-- private shallow validator、element／state validator等、validation専用のprivate helperを配置する。
+- private validatorやvalidation専用のprivate helperを配置する。
 - public validatorのdefinitionは`Public API`へ置き、private validatorだけをこのsectionへ配置する。
 
 ### Section commentの階層
@@ -1458,7 +1283,6 @@ Cのsourceおよびheaderでは、ファイル先頭を次の形とする。
 - file/module levelでは、必要に応じてmodule descriptionおよびModule Boundary ContractをDoxygenで記述する。
 - Module Boundary Contractには、ownership、lifetime、storage、公開範囲、固定alignment等、module利用者が守る条件または期待できる保証を記述する。
 - public APIには、責務、所有権、事前条件、事後条件、戻り値を記述する。
-- `component_result_t`を返すAPIには、主要操作対象、`state_after`が表すコンポーネント、および代表的な失敗時の処理後状態を記述する。
 - リソースライフサイクルAPIには、取得処理、オブジェクト自身の破棄、識別子またはdescriptorを指定する解除のどれに該当するか、および失敗時に保証する状態を記述する。
 - constructorには、成功時に公開されるstable state、通常利用に必要な構成、および失敗時の出力とownershipの状態を記述する。
 - resourceを受け取るAPIには、copy、moveまたはborrowのどれで受け取るかを記述する。
@@ -1603,7 +1427,7 @@ validatorは実際にその型が保証するstructural / semantic invariantを�
 - 事前条件の検証に失敗した場合は、管理状態および出力引数を変更しない。
 - 有効な所有関係およびライフサイクルが確認され、解除処理を開始した後は、対応する解除操作が成功することを前提とする。
 - 成立済み状態の解除に失敗した場合は、対応するモジュールの`DATA_CORRUPTED`として扱い、通常運転への復帰、失敗時不変、およびrollbackを保証しない。
-- `DATA_CORRUPTED`を返す場合は、影響を受けたコンポーネントを`FAULTED`へ遷移させ、以後そのコンポーネントを通常運転で継続使用しない。上位レイヤーは重大エラーとして扱い、障害を安全に隔離できない場合はApplication側のFATAL処置対象とする。
+- `DATA_CORRUPTED`確定後は通常のcleanup / rollbackを停止する。検出後の処理とFail-stopの適用範囲は`validation_policy.md`を正本とする。
 
 #### 共通設計
 
@@ -1650,11 +1474,6 @@ validatorは実際にその型が保証するstructural / semantic invariantを�
 - `UNDEFINED_ERROR`が未定義値、変換漏れまたは到達不能なresultに限定され、元のresult値が診断情報に残されているか。
 - 上位resultへ追加した固有コードによって、呼び出し側の回復処理、状態遷移または重大度判断が実際に変わるか。
 - 下位固有のresultを上位で集約する境界に、原因を追跡できる十分な診断情報があるか。
-- 状態を持つコンポーネントのAPIが、共通の`component_result_t`を使用しているか。
-- `component_result_t.state_after`が、どの主要操作対象コンポーネントの状態を表すか一意に定義されているか。
-- result codeと処理後状態を独立して判断し、回復可能な処理失敗だけを理由に`DEGRADED`または`FAULTED`へ遷移させていないか。
-- 下位コンポーネントの`state_after`を上位コンポーネントへ機械的にコピーせず、障害範囲、隔離可能性および依存の必須性から上位自身の状態を決定しているか。
-- `FAULTED`状態のコンポーネントに対する通常操作を拒否し、許可する診断、解放または再初期化操作をAPI契約で限定しているか。
 - rollback不可の副作用が契約化されているか。
 - opaqueにすべき型が公開構造体になっていないか。
 - 非opaqueにすべき値型が過剰に隠蔽されていないか。
@@ -1695,5 +1514,4 @@ validatorは実際にその型が保証するstructural / semantic invariantを�
 
 - 新規コードはこの規約に従う。
 - 既存コードは、触る範囲から段階的に適用する。
-- PJ全体の一括整備は、renderer_frontendの骨格が固まった後に行う。
 - 公開前に、命名、include、Doxygen、エラーメッセージの全体監査を行う。
