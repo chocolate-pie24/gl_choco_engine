@@ -29,39 +29,88 @@ extern "C" {
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend内部状態管理構造体前方宣言 */
 
 /**
- * @brief VAO内部状態管理構造体インスタンスのメモリを確保する
- *
- * @note 確保されたリソースは @ref renderer_backend_vao_destroy を使用して破棄する
+ * @brief Renderer Backend VAOを生成する
  *
  * @details
- * - backend_context_が保有する仮想関数テーブルの関数を使用しメモリ確保を行う
- * - 構造体インスタンスのメモリ確保に成功した場合、VAOのGPU側リソースも確保される
+ * backend_context_が保持するVAO vtableを使用して、
+ * Concrete側のVAO生成処理を呼び出す。
  *
- * @param[in] backend_context_ VAOメモリ確保関数保有構造体インスタンスへのポインタ
- * @param[out] out_vao_ メモリ確保対象VAO構造体インスタンスへのダブルポインタ
+ * 現在のGL33 Concreteでは、General Allocatorから
+ * VAO管理Objectを確保した後、glGenVertexArrays()を呼び出す。
  *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - backend_context_ == NULL
- * - out_vao_ == NULL
- * - *out_vao_ != NULL
- * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
- * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
- * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ * GL33 ConcreteはOpenGL APIの実行結果や
+ * 生成されたHandleの妥当性を検証しない。
+ *
+ * したがって、本APIのSUCCESSは、
+ * OpenGL側のResource Stateの正常性まで保証するものではない。
+ *
+ * 生成したVAO管理Objectは、
+ * renderer_backend_vao_destroy()で破棄する。
+ *
+ * @param[in] backend_context_
+ * VAO vtableを保持するRenderer Backend Context
+ *
+ * @param[out] out_vao_
+ * 生成されたVAO管理Objectの格納先。
+ * 呼び出し前に*out_vao_はNULLでなければならない。
+ *
+ * @retval RENDERER_BACKEND_SUCCESS
+ * VAO管理Objectの生成処理が成功した
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT
+ * backend_context_またはout_vao_がNULL、
+ * または*out_vao_がNULLではない。
+ * 下位Allocator由来の引数不正も含む。
+ *
+ * @retval RENDERER_BACKEND_BAD_OPERATION
+ * VAO vtableが設定されていない、
+ * または下位Allocatorの操作条件を満たしていない
+ *
+ * @retval RENDERER_BACKEND_NO_MEMORY
+ * VAO管理Objectのメモリを確保できなかった
+ *
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED
+ * 下位Allocatorの管理上限を超えた
+ *
+ * @retval RENDERER_BACKEND_OVERFLOW
+ * 下位Allocatorで算術overflowが検出された
+ *
+ * @retval RENDERER_BACKEND_DATA_CORRUPTED
+ * 下位Allocatorで内部データ破損が検出された
+ *
+ * @retval RENDERER_BACKEND_UNDEFINED_ERROR
+ * 下位Allocatorから未定義または変換対象外の結果を受け取った
  */
 renderer_backend_result_t renderer_backend_vao_create(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** out_vao_);
 
 /**
- * @brief VAO内部状態管理構造体インスタンスを破棄する
+ * @brief Renderer Backend VAOを破棄する
  *
  * @details
- * - VAOのGPU側リソースの解放も行う
- * - 本関数実行後、vao_ == NULLになる
- * - 既に解放済みのvao_に対しては何もしない
- * - backend_context_ == NULLの場合は何もしない
+ * backend_context_が保持するVAO vtableを使用し、
+ * Concrete側の破棄処理を呼び出す。
  *
- * @param[in] backend_context_ リソース破棄用vtable保有構造体インスタンスへのポインタ
- * @param[in] vao_ 破棄対象インスタンスへのダブルポインタ
+ * 現在のGL33 Concreteでは、OpenGL VAO Handleの削除を要求し、
+ * VAO管理Objectのメモリ解放を行う。
+ *
+ * backend_context_がNULL、またはVAO vtableがNULLの場合は、
+ * 破棄処理を行わずに終了する。
+ *
+ * GL33 Concreteでは、vao_または*vao_がNULLの場合も
+ * 何も行わない。
+ *
+ * 有効なBackend ContextとVAO管理Objectを指定した場合、
+ * Concrete側の破棄処理を実行し、*vao_をNULLへ設定する。
+ *
+ * 現在の実装では、OpenGL側の削除結果および
+ * General Allocatorによる解放結果を
+ * Callerへ通知しない。
+ *
+ * @param[in] backend_context_
+ * VAO破棄用vtableを保持するRenderer Backend Context
+ *
+ * @param[in,out] vao_
+ * 破棄するVAO管理Objectを保持するPointerの格納先
  */
 void renderer_backend_vao_destroy(renderer_backend_context_t* backend_context_, renderer_backend_vao_t** vao_);
 
@@ -87,49 +136,109 @@ renderer_backend_result_t renderer_backend_vao_bind(const renderer_backend_conte
  * @param[in] backend_context_ unbind用vtable保有構造体インスタンスへのポインタ
  *
  * @retval RENDERER_BACKEND_INVALID_ARGUMENT backend_context_ == NULL
- * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化
+ * @retval RENDERER_BACKEND_BAD_OPERATION VAO vtableが設定されていない
  * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
  */
 renderer_backend_result_t renderer_backend_vao_unbind(const renderer_backend_context_t* backend_context_);
 
- /**
- * @brief 現在bind中のVAOに対し、頂点情報のレイアウトをGPUに通知する
+/**
+ * @brief 現在Bind中のVAOへVertex Attributeを設定する
  *
- * @warning 呼び出し側は、本APIを呼ぶ前に設定対象VAOと参照元VBOをbindしておく必要がある
+ * @details
+ * VAO vtableを介してConcrete側のAttribute設定処理を呼び出す。
  *
- * @param[in] backend_context_ アトリビュート設定用vtable保有構造体インスタンスへのポインタ
- * @param[in] layout_ シェーダープログラム内のどのバッファ変数の設定値かを指定
- * @param[in] size_ 頂点情報(layoutごと)に含まれるデータの数([x, y, z, u, v]のうち、3次元座標のみであれば3、テクスチャ座標であれば2)
- * @param[in] type_ バッファに格納されているデータの型 @ref renderer_type_t
- * @param[in] normalized_ 与えられた頂点データを正規化するかどうかを指定
- * @param[in] stride_ 頂点情報1つあたりのサイズを指定(GLfloat型の[x, y, z]であれば、sizeof(GLfloat) x 3を指定)
- * @param[in] offset_ 「この頂点属性の先頭が、現在GL_ARRAY_BUFFERにバインドされているバッファの先頭から何バイト目にあるか」を指定
+ * 現在のGL33 Concreteでは、type_に対応するOpenGL型を選択し、
+ * glVertexAttribPointer()とglEnableVertexAttribArray()を呼び出す。
  *
- * メモ:
- * @code{.c}
- * static const GLfloat vbo_data[] = {
- * -1.0f, -1.0f, 0.0f,
- * 1.0f, -1.0f, 0.0f,
- * 0.0f,  1.0f, 0.0f,
- * };
+ * 対応するtype_は次のとおり。
+ * - RENDERER_TYPE_FLOAT
+ * - RENDERER_TYPE_UNSIGNED_BYTE
+ * - RENDERER_TYPE_BYTE
  *
- * glVertexAttribPointer(
- * 0,
- * 3,
- * GL_FLOAT,
- * GL_FALSE,
- * sizeof(GLfloat) * 3,
- * (void*)0
- * );
- * @endcode
+ * layout_、size_、stride_、offset_については、
+ * GL33 Concrete側で個別の値域検証を行わない。
  *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT backend_context_ == NULL
- * @retval RENDERER_BACKEND_BAD_OPERATION backend_context_が未初期化
- * @retval RENDERER_BACKEND_RUNTIME_ERROR type_の値が既定値外
- * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ * また、OpenGL側の実行結果は検証しない。
+ *
+ * @warning
+ * 呼び出し前に設定対象VAOと参照元VBOをBindしておくこと。
+ * 本API自身はBind状態を検証しない。
+ *
+ * @param[in] backend_context_
+ * Attribute設定用vtableを保持するRenderer Backend Context
+ *
+ * @param[in] layout_
+ * 設定対象となるVertex AttributeのLocation
+ *
+ * @param[in] size_
+ * Vertex AttributeのComponent数
+ *
+ * @param[in] type_
+ * Vertex AttributeのData Type
+ *
+ * @param[in] normalized_
+ * 整数型Attributeを浮動小数点値として取得する際の正規化指定
+ *
+ * @param[in] stride_
+ * 連続するVertex Attribute間のバイト単位のStride
+ *
+ * @param[in] offset_
+ * 現在Bind中のVBO先頭から対象AttributeまでのバイトOffset
+ *
+ * @retval RENDERER_BACKEND_SUCCESS
+ * Concrete側のAttribute設定処理がSUCCESSを返した
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT
+ * backend_context_がNULL
+ *
+ * @retval RENDERER_BACKEND_BAD_OPERATION
+ * VAO vtableが設定されていない
+ *
+ * @retval RENDERER_BACKEND_RUNTIME_ERROR
+ * GL33 Concreteでtype_がサポート対象外の値である
  */
 renderer_backend_result_t renderer_backend_vao_attribute_set(const renderer_backend_context_t* backend_context_, uint32_t layout_, int32_t size_, renderer_type_t type_, bool normalized_, size_t stride_, size_t offset_);
 
+/**
+ * @brief Renderer Backend VAOの構造的妥当性を検証する
+ *
+ * @details
+ * 次の条件を検証する。
+ *
+ * - vao_がNULLではない
+ * - Renderer Backend Contextがvalidである
+ * - Concrete側のVAO Validatorがtrueを返す
+ *
+ * Renderer Backend ContextのValidationでは、
+ * Shader、VAO、VBO、Textureの各vtableが、
+ * 現在選択されているConcreteのvtableと一致することを確認する。
+ *
+ * 現在のGL33 Concreteでは、VAO Handleが0ではないことを
+ * 構造的妥当性の条件とする。
+ *
+ * 本関数はglIsVertexArray()等による
+ * OpenGL側のResource存在確認を行わない。
+ *
+ * @pre
+ * NULLではないvao_は、読み取り可能な有効期間中の
+ * VAO管理Objectを指していること。
+ *
+ * @param[in] backend_context_
+ * 検証対象のRenderer Backend Context
+ *
+ * @param[in] vao_
+ * 検証対象のVAO管理Object
+ *
+ * @retval true
+ * 検査対象の構造的妥当性が成立している
+ *
+ * @retval false
+ * 検査対象の構造的妥当性が成立していない
+ *
+ * @note
+ * 本関数はRenderer Backend Contextおよび
+ * VAO管理Objectを変更しない。
+ */
 bool renderer_backend_vao_is_valid(const renderer_backend_context_t* backend_context_, const renderer_backend_vao_t* vao_);
 
 #ifdef __cplusplus

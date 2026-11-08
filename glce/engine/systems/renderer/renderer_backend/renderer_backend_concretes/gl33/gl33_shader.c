@@ -110,17 +110,47 @@ const renderer_shader_vtable_t* gl33_shader_vtable_get(void) {
 }
 
 /**
- * @brief OpenGL3.3用シェーダーGPUリソース内部状態管理構造体インスタンスのメモリを確保し、フィールドを0で初期化する
+ * @brief Shader管理Objectを生成し、各Handleをゼロ初期化する
  *
- * @param[out] out_shader_handle_ GPUリソース内部状態管理構造体インスタンスへのダブルポインタ
+ * @details
+ * General Allocatorからrenderer_backend_shader_tのStorageを確保し、
+ * 以下のフィールドを0に初期化する。
  *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
- * - out_shader_handle_ == NULL
- * - *out_shader_handle_ != NULL
- * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システム使用可能範囲上限超過
- * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
- * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ * - program_id
+ * - vertex_shader_handle
+ * - fragment_shader_handle
+ *
+ * 本関数ではOpenGLのShader ObjectおよびShader Programを生成しない。
+ * GPU Resourceは後続のcompile／link処理で生成する。
+ *
+ * @param[out] out_shader_handle_
+ * 生成した管理Objectの格納先。
+ * 呼び出し前に*out_shader_handle_はNULLでなければならない。
+ *
+ * @retval RENDERER_BACKEND_SUCCESS
+ * 管理Objectの確保と初期化が成功した
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT
+ * out_shader_handle_がNULL、*out_shader_handle_がNULLではない、
+ * またはGeneral Allocatorが引数不正を返した
+ *
+ * @retval RENDERER_BACKEND_BAD_OPERATION
+ * General Allocatorの操作条件違反
+ *
+ * @retval RENDERER_BACKEND_NO_MEMORY
+ * 管理ObjectのStorageを確保できなかった
+ *
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED
+ * General Allocatorの管理上限を超えた
+ *
+ * @retval RENDERER_BACKEND_OVERFLOW
+ * General Allocatorで算術Overflowを検出した
+ *
+ * @retval RENDERER_BACKEND_DATA_CORRUPTED
+ * General Allocatorで内部状態の破損を検出した
+ *
+ * @retval RENDERER_BACKEND_UNDEFINED_ERROR
+ * General Allocatorから未定義のResultを受け取った
  */
 static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** out_shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -181,6 +211,50 @@ static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
     general_allocator_free((void**)shader_handle_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
+/**
+ * @brief 指定されたシェーダーステージのソースコードをコンパイルする
+ *
+ * @details
+ * Vertex / Fragment Shaderのいずれかを対象とする。
+ * 指定ステージのハンドルが設定済み、またはプログラムがリンク済みの場合は
+ * コンパイルを行わない。
+ *
+ * OpenGLシェーダーオブジェクトを生成し、ソースコードを設定して
+ * コンパイルを実行する。
+ * GL_COMPILE_STATUSによってコンパイル結果を確認する。
+ *
+ * Info Logが存在する場合はGeneral Allocatorで一時領域を確保し、
+ * コンパイル失敗時にはError、成功時にはWarningとして出力する。
+ *
+ * コンパイルに成功した場合のみ、生成されたシェーダーハンドルを
+ * shader_handle_の対応フィールドへ設定する。
+ * 失敗した場合は、生成途中のシェーダーオブジェクトの削除を要求する。
+ *
+ * @pre shader_source_はNULL終端された読み取り可能な文字列であること
+ *
+ * @param[in] shader_stage_ コンパイル対象のシェーダーステージ
+ * @param[in] shader_source_ コンパイル対象のシェーダーソースコード
+ * @param[in,out] shader_handle_ シェーダーGPUリソース内部状態管理構造体インスタンス
+ *
+ * @retval RENDERER_BACKEND_SUCCESS コンパイルに成功
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
+ * - shader_source_がNULL
+ * - shader_handle_がNULL
+ * - shader_stage_が未対応の値
+ * - General Allocatorが引数異常を返した
+ * @retval RENDERER_BACKEND_BAD_OPERATION 以下のいずれか
+ * - 対象ステージのシェーダーハンドルが設定済み
+ * - シェーダープログラムがリンク済み
+ * - General Allocatorが操作条件違反を返した
+ * @retval RENDERER_BACKEND_SHADER_COMPILE_ERROR 以下のいずれか
+ * - シェーダーオブジェクトの生成に失敗
+ * - シェーダーソースコードのコンパイルに失敗
+ * @retval RENDERER_BACKEND_NO_MEMORY 一時領域のメモリ確保に失敗
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED General Allocatorの管理上限を超過
+ * @retval RENDERER_BACKEND_OVERFLOW General Allocatorでオーバーフローを検出
+ * @retval RENDERER_BACKEND_DATA_CORRUPTED General Allocatorで内部状態の破損を検出
+ * @retval RENDERER_BACKEND_UNDEFINED_ERROR General Allocatorから未定義のResultを受け取った
+ */
 static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
@@ -275,19 +349,59 @@ cleanup:
 }
 
 /**
- * @brief コンパイル済みシェーダーオブジェクトをリンクし、OpenGLシェーダープログラムを生成する
+ * @brief コンパイル済みのVertex / Fragment Shaderをリンクする
  *
- * @param[in,out] shader_handle_ シェーダー関連リソース管理構造体インスタンスへのポインタ
+ * @details
+ * Vertex ShaderとFragment ShaderのHandleが設定されており、
+ * Shader Programが未リンクであることを確認する。
  *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT shader_handle_ == NULL
- * @retval RENDERER_BACKEND_BAD_OPERATION 以下のいずれか
- * - シェーダープログラムがすでにリンク済み
- * - バーテックスシェーダーが未コンパイル
- * - フラグメントシェーダーが未コンパイル
- * @retval RENDERER_BACKEND_SHADER_LINK_ERROR シェーダーリンクエラー
- * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリシステム使用可能範囲上限超過
- * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
- * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+ * glCreateProgram()でProgramを生成し、
+ * 両ShaderをAttachしてglLinkProgram()を実行する。
+ *
+ * GL_LINK_STATUSを取得し、リンク結果を判定する。
+ * Info Logが存在する場合はGeneral Allocatorで一時Bufferを確保し、
+ * Log内容を取得する。
+ *
+ * リンク成功後、生成したProgram Handleを
+ * shader_handle_->program_idへ設定する。
+ *
+ * リンクに失敗した場合は、生成途中のProgram Handleの
+ * 削除を要求し、program_idは変更しない。
+ *
+ * リンク成功後もVertex / Fragment Shader Handleを保持し、
+ * これらはdestroy時にProgramとともに破棄する。
+ *
+ * @param[in,out] shader_handle_
+ * コンパイル済みShaderを保持する管理Object
+ *
+ * @retval RENDERER_BACKEND_SUCCESS
+ * Programのリンクに成功した
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT
+ * shader_handle_がNULL、またはGeneral Allocatorが引数不正を返した
+ *
+ * @retval RENDERER_BACKEND_BAD_OPERATION
+ * Programがリンク済み、Vertex Shaderが未コンパイル、
+ * Fragment Shaderが未コンパイル、
+ * またはGeneral Allocatorの操作条件違反
+ *
+ * @retval RENDERER_BACKEND_SHADER_LINK_ERROR
+ * Program Handleを生成できない、またはリンクに失敗した
+ *
+ * @retval RENDERER_BACKEND_NO_MEMORY
+ * Info Log用Storageの確保に失敗した
+ *
+ * @retval RENDERER_BACKEND_LIMIT_EXCEEDED
+ * General Allocatorの管理上限を超えた
+ *
+ * @retval RENDERER_BACKEND_OVERFLOW
+ * General Allocatorで算術Overflowを検出した
+ *
+ * @retval RENDERER_BACKEND_DATA_CORRUPTED
+ * General Allocatorで内部状態の破損を検出した
+ *
+ * @retval RENDERER_BACKEND_UNDEFINED_ERROR
+ * General Allocatorから未定義のResultを受け取った
  */
 static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -358,6 +472,17 @@ cleanup:
 
 /**
  * @brief OpenGLシェーダープログラムを切り替える
+ *
+ * @details
+ * program_idが0ではないことを確認する。
+ * また、リンク済みProgramに対応するVertex / Fragment Shaderの
+ * Handleが両方とも0ではないことを確認する。
+ *
+ * 条件を満たした場合、glUseProgram()を呼び出す。
+ *
+ * 本関数はOpenGL側のProgram使用結果を検証しない。
+ * Shader Objectが実際にコンパイル済みであるかも、
+ * OpenGLへ問い合わせて再検証するわけではない。
  *
  * @param[in] shader_handle_ 切り替え先シェーダープログラムを管理する内部状態管理構造体インスタンスへのポインタ
  *
@@ -460,6 +585,22 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief シェーダープログラムにvec3f型のユニフォーム変数を送信する
+ *
+ * @details
+ * data_が指す3個のfloat値をglUniform3f()へ渡す。
+ *
+ * @note OpenGL側の実行結果は検証しない。
+ * @warning 本関数の呼び出し前に対象のシェーダープログラムをuse状態にすること
+ * @pre data_は3個のfloat値を読み取り可能なメモリ領域を指していること
+ *
+ * @param[in] location_ ユニフォーム変数のLocation
+ * @param[in] data_ 送信する3個のfloat値へのポインタ
+ *
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT data_がNULL
+ * @retval RENDERER_BACKEND_SUCCESS OpenGLへのユニフォーム設定要求が完了
+ */
 static renderer_backend_result_t gl33_vec3f_uniform_set(int32_t location_, const float* data_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
@@ -473,6 +614,22 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief シェーダープログラムにfloat型のユニフォーム変数を送信する
+ *
+ * @details
+ * 指定されたfloat値をglUniform1f()へ渡す。
+ *
+ * 現在の実装では、引数の値域やOpenGL側の実行結果を検証せず、
+ * OpenGL APIの呼び出し後にSUCCESSを返す。
+ *
+ * @warning 本関数の呼び出し前に対象のシェーダープログラムをuse状態にすること
+ *
+ * @param[in] location_ ユニフォーム変数のLocation
+ * @param[in] value_ 送信するfloat値
+ *
+ * @retval RENDERER_BACKEND_SUCCESS OpenGLへのユニフォーム設定要求が完了
+ */
 static renderer_backend_result_t gl33_float_uniform_set(int32_t location_, float value_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
@@ -515,6 +672,32 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief 指定されたシェーダーステージのハンドル格納先アドレスを取得する
+ *
+ * @details
+ * shader_handle_が保持するシェーダーハンドルのうち、
+ * shader_stage_に対応するフィールドのアドレスを取得する。
+ *
+ * - SHADER_STAGE_VERTEX: vertex_shader_handle
+ * - SHADER_STAGE_FRAGMENT: fragment_shader_handle
+ *
+ * 取得するアドレスは管理構造体内部のフィールドを指す。
+ * 新しいメモリ領域の確保は行わない。
+ *
+ * @note 取得したアドレスの有効期間はshader_handle_の有効期間に従う。
+ * @note エラー時は*out_handle_addr_を変更しない。
+ *
+ * @param[in,out] shader_handle_ シェーダーGPUリソース内部状態管理構造体インスタンス
+ * @param[in] shader_stage_ アドレスを取得するシェーダーステージ
+ * @param[out] out_handle_addr_ シェーダーハンドル格納先アドレスの出力先
+ *
+ * @retval RENDERER_BACKEND_SUCCESS ハンドル格納先アドレスの取得に成功
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
+ * - shader_handle_がNULL
+ * - out_handle_addr_がNULL
+ * - shader_stage_が未対応の値
+ */
 static renderer_backend_result_t gl33_shader_handle_addr_get(renderer_backend_shader_t* shader_handle_, shader_stage_t shader_stage_, GLuint** out_handle_addr_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
@@ -542,6 +725,27 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief GLCEのシェーダーステージをOpenGL 3.3のシェーダー種別へ変換する
+ *
+ * @details
+ * 次の変換を行う。
+ *
+ * - SHADER_STAGE_VERTEXからGL_VERTEX_SHADER
+ * - SHADER_STAGE_FRAGMENTからGL_FRAGMENT_SHADER
+ *
+ * 未対応のシェーダーステージでは変換を行わない。
+ *
+ * @note エラー時は*out_gl33_type_を変更しない。
+ *
+ * @param[in] shader_stage_ 変換対象のシェーダーステージ
+ * @param[out] out_gl33_type_ 変換後のOpenGLシェーダー種別の格納先
+ *
+ * @retval RENDERER_BACKEND_SUCCESS 変換に成功
+ * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
+ * - out_gl33_type_がNULL
+ * - shader_stage_が未対応の値
+ */
 static renderer_backend_result_t gl33_shader_resolve_target(shader_stage_t shader_stage_, GLenum* out_gl33_type_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
@@ -568,6 +772,27 @@ cleanup:
     return ret;
 }
 
+/**
+ * @brief 指定されたシェーダーステージのコンパイル管理状態を取得する
+ *
+ * @details
+ * 対象ステージのシェーダーハンドルが0であるかどうかを確認し、
+ * コンパイル管理状態を返す。
+ *
+ * @note 本関数はOpenGLのコンパイル結果を問い合わせない。
+ * SHADER_COMPILE_STATUS_COMPILEDは、対応するシェーダーハンドルが
+ * 0ではないことを意味する。
+ *
+ * @param[in] shader_stage_ 検査対象のシェーダーステージ
+ * @param[in] shader_handle_ シェーダーGPUリソース内部状態管理構造体インスタンス
+ *
+ * @return shader_compile_status_t コンパイル管理状態
+ *
+ * @retval SHADER_COMPILE_STATUS_NOT_COMPILED 対象ステージのハンドルが0
+ * @retval SHADER_COMPILE_STATUS_COMPILED 対象ステージのハンドルが0ではない
+ * @retval SHADER_COMPILE_STATUS_UNSUPPORTED_SHADER_STAGE 未対応のシェーダーステージ
+ * @retval SHADER_COMPILE_STATUS_INVALID_SHADER_HANDLE shader_handle_がNULL
+ */
 static shader_compile_status_t shader_compile_status_get(shader_stage_t shader_stage_, const renderer_backend_shader_t* shader_handle_) {
     shader_compile_status_t status = SHADER_COMPILE_STATUS_NOT_COMPILED;
 
@@ -661,6 +886,30 @@ static GLint NO_COVERAGE mock_glGetUniformLocation(GLuint program_, const GLchar
     return glGetUniformLocation(program_, name_);
 }
 
+/**
+ * @brief OpenGL 3.3用シェーダーGPUリソース内部状態管理構造体の妥当性を検証する
+ *
+ * @details
+ * shader_がNULLではないことを確認する。
+ *
+ * program_idが0ではない場合は、以下の条件も検証する。
+ *
+ * - vertex_shader_handleが0ではない
+ * - fragment_shader_handleが0ではない
+ *
+ * program_idが0の場合は、両ステージのハンドルが0でも
+ * validと判定する。
+ * そのため、生成直後および一部のステージだけを
+ * コンパイルした状態も許容する。
+ *
+ * @note OpenGL側のリソース存在確認および実際のコンパイル・リンク状態の
+ * 問い合わせは行わない。
+ *
+ * @param[in] shader_ 検証対象のシェーダーGPUリソース内部状態管理構造体インスタンス
+ *
+ * @retval true 構造的妥当性を満たす
+ * @retval false 構造的妥当性を満たさない
+ */
 static bool gl33_shader_is_valid(const renderer_backend_shader_t* shader_) {
     if(NULL == shader_) {
         return false;

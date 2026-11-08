@@ -44,18 +44,40 @@ typedef bool (*pfn_vao_is_valid)(const renderer_backend_vao_t* vao_);
  */
 typedef struct renderer_vao_vtable {
     /**
-     * @brief VAO構造体インスタンスのメモリを確保し、VAOハンドルを生成する
+     * @brief Concrete側のVAO管理Object生成処理
      *
-     * @param[out] out_vao_ renderer_backend_vao_t構造体インスタンスへのダブルポインタ
+     * @details
+     * 管理ObjectのStorageを確保し、
+     * 対応するGraphics APIのVAO生成処理を実行する。
      *
-     * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
-     * - vao_がNULL
-     * - *vao_が非NULL
-     * @retval RENDERER_BACKEND_NO_MEMORY メモリ確保失敗
-     * @retval RENDERER_BACKEND_UNDEFINED_ERROR メモリ確保時に不明なエラーが発生
-     * @retval RENDERER_BACKEND_LIMIT_EXCEEDED メモリ管理システムのシステム使用可能範囲上限を超過
-     * @retval RENDERER_BACKEND_BAD_OPERATION メモリシステム未初期化
-     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
+     * @param[out] out_vao_
+     * 生成されたVAO管理Objectの格納先。
+     * 呼び出し前に*out_vao_はNULLでなければならない。
+     *
+     * @retval RENDERER_BACKEND_SUCCESS
+     * Concrete側の生成処理が成功した
+     *
+     * @retval RENDERER_BACKEND_INVALID_ARGUMENT
+     * out_vao_がNULL、または*out_vao_がNULLではない。
+     * 下位Allocator由来の引数不正も含む。
+     *
+     * @retval RENDERER_BACKEND_NO_MEMORY
+     * 管理ObjectのStorageを確保できなかった
+     *
+     * @retval RENDERER_BACKEND_BAD_OPERATION
+     * 下位Allocatorの操作条件を満たしていない
+     *
+     * @retval RENDERER_BACKEND_LIMIT_EXCEEDED
+     * 下位Allocatorの管理上限を超えた
+     *
+     * @retval RENDERER_BACKEND_OVERFLOW
+     * 下位Allocatorで算術overflowが検出された
+     *
+     * @retval RENDERER_BACKEND_DATA_CORRUPTED
+     * 下位Allocatorで内部データ破損が検出された
+     *
+     * @retval RENDERER_BACKEND_UNDEFINED_ERROR
+     * 下位Allocatorから未定義または変換対象外の結果を受け取った
      */
     pfn_vao_create vao_create;
 
@@ -102,6 +124,28 @@ typedef struct renderer_vao_vtable {
      */
     pfn_vao_attribute_set vao_attribute_set;
 
+    /**
+     * @brief Concrete側のVAO管理Objectを検証する
+     *
+     * @details
+     * Concreteが所有するVAO内部表現の妥当性を検証する。
+     *
+     * 現在のGL33 Concreteでは、VAO管理ObjectがNULLではなく、
+     * VAO Handleが0ではないことを検証する。
+     *
+     * Renderer Backend Contextの妥当性は本関数では検証しない。
+     *
+     * OpenGL側のVAO Resource存在確認も行わない。
+     *
+     * @param[in] vao_
+     * 検証対象のVAO管理Object
+     *
+     * @retval true
+     * Concrete側の構造的妥当性が成立している
+     *
+     * @retval false
+     * Concrete側の構造的妥当性が成立していない
+     */
     pfn_vao_is_valid vao_is_valid;
 } renderer_vao_vtable_t;
 

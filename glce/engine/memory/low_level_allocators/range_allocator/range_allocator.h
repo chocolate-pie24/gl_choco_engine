@@ -419,11 +419,21 @@ void range_allocator_destroy(range_allocator_t** allocator_);
  * 異なる可能性がある。
  *
  * @par 計算量
- * 現在の実装では、API入口でO(n^2)のdeep validationを実行する。
- * その後のfirst-fit探索、node index検索、および必要に応じた
- * NOT_USED node検索は、それぞれ最大O(n)である。
+ * DEBUG_BUILDのPreconditionではO(1)のShallow Validationを実行する。
+ * TEST_BUILDのPreconditionではO(n^2)のFull Validationを実行する。
+ * RELEASE_BUILDではautomatic Object Validationを実行しない。
  *
- * deep validationを除いたallocation処理全体の時間計算量はO(n)である。
+ * DEBUG_BUILD／TEST_BUILDのPostconditionでは、
+ * O(n^2)のFull Validationを実行する。
+ *
+ * これらのValidationを除いたallocation処理は、
+ * first-fit探索、node index検索、および必要に応じた
+ * NOT_USED node検索によって、最悪O(n)である。
+ *
+ * したがって、現在の実装における最悪時間計算量は、
+ * DEBUG_BUILD／TEST_BUILDではO(n^2)、
+ * RELEASE_BUILDではO(n)である。
+ *
  * ここでnはmax node countである。
  *
  * @see range_allocator_free
@@ -483,9 +493,8 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
  *
  * @retval RANGE_ALLOCATOR_BAD_OPERATION
  * 次のいずれか。
- * - allocation_->allocated_sizeが現在のtotal allocated sizeを超えている
- * - allocator_にlive allocationが存在しない
  * - allocation_->allocated_sizeが0
+ * - allocation_のoffsetとallocated_sizeの加算がoverflowする
  * - allocation_->ownerがallocator_と一致しない
  * - allocation_->node_indexがnode poolの範囲外
  * - 対応nodeのstateがALLOCATEDではない
@@ -495,16 +504,18 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
  * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * 次のいずれか。
  * - Range Allocatorが内部不変条件を満たしていない
- * - range listがmax node count以内に終端へ到達しない
- * - range list上のnodeがnode poolに所属していない
- * - nodeのstate、range情報、alignment、または接続関係に不整合がある
- * - node数、allocation count、unused node count、または
- *   total allocated sizeが実際のnode状態と一致しない
- * - descriptorに対応するnodeまたは隣接FREE nodeが局所的不変条件を満たしていない
- * - descriptorの解決後に、merge対象node、range list、range、
- *   またはnode poolの不整合を検出した
- * - 隣接rangeの終端またはmerge後のblock size計算でoverflowを検出した
- * - 不要になったnodeをrange listから切断またはnode poolへ返却できなかった
+ * - range list、node pool、または管理値に不整合がある
+ * - descriptorの解決後にallocation countが0である
+ * - descriptorの解決後にallocation_->allocated_sizeが
+ *   total allocated sizeを超えている
+ * - descriptorに対応するnodeまたは隣接FREE nodeが
+ *   局所的不変条件を満たしていない
+ * - merge計画の取得またはfree処理が、
+ *   成立済みの内部contractに反して失敗した
+ * - 隣接rangeの終端またはmerge後のblock size計算で
+ *   overflowを検出した
+ * - 不要になったnodeをrange listから切断または
+ *   node poolへ返却できなかった
  *
  * @post 成功時は次が成立する。
  * - allocation_が表していたrangeはFREE rangeへ統合される
@@ -546,10 +557,22 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
  * RANGE_ALLOCATOR_DATA_CORRUPTEDを返す。
  *
  * @par 計算量
- * 現在の実装では、API入口でO(n^2)のdeep validationを実行する。
+ * DEBUG_BUILDのPreconditionではO(1)のShallow Validationを実行する。
+ * TEST_BUILDのPreconditionではO(n^2)のFull Validationを実行する。
+ * RELEASE_BUILDではautomatic Object Validationを実行しない。
  *
- * deep validationを除いた場合、mergeを行わないfreeはO(1)である。
- * mergeを行うfreeは、nodeの所属確認のためnode poolを線形探索するためO(n)である。
+ * DEBUG_BUILD／TEST_BUILDのPostconditionでは、
+ * O(n^2)のFull Validationを実行する。
+ *
+ * これらのValidationを除いた場合、
+ * mergeを行わないfreeはO(1)である。
+ * mergeを行うfreeはnode poolへの所属確認を伴うため、
+ * 最悪O(n)である。
+ *
+ * したがって、現在の実装における最悪時間計算量は、
+ * DEBUG_BUILD／TEST_BUILDではO(n^2)、
+ * RELEASE_BUILDではO(n)である。
+ *
  * ここでnはmax node countである。
  *
  * 本関数は動的メモリ確保および動的メモリ解放を行わない。
@@ -562,10 +585,6 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
  * プロジェクト作成者が内容を確認・修正した。
  */
 range_allocator_result_t range_allocator_free(range_allocator_t* allocator_, const range_allocation_t* allocation_);
-
-// range_allocator_result_t range_allocator_validate(const range_allocator_t* allocator_, range_allocator_validation_result_t* out_validation_result_);
-
-// void range_allocator_validation_result_print(const range_allocator_validation_result_t* validation_result_);
 
 /**
  * @brief Range Allocatorの状態snapshotを取得する
@@ -833,8 +852,61 @@ void range_allocator_status_print(const range_allocator_status_t* status_);
  */
 void range_allocator_debug_print(const range_allocator_t* allocator_);
 
+/**
+ * @brief Range Allocation Descriptorの構造的妥当性を検証する
+ *
+ * @details
+ * 次の条件を検証する。
+ *
+ * - allocation_がNULLではない
+ * - allocated_sizeが0ではない
+ * - offsetとallocated_sizeの加算がoverflowしない
+ * - ownerがNULLではない
+ *
+ * 本関数はDescriptor自身の構造的妥当性だけを判定する。
+ *
+ * ownerの生存、node indexの範囲、
+ * 対応nodeのstate、allocationのliveness、
+ * およびfree可能性は検証しない。
+ *
+ * @param[in] allocation_ 検証対象のDescriptor
+ *
+ * @retval true 構造的妥当性を満たす
+ * @retval false 構造的妥当性を満たさない
+ *
+ * @note 本関数はDescriptorを変更しない。
+ */
 bool range_allocation_is_valid(const range_allocation_t* allocation_);
 
+/**
+ * @brief Range Allocatorの内部整合性を検証する
+ *
+ * @details
+ * Range Allocatorの基本管理値、node pool、
+ * range list、および各管理値の相互整合性を検証する。
+ *
+ * 検証対象には次を含む。
+ *
+ * - memory pool size、alignmentおよび管理count
+ * - node poolの局所的不変条件
+ * - range listの接続関係、順序および連続性
+ * - FREE／ALLOCATED／NOT_USED nodeのstate
+ * - allocation countとtotal allocated sizeの整合性
+ * - range listとnode poolのownership relation
+ *
+ * 現在の実装ではBUILD_MODEに関係なく
+ * range listおよびnode pool全体を検証する。
+ *
+ * @param[in] allocator_ 検証対象のRange Allocator
+ *
+ * @retval true 検査対象の内部整合性が成立している
+ * @retval false 内部整合性が成立していない
+ *
+ * @note 本関数はRange Allocatorの状態を変更しない。
+ *
+ * @par 計算量
+ * node poolのnode数をnとしたとき、最悪O(n^2)である。
+ */
 bool range_allocator_is_valid(const range_allocator_t* allocator_);
 
 #ifdef __cplusplus

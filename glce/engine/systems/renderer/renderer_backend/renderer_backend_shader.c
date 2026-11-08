@@ -1,6 +1,28 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
+/** @ingroup renderer
+ *
+ * @file renderer_backend_shader.c
+ * @author chocolate-pie24
+ * @brief Renderer Backendのシェーダー操作APIの実装
+ *
+ * @details
+ * Renderer Backend Contextが保持するShader vtableを介して、
+ * Concrete側のシェーダー操作を呼び出す。
+ *
+ * 以下の機能を提供する。
+ * - シェーダー管理Objectの生成と破棄
+ * - シェーダーソースコードのコンパイル
+ * - シェーダープログラムのリンクと使用
+ * - ユニフォーム変数のLocation取得と値の設定
+ * - シェーダー管理Objectの妥当性検証
+ *
+ * @note GPU Resourceに対する具体的な操作はConcrete側が担当する。
+ *
+ * @date 2026-02-23
+ *
+ */
 #include "engine/systems/renderer/renderer_backend/renderer_backend_shader.h"
 
 #include <stdint.h>

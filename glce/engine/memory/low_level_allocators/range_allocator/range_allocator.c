@@ -136,14 +136,32 @@
  * - range list接続node数とunused node countの合計はmax node countと一致する
  *
  * @par Validation
- * public allocate／freeの入口では、Range Allocator全体のdeep validationを実行する。
+ * Range Allocatorは、基本管理値を検証するShallow Validatorと、
+ * range listおよびnode pool全体を検証するFull Validatorを持つ。
  *
- * deep validationはrange list上の各nodeについてnode poolへの所属確認を行うため、
- * 現在の時間計算量はO(n^2)である。
+ * Shallow ValidatorはO(1)の局所的な整合性を検証する。
+ * Full ValidatorはShallow Validationに加え、
+ * range listおよびnode pool全体の整合性を検証する。
+ *
+ * Full Validationは、range list上の各nodeについて
+ * node poolへの所属確認を行うため、時間計算量はO(n^2)である。
+ *
+ * 現在のallocate／freeの入口では、次の方式を採用している。
+ *
+ * - DEBUG_BUILD: Shallow Validation
+ * - TEST_BUILD: Full Validation
+ * - RELEASE_BUILD: automatic Object Validationを実行しない
+ *
+ * create／allocate／freeのPostconditionsでは、
+ * DEBUG_BUILD／TEST_BUILDでFull Validationを実行する。
+ *
+ * 公開されたrange_allocator_is_valid()は、
+ * 現在の実装ではBUILD_MODEに関係なくFull Validationを行う。
  *
  * private関数ではRange Allocator全体のvalidationを繰り返さない。
- * 呼び出し元が必要なvalidationを完了していることを事前条件とし、
- * 各private関数は担当範囲の引数、node state、および局所的な接続関係を検証する。
+ * 呼び出し元で成立した内部contractを信頼し、
+ * 各private関数は自身の責務に属する引数、node state、
+ * および局所的な接続関係を必要に応じて検証する。
  *
  * @par 破損状態の扱い
  * validなdescriptorと正常な内部状態を前提とするfree処理では、
@@ -838,8 +856,15 @@ bool range_allocation_is_valid(const range_allocation_t* allocation_) {
  * @brief Range Allocator全体の内部整合性を検証する
  *
  * @details
- * allocator_is_valid_shallow()によって基本管理値を検証した後、
- * range listとnode poolを走査し、両者の内容と管理値が一致することを検証する。
+ * range_allocator_is_valid_shallow()によって基本管理値を検証した後、
+ * range listとnode poolを走査し、両者の内容と管理値が
+ * 一致することを検証する。
+ *
+ * 本関数は現在、BUILD_MODEに関係なくFull Validationを実行する。
+ *
+ * 検証対象はRange Allocator自身が所有する内部状態であり、
+ * Descriptorを保持する外部Moduleのownership relationや、
+ * 管理対象となる実メモリ／GPU Bufferの状態は検証しない。
  *
  * range listについて、次の条件を検証する。
  *
@@ -890,7 +915,6 @@ bool range_allocation_is_valid(const range_allocation_t* allocation_) {
  *
  * @note
  * 本関数は不整合の種類を結果コードとして区別しない。
- * public APIはfalseを内部データ破損として扱う。
  *
  * @note
  * 本関数はRange Allocator、node pool、range list、および
