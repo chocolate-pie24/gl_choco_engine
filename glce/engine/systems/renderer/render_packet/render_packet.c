@@ -2,6 +2,9 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include "config/build_config.h"
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -19,17 +22,50 @@
 #include "engine/systems/renderer/resources/meshes/ui_mesh.h"
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
 
+typedef struct {
+    size_t max_mesh_count;
+    size_t mesh_count;
+    line_mesh_t* meshes;
+    mat4x4f_t* model_matrices;
+} line_mesh_render_packet_t;
+
+typedef struct {
+    size_t max_mesh_count;
+    size_t mesh_count;
+    point_mesh_t* meshes;
+    mat4x4f_t* model_matrices;
+} point_mesh_render_packet_t;
+
+typedef struct {
+    size_t max_mesh_count;
+    size_t mesh_count;
+    ui_mesh_t* meshes;
+    mat4x4f_t* model_matrices;
+} ui_mesh_render_packet_t;
+
+typedef struct {
+    size_t max_mesh_count;
+    size_t mesh_count;
+    untextured_mesh_t* meshes;
+    mat4x4f_t* model_matrices;
+} untextured_mesh_render_packet_t;
+
+struct render_packet {
+    frame_allocator_t* allocator;
+
+    line_mesh_render_packet_t line_mesh_packet;
+    point_mesh_render_packet_t point_mesh_packet;
+    ui_mesh_render_packet_t ui_mesh_packet;
+    untextured_mesh_render_packet_t untextured_mesh_packet;
+};
+
 static bool render_packet_is_empty(const render_packet_t* render_packet_);
 static bool line_mesh_packet_is_empty(const line_mesh_render_packet_t* render_packet_);
 static bool point_mesh_packet_is_empty(const point_mesh_render_packet_t* render_packet_);
 static bool ui_mesh_packet_is_empty(const ui_mesh_render_packet_t* render_packet_);
 static bool untextured_mesh_packet_is_empty(const untextured_mesh_render_packet_t* render_packet_);
 
-static bool render_packet_is_not_empty(const render_packet_t* render_packet_);
-static bool line_mesh_packet_is_not_empty(const line_mesh_render_packet_t* render_packet_);
-static bool point_mesh_packet_is_not_empty(const point_mesh_render_packet_t* render_packet_);
-static bool ui_mesh_packet_is_not_empty(const ui_mesh_render_packet_t* render_packet_);
-static bool untextured_mesh_packet_is_not_empty(const untextured_mesh_render_packet_t* render_packet_);
+static bool mesh_packet_storage_is_valid(size_t max_mesh_count_, size_t mesh_count_, const void* meshes_, const mat4x4f_t* model_matrices_, size_t mesh_size_);
 
 render_packet_result_t render_packet_create(size_t max_memory_pool_size_, render_packet_t** out_render_packet_) {
     render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
@@ -378,8 +414,181 @@ void render_packet_deinitialize(render_packet_t* render_packet_) {
     render_packet_->untextured_mesh_packet.model_matrices = NULL;
 }
 
+render_packet_result_t render_packet_line_mesh_push(line_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
+    render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_line_mesh_push", "mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_line_mesh_push", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_line_mesh_push", "render_packet_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!render_packet_is_valid(render_packet_)) {
+        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ERROR_MESSAGE("render_packet_line_mesh_push(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    if(render_packet_->line_mesh_packet.max_mesh_count == render_packet_->line_mesh_packet.mesh_count) {
+        ret = RENDER_PACKET_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("render_packet_line_mesh_push(%s) - Line mesh storage is full.", render_packet_result_to_str(ret));
+        goto cleanup;
+    }
+
+    render_packet_->line_mesh_packet.meshes[render_packet_->line_mesh_packet.mesh_count] = *mesh_;
+    render_packet_->line_mesh_packet.model_matrices[render_packet_->line_mesh_packet.mesh_count] = *model_matrix_;
+    render_packet_->line_mesh_packet.mesh_count++;
+
+    ret = RENDER_PACKET_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_packet_result_t render_packet_point_mesh_push(point_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
+    render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_point_mesh_push", "mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_point_mesh_push", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_point_mesh_push", "render_packet_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!render_packet_is_valid(render_packet_)) {
+        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ERROR_MESSAGE("render_packet_point_mesh_push(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    if(render_packet_->point_mesh_packet.max_mesh_count == render_packet_->point_mesh_packet.mesh_count) {
+        ret = RENDER_PACKET_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("render_packet_point_mesh_push(%s) - Point mesh storage is full.", render_packet_result_to_str(ret));
+        goto cleanup;
+    }
+
+    render_packet_->point_mesh_packet.meshes[render_packet_->point_mesh_packet.mesh_count] = *mesh_;
+    render_packet_->point_mesh_packet.model_matrices[render_packet_->point_mesh_packet.mesh_count] = *model_matrix_;
+    render_packet_->point_mesh_packet.mesh_count++;
+
+    ret = RENDER_PACKET_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_packet_result_t render_packet_ui_mesh_push(ui_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
+    render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_ui_mesh_push", "mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_ui_mesh_push", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_ui_mesh_push", "render_packet_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!render_packet_is_valid(render_packet_)) {
+        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ERROR_MESSAGE("render_packet_ui_mesh_push(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    if(render_packet_->ui_mesh_packet.max_mesh_count == render_packet_->ui_mesh_packet.mesh_count) {
+        ret = RENDER_PACKET_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("render_packet_ui_mesh_push(%s) - UI mesh storage is full.", render_packet_result_to_str(ret));
+        goto cleanup;
+    }
+
+    render_packet_->ui_mesh_packet.meshes[render_packet_->ui_mesh_packet.mesh_count] = *mesh_;
+    render_packet_->ui_mesh_packet.model_matrices[render_packet_->ui_mesh_packet.mesh_count] = *model_matrix_;
+    render_packet_->ui_mesh_packet.mesh_count++;
+
+    ret = RENDER_PACKET_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+render_packet_result_t render_packet_untextured_mesh_push(untextured_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
+    render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_untextured_mesh_push", "mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_untextured_mesh_push", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_untextured_mesh_push", "render_packet_")
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!render_packet_is_valid(render_packet_)) {
+        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ERROR_MESSAGE("render_packet_untextured_mesh_push(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
+    if(render_packet_->untextured_mesh_packet.max_mesh_count == render_packet_->untextured_mesh_packet.mesh_count) {
+        ret = RENDER_PACKET_LIMIT_EXCEEDED;
+        ERROR_MESSAGE("render_packet_untextured_mesh_push(%s) - Untextured mesh storage is full.", render_packet_result_to_str(ret));
+        goto cleanup;
+    }
+
+    render_packet_->untextured_mesh_packet.meshes[render_packet_->untextured_mesh_packet.mesh_count] = *mesh_;
+    render_packet_->untextured_mesh_packet.model_matrices[render_packet_->untextured_mesh_packet.mesh_count] = *model_matrix_;
+    render_packet_->untextured_mesh_packet.mesh_count++;
+
+    ret = RENDER_PACKET_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 bool render_packet_is_valid(const render_packet_t* render_packet_) {
     if(NULL == render_packet_) {
+        return false;
+    }
+
+    // Frame Allocator ownership.
+    if(NULL == render_packet_->allocator) {
+        return false;
+    }
+
+    if(!general_allocator_ptr_is_allocated(render_packet_->allocator)) {
+        return false;
+    }
+
+    if(!frame_allocator_is_valid(render_packet_->allocator)) {
+        return false;
+    }
+
+    // Line Mesh Packet.
+    if(!mesh_packet_storage_is_valid(
+        render_packet_->line_mesh_packet.max_mesh_count,
+        render_packet_->line_mesh_packet.mesh_count,
+        render_packet_->line_mesh_packet.meshes,
+        render_packet_->line_mesh_packet.model_matrices,
+        sizeof(line_mesh_t))) {
+        return false;
+    }
+
+    // Point Mesh Packet.
+    if(!mesh_packet_storage_is_valid(
+        render_packet_->point_mesh_packet.max_mesh_count,
+        render_packet_->point_mesh_packet.mesh_count,
+        render_packet_->point_mesh_packet.meshes,
+        render_packet_->point_mesh_packet.model_matrices,
+        sizeof(point_mesh_t))) {
+        return false;
+    }
+
+    // UI Mesh Packet.
+    if(!mesh_packet_storage_is_valid(
+        render_packet_->ui_mesh_packet.max_mesh_count,
+        render_packet_->ui_mesh_packet.mesh_count,
+        render_packet_->ui_mesh_packet.meshes,
+        render_packet_->ui_mesh_packet.model_matrices,
+        sizeof(ui_mesh_t))) {
+        return false;
+    }
+
+    // Untextured Mesh Packet.
+    if(!mesh_packet_storage_is_valid(
+        render_packet_->untextured_mesh_packet.max_mesh_count,
+        render_packet_->untextured_mesh_packet.mesh_count,
+        render_packet_->untextured_mesh_packet.meshes,
+        render_packet_->untextured_mesh_packet.model_matrices,
+        sizeof(untextured_mesh_t))) {
         return false;
     }
 
@@ -430,46 +639,29 @@ static bool untextured_mesh_packet_is_empty(const untextured_mesh_render_packet_
     return false;
 }
 
-static bool render_packet_is_not_empty(const render_packet_t* render_packet_) {
-    if(!line_mesh_packet_is_not_empty(&render_packet_->line_mesh_packet)) {
+static bool mesh_packet_storage_is_valid(size_t max_mesh_count_, size_t mesh_count_, const void* meshes_, const mat4x4f_t* model_matrices_, size_t mesh_size_) {
+    if(mesh_count_ > max_mesh_count_) {
         return false;
     }
-    if(!point_mesh_packet_is_not_empty(&render_packet_->point_mesh_packet)) {
+
+    if(0 == max_mesh_count_) {
+        if(0 != mesh_count_ || NULL != meshes_ || NULL != model_matrices_) {
+            return false;
+        }
+        return true;
+    }
+
+    if(NULL == meshes_ || NULL == model_matrices_) {
         return false;
     }
-    if(!ui_mesh_packet_is_not_empty(&render_packet_->ui_mesh_packet)) {
+
+    if(max_mesh_count_ > SIZE_MAX / mesh_size_) {
         return false;
     }
-    if(!untextured_mesh_packet_is_not_empty(&render_packet_->untextured_mesh_packet)) {
+
+    if(max_mesh_count_ > SIZE_MAX / sizeof(mat4x4f_t)) {
         return false;
     }
+
     return true;
-}
-
-static bool line_mesh_packet_is_not_empty(const line_mesh_render_packet_t* render_packet_) {
-    if(0 != render_packet_->max_mesh_count || 0 != render_packet_->mesh_count || NULL != render_packet_->meshes || NULL != render_packet_->model_matrices) {
-        return true;
-    }
-    return false;
-}
-
-static bool point_mesh_packet_is_not_empty(const point_mesh_render_packet_t* render_packet_) {
-    if(0 != render_packet_->max_mesh_count || 0 != render_packet_->mesh_count || NULL != render_packet_->meshes || NULL != render_packet_->model_matrices) {
-        return true;
-    }
-    return false;
-}
-
-static bool ui_mesh_packet_is_not_empty(const ui_mesh_render_packet_t* render_packet_) {
-    if(0 != render_packet_->max_mesh_count || 0 != render_packet_->mesh_count || NULL != render_packet_->meshes || NULL != render_packet_->model_matrices) {
-        return true;
-    }
-    return false;
-}
-
-static bool untextured_mesh_packet_is_not_empty(const untextured_mesh_render_packet_t* render_packet_) {
-    if(0 != render_packet_->max_mesh_count || 0 != render_packet_->mesh_count || NULL != render_packet_->meshes || NULL != render_packet_->model_matrices) {
-        return true;
-    }
-    return false;
 }

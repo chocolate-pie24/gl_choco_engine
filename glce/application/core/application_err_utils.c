@@ -24,6 +24,8 @@
 
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 
+#include "engine/systems/renderer/render_packet/core/render_packet_types.h"
+
 #include "application/core/application_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
@@ -389,6 +391,31 @@ application_result_t application_result_convert_geometry(geometry_result_t resul
     case GEOMETRY_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     case GEOMETRY_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t application_result_convert_render_packet(render_packet_result_t result_) {
+    switch(result_) {
+    case RENDER_PACKET_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case RENDER_PACKET_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case RENDER_PACKET_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case RENDER_PACKET_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case RENDER_PACKET_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case RENDER_PACKET_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case RENDER_PACKET_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case RENDER_PACKET_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case RENDER_PACKET_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

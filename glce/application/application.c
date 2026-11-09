@@ -64,6 +64,9 @@
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
 
+#include "engine/systems/renderer/render_packet/core/render_packet_types.h"
+#include "engine/systems/renderer/render_packet/render_packet.h"
+
 // Application Layer
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
@@ -123,6 +126,7 @@ typedef struct application_state {
 
     // Render model
     // Sample Robot scene
+    render_packet_t* sample_robot_scene_render_packet;
     untextured_model_resource_map_t* sample_robot_resource_map;
     sample_robot_t* sample_robot1;
     sample_robot_t* sample_robot2;
@@ -148,6 +152,8 @@ static application_result_t sample_robot_model_resource_map_destroy(renderer_fro
 static application_result_t floor_grid_mesh_create(renderer_frontend_t* renderer_frontend_, line_mesh_t** out_mesh_);
 static application_result_t floor_grid_mesh_destroy(renderer_frontend_t* renderer_frontend_, line_mesh_t** mesh_);
 
+static application_result_t application_render_packet_initialize(void);
+
 application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
     application_result_t ret_cleanup = APPLICATION_RUNTIME_ERROR;
@@ -159,6 +165,7 @@ application_result_t application_create(void) {
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
     light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+    render_packet_result_t ret_render_packet = RENDER_PACKET_INVALID_ARGUMENT;
 
     size_t subsystem_memory_pool_size = 0;
 
@@ -298,6 +305,15 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     mat4f_identity(&tmp_state->floor_grid_model_matrix);
+    ret_render_packet = render_packet_create(16 * MIB, &tmp_state->sample_robot_scene_render_packet);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = application_result_convert_render_packet(ret_render_packet);
+        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+            ret = APPLICATION_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("application_create(%s) - render_packet_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
 
     application_diagnostics_status_report(tmp_state->subsystem_allocator);
 
@@ -312,6 +328,9 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_state) {
+        if(NULL != tmp_state->sample_robot_scene_render_packet) {
+            render_packet_destroy(&tmp_state->sample_robot_scene_render_packet);
+        }
         if(NULL != tmp_state->floor_grid_line_mesh && NULL != tmp_state->renderer_frontend) {
             ret_cleanup = floor_grid_mesh_destroy(tmp_state->renderer_frontend, &tmp_state->floor_grid_line_mesh);
             if(APPLICATION_DATA_CORRUPTED == ret_cleanup) {
@@ -367,6 +386,9 @@ void application_destroy(void) {
     }
 
     // begin cleanup all systems.
+    if(NULL != s_application_state->sample_robot_scene_render_packet) {
+        render_packet_destroy(&s_application_state->sample_robot_scene_render_packet);
+    }
     if(NULL != s_application_state->floor_grid_line_mesh && NULL != s_application_state->renderer_frontend) {
         ret = floor_grid_mesh_destroy(s_application_state->renderer_frontend, &s_application_state->floor_grid_line_mesh);
         if(APPLICATION_DATA_CORRUPTED == ret) {
@@ -520,6 +542,16 @@ application_result_t application_run(void) {
             }
         } else if(s_application_state->frame_state.validation_report_requested) {
             WARN_MESSAGE("application_run(%s) - not impremented yet...");
+        }
+
+        render_packet_deinitialize(s_application_state->sample_robot_scene_render_packet);
+        ret = application_render_packet_initialize();
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - application_render_packet_initialize failed.", application_result_to_str(ret));
+            if(APPLICATION_DATA_CORRUPTED == ret) {
+                goto cleanup;
+            }
+            continue;
         }
 
         // begin temporary TODO: remove this!!
@@ -965,6 +997,228 @@ static application_result_t floor_grid_mesh_destroy(renderer_frontend_t* rendere
         goto cleanup;
     }
     general_allocator_free((void**)mesh_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+static application_result_t application_render_packet_initialize(void) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+    render_packet_result_t ret_render_packet = RENDER_PACKET_INVALID_ARGUMENT;
+
+    size_t sample_robot_mesh_count = 0; // sample robot 1台分
+    size_t debug_axis_mesh_count = 0;   // sample robot 1台分
+    size_t debug_aabb_mesh_count = 0;   // sample robot 1台分
+
+    size_t line_mesh_count = 0;
+    size_t untextured_mesh_count = 0;
+
+    mat4x4f_t tmp_model_matrix = { 0 };
+    uint16_t tmp_coordinate_id = 0;
+    untextured_mesh_t tmp_untextured_mesh = { 0 };
+    line_mesh_t tmp_line_mesh = { 0 };
+
+    if(NULL == s_application_state->sample_robot_scene_render_packet) {
+        ret = APPLICATION_BAD_OPERATION;
+        ERROR_MESSAGE("application_render_packet_initialize(%s) - Render packet is not initialized.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // mesh count initialize
+    // STL model(untextured mesh)
+    ret_model_framework = untextured_model_resource_map_untextured_mesh_count_get(s_application_state->sample_robot_resource_map, &sample_robot_mesh_count);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ERROR_MESSAGE("application_render_packet_initialize - model_resource_map_untextured_mesh_count_get failed. continue...");
+        goto cleanup;
+    }
+    untextured_mesh_count += sample_robot_mesh_count * 2; // sample robot2台分
+
+    // Debug AXIS(untextured mesh)
+    ret_model_framework = untextured_model_resource_map_debug_axis_mesh_count_get(s_application_state->sample_robot_resource_map, &debug_axis_mesh_count);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ERROR_MESSAGE("application_render_packet_initialize - untextured_model_resource_map_debug_axis_mesh_count_get failed. continue...");
+        goto cleanup;
+    }
+    untextured_mesh_count += debug_axis_mesh_count * 2;
+
+    // Debug AABB Line描画
+    ret_model_framework = untextured_model_resource_map_debug_aabb_mesh_count_get(s_application_state->sample_robot_resource_map, &debug_aabb_mesh_count);
+    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+        ERROR_MESSAGE("application_render_packet_initialize - untextured_model_resource_map_debug_aabb_mesh_count_get failed. continue...");
+        goto cleanup;
+    }
+    line_mesh_count += debug_aabb_mesh_count * 2;
+
+    // Floor Grid(line mesh)
+    line_mesh_count += 1;
+
+    // Render packet配列メモリ確保
+    ret_render_packet = render_packet_initialize(line_mesh_count, 0, 0, untextured_mesh_count, s_application_state->sample_robot_scene_render_packet);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = application_result_convert_render_packet(ret_render_packet);
+        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+            ret = APPLICATION_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_initialize failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Render packet初期化
+    // STL model(untextured mesh)
+    for(size_t i = 0; i != sample_robot_mesh_count; ++i) {
+        ret_model_framework = untextured_model_resource_map_untextured_mesh_binding_get(s_application_state->sample_robot_resource_map, (uint16_t)i, &tmp_untextured_mesh, &tmp_coordinate_id);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ret = application_result_convert_model_framework(ret_model_framework);
+            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - untextured_model_resource_map_untextured_mesh_binding_get failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ret = application_result_convert_model_framework(ret_model_framework);
+            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - model_transform_tree_world_matrix_get failed. continue.", application_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_render_packet = render_packet_untextured_mesh_push(&tmp_untextured_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = application_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ret = application_result_convert_model_framework(ret_model_framework);
+            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - model_transform_tree_world_matrix_get failed. continue.", application_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_render_packet = render_packet_untextured_mesh_push(&tmp_untextured_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = application_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    // Debug AXIS(untextured mesh)
+    for(size_t i = 0; i != debug_axis_mesh_count; ++i) {
+        ret_model_framework = untextured_model_resource_map_debug_axis_mesh_binding_get(s_application_state->sample_robot_resource_map, (uint16_t)i, &tmp_untextured_mesh, &tmp_coordinate_id);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ret = application_result_convert_model_framework(ret_model_framework);
+            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - untextured_model_resource_map_debug_axis_mesh_binding_get failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ret = application_result_convert_model_framework(ret_model_framework);
+            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - model_transform_tree_world_matrix_get failed. continue.", application_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_render_packet = render_packet_untextured_mesh_push(&tmp_untextured_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = application_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ret = application_result_convert_model_framework(ret_model_framework);
+            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - model_transform_tree_world_matrix_get failed. continue.", application_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_render_packet = render_packet_untextured_mesh_push(&tmp_untextured_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = application_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    // Debug AABB Line描画
+    for(size_t i = 0; i != debug_aabb_mesh_count; ++i) {
+        ret_model_framework = untextured_model_resource_map_debug_aabb_mesh_binding_get(s_application_state->sample_robot_resource_map, (uint16_t)i, &tmp_line_mesh, &tmp_coordinate_id);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ret = application_result_convert_model_framework(ret_model_framework);
+            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - untextured_model_resource_map_debug_aabb_mesh_binding_get failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+            continue;
+        }
+        ret_render_packet = render_packet_line_mesh_push(&tmp_line_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = application_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
+        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
+            ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
+            continue;
+        }
+        ret_render_packet = render_packet_line_mesh_push(&tmp_line_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = application_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    ret_render_packet = render_packet_line_mesh_push(s_application_state->floor_grid_line_mesh, &s_application_state->floor_grid_model_matrix, s_application_state->sample_robot_scene_render_packet);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = application_result_convert_render_packet(ret_render_packet);
+        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+            ret = APPLICATION_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = APPLICATION_SUCCESS;
 
