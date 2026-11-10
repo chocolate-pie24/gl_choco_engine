@@ -16,6 +16,8 @@ extern "C" {
 
 #include "engine/systems/renderer/core/renderer_types.h"
 
+#include "engine/systems/renderer/render_packet/core/render_packet_types.h"
+
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
 typedef struct renderer_frontend renderer_frontend_t;
@@ -30,6 +32,7 @@ typedef struct line_mesh line_mesh_t;
 typedef struct aabb_3d aabb_3d_t;
 typedef struct untextured_mesh_material untextured_mesh_material_t;
 typedef struct point_normal_vertex point_normal_vertex_t;
+typedef struct render_packet render_packet_t;
 
 typedef struct {
     size_t vbo_size;
@@ -58,6 +61,8 @@ renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_conf
 
 void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_);
 
+renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render_packet_, renderer_frontend_t* renderer_frontend_);
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // for Untexture Mesh
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +87,7 @@ void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_);
  * @retval RENDERER_FRONTEND_OVERFLOW Draw Rangeの算術計算でoverflowを検出
  * @return その他、Shader操作の失敗を変換したResult
  */
+// TODO: private helper化
 renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
 
 /**
@@ -117,6 +123,7 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_local_aabb_get(cons
 //////////////////////////////////////////////////////////////////////////////////////////
 // for Line Mesh
 //////////////////////////////////////////////////////////////////////////////////////////
+// TODO: private helper化
 renderer_frontend_result_t renderer_frontend_line_mesh_draw(renderer_frontend_t* renderer_frontend_, const line_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
 
 renderer_frontend_result_t renderer_frontend_line_mesh_render_update(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
@@ -126,6 +133,8 @@ renderer_frontend_result_t renderer_frontend_line_mesh_import_from_vertices(rend
 renderer_frontend_result_t renderer_frontend_line_mesh_import_from_aabb(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const aabb_3d_t* aabb_, vec4u8_t color_, line_mesh_t* out_mesh_);
 
 renderer_frontend_result_t renderer_frontend_line_mesh_release(renderer_frontend_t* renderer_frontend_, const line_mesh_t* mesh_);
+
+// TODO: UI mesh, Point mesh.
 
 bool renderer_frontend_is_valid(const renderer_frontend_t* renderer_frontend_);
 

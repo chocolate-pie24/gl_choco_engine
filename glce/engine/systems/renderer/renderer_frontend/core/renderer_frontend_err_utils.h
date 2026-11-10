@@ -23,6 +23,8 @@ extern "C" {
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
+#include "engine/systems/renderer/render_packet/core/render_packet_types.h"
+
 const char* renderer_frontend_result_to_str(renderer_frontend_result_t result_);
 
 renderer_frontend_result_t renderer_frontend_result_convert_general_allocator(general_allocator_result_t result_);
@@ -34,6 +36,7 @@ renderer_frontend_result_t renderer_frontend_result_convert_buffer_manager(buffe
 renderer_frontend_result_t renderer_frontend_result_convert_fs_path(fs_path_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_shader(shader_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_geometry(geometry_result_t result_);
+renderer_frontend_result_t renderer_frontend_result_convert_render_packet(render_packet_result_t result_);
 
 #ifdef __cplusplus
 }

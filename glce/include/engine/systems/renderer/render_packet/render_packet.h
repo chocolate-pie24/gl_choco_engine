@@ -39,6 +39,16 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
 
 void render_packet_deinitialize(render_packet_t* render_packet_);
 
+void render_packet_read_state_reset(render_packet_t* render_packet_);
+
+render_packet_result_t render_packet_line_mesh_read_state_completed(const render_packet_t* render_packet_, bool* out_completed_);
+
+render_packet_result_t render_packet_point_mesh_read_state_completed(const render_packet_t* render_packet_, bool* out_completed_);
+
+render_packet_result_t render_packet_ui_mesh_read_state_completed(const render_packet_t* render_packet_, bool* out_completed_);
+
+render_packet_result_t render_packet_untextured_mesh_read_state_completed(const render_packet_t* render_packet_, bool* out_completed_);
+
 render_packet_result_t render_packet_line_mesh_push(line_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
 
 render_packet_result_t render_packet_point_mesh_push(point_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
@@ -46,6 +56,14 @@ render_packet_result_t render_packet_point_mesh_push(point_mesh_t* mesh_, mat4x4
 render_packet_result_t render_packet_ui_mesh_push(ui_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
 
 render_packet_result_t render_packet_untextured_mesh_push(untextured_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
+
+bool render_packet_line_mesh_read_next(render_packet_t* render_packet_, line_mesh_t* out_mesh_, mat4x4f_t* out_model_matrix_);
+
+bool render_packet_point_mesh_read_next(render_packet_t* render_packet_, point_mesh_t* out_mesh_, mat4x4f_t* out_model_matrix_);
+
+bool render_packet_ui_mesh_read_next(render_packet_t* render_packet_, ui_mesh_t* out_mesh_, mat4x4f_t* out_model_matrix_);
+
+bool render_packet_untextured_mesh_read_next(render_packet_t* render_packet_, untextured_mesh_t* out_mesh_, mat4x4f_t* out_model_matrix_);
 
 bool render_packet_is_valid(const render_packet_t* render_packet_);
 
