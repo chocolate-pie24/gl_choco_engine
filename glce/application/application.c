@@ -79,7 +79,8 @@
 #include "application/model_framework/assembly/untextured_model/model_assembly_config.h"
 #include "application/model_framework/assembly/untextured_model/model_resource_map.h"
 #include "application/model_framework/coordinates/model_transform_tree.h"
-#include "application/model_instance/sample_robot/sample_robot.h"
+
+#include "application/demos/sample_robot/model_instance/sample_robot.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する

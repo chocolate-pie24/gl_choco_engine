@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "application/model_instance/sample_robot/sample_robot.h"
+#include "application/demos/sample_robot/model_instance/sample_robot.h"
 
 #include <stddef.h>
 #include <stdint.h>
