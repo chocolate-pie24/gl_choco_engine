@@ -1,0 +1,47 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 chocolate-pie24
+
+#ifndef GLCE_ENGINE_MEMORY_FRAME_ALLOCATOR_FRAME_ALLOCATOR_H
+#define GLCE_ENGINE_MEMORY_FRAME_ALLOCATOR_FRAME_ALLOCATOR_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdbool.h>
+#include <stddef.h>
+
+typedef struct frame_allocator frame_allocator_t;
+
+typedef enum {
+    FRAME_ALLOCATOR_SUCCESS = 0,
+    FRAME_ALLOCATOR_BAD_OPERATION,
+    FRAME_ALLOCATOR_DATA_CORRUPTED,
+    FRAME_ALLOCATOR_NO_MEMORY,
+    FRAME_ALLOCATOR_INVALID_ARGUMENT,
+    FRAME_ALLOCATOR_OVERFLOW,
+    FRAME_ALLOCATOR_LIMIT_EXCEEDED,
+    FRAME_ALLOCATOR_UNDEFINED_ERROR,
+} frame_allocator_result_t;
+
+typedef enum {
+    FRAME_ALLOCATOR_MEMORY_TAG_RENDER_PACKET = 0,
+    FRAME_ALLOCATOR_MEMORY_TAG_MAX,
+} frame_allocator_memory_tag_t;
+
+frame_allocator_result_t frame_allocator_create(size_t memory_pool_size_, frame_allocator_t** out_allocator_);
+
+void frame_allocator_destroy(frame_allocator_t** allocator_);
+
+frame_allocator_result_t frame_allocator_allocate(frame_allocator_t* allocator_, size_t allocation_size_, frame_allocator_memory_tag_t memory_tag_, void** out_ptr_);
+
+frame_allocator_result_t frame_allocator_reset(frame_allocator_t* allocator_);
+
+const char* frame_allocator_memory_tag_to_str(frame_allocator_memory_tag_t memory_tag_);
+
+bool frame_allocator_is_valid(const frame_allocator_t* allocator_);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

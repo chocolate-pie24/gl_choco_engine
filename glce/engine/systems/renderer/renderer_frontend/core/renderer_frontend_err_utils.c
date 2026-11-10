@@ -281,3 +281,28 @@ renderer_frontend_result_t renderer_frontend_result_convert_geometry(geometry_re
         return RENDERER_FRONTEND_UNDEFINED_ERROR;
     }
 }
+
+renderer_frontend_result_t renderer_frontend_result_convert_render_packet(render_packet_result_t result_) {
+    switch(result_) {
+    case RENDER_PACKET_SUCCESS:
+        return RENDERER_FRONTEND_SUCCESS;
+    case RENDER_PACKET_INVALID_ARGUMENT:
+        return RENDERER_FRONTEND_INVALID_ARGUMENT;
+    case RENDER_PACKET_RUNTIME_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case RENDER_PACKET_OVERFLOW:
+        return RENDERER_FRONTEND_OVERFLOW;
+    case RENDER_PACKET_BAD_OPERATION:
+        return RENDERER_FRONTEND_BAD_OPERATION;
+    case RENDER_PACKET_DATA_CORRUPTED:
+        return RENDERER_FRONTEND_DATA_CORRUPTED;
+    case RENDER_PACKET_NO_MEMORY:
+        return RENDERER_FRONTEND_NO_MEMORY;
+    case RENDER_PACKET_LIMIT_EXCEEDED:
+        return RENDERER_FRONTEND_LIMIT_EXCEEDED;
+    case RENDER_PACKET_UNDEFINED_ERROR:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    default:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    }
+}
