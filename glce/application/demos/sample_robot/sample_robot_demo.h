@@ -20,6 +20,7 @@ sample_robot_result_t sample_robot_demo_create(renderer_frontend_t* renderer_fro
 
 void sample_robot_demo_destroy(renderer_frontend_t* renderer_frontend_, sample_robot_demo_t** demo_);
 
+// TODO: 実装
 bool sample_robot_demo_is_valid(const sample_robot_demo_t* demo_);
 
 #ifdef __cplusplus

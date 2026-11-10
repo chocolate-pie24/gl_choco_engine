@@ -89,3 +89,28 @@ sample_robot_result_t sample_robot_result_convert_general_allocator(general_allo
         return SAMPLE_ROBOT_UNDEFINED_ERROR;
     }
 }
+
+sample_robot_result_t sample_robot_result_convert_mesh(mesh_result_t result_) {
+    switch(result_) {
+    case MESH_SUCCESS:
+        return SAMPLE_ROBOT_SUCCESS;
+    case MESH_NO_MEMORY:
+        return SAMPLE_ROBOT_NO_MEMORY;
+    case MESH_RUNTIME_ERROR:
+        return SAMPLE_ROBOT_RUNTIME_ERROR;
+    case MESH_INVALID_ARGUMENT:
+        return SAMPLE_ROBOT_INVALID_ARGUMENT;
+    case MESH_DATA_CORRUPTED:
+        return SAMPLE_ROBOT_DATA_CORRUPTED;
+    case MESH_BAD_OPERATION:
+        return SAMPLE_ROBOT_BAD_OPERATION;
+    case MESH_OVERFLOW:
+        return SAMPLE_ROBOT_OVERFLOW;
+    case MESH_LIMIT_EXCEEDED:
+        return SAMPLE_ROBOT_LIMIT_EXCEEDED;
+    case MESH_UNDEFINED_ERROR:
+        return SAMPLE_ROBOT_UNDEFINED_ERROR;
+    default:
+        return SAMPLE_ROBOT_UNDEFINED_ERROR;
+    }
+}

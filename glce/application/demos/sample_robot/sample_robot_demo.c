@@ -67,10 +67,9 @@ sample_robot_result_t sample_robot_demo_create(renderer_frontend_t* renderer_fro
 
     // Model Assembly config.
     // TODO: untextured_model_assembly_config_loaderを実装し、dummy_loaderと入れ替え
-    ret_model_framework = sample_robot_dummy_config_loader(&config);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+    ret = sample_robot_dummy_config_loader(&config);
+    if(SAMPLE_ROBOT_SUCCESS != ret) {
+        if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret) {
             ret = SAMPLE_ROBOT_DATA_CORRUPTED;
         }
         ERROR_MESSAGE("sample_robot_demo_create(%s) - sample_robot_dummy_config_loader failed.", sample_robot_result_to_str(ret));
@@ -90,19 +89,17 @@ sample_robot_result_t sample_robot_demo_create(renderer_frontend_t* renderer_fro
     untextured_model_assembly_config_destroy(&config);
 
     // Sample Robot1.
-    ret_model_framework = sample_robot_create(tmp_resource_map, &tmp_robot1);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+    ret = sample_robot_create(tmp_resource_map, &tmp_robot1);
+    if(SAMPLE_ROBOT_SUCCESS != ret) {
+        if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret) {
             ret = SAMPLE_ROBOT_DATA_CORRUPTED;
         }
         ERROR_MESSAGE("sample_robot_demo_create(%s) - sample_robot_create failed.", sample_robot_result_to_str(ret));
         goto cleanup;
     }
-    ret_model_framework = sample_robot_placement_set(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_robot1);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+    ret = sample_robot_placement_set(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_robot1);
+    if(SAMPLE_ROBOT_SUCCESS != ret) {
+        if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret) {
             ret = SAMPLE_ROBOT_DATA_CORRUPTED;
         }
         ERROR_MESSAGE("sample_robot_demo_create(%s) - sample_robot_placement_set failed.", sample_robot_result_to_str(ret));
@@ -110,19 +107,17 @@ sample_robot_result_t sample_robot_demo_create(renderer_frontend_t* renderer_fro
     }
 
     // Sample Robot2.
-    ret_model_framework = sample_robot_create(tmp_resource_map, &tmp_robot2);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+    ret = sample_robot_create(tmp_resource_map, &tmp_robot2);
+    if(SAMPLE_ROBOT_SUCCESS != ret) {
+        if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret) {
             ret = SAMPLE_ROBOT_DATA_CORRUPTED;
         }
         ERROR_MESSAGE("sample_robot_demo_create(%s) - sample_robot_create failed.", sample_robot_result_to_str(ret));
         goto cleanup;
     }
-    ret_model_framework = sample_robot_placement_set(vec3f_initialize(150.0f, 0.0f, -1000.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_robot2);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
+    ret = sample_robot_placement_set(vec3f_initialize(150.0f, 0.0f, -1000.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_robot2);
+    if(SAMPLE_ROBOT_SUCCESS != ret) {
+        if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret) {
             ret = SAMPLE_ROBOT_DATA_CORRUPTED;
         }
         ERROR_MESSAGE("sample_robot_demo_create(%s) - sample_robot_placement_set failed.", sample_robot_result_to_str(ret));
@@ -152,6 +147,9 @@ sample_robot_result_t sample_robot_demo_create(renderer_frontend_t* renderer_fro
     ret = SAMPLE_ROBOT_SUCCESS;
 
 cleanup:
+    if(SAMPLE_ROBOT_DATA_CORRUPTED == ret || SAMPLE_ROBOT_SUCCESS == ret) {
+        return ret;
+    }
     if(NULL != tmp_robot2) {
         sample_robot_destroy(&tmp_robot2);
     }
@@ -193,13 +191,16 @@ void sample_robot_demo_destroy(renderer_frontend_t* renderer_frontend_, sample_r
 
     ret_model_framework = untextured_model_resource_map_destroy(renderer_frontend_, &(*demo_)->resource_map);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ERROR_MESSAGE("sample_robot_demo_create(%s) - untextured_model_resource_map_destroy failed.", sample_robot_result_to_str(SAMPLE_ROBOT_DATA_CORRUPTED));
+        ERROR_MESSAGE("sample_robot_demo_destroy(%s) - untextured_model_resource_map_destroy failed.", sample_robot_result_to_str(SAMPLE_ROBOT_DATA_CORRUPTED));
         return;
     }
     general_allocator_free((void**)demo_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
+// TODO: 実装
 bool sample_robot_demo_is_valid(const sample_robot_demo_t* demo_) {
-    (void)demo_;
+    if(NULL == demo_) {
+        return false;
+    }
     return true;
 }

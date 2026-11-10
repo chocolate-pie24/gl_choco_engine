@@ -8,9 +8,11 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 #include "engine/base/choco_math/math_types.h"
 
-#include "application/model_framework/core/model_framework_types.h"
+#include "application/demos/sample_robot/core/sample_robot_types.h"
 
 typedef struct untextured_model_resource_map untextured_model_resource_map_t;
 typedef struct model_transform_tree model_transform_tree_t;
@@ -31,17 +33,20 @@ typedef struct {
     sample_robot_posture_t posture;
 } sample_robot_t;
 
-model_framework_result_t sample_robot_create(const untextured_model_resource_map_t* resource_map_, sample_robot_t** out_robot_);
+sample_robot_result_t sample_robot_create(const untextured_model_resource_map_t* resource_map_, sample_robot_t** out_robot_);
 
 void sample_robot_destroy(sample_robot_t** robot_);
 
-model_framework_result_t sample_robot_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_t* robot_);
+sample_robot_result_t sample_robot_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_t* robot_);
 
-model_framework_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_);
+sample_robot_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_);
 
 void sample_robot_posture_default_get(sample_robot_posture_t* posture_);
 
-model_framework_result_t sample_robot_dummy_config_loader(untextured_model_assembly_config_t** out_config_);
+sample_robot_result_t sample_robot_dummy_config_loader(untextured_model_assembly_config_t** out_config_);
+
+// TODO: 実装
+bool sample_robot_is_valid(const sample_robot_t* robot_);
 
 #ifdef __cplusplus
 }
