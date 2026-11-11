@@ -49,13 +49,13 @@ render_packet_result_t render_packet_ui_mesh_read_state_completed(const render_p
 
 render_packet_result_t render_packet_untextured_mesh_read_state_completed(const render_packet_t* render_packet_, bool* out_completed_);
 
-render_packet_result_t render_packet_line_mesh_push(line_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
+render_packet_result_t render_packet_line_mesh_push(const line_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
 
-render_packet_result_t render_packet_point_mesh_push(point_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
+render_packet_result_t render_packet_point_mesh_push(const point_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
 
-render_packet_result_t render_packet_ui_mesh_push(ui_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
+render_packet_result_t render_packet_ui_mesh_push(const ui_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
 
-render_packet_result_t render_packet_untextured_mesh_push(untextured_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
+render_packet_result_t render_packet_untextured_mesh_push(const untextured_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_);
 
 bool render_packet_line_mesh_read_next(render_packet_t* render_packet_, line_mesh_t* out_mesh_, mat4x4f_t* out_model_matrix_);
 

@@ -10,7 +10,11 @@ extern "C" {
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
+#include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
+
+#include "engine/systems/renderer/render_packet/core/render_packet_types.h"
+#include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
 #include "application/model_framework/core/model_framework_types.h"
 
@@ -23,6 +27,12 @@ sample_robot_result_t sample_robot_result_convert_model_framework(model_framewor
 sample_robot_result_t sample_robot_result_convert_general_allocator(general_allocator_result_t result_);
 
 sample_robot_result_t sample_robot_result_convert_mesh(mesh_result_t result_);
+
+sample_robot_result_t sample_robot_result_convert_geometry(geometry_result_t result_);
+
+sample_robot_result_t sample_robot_result_convert_renderer_frontend(renderer_frontend_result_t result_);
+
+sample_robot_result_t sample_robot_result_convert_render_packet(render_packet_result_t result_);
 
 #ifdef __cplusplus
 }

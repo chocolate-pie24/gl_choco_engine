@@ -44,6 +44,8 @@ extern "C" {
 
 #include "application/model_framework/core/model_framework_types.h"
 
+#include "application/demos/sample_robot/core/sample_robot_types.h"
+
 /**
  * @brief アプリケーションレイヤー実行結果コードを文字列に変換する
  *
@@ -87,6 +89,8 @@ application_result_t application_result_convert_model_framework(model_framework_
 application_result_t application_result_convert_geometry(geometry_result_t result_);
 
 application_result_t application_result_convert_render_packet(render_packet_result_t result_);
+
+application_result_t application_result_convert_sample_robot_demo(sample_robot_result_t result_);
 
 #ifdef __cplusplus
 }

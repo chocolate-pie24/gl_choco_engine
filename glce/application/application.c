@@ -7,8 +7,6 @@
  * @author chocolate-pie24
  * @brief プロジェクトの最上位レイヤーで全サブシステムのオーケストレーションを行うAPIの実装
  *
- * @todo application.cのエラー文字列周りを別ファイルに移す
- *
  * @date 2025-09-20
  *
  */
@@ -31,10 +29,6 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
-#include "engine/core/geometry_primitive/vertex.h"
-#include "engine/core/geometry_primitive/aabb_3d.h"
-#include "engine/core/geometry_primitive/cone.h"
-#include "engine/core/geometry_primitive/cylinder.h"
 #include "engine/core/event/keyboard_event.h"
 
 #include "engine/io_utils/fs_path.h"
@@ -57,10 +51,6 @@
 // Renderer System
 #include "engine/systems/renderer/core/renderer_types.h"
 
-#include "engine/systems/renderer/resources/geometries/generators/line_grid_geometry.h"
-#include "engine/systems/renderer/resources/meshes/line_mesh.h"
-#include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
-
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
 
@@ -75,12 +65,8 @@
 #include "application/cameras/application_flight_camera.h"
 #include "application/diagnostics/application_diagnostics.h"
 
-#include "application/model_framework/core/model_framework_types.h"
-#include "application/model_framework/assembly/untextured_model/model_assembly_config.h"
-#include "application/model_framework/assembly/untextured_model/model_resource_map.h"
-#include "application/model_framework/coordinates/model_transform_tree.h"
-
-#include "application/demos/sample_robot/model_instance/sample_robot.h"
+#include "application/demos/sample_robot/core/sample_robot_types.h"
+#include "application/demos/sample_robot/sample_robot_demo.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -97,7 +83,7 @@ typedef struct application_state {
 
     // ファイルパス
     fs_path_t* executable_directory;
-    fs_path_t* asset_root;
+    fs_path_t* asset_root_path;
 
     // Subsystem Allocator
     subsystem_allocator_t* subsystem_allocator;
@@ -125,39 +111,30 @@ typedef struct application_state {
     mat4x4f_t projection_matrix;
     mat4x4f_t view_matrix;
 
-    // Render model
-    // Sample Robot scene
-    render_packet_t* sample_robot_scene_render_packet;
-    untextured_model_resource_map_t* sample_robot_resource_map;
-    sample_robot_t* sample_robot1;
-    sample_robot_t* sample_robot2;
-    line_mesh_t* floor_grid_line_mesh;
-    mat4x4f_t floor_grid_model_matrix;
+    // Render Packet
+    render_packet_t* render_packet;
+
+    // Demo scenes
+    sample_robot_demo_t* sample_robot_demo;
 } application_state_t;
 
 static application_state_t* s_application_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
+// Frame Orchestration.
 static application_result_t app_state_update(void);
-static void app_state_begin_frame(void);
+static application_result_t scene_update(float delta_time_, sample_robot_demo_t *demo_);
+static application_result_t scene_render_packet_build(const sample_robot_demo_t *demo_, render_packet_t *packet_);
 
-// subsystem configuration
+// Subsystem Configuration.
 static void platform_system_config_initialize(platform_system_config_t* config_);
 static void event_system_config_initialize(event_system_config_t* config_);
 static void renderer_frontend_config_initialize(renderer_frontend_config_t* config_);
 
-static application_result_t directory_path_initialize(application_state_t* state_);
-
-static application_result_t sample_robot_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_);
-static application_result_t sample_robot_model_resource_map_destroy(renderer_frontend_t* renderer_frontend_, untextured_model_resource_map_t** resource_map_);
-
-static application_result_t floor_grid_mesh_create(renderer_frontend_t* renderer_frontend_, line_mesh_t** out_mesh_);
-static application_result_t floor_grid_mesh_destroy(renderer_frontend_t* renderer_frontend_, line_mesh_t** mesh_);
-
-static application_result_t application_render_packet_initialize(void);
+// Application Resource Setup.
+static application_result_t directory_path_initialize(fs_path_t** out_executable_directory_, fs_path_t** out_asset_root_path_);
 
 application_result_t application_create(void) {
     application_result_t ret = APPLICATION_RUNTIME_ERROR;
-    application_result_t ret_cleanup = APPLICATION_RUNTIME_ERROR;
 
     subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
@@ -165,12 +142,21 @@ application_result_t application_create(void) {
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
     light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
-    model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
     render_packet_result_t ret_render_packet = RENDER_PACKET_INVALID_ARGUMENT;
-
-    size_t subsystem_memory_pool_size = 0;
+    sample_robot_result_t ret_sample_robot = SAMPLE_ROBOT_INVALID_ARGUMENT;
 
     application_state_t* tmp_state = NULL;
+    subsystem_allocator_t* tmp_subsystem_allocator = NULL;
+    platform_system_t* tmp_platform_system = NULL;
+    render_packet_t* tmp_render_packet = NULL;
+    renderer_frontend_t* tmp_renderer_frontend = NULL;
+    application_flight_camera_t* tmp_flight_camera = NULL;
+    sample_robot_demo_t* tmp_sample_robot_demo = NULL;
+    event_system_t* tmp_event_system = NULL;
+    fs_path_t* tmp_executable_directory = NULL;
+    fs_path_t* tmp_asset_root_path = NULL;
+
+    size_t subsystem_memory_pool_size = 0;
 
     // Preconditions
     if(NULL != s_application_state) {
@@ -179,8 +165,12 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    // begin Simulation
-    // Application State
+    // Prepare.
+    // Application Infrastructure.
+    //   Application State
+    //   Subsystem Allocator
+    //   Directory Paths
+    INFO_MESSAGE("Creating application infrastructure...");
     ret_general_allocator = general_allocator_allocate(sizeof(*tmp_state), GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_state);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = application_result_convert_general_allocator(ret_general_allocator);
@@ -188,55 +178,52 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    // Subsystem Allocator
     subsystem_memory_pool_size = 128 * KIB;
-    ret_subsystem_allocator = subsystem_allocator_create(subsystem_memory_pool_size, &tmp_state->subsystem_allocator);
+    ret_subsystem_allocator = subsystem_allocator_create(subsystem_memory_pool_size, &tmp_subsystem_allocator);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = application_result_convert_subsystem_allocator(ret_subsystem_allocator);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for subsystem allocator.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    // 実行ファイルパス取得
-    ret = directory_path_initialize(tmp_state);
+    ret = directory_path_initialize(&tmp_executable_directory, &tmp_asset_root_path);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - directory_path_initialize failed.", application_result_to_str(ret));
         goto cleanup;
     }
+    INFO_MESSAGE("Application infrastructure created successfully.");
 
-    // Platform System
+    // Platform / Event Systems.
     INFO_MESSAGE("Creating platform system...");
     platform_system_config_initialize(&tmp_state->platform_system_config);
 
-    ret_platform_system = platform_system_create(&tmp_state->platform_system_config, tmp_state->subsystem_allocator, &tmp_state->frame_state.framebuffer_width, &tmp_state->frame_state.framebuffer_height, &tmp_state->platform_system);
+    ret_platform_system = platform_system_create(&tmp_state->platform_system_config, tmp_subsystem_allocator, &tmp_state->frame_state.framebuffer_width, &tmp_state->frame_state.framebuffer_height, &tmp_platform_system);
     if(PLATFORM_SYSTEM_SUCCESS != ret_platform_system) {
         ret = application_result_convert_platform_system(ret_platform_system);
         ERROR_MESSAGE("application_create(%s) - platform_system_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("platform system created successfully.");
+    INFO_MESSAGE("Platform system created successfully.");
 
-    // Event System
     INFO_MESSAGE("Creating event system...");
     event_system_config_initialize(&tmp_state->event_system_config);
-    ret_event_system = event_system_create(&tmp_state->event_system_config, tmp_state->subsystem_allocator, tmp_state->platform_system, &tmp_state->event_system);
+    ret_event_system = event_system_create(&tmp_state->event_system_config, tmp_subsystem_allocator, tmp_platform_system, &tmp_event_system);
     if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
         ret = application_result_convert_event_system(ret_event_system);
         ERROR_MESSAGE("application_create(%s) - event_system_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("event system created successfully.");
+    INFO_MESSAGE("Event system created successfully.");
 
-    // application flight camera
+    // Camera / Lighting.
     INFO_MESSAGE("Creating flight camera system...");
-    ret = application_flight_camera_create(8, tmp_state->subsystem_allocator, tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_state->flight_camera);
+    ret = application_flight_camera_create(8, tmp_subsystem_allocator, tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_flight_camera);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - application_flight_camera_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("flight camera system created successfully.");
+    INFO_MESSAGE("Flight camera system created successfully.");
 
-    // light
     INFO_MESSAGE("Creating directional light...");
     // NOTE: 設定値の意味
     // direction: 正面から少し斜め上の光で、面の違いが見やすい
@@ -254,59 +241,40 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - ambient_light_initialize failed.", application_result_to_str(ret));
         goto cleanup;
     }
+    INFO_MESSAGE("Directional light created successfully.");
 
-    // Renderer Backend / Frontend
+    // Renderer System.
     INFO_MESSAGE("Creating renderer frontend...");
     renderer_frontend_config_initialize(&tmp_state->renderer_frontend_config);
-    ret_renderer_frontend = renderer_frontend_create(&tmp_state->renderer_frontend_config, tmp_state->subsystem_allocator, fs_path_fullpath_get(tmp_state->executable_directory), "../../assets/shaders/test_shader/", &tmp_state->renderer_frontend);
+    ret_renderer_frontend = renderer_frontend_create(&tmp_state->renderer_frontend_config, tmp_subsystem_allocator, fs_path_fullpath_get(tmp_executable_directory), "../../assets/shaders/test_shader/", &tmp_renderer_frontend);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("application_create(%s) - renderer_frontend_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    INFO_MESSAGE("renderer frontend created successfully.");
+    INFO_MESSAGE("Renderer frontend created successfully.");
 
-    // diagnostic config
+    // Application Services.
+    //   Diagnostics
     tmp_state->diag_config.runtime_status_report = KEY_1;
     tmp_state->diag_config.validation_report = KEY_2;
 
-    // sample robot scene
-    ret = sample_robot_model_resource_map_create(tmp_state->renderer_frontend, fs_path_fullpath_get(tmp_state->asset_root), &tmp_state->sample_robot_resource_map);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - sample_robot_model_resource_map_create failed.", application_result_to_str(ret));
+    // Demo.
+    INFO_MESSAGE("Creating sample robot demo...");
+    ret_sample_robot = sample_robot_demo_create(tmp_renderer_frontend, fs_path_fullpath_get(tmp_asset_root_path), &tmp_sample_robot_demo);
+    if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
+        ret = application_result_convert_sample_robot_demo(ret_sample_robot);
+        if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+            ret = APPLICATION_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("application_create(%s) - sample_robot_demo_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    ret_model_framework = sample_robot_create(tmp_state->sample_robot_resource_map, &tmp_state->sample_robot1);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = application_result_convert_model_framework(ret_model_framework);
-        ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_model_framework = sample_robot_placement_set(vec3f_initialize(-135.0f, 0.0f, -600.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->sample_robot1);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = application_result_convert_model_framework(ret_model_framework);
-        ERROR_MESSAGE("application_create(%s) - sample_robot_placement_set failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_model_framework = sample_robot_create(tmp_state->sample_robot_resource_map, &tmp_state->sample_robot2);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = application_result_convert_model_framework(ret_model_framework);
-        ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_model_framework = sample_robot_placement_set(vec3f_initialize(150.0f, 0.0f, -1000.0f), vec3f_initialize(270.0f, 0.0f, 0.0f), tmp_state->sample_robot2);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = application_result_convert_model_framework(ret_model_framework);
-        ERROR_MESSAGE("sample_robot_initialize(%s) - sample_robot_placement_set failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    ret = floor_grid_mesh_create(tmp_state->renderer_frontend, &tmp_state->floor_grid_line_mesh);
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_create(%s) - floor_grid_mesh_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    mat4f_identity(&tmp_state->floor_grid_model_matrix);
-    ret_render_packet = render_packet_create(16 * MIB, &tmp_state->sample_robot_scene_render_packet);
+    INFO_MESSAGE("Sample robot demo created successfully.");
+
+    // Render packet
+    INFO_MESSAGE("Creating render packet...");
+    ret_render_packet = render_packet_create(16 * MIB, &tmp_render_packet);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = application_result_convert_render_packet(ret_render_packet);
         if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
@@ -315,11 +283,36 @@ application_result_t application_create(void) {
         ERROR_MESSAGE("application_create(%s) - render_packet_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
+    INFO_MESSAGE("Render packet created successfully.");
 
-    application_diagnostics_status_report(tmp_state->subsystem_allocator);
+    ret = application_diagnostics_status_report(tmp_subsystem_allocator);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - application_diagnostics_status_report failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
 
-    // commit
+    // Commit.
+    tmp_state->platform_system = tmp_platform_system;
+    tmp_state->subsystem_allocator = tmp_subsystem_allocator;
+    tmp_state->render_packet = tmp_render_packet;
+    tmp_state->renderer_frontend = tmp_renderer_frontend;
+    tmp_state->flight_camera = tmp_flight_camera;
+    tmp_state->sample_robot_demo = tmp_sample_robot_demo;
+    tmp_state->asset_root_path = tmp_asset_root_path;
+    tmp_state->executable_directory = tmp_executable_directory;
+    tmp_state->event_system = tmp_event_system;
+
     s_application_state = tmp_state;
+    tmp_state = NULL;
+    tmp_subsystem_allocator = NULL;
+    tmp_platform_system = NULL;
+    tmp_render_packet = NULL;
+    tmp_renderer_frontend = NULL;
+    tmp_flight_camera = NULL;
+    tmp_sample_robot_demo = NULL;
+    tmp_event_system = NULL;
+    tmp_executable_directory = NULL;
+    tmp_asset_root_path = NULL;
     INFO_MESSAGE("Application created successfully.");
 
     ret = APPLICATION_SUCCESS;
@@ -328,49 +321,34 @@ cleanup:
     if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
         return ret;
     }
+    if(NULL != tmp_render_packet) {
+        render_packet_destroy(&tmp_render_packet);
+    }
+    if(NULL != tmp_sample_robot_demo && NULL != tmp_renderer_frontend) {
+        sample_robot_demo_destroy(tmp_renderer_frontend, &tmp_sample_robot_demo);
+    }
+    if(NULL != tmp_renderer_frontend) {
+        renderer_frontend_deinitialize(tmp_renderer_frontend);
+    }
+    if(NULL != tmp_flight_camera) {
+        application_flight_camera_deinitialize(tmp_flight_camera);
+    }
+    if(NULL != tmp_event_system) {
+        event_system_deinitialize(tmp_event_system);
+    }
+    if(NULL != tmp_platform_system) {
+        platform_system_deinitialize(tmp_platform_system);
+    }
+    if(NULL != tmp_executable_directory) {
+        fs_path_destroy(&tmp_executable_directory);
+    }
+    if(NULL != tmp_asset_root_path) {
+        fs_path_destroy(&tmp_asset_root_path);
+    }
+    if(NULL != tmp_subsystem_allocator) {
+        subsystem_allocator_destroy(&tmp_subsystem_allocator);
+    }
     if(NULL != tmp_state) {
-        if(NULL != tmp_state->sample_robot_scene_render_packet) {
-            render_packet_destroy(&tmp_state->sample_robot_scene_render_packet);
-        }
-        if(NULL != tmp_state->floor_grid_line_mesh && NULL != tmp_state->renderer_frontend) {
-            ret_cleanup = floor_grid_mesh_destroy(tmp_state->renderer_frontend, &tmp_state->floor_grid_line_mesh);
-            if(APPLICATION_DATA_CORRUPTED == ret_cleanup) {
-                ERROR_MESSAGE("application_create(%s) - floor_grid_mesh_destroy failed.", application_result_to_str(ret_cleanup));
-                return ret_cleanup;
-            }
-        }
-        if(NULL != tmp_state->sample_robot2) {
-            sample_robot_destroy(&tmp_state->sample_robot2);
-        }
-        if(NULL != tmp_state->sample_robot1) {
-            sample_robot_destroy(&tmp_state->sample_robot1);
-        }
-        if(NULL != tmp_state->sample_robot_resource_map) {
-            ret_cleanup = sample_robot_model_resource_map_destroy(tmp_state->renderer_frontend, &tmp_state->sample_robot_resource_map);
-            if(APPLICATION_DATA_CORRUPTED == ret_cleanup) {
-                ERROR_MESSAGE("application_create(%s) - sample_robot_model_resource_map_destroy failed.", application_result_to_str(ret_cleanup));
-                return ret_cleanup;
-            }
-        }
-        if(NULL != tmp_state->renderer_frontend) {
-            renderer_frontend_deinitialize(tmp_state->renderer_frontend);
-        }
-        if(NULL != tmp_state->flight_camera) {
-            application_flight_camera_deinitialize(tmp_state->flight_camera);
-        }
-        if(NULL != tmp_state->event_system) {
-            event_system_deinitialize(tmp_state->event_system);
-        }
-        if(NULL != tmp_state->platform_system) {
-            platform_system_deinitialize(tmp_state->platform_system);
-        }
-        if(NULL != tmp_state->executable_directory) {
-            fs_path_destroy(&tmp_state->executable_directory);
-        }
-        if(NULL != tmp_state->asset_root) {
-            fs_path_destroy(&tmp_state->asset_root);
-        }
-        subsystem_allocator_destroy(&tmp_state->subsystem_allocator);
         general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     }
 
@@ -379,36 +357,16 @@ cleanup:
 
 // TODO: test
 void application_destroy(void) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
     INFO_MESSAGE("Starting application shutdown...");
     if(NULL == s_application_state) {
         goto cleanup;
     }
 
-    // begin cleanup all systems.
-    if(NULL != s_application_state->sample_robot_scene_render_packet) {
-        render_packet_destroy(&s_application_state->sample_robot_scene_render_packet);
+    if(NULL != s_application_state->render_packet) {
+        render_packet_destroy(&s_application_state->render_packet);
     }
-    if(NULL != s_application_state->floor_grid_line_mesh && NULL != s_application_state->renderer_frontend) {
-        ret = floor_grid_mesh_destroy(s_application_state->renderer_frontend, &s_application_state->floor_grid_line_mesh);
-        if(APPLICATION_DATA_CORRUPTED == ret) {
-            ERROR_MESSAGE("application_destroy(%s) - floor_grid_mesh_destroy failed.", application_result_to_str(ret));
-            return;
-        }
-    }
-    if(NULL != s_application_state->sample_robot2) {
-        sample_robot_destroy(&s_application_state->sample_robot2);
-    }
-    if(NULL != s_application_state->sample_robot1) {
-        sample_robot_destroy(&s_application_state->sample_robot1);
-    }
-    if(NULL != s_application_state->sample_robot_resource_map && NULL != s_application_state->renderer_frontend) {
-        ret = sample_robot_model_resource_map_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_resource_map);
-        if(APPLICATION_DATA_CORRUPTED == ret) {
-            ERROR_MESSAGE("application_destroy(%s) - sample_robot_model_resource_map_destroy failed.", application_result_to_str(ret));
-            return;
-        }
+    if(NULL != s_application_state->sample_robot_demo) {
+        sample_robot_demo_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_demo);
     }
     if(NULL != s_application_state->renderer_frontend) {
         renderer_frontend_deinitialize(s_application_state->renderer_frontend);
@@ -425,8 +383,8 @@ void application_destroy(void) {
     if(NULL != s_application_state->executable_directory) {
         fs_path_destroy(&s_application_state->executable_directory);
     }
-    if(NULL != s_application_state->asset_root) {
-        fs_path_destroy(&s_application_state->asset_root);
+    if(NULL != s_application_state->asset_root_path) {
+        fs_path_destroy(&s_application_state->asset_root_path);
     }
 
     application_diagnostics_status_report(s_application_state->subsystem_allocator);
@@ -434,7 +392,6 @@ void application_destroy(void) {
     subsystem_allocator_destroy(&s_application_state->subsystem_allocator);
     general_allocator_free((void**)&s_application_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
     INFO_MESSAGE("Freed all memory.");
-    // end cleanup all systems.
 
     INFO_MESSAGE("Application destroyed successfully.");
 cleanup:
@@ -447,14 +404,13 @@ application_result_t application_run(void) {
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     struct timespec  req = {0, 1000000};
+    const float demo_delta_time = 1.0f / 60.0f; // 暫定固定値
 
     if(NULL == s_application_state) {
         ret = APPLICATION_RUNTIME_ERROR;
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", application_result_to_str(ret));
         goto cleanup;
     }
-
-    // begin temporary
 
     glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
 
@@ -486,48 +442,17 @@ application_result_t application_run(void) {
     }
 
     // TODO: window NULLチェック
-    // end temporary
     while(!s_application_state->window_should_close) {
-        s_application_state->sample_robot1->posture.base_motor_angle += 0.1f;
-        if(s_application_state->sample_robot1->posture.base_motor_angle >= 360.0f) {
-            s_application_state->sample_robot1->posture.base_motor_angle = 0.0f;
-        }
-        s_application_state->sample_robot1->posture.shoulder_motor_angle -= 0.1f;
-        if(s_application_state->sample_robot1->posture.shoulder_motor_angle <= -45.0f) {
-            s_application_state->sample_robot1->posture.shoulder_motor_angle = 0.0f;
-        }
+        application_frame_state_begin_frame(&s_application_state->frame_state);
 
-        s_application_state->sample_robot2->posture.wrist_motor_angle += 0.1f;
-        if(s_application_state->sample_robot2->posture.wrist_motor_angle >= 360.0f) {
-            s_application_state->sample_robot2->posture.wrist_motor_angle = 0.0f;
-        }
-        s_application_state->sample_robot2->posture.elbow_motor_angle += 0.1f;
-        if(s_application_state->sample_robot2->posture.elbow_motor_angle >= 45.0f) {
-            s_application_state->sample_robot2->posture.elbow_motor_angle = 0.0f;
-        }
-        s_application_state->sample_robot2->posture.left_finger_angle += 0.1f;
-        if(s_application_state->sample_robot2->posture.left_finger_angle >= 45.0f) {
-            s_application_state->sample_robot2->posture.left_finger_angle = 0.0f;
-        }
-        s_application_state->sample_robot2->posture.right_finger_angle -= 0.1f;
-        if(s_application_state->sample_robot2->posture.right_finger_angle <= -45.0f) {
-            s_application_state->sample_robot2->posture.right_finger_angle = 0.0f;
-        }
-
-        if(MODEL_FRAMEWORK_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot1->posture, s_application_state->sample_robot1)) {
-            ERROR_MESSAGE("sample_robot_posture_update failed.");
-        }
-        if(MODEL_FRAMEWORK_SUCCESS != sample_robot_posture_update(&s_application_state->sample_robot2->posture, s_application_state->sample_robot2)) {
-            ERROR_MESSAGE("sample_robot_posture_update failed.");
-        }
-
-        app_state_begin_frame();
-
+        // Application State Update.
         ret = app_state_update();
         if(APPLICATION_SUCCESS != ret) {
             ERROR_MESSAGE("application_run(%s) - app_state_update failed.", application_result_to_str(ret));
             goto cleanup;
         }
+
+        // Diagnostics.
         if(s_application_state->frame_state.runtime_status_report_requested) {
             ret = application_diagnostics_status_report(s_application_state->subsystem_allocator);
             if(APPLICATION_SUCCESS != ret) {
@@ -538,22 +463,30 @@ application_result_t application_run(void) {
             WARN_MESSAGE("application_run(%s) - not impremented yet...");
         }
 
-        render_packet_deinitialize(s_application_state->sample_robot_scene_render_packet);
-        ret = application_render_packet_initialize();
+        // Demo Update.
+        ret = scene_update(demo_delta_time, s_application_state->sample_robot_demo);
         if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_render_packet_initialize failed.", application_result_to_str(ret));
-            if(APPLICATION_DATA_CORRUPTED == ret) {
-                goto cleanup;
-            }
-            continue;
+            ERROR_MESSAGE("application_run(%s) - scene_update failed.", application_result_to_str(ret));
+            goto cleanup;
         }
 
-        // begin temporary TODO: remove this!!
+        // Render Frame.
+        //   Framebuffer setup
+        //   Render Packet build
+        //   Render Packet execution
+        //   Buffer swap
+        // TODO: Renderer Backendへ移管する。
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
 
-        ret_renderer_frontend = renderer_frontend_draw_packet(s_application_state->sample_robot_scene_render_packet, s_application_state->renderer_frontend);
+        ret = scene_render_packet_build(s_application_state->sample_robot_demo, s_application_state->render_packet);
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - scene_render_packet_build failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret_renderer_frontend = renderer_frontend_draw_packet(s_application_state->render_packet, s_application_state->renderer_frontend);
         if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
             ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
             if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
@@ -566,7 +499,6 @@ application_result_t application_run(void) {
         }
 
         platform_system_swap_buffers(s_application_state->platform_system);
-        // end temporary
 
         nanosleep(&req, NULL);
     }
@@ -580,12 +512,16 @@ static application_result_t app_state_update(void) {
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
+    // Preconditions.
     if(NULL == s_application_state) {
         ret = APPLICATION_BAD_OPERATION;
         ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", application_result_to_str(ret));
         goto cleanup;
     }
 
+    // Event System.
+    //   OS / Engine events
+    //   Window close request
     ret_event_system = event_system_update(s_application_state->event_system, &s_application_state->engine_event_view);
     if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
         ret = application_result_convert_event_system(ret_event_system);
@@ -594,6 +530,9 @@ static application_result_t app_state_update(void) {
     }
     s_application_state->window_should_close = s_application_state->engine_event_view->window_close_requested;
 
+    // Camera System.
+    //   Camera command execution
+    //   View / Projection matrices
     ret = application_flight_camera_update(s_application_state->flight_camera, 0.1f, 1.0f, s_application_state->engine_event_view, &s_application_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_flight_camera_update failed.", application_result_to_str(ret));
@@ -612,6 +551,9 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
+    // Renderer State.
+    //   Untextured Mesh
+    //   Line Mesh
     ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
@@ -626,12 +568,14 @@ static application_result_t app_state_update(void) {
         goto cleanup;
     }
 
+    // Diagnostics.
     ret = application_diagnostics_update(&s_application_state->diag_config, s_application_state->engine_event_view, &s_application_state->frame_state);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("app_state_update(%s) - application_diagnostics_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
+    // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!application_frame_state_is_valid(&s_application_state->frame_state)) {
         ret = APPLICATION_DATA_CORRUPTED;
@@ -644,14 +588,51 @@ cleanup:
     return ret;
 }
 
-static void app_state_begin_frame(void) {
-    if(NULL == s_application_state) {
-        ERROR_MESSAGE("app_state_begin_frame(%s) - Application state is not initialized.", application_result_to_str(APPLICATION_RUNTIME_ERROR));
+static application_result_t scene_update(float delta_time_, sample_robot_demo_t *demo_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    sample_robot_result_t ret_sample_robot = SAMPLE_ROBOT_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(demo_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "scene_update", "demo_")
+
+    ret_sample_robot = sample_robot_demo_posture_update(delta_time_, demo_);   // 仮で60FPSを前提
+    if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
+        ret = application_result_convert_sample_robot_demo(ret_sample_robot);
+        if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+            ret = APPLICATION_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("scene_update(%s) - sample_robot_demo_posture_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    application_frame_state_begin_frame(&s_application_state->frame_state);
+
+    ret = APPLICATION_SUCCESS;
+
 cleanup:
-    return;
+    return ret;
+}
+
+static application_result_t scene_render_packet_build(const sample_robot_demo_t *demo_, render_packet_t *packet_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    sample_robot_result_t ret_sample_robot = SAMPLE_ROBOT_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(demo_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "scene_render_packet_build", "demo_")
+    IF_ARG_NULL_GOTO_CLEANUP(packet_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "scene_render_packet_build", "packet_")
+
+    ret_sample_robot = sample_robot_demo_render_packet_build(demo_, packet_);
+    if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
+        ret = application_result_convert_sample_robot_demo(ret_sample_robot);
+        if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+            ret = APPLICATION_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("scene_render_packet_build(%s) - sample_robot_demo_render_packet_build failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
 static void platform_system_config_initialize(platform_system_config_t* config_) {
@@ -684,34 +665,37 @@ static void renderer_frontend_config_initialize(renderer_frontend_config_t* conf
     config_->untextured_mesh_resource_config.vbo_config.vbo_size = 1 * GIB;
 }
 
-static application_result_t directory_path_initialize(application_state_t* state_) {
+static application_result_t directory_path_initialize(fs_path_t** out_executable_directory_, fs_path_t** out_asset_root_path_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     fs_path_result_t ret_fs_path = FS_PATH_INVALID_ARGUMENT;
 
-    fs_path_t* executable_directory_path = NULL;
-    fs_path_t* asset_root_path = NULL;
+    fs_path_t* tmp_executable_directory_path = NULL;
+    fs_path_t* tmp_asset_root_path = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "directory_path_initialize", "state_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_executable_directory_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "directory_path_initialize", "out_executable_directory_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_asset_root_path_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "directory_path_initialize", "out_asset_root_path_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_executable_directory_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "directory_path_initialize", "*out_executable_directory_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_asset_root_path_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "directory_path_initialize", "*out_asset_root_path_")
 
-    ret_fs_path = fs_path_create_from_executable_directory(&executable_directory_path);
+    ret_fs_path = fs_path_create_from_executable_directory(&tmp_executable_directory_path);
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = application_result_convert_fs_path(ret_fs_path);
         ERROR_MESSAGE("directory_path_initialize(%s) - fs_path_create_from_executable_directory failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_fs_path = fs_path_create(&asset_root_path, fs_path_fullpath_get(executable_directory_path), "../..", "assets", NULL);
+    ret_fs_path = fs_path_create(&tmp_asset_root_path, fs_path_fullpath_get(tmp_executable_directory_path), "../..", "assets", NULL);
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = application_result_convert_fs_path(ret_fs_path);
         ERROR_MESSAGE("directory_path_initialize(%s) - fs_path_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
 
-    state_->executable_directory = executable_directory_path;
-    state_->asset_root = asset_root_path;
-    executable_directory_path = NULL;
-    asset_root_path = NULL;
+    *out_executable_directory_ = tmp_executable_directory_path;
+    *out_asset_root_path_ = tmp_asset_root_path;
+    tmp_executable_directory_path = NULL;
+    tmp_asset_root_path = NULL;
 
     ret = APPLICATION_SUCCESS;
 
@@ -719,399 +703,11 @@ cleanup:
     if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
         return ret;
     }
-    if(NULL != executable_directory_path) {
-        fs_path_destroy(&executable_directory_path);
+    if(NULL != tmp_executable_directory_path) {
+        fs_path_destroy(&tmp_executable_directory_path);
     }
-    if(NULL != asset_root_path) {
-        fs_path_destroy(&asset_root_path);
+    if(NULL != tmp_asset_root_path) {
+        fs_path_destroy(&tmp_asset_root_path);
     }
-    return ret;
-}
-
-static application_result_t sample_robot_model_resource_map_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, untextured_model_resource_map_t** out_resource_map_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-
-    untextured_model_assembly_config_t* config = NULL;
-    untextured_model_resource_map_t* tmp_resource_map = NULL;
-
-    // Debug Axis Configuration.
-    const uint32_t segment_count = 32;
-    const cone_t cone = { .height = 10.0f, .radius = 10.0f };
-    const cylinder_t cylinder = { .height = 30.0f, .radius = 5.0f };
-
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_create", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_create", "asset_root_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_map_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_create", "out_resource_map_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_resource_map_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_create", "*out_resource_map_")
-
-    ret_model_framework = sample_robot_dummy_config_loader(&config);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = application_result_convert_model_framework(ret_model_framework);
-        ERROR_MESSAGE("sample_robot_model_resource_map_create(%s) - sample_robot_dummy_config_loader failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_model_framework = untextured_model_resource_map_create(renderer_frontend_, "sample_robot_resource_map", config, asset_root_path_, vec4u8_initialize(255, 0, 0, 255), &cone, &cylinder, segment_count, &tmp_resource_map);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = application_result_convert_model_framework(ret_model_framework);
-        ERROR_MESSAGE("sample_robot_model_resource_map_create(%s) - model_resource_map_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    untextured_model_assembly_config_destroy(&config);
-
-    *out_resource_map_ = tmp_resource_map;
-    tmp_resource_map = NULL;
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
-        return ret;
-    }
-    if(NULL != tmp_resource_map && NULL != renderer_frontend_) {
-        ret_model_framework = untextured_model_resource_map_destroy(renderer_frontend_, &tmp_resource_map);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = APPLICATION_DATA_CORRUPTED;
-            ERROR_MESSAGE("sample_robot_model_resource_map_create(%s) - untextured_model_resource_map_destroy failed.", application_result_to_str(ret));
-            return ret;
-        }
-    }
-    if(NULL != config) {
-        untextured_model_assembly_config_destroy(&config);
-    }
-    return ret;
-}
-
-static application_result_t sample_robot_model_resource_map_destroy(renderer_frontend_t* renderer_frontend_, untextured_model_resource_map_t** resource_map_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_destroy", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_destroy", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(*resource_map_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "sample_robot_model_resource_map_destroy", "*resource_map_")
-
-    ret_model_framework = untextured_model_resource_map_destroy(renderer_frontend_, resource_map_);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("sample_robot_model_resource_map_destroy(%s) - untextured_model_resource_map_destroy failed.", application_result_to_str(ret));
-        return ret;
-    }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-static application_result_t floor_grid_mesh_create(renderer_frontend_t* renderer_frontend_, line_mesh_t** out_mesh_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
-    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
-    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
-
-    line_vertex_t* tmp_vertices = NULL;
-    size_t tmp_vertex_count = 0;
-    line_mesh_t* tmp_mesh = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "floor_grid_mesh_create", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "floor_grid_mesh_create", "out_mesh_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_mesh_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "floor_grid_mesh_create", "*out_mesh_")
-
-    ret_general_allocator = general_allocator_allocate(sizeof(line_mesh_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_mesh);
-    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = application_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("floor_grid_mesh_create(%s) - general_allocator_allocate failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_geometry = line_grid_geometry_vertices_create(LINE_GRID_PLANE_XZ, vec4u8_initialize(128, 128, 128, 255), vec3f_initialize(-500.0f, 0.0f, -1300.0f), vec3f_initialize(500.0f, 0.0f, 100.0f), 50.0f, &tmp_vertices, &tmp_vertex_count);
-    if(GEOMETRY_SUCCESS != ret_geometry) {
-        ret = application_result_convert_geometry(ret_geometry);
-        ERROR_MESSAGE("floor_grid_mesh_create(%s) - line_grid_geometry_vertices_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_renderer_frontend = renderer_frontend_line_mesh_import_from_vertices(renderer_frontend_, "floor_grid_line", tmp_vertices, tmp_vertex_count, tmp_mesh);
-    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-        ERROR_MESSAGE("floor_grid_mesh_create(%s) - renderer_frontend_line_mesh_import_from_vertices failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    *out_mesh_ = tmp_mesh;
-    tmp_mesh = NULL;
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    if(APPLICATION_DATA_CORRUPTED == ret) {
-        return ret;
-    }
-    if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    }
-    if(NULL != tmp_mesh) {
-        general_allocator_free((void**)&tmp_mesh, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    }
-    return ret;
-}
-
-static application_result_t floor_grid_mesh_destroy(renderer_frontend_t* renderer_frontend_, line_mesh_t** mesh_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "floor_grid_mesh_destroy", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "floor_grid_mesh_destroy", "mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(*mesh_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "floor_grid_mesh_destroy", "*mesh_")
-
-    ret_renderer_frontend = renderer_frontend_line_mesh_release(renderer_frontend_, *mesh_);
-    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-        ret = APPLICATION_DATA_CORRUPTED;
-        ERROR_MESSAGE("floor_grid_mesh_destroy(%s) - renderer_frontend_line_mesh_release failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    general_allocator_free((void**)mesh_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-static application_result_t application_render_packet_initialize(void) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
-    render_packet_result_t ret_render_packet = RENDER_PACKET_INVALID_ARGUMENT;
-
-    size_t sample_robot_mesh_count = 0; // sample robot 1台分
-    size_t debug_axis_mesh_count = 0;   // sample robot 1台分
-    size_t debug_aabb_mesh_count = 0;   // sample robot 1台分
-
-    size_t line_mesh_count = 0;
-    size_t untextured_mesh_count = 0;
-
-    mat4x4f_t tmp_model_matrix = { 0 };
-    uint16_t tmp_coordinate_id = 0;
-    untextured_mesh_t tmp_untextured_mesh = { 0 };
-    line_mesh_t tmp_line_mesh = { 0 };
-
-    if(NULL == s_application_state->sample_robot_scene_render_packet) {
-        ret = APPLICATION_BAD_OPERATION;
-        ERROR_MESSAGE("application_render_packet_initialize(%s) - Render packet is not initialized.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // mesh count initialize
-    // STL model(untextured mesh)
-    ret_model_framework = untextured_model_resource_map_untextured_mesh_count_get(s_application_state->sample_robot_resource_map, &sample_robot_mesh_count);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = application_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = APPLICATION_DATA_CORRUPTED;
-        }
-        ERROR_MESSAGE("application_render_packet_initialize - model_resource_map_untextured_mesh_count_get failed. continue...");
-        goto cleanup;
-    }
-    untextured_mesh_count += sample_robot_mesh_count * 2; // sample robot2台分
-
-    // Debug AXIS(untextured mesh)
-    ret_model_framework = untextured_model_resource_map_debug_axis_mesh_count_get(s_application_state->sample_robot_resource_map, &debug_axis_mesh_count);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = application_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = APPLICATION_DATA_CORRUPTED;
-        }
-        ERROR_MESSAGE("application_render_packet_initialize - untextured_model_resource_map_debug_axis_mesh_count_get failed. continue...");
-        goto cleanup;
-    }
-    untextured_mesh_count += debug_axis_mesh_count * 2;
-
-    // Debug AABB Line描画
-    ret_model_framework = untextured_model_resource_map_debug_aabb_mesh_count_get(s_application_state->sample_robot_resource_map, &debug_aabb_mesh_count);
-    if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = application_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = APPLICATION_DATA_CORRUPTED;
-        }
-        ERROR_MESSAGE("application_render_packet_initialize - untextured_model_resource_map_debug_aabb_mesh_count_get failed. continue...");
-        goto cleanup;
-    }
-    line_mesh_count += debug_aabb_mesh_count * 2;
-
-    // Floor Grid(line mesh)
-    line_mesh_count += 1;
-
-    // Render packet配列メモリ確保
-    ret_render_packet = render_packet_initialize(line_mesh_count, 0, 0, untextured_mesh_count, s_application_state->sample_robot_scene_render_packet);
-    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-        ret = application_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = APPLICATION_DATA_CORRUPTED;
-        }
-        ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_initialize failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // Render packet初期化
-    // STL model(untextured mesh)
-    for(size_t i = 0; i != sample_robot_mesh_count; ++i) {
-        ret_model_framework = untextured_model_resource_map_untextured_mesh_binding_get(s_application_state->sample_robot_resource_map, (uint16_t)i, &tmp_untextured_mesh, &tmp_coordinate_id);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = application_result_convert_model_framework(ret_model_framework);
-            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - untextured_model_resource_map_untextured_mesh_binding_get failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = application_result_convert_model_framework(ret_model_framework);
-            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - model_transform_tree_world_matrix_get failed. continue.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret_render_packet = render_packet_untextured_mesh_push(&tmp_untextured_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
-        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-            ret = application_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = application_result_convert_model_framework(ret_model_framework);
-            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - model_transform_tree_world_matrix_get failed. continue.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret_render_packet = render_packet_untextured_mesh_push(&tmp_untextured_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
-        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-            ret = application_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-    }
-
-    // Debug AXIS(untextured mesh)
-    for(size_t i = 0; i != debug_axis_mesh_count; ++i) {
-        ret_model_framework = untextured_model_resource_map_debug_axis_mesh_binding_get(s_application_state->sample_robot_resource_map, (uint16_t)i, &tmp_untextured_mesh, &tmp_coordinate_id);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = application_result_convert_model_framework(ret_model_framework);
-            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - untextured_model_resource_map_debug_axis_mesh_binding_get failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = application_result_convert_model_framework(ret_model_framework);
-            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - model_transform_tree_world_matrix_get failed. continue.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret_render_packet = render_packet_untextured_mesh_push(&tmp_untextured_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
-        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-            ret = application_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = application_result_convert_model_framework(ret_model_framework);
-            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - model_transform_tree_world_matrix_get failed. continue.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret_render_packet = render_packet_untextured_mesh_push(&tmp_untextured_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
-        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-            ret = application_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-    }
-
-    // Debug AABB Line描画
-    for(size_t i = 0; i != debug_aabb_mesh_count; ++i) {
-        ret_model_framework = untextured_model_resource_map_debug_aabb_mesh_binding_get(s_application_state->sample_robot_resource_map, (uint16_t)i, &tmp_line_mesh, &tmp_coordinate_id);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = application_result_convert_model_framework(ret_model_framework);
-            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - untextured_model_resource_map_debug_aabb_mesh_binding_get failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot1->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
-            continue;
-        }
-        ret_render_packet = render_packet_line_mesh_push(&tmp_line_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
-        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-            ret = application_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_model_framework = model_transform_tree_world_matrix_get(s_application_state->sample_robot2->transform_tree, tmp_coordinate_id, &tmp_model_matrix);
-        if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ERROR_MESSAGE("application_run - model_transform_tree_world_matrix_get failed. continue...");
-            continue;
-        }
-        ret_render_packet = render_packet_line_mesh_push(&tmp_line_mesh, &tmp_model_matrix, s_application_state->sample_robot_scene_render_packet);
-        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-            ret = application_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-    }
-
-    ret_render_packet = render_packet_line_mesh_push(s_application_state->floor_grid_line_mesh, &s_application_state->floor_grid_model_matrix, s_application_state->sample_robot_scene_render_packet);
-    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-        ret = application_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = APPLICATION_DATA_CORRUPTED;
-        }
-        ERROR_MESSAGE("application_render_packet_initialize(%s) - render_packet_untextured_mesh_push failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
     return ret;
 }

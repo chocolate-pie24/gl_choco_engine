@@ -28,6 +28,8 @@
 
 #include "application/core/application_types.h"
 
+#include "application/demos/sample_robot/core/sample_robot_types.h"
+
 static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
 static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
@@ -416,6 +418,31 @@ application_result_t application_result_convert_render_packet(render_packet_resu
     case RENDER_PACKET_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     case RENDER_PACKET_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t application_result_convert_sample_robot_demo(sample_robot_result_t result_) {
+    switch(result_) {
+    case SAMPLE_ROBOT_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case SAMPLE_ROBOT_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case SAMPLE_ROBOT_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case SAMPLE_ROBOT_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case SAMPLE_ROBOT_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case SAMPLE_ROBOT_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case SAMPLE_ROBOT_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case SAMPLE_ROBOT_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case SAMPLE_ROBOT_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;
