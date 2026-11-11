@@ -186,8 +186,8 @@ texture_result_t texture_gpu_resource_create(const renderer_backend_context_t* b
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     texture_gpu_resource_t* tmp_texture_gpu_resource = NULL;
+    renderer_backend_texture_t* tmp_backend_texture = NULL;
 
-    bool texture_created = false;
     bool texture_bound = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_gpu_resource_create", "backend_context_")
@@ -208,15 +208,14 @@ texture_result_t texture_gpu_resource_create(const renderer_backend_context_t* b
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_texture_create(backend_context_, texture_unit_index_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, &tmp_texture_gpu_resource->backend_texture);
+    ret_renderer_backend = renderer_backend_texture_create(backend_context_, texture_unit_index_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, &tmp_backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = texture_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_create failed.", texture_result_to_str(ret));
         goto cleanup;
     }
-    texture_created = true;
 
-    ret_renderer_backend = renderer_backend_texture_bind(backend_context_, tmp_texture_gpu_resource->backend_texture);
+    ret_renderer_backend = renderer_backend_texture_bind(backend_context_, tmp_backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = texture_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_bind failed.", texture_result_to_str(ret));
@@ -231,7 +230,7 @@ texture_result_t texture_gpu_resource_create(const renderer_backend_context_t* b
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_texture_unbind(backend_context_, tmp_texture_gpu_resource->backend_texture);
+    ret_renderer_backend = renderer_backend_texture_unbind(backend_context_, tmp_backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = texture_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_unbind failed.", texture_result_to_str(ret));
@@ -240,6 +239,7 @@ texture_result_t texture_gpu_resource_create(const renderer_backend_context_t* b
     texture_bound = false;
 
     tmp_texture_gpu_resource->backend_context = backend_context_;
+    tmp_texture_gpu_resource->backend_texture = tmp_backend_texture;
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_gpu_resource_is_valid(tmp_texture_gpu_resource)) {
@@ -250,25 +250,29 @@ texture_result_t texture_gpu_resource_create(const renderer_backend_context_t* b
 #endif
 
     *out_texture_resource_ = tmp_texture_gpu_resource;
+    tmp_texture_gpu_resource = NULL;
+    tmp_backend_texture = NULL;
 
     ret = TEXTURE_SUCCESS;
 
 cleanup:
-    if(TEXTURE_SUCCESS != ret) {
-        if(texture_bound) {
-            ret_renderer_backend = renderer_backend_texture_unbind(backend_context_, tmp_texture_gpu_resource->backend_texture);
-            if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-                ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_unbind failed.", texture_result_to_str(TEXTURE_DATA_CORRUPTED));
-                ret = TEXTURE_DATA_CORRUPTED;
-            }
+    if(TEXTURE_DATA_CORRUPTED == ret || TEXTURE_SUCCESS == ret) {
+        return ret;
+    }
+    if(texture_bound) {
+        ret_renderer_backend = renderer_backend_texture_unbind(backend_context_, tmp_backend_texture);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_unbind failed.", texture_result_to_str(TEXTURE_DATA_CORRUPTED));
+            ret = TEXTURE_DATA_CORRUPTED;
+            return ret;
         }
-        if(texture_created && NULL != backend_context_ && NULL != tmp_texture_gpu_resource) {
-            renderer_backend_texture_destroy(backend_context_, &tmp_texture_gpu_resource->backend_texture);
-        }
-        if(NULL != tmp_texture_gpu_resource) {
-            general_allocator_free((void**)&tmp_texture_gpu_resource, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-            tmp_texture_gpu_resource = NULL;
-        }
+    }
+    if(NULL != backend_context_ && NULL != tmp_backend_texture) {
+        renderer_backend_texture_destroy(backend_context_, &tmp_backend_texture);
+    }
+    if(NULL != tmp_texture_gpu_resource) {
+        general_allocator_free((void**)&tmp_texture_gpu_resource, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        tmp_texture_gpu_resource = NULL;
     }
     return ret;
 }
