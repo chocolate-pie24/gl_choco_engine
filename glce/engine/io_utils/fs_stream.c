@@ -172,6 +172,7 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullp
     filesystem_result_t ret_filesystem = FILESYSTEM_INVALID_ARGUMENT;
 
     fs_stream_t* tmp_stream = NULL;
+    filesystem_t* tmp_filesystem = NULL;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(out_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "out_stream_")
@@ -195,12 +196,14 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullp
         goto cleanup;
     }
 
-    ret_filesystem = filesystem_create(&tmp_stream->filesystem, fullpath_, mode_);
+    ret_filesystem = filesystem_create(&tmp_filesystem, fullpath_, mode_);
     if(FILESYSTEM_SUCCESS != ret_filesystem) {
         ret = result_convert_filesystem(ret_filesystem);
         ERROR_MESSAGE("fs_stream_create(%s) - filesystem_create failed.", result_to_str(ret));
         goto cleanup;
     }
+
+    tmp_stream->filesystem = tmp_filesystem;
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -214,17 +217,20 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullp
     // Output.
     *out_stream_ = tmp_stream;
     tmp_stream = NULL;
+    tmp_filesystem = NULL;
 
     ret = FS_STREAM_SUCCESS;
 
 cleanup:
-    if(FS_STREAM_DATA_CORRUPTED != ret) {
-        if(NULL != tmp_stream) {
-            filesystem_destroy(&tmp_stream->filesystem, NULL);
-            general_allocator_free((void**)&tmp_stream, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
-        }
+    if(FS_STREAM_DATA_CORRUPTED == ret || FS_STREAM_SUCCESS == ret) {
+        return ret;
     }
-
+    if(NULL != tmp_filesystem) {
+        filesystem_destroy(&tmp_filesystem, NULL);
+    }
+    if(NULL != tmp_stream) {
+        general_allocator_free((void**)&tmp_stream, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO);
+    }
     return ret;
 }
 

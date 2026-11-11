@@ -521,7 +521,7 @@ cleanup:
     return ret;
 }
 
-render_packet_result_t render_packet_line_mesh_push(line_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
+render_packet_result_t render_packet_line_mesh_push(const line_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
     render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_line_mesh_push", "mesh_")
@@ -551,7 +551,7 @@ cleanup:
     return ret;
 }
 
-render_packet_result_t render_packet_point_mesh_push(point_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
+render_packet_result_t render_packet_point_mesh_push(const point_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
     render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_point_mesh_push", "mesh_")
@@ -581,7 +581,7 @@ cleanup:
     return ret;
 }
 
-render_packet_result_t render_packet_ui_mesh_push(ui_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
+render_packet_result_t render_packet_ui_mesh_push(const ui_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
     render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_ui_mesh_push", "mesh_")
@@ -611,7 +611,7 @@ cleanup:
     return ret;
 }
 
-render_packet_result_t render_packet_untextured_mesh_push(untextured_mesh_t* mesh_, mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
+render_packet_result_t render_packet_untextured_mesh_push(const untextured_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
     render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_untextured_mesh_push", "mesh_")

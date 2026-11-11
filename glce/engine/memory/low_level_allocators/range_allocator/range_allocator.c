@@ -463,6 +463,7 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     range_allocator_t* tmp_allocator = NULL;
+    node_t* tmp_node_pool = NULL;
 
     size_t max_node_count = 0;
     size_t node_pool_size = 0;
@@ -494,7 +495,7 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(node_pool_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_allocator->node_pool);
+    ret_general_allocator = general_allocator_allocate(node_pool_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_node_pool);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("range_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
@@ -502,9 +503,10 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
     }
 
     for(size_t i = 0; i != max_node_count; ++i) {
-        set_node_to_not_used(&tmp_allocator->node_pool[i]);
+        set_node_to_not_used(&tmp_node_pool[i]);
     }
 
+    tmp_allocator->node_pool = tmp_node_pool;
     tmp_allocator->max_node_count = max_node_count;
     tmp_allocator->max_allocation_count = max_allocation_count_;
     tmp_allocator->allocation_count = 0;
@@ -528,14 +530,18 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
 
     *out_allocator_ = tmp_allocator;
     tmp_allocator = NULL;
+    tmp_node_pool = NULL;
 
     ret = RANGE_ALLOCATOR_SUCCESS;
 
 cleanup:
+    if(RANGE_ALLOCATOR_DATA_CORRUPTED == ret || RANGE_ALLOCATOR_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != tmp_node_pool) {
+        general_allocator_free((void**)&tmp_node_pool, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
     if(NULL != tmp_allocator) {
-        if(NULL != tmp_allocator->node_pool) {
-            general_allocator_free((void**)&tmp_allocator->node_pool, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-        }
         general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
     return ret;
