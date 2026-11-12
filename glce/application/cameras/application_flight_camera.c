@@ -183,13 +183,13 @@ application_result_t application_flight_camera_update(application_flight_camera_
     }
 #endif
 
-    for(size_t i = 0; i != event_view_->window_event_count; ++i) {
-        if(WINDOW_EVENT_RESIZE == event_view_->window_events[i].event_code) {
-            framebuffer_width = event_view_->window_events[i].event_args.framebuffer_width;
-            framebuffer_height = event_view_->window_events[i].event_args.framebuffer_height;
-            window_resized = true;
-        }
-    }
+    // for(size_t i = 0; i != event_view_->window_event_count; ++i) {
+    //     if(WINDOW_EVENT_RESIZE == event_view_->window_events[i].event_code) {
+    //         framebuffer_width = event_view_->window_events[i].event_args.framebuffer_width;
+    //         framebuffer_height = event_view_->window_events[i].event_args.framebuffer_height;
+    //         window_resized = true;
+    //     }
+    // }
 
     for(size_t i = 0; i != event_view_->keyboard_event_count; ++i) {
         ret_camera = flight_camera_command_update(flight_camera_->active_camera, &event_view_->keyboard_events[i]);

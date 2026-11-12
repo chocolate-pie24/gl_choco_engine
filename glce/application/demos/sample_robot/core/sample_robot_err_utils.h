@@ -10,6 +10,8 @@ extern "C" {
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
+#include "engine/camera/core/camera_types.h"
+
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
@@ -33,6 +35,8 @@ sample_robot_result_t sample_robot_result_convert_geometry(geometry_result_t res
 sample_robot_result_t sample_robot_result_convert_renderer_frontend(renderer_frontend_result_t result_);
 
 sample_robot_result_t sample_robot_result_convert_render_packet(render_packet_result_t result_);
+
+sample_robot_result_t sample_robot_result_convert_camera(camera_result_t result_);
 
 #ifdef __cplusplus
 }
