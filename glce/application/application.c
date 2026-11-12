@@ -51,6 +51,8 @@
 // Renderer System
 #include "engine/systems/renderer/core/renderer_types.h"
 
+#include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
+
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
 
@@ -129,7 +131,7 @@ typedef struct application_state {
     stl_viewer_t* stl_viewer_demo;
 } application_state_t;
 
-const application_demo_type_t s_demo_type = APPLICATION_DEMO_TYPE_STL_VIEWER;
+static const application_demo_type_t s_demo_type = APPLICATION_DEMO_TYPE_STL_VIEWER;
 static application_state_t* s_application_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
 // Frame Orchestration.
@@ -171,6 +173,7 @@ application_result_t application_create(void) {
     stl_viewer_t* tmp_stl_viewer_demo = NULL;
 
     size_t subsystem_memory_pool_size = 0;
+    untextured_mesh_config_t stl_viewer_mesh_config = { 0 };
 
     // Preconditions
     if(NULL != s_application_state) {
@@ -287,16 +290,13 @@ application_result_t application_create(void) {
     INFO_MESSAGE("Sample robot demo created successfully.");
 
     INFO_MESSAGE("Creating STL viewer demo...");
-    ret_stl_viewer = stl_viewer_create(
-        fs_path_fullpath_get(tmp_asset_root_path),
-        "stl/demo_stl_viewer",
-        "utah_teapot_ascii",
-        "stl",
-        "materials/demo_stl_viewer",
-        "utah_teapot",
-        "untextured_mat",
-        tmp_renderer_frontend,
-        &tmp_stl_viewer_demo);
+    stl_viewer_mesh_config.geometry_subdirectory = "stl/demo_stl_viewer";
+    stl_viewer_mesh_config.geometry_resource_name = "utah_teapot_ascii";
+    stl_viewer_mesh_config.geometry_extension = "stl";
+    stl_viewer_mesh_config.material_subdirectory = "materials/demo_stl_viewer";
+    stl_viewer_mesh_config.material_resource_name = "utah_teapot";
+    stl_viewer_mesh_config.material_extension = "untextured_mat";
+    ret_stl_viewer = stl_viewer_create(fs_path_fullpath_get(tmp_asset_root_path), &stl_viewer_mesh_config, tmp_renderer_frontend, &tmp_stl_viewer_demo);
     if(STL_VIEWER_SUCCESS != ret_stl_viewer) {
         ret = application_result_convert_stl_viewer(ret_stl_viewer);
         if(STL_VIEWER_INVALID_ARGUMENT == ret_stl_viewer) {

@@ -527,13 +527,13 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_import(renderer_fro
         goto cleanup;
     }
 
-    ret_fs_path = fs_path_create(&fs_path, asset_root_path_, choco_string_c_str(config_->geometry_subdirectory), choco_string_c_str(config_->geometry_resource_name), choco_string_c_str(config_->geometry_extension));
+    ret_fs_path = fs_path_create(&fs_path, asset_root_path_, config_->geometry_subdirectory, config_->geometry_resource_name, config_->geometry_extension);
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = renderer_frontend_result_convert_fs_path(ret_fs_path);
         ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - fs_path_create failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
-    ret_resource_pipeline = untextured_mesh_geometry_pipeline_import_from_file(renderer_frontend_->untextured_mesh_render_resource->vbo_manager, renderer_frontend_->untextured_mesh_render_resource->geometry_registry, choco_string_c_str(config_->geometry_resource_name), fs_path_fullpath_get(fs_path), &tmp_geometry_id);
+    ret_resource_pipeline = untextured_mesh_geometry_pipeline_import_from_file(renderer_frontend_->untextured_mesh_render_resource->vbo_manager, renderer_frontend_->untextured_mesh_render_resource->geometry_registry, config_->geometry_resource_name, fs_path_fullpath_get(fs_path), &tmp_geometry_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = renderer_frontend_result_convert_resource_pipeline(ret_resource_pipeline);
         ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_geometry_pipeline_import_from_file failed.", renderer_frontend_result_to_str(ret));
@@ -543,13 +543,13 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_import(renderer_fro
     geometry_imported = true;
 
     // material
-    ret_fs_path = fs_path_create(&fs_path, asset_root_path_, choco_string_c_str(config_->material_subdirectory), choco_string_c_str(config_->material_resource_name), choco_string_c_str(config_->material_extension));
+    ret_fs_path = fs_path_create(&fs_path, asset_root_path_, config_->material_subdirectory, config_->material_resource_name, config_->material_extension);
     if(FS_PATH_SUCCESS != ret_fs_path) {
         ret = renderer_frontend_result_convert_fs_path(ret_fs_path);
         ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - fs_path_create failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
-    ret_resource_pipeline = untextured_mesh_material_pipeline_import_from_file(renderer_frontend_->untextured_mesh_render_resource->material_registry, choco_string_c_str(config_->material_resource_name), fs_path_fullpath_get(fs_path), &tmp_material_id);
+    ret_resource_pipeline = untextured_mesh_material_pipeline_import_from_file(renderer_frontend_->untextured_mesh_render_resource->material_registry, config_->material_resource_name, fs_path_fullpath_get(fs_path), &tmp_material_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = renderer_frontend_result_convert_resource_pipeline(ret_resource_pipeline);
         ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_material_pipeline_import_from_file failed.", renderer_frontend_result_to_str(ret));

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "application/demos/stl_viewer/core/stl_viewer_types.h"
+#include "application/demos/stl_viewer/core/stl_viewer_err_utils.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 

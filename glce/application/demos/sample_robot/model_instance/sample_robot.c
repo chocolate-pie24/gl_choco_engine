@@ -252,7 +252,6 @@ sample_robot_result_t sample_robot_dummy_config_loader(untextured_model_assembly
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
-    mesh_result_t ret_mesh = MESH_INVALID_ARGUMENT;
 
     // ID 14はRobot全体の配置用座標。
     // ID 1はBase Yaw、9/13は固定側で、いずれも14の子にする。
@@ -302,7 +301,6 @@ sample_robot_result_t sample_robot_dummy_config_loader(untextured_model_assembly
 
     const size_t coordinate_count = sizeof(coordinate_definitions) / sizeof(coordinate_definitions[0]);
     const size_t untextured_mesh_count = sizeof(untextured_mesh_definitions) / sizeof(untextured_mesh_definitions[0]);
-    size_t created_config_count = 0;
 
     untextured_model_assembly_config_t* tmp_assembly_config = NULL;
     model_coordinate_config_t* coordinates = NULL;
@@ -354,23 +352,12 @@ sample_robot_result_t sample_robot_dummy_config_loader(untextured_model_assembly
 
     for(size_t i = 0; i != untextured_mesh_count; ++i) {
         coordinate_ids[i] = untextured_mesh_definitions[i].coordinate_id;
-        ret_mesh = untextured_mesh_config_initialize(
-            "stl/robot_sample",
-            untextured_mesh_definitions[i].geometry_name,
-            "stl",
-            "materials/robot_sample",
-            untextured_mesh_definitions[i].material_name,
-            "untextured_mat",
-            &untextured_mesh_configs[i]);
-        if(MESH_SUCCESS != ret_mesh) {
-            ret = sample_robot_result_convert_mesh(ret_mesh);
-            if(MESH_INVALID_ARGUMENT == ret_mesh) {
-                ret = SAMPLE_ROBOT_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - untextured_mesh_config_initialize failed (index = %zu).", sample_robot_result_to_str(ret), i);
-            goto cleanup;
-        }
-        ++created_config_count;
+        untextured_mesh_configs[i].geometry_subdirectory = "stl/robot_sample";
+        untextured_mesh_configs[i].geometry_resource_name = untextured_mesh_definitions[i].geometry_name;
+        untextured_mesh_configs[i].geometry_extension = "stl";
+        untextured_mesh_configs[i].material_subdirectory = "materials/robot_sample";
+        untextured_mesh_configs[i].material_resource_name = untextured_mesh_definitions[i].material_name;
+        untextured_mesh_configs[i].material_extension = "untextured_mat";
     }
 
     ret_model_framework = untextured_model_assembly_config_create(
@@ -400,9 +387,6 @@ cleanup:
     // createが成功していれば上でOutputして終了する。以下は失敗時の局所Rollback。
     if(NULL != tmp_assembly_config) {
         untextured_model_assembly_config_destroy(&tmp_assembly_config);
-    }
-    for(size_t i = 0; i != created_config_count; ++i) {
-        untextured_mesh_config_deinitialize(&untextured_mesh_configs[i]);
     }
     if(NULL != coordinates) {
         general_allocator_free((void**)&coordinates, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);

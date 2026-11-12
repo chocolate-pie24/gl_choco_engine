@@ -113,10 +113,6 @@ void untextured_model_assembly_config_destroy(untextured_model_assembly_config_t
         model_coordinate_config_deinitialize(&(*config_)->coordinate_configs[i]);
     }
 
-    for(size_t i = 0; i != (*config_)->mesh_count; ++i) {
-        untextured_mesh_config_deinitialize(&(*config_)->mesh_configs[i]);
-    }
-
     if(NULL != (*config_)->coordinate_configs) {
         general_allocator_free((void**)&(*config_)->coordinate_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }
@@ -190,13 +186,6 @@ bool untextured_model_assembly_config_is_valid(const untextured_model_assembly_c
     if(!general_allocator_ptr_is_allocated(config_->mesh_configs)) {
         return false;
     }
-#if ENABLE_VALID_DEEP == 1
-    for(size_t i = 0; i != config_->mesh_count; ++i) {
-        if(!untextured_mesh_config_is_valid(&config_->mesh_configs[i])) {
-            return false;
-        }
-    }
-#endif
 
     return true;
 }

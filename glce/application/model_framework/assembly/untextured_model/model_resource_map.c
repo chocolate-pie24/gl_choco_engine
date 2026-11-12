@@ -130,7 +130,7 @@ static model_framework_result_t untextured_meshes_destroy(renderer_frontend_t* r
 // Debug AABB Mesh Helpers
 static model_framework_result_t debug_aabb_meshes_create(renderer_frontend_t* renderer_frontend_, const untextured_model_assembly_config_t* config_, const untextured_mesh_t* untextured_meshes_, const uint16_t* untextured_mesh_coordinate_ids_, vec4u8_t aabb_color_, size_t* out_mesh_count_, line_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_);
 static model_framework_result_t debug_aabb_meshes_destroy(renderer_frontend_t* renderer_frontend_, size_t mesh_count_, line_mesh_t** meshes_, uint16_t** coordinate_ids_);
-static model_framework_result_t debug_aabb_mesh_resource_name_create(const choco_string_t* source_resource_name_, choco_string_t** out_string_);
+static model_framework_result_t debug_aabb_mesh_resource_name_create(const char* source_resource_name_, choco_string_t** out_string_);
 
 // Debug Axis Mesh Helpers
 static model_framework_result_t debug_axis_meshes_create(renderer_frontend_t* renderer_frontend_, const char* resource_map_name_, const untextured_model_assembly_config_t* config_, const cone_t* debug_axis_cone_, const cylinder_t* debug_axis_cylinder_, uint16_t debug_axis_segment_count_, size_t* out_mesh_count_, untextured_mesh_t** out_meshes_, uint16_t** out_coordinate_ids_);
@@ -955,7 +955,7 @@ cleanup:
 }
 
 // source_resource_name_がxxxの場合、xxx_debug_aabbという名称がout_string_に格納される
-static model_framework_result_t debug_aabb_mesh_resource_name_create(const choco_string_t* source_resource_name_, choco_string_t** out_string_) {
+static model_framework_result_t debug_aabb_mesh_resource_name_create(const char* source_resource_name_, choco_string_t** out_string_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -966,7 +966,7 @@ static model_framework_result_t debug_aabb_mesh_resource_name_create(const choco
     IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "debug_aabb_mesh_resource_name_create", "out_string_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "debug_aabb_mesh_resource_name_create", "*out_string_")
 
-    ret_choco_string = choco_string_create_from_c_string(choco_string_c_str(source_resource_name_), &tmp_string);
+    ret_choco_string = choco_string_create_from_c_string(source_resource_name_, &tmp_string);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
         ret = model_framework_result_convert_choco_string(ret_choco_string);
         ERROR_MESSAGE("debug_aabb_mesh_resource_name_create(%s) - choco_string_create_from_c_string failed.", model_framework_result_to_str(ret));
