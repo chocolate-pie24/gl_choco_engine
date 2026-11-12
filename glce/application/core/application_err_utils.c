@@ -29,6 +29,7 @@
 #include "application/core/application_types.h"
 
 #include "application/demos/sample_robot/core/sample_robot_types.h"
+#include "application/demos/stl_viewer/core/stl_viewer_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
@@ -443,6 +444,31 @@ application_result_t application_result_convert_sample_robot_demo(sample_robot_r
     case SAMPLE_ROBOT_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
     case SAMPLE_ROBOT_UNDEFINED_ERROR:
+        return APPLICATION_UNDEFINED_ERROR;
+    default:
+        return APPLICATION_UNDEFINED_ERROR;
+    }
+}
+
+application_result_t application_result_convert_stl_viewer(stl_viewer_result_t result_) {
+    switch(result_) {
+    case STL_VIEWER_SUCCESS:
+        return APPLICATION_SUCCESS;
+    case STL_VIEWER_NO_MEMORY:
+        return APPLICATION_NO_MEMORY;
+    case STL_VIEWER_RUNTIME_ERROR:
+        return APPLICATION_RUNTIME_ERROR;
+    case STL_VIEWER_INVALID_ARGUMENT:
+        return APPLICATION_INVALID_ARGUMENT;
+    case STL_VIEWER_DATA_CORRUPTED:
+        return APPLICATION_DATA_CORRUPTED;
+    case STL_VIEWER_BAD_OPERATION:
+        return APPLICATION_BAD_OPERATION;
+    case STL_VIEWER_OVERFLOW:
+        return APPLICATION_OVERFLOW;
+    case STL_VIEWER_LIMIT_EXCEEDED:
+        return APPLICATION_LIMIT_EXCEEDED;
+    case STL_VIEWER_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

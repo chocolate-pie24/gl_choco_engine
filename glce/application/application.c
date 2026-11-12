@@ -65,8 +65,18 @@
 #include "application/cameras/application_flight_camera.h"
 #include "application/diagnostics/application_diagnostics.h"
 
+
+// Demos
 #include "application/demos/sample_robot/core/sample_robot_types.h"
 #include "application/demos/sample_robot/sample_robot_demo.h"
+
+#include "application/demos/stl_viewer/core/stl_viewer_types.h"
+#include "application/demos/stl_viewer/stl_viewer.h"
+
+typedef enum {
+    APPLICATION_DEMO_TYPE_SAMPLE_ROBOT,
+    APPLICATION_DEMO_TYPE_STL_VIEWER,
+} application_demo_type_t;
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -116,8 +126,10 @@ typedef struct application_state {
 
     // Demo scenes
     sample_robot_demo_t* sample_robot_demo;
+    stl_viewer_t* stl_viewer_demo;
 } application_state_t;
 
+const application_demo_type_t s_demo_type = APPLICATION_DEMO_TYPE_STL_VIEWER;
 static application_state_t* s_application_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
 // Frame Orchestration.
@@ -144,6 +156,7 @@ application_result_t application_create(void) {
     light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
     render_packet_result_t ret_render_packet = RENDER_PACKET_INVALID_ARGUMENT;
     sample_robot_result_t ret_sample_robot = SAMPLE_ROBOT_INVALID_ARGUMENT;
+    stl_viewer_result_t ret_stl_viewer = STL_VIEWER_INVALID_ARGUMENT;
 
     application_state_t* tmp_state = NULL;
     subsystem_allocator_t* tmp_subsystem_allocator = NULL;
@@ -155,6 +168,7 @@ application_result_t application_create(void) {
     event_system_t* tmp_event_system = NULL;
     fs_path_t* tmp_executable_directory = NULL;
     fs_path_t* tmp_asset_root_path = NULL;
+    stl_viewer_t* tmp_stl_viewer_demo = NULL;
 
     size_t subsystem_memory_pool_size = 0;
 
@@ -272,6 +286,27 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("Sample robot demo created successfully.");
 
+    INFO_MESSAGE("Creating STL viewer demo...");
+    ret_stl_viewer = stl_viewer_create(
+        fs_path_fullpath_get(tmp_asset_root_path),
+        "stl/demo_stl_viewer",
+        "utah_teapot_ascii",
+        "stl",
+        "materials/demo_stl_viewer",
+        "utah_teapot",
+        "untextured_mat",
+        tmp_renderer_frontend,
+        &tmp_stl_viewer_demo);
+    if(STL_VIEWER_SUCCESS != ret_stl_viewer) {
+        ret = application_result_convert_stl_viewer(ret_stl_viewer);
+        if(STL_VIEWER_INVALID_ARGUMENT == ret_stl_viewer) {
+            ret = APPLICATION_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("application_create(%s) - stl_viewer_create failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    INFO_MESSAGE("STL viewer demo created successfully.");
+
     // Render packet
     INFO_MESSAGE("Creating render packet...");
     ret_render_packet = render_packet_create(16 * MIB, &tmp_render_packet);
@@ -301,6 +336,7 @@ application_result_t application_create(void) {
     tmp_state->asset_root_path = tmp_asset_root_path;
     tmp_state->executable_directory = tmp_executable_directory;
     tmp_state->event_system = tmp_event_system;
+    tmp_state->stl_viewer_demo = tmp_stl_viewer_demo;
 
     s_application_state = tmp_state;
     tmp_state = NULL;
@@ -313,6 +349,7 @@ application_result_t application_create(void) {
     tmp_event_system = NULL;
     tmp_executable_directory = NULL;
     tmp_asset_root_path = NULL;
+    tmp_stl_viewer_demo = NULL;
     INFO_MESSAGE("Application created successfully.");
 
     ret = APPLICATION_SUCCESS;
@@ -323,6 +360,9 @@ cleanup:
     }
     if(NULL != tmp_render_packet) {
         render_packet_destroy(&tmp_render_packet);
+    }
+    if(NULL != tmp_stl_viewer_demo && NULL != tmp_renderer_frontend) {
+        stl_viewer_destroy(tmp_renderer_frontend, &tmp_stl_viewer_demo);
     }
     if(NULL != tmp_sample_robot_demo && NULL != tmp_renderer_frontend) {
         sample_robot_demo_destroy(tmp_renderer_frontend, &tmp_sample_robot_demo);
@@ -365,6 +405,9 @@ void application_destroy(void) {
     if(NULL != s_application_state->render_packet) {
         render_packet_destroy(&s_application_state->render_packet);
     }
+    if(NULL != s_application_state->stl_viewer_demo) {
+        stl_viewer_destroy(s_application_state->renderer_frontend, &s_application_state->stl_viewer_demo);
+    }
     if(NULL != s_application_state->sample_robot_demo) {
         sample_robot_demo_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_demo);
     }
@@ -402,6 +445,7 @@ application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
 
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+    stl_viewer_result_t ret_stl_viewer = STL_VIEWER_INVALID_ARGUMENT;
 
     struct timespec  req = {0, 1000000};
     const float demo_delta_time = 1.0f / 60.0f; // 暫定固定値
@@ -464,10 +508,13 @@ application_result_t application_run(void) {
         }
 
         // Demo Update.
-        ret = scene_update(demo_delta_time, s_application_state->sample_robot_demo);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - scene_update failed.", application_result_to_str(ret));
-            goto cleanup;
+        // TODO: scene_update整理
+        if(APPLICATION_DEMO_TYPE_SAMPLE_ROBOT == s_demo_type) {
+            ret = scene_update(demo_delta_time, s_application_state->sample_robot_demo);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - scene_update failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
         }
 
         // Render Frame.
@@ -480,10 +527,23 @@ application_result_t application_run(void) {
         glEnable(GL_DEPTH_TEST);
         glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
 
-        ret = scene_render_packet_build(s_application_state->sample_robot_demo, s_application_state->render_packet);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - scene_render_packet_build failed.", application_result_to_str(ret));
-            goto cleanup;
+        // TODO: scene_render_packet_build整理
+        if(APPLICATION_DEMO_TYPE_SAMPLE_ROBOT == s_demo_type) {
+            ret = scene_render_packet_build(s_application_state->sample_robot_demo, s_application_state->render_packet);
+            if(APPLICATION_SUCCESS != ret) {
+                ERROR_MESSAGE("application_run(%s) - scene_render_packet_build failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
+        } else if(APPLICATION_DEMO_TYPE_STL_VIEWER == s_demo_type) {
+            ret_stl_viewer = stl_viewer_render_packet_build(s_application_state->stl_viewer_demo, s_application_state->render_packet);
+            if(STL_VIEWER_SUCCESS != ret_stl_viewer) {
+                ret = application_result_convert_stl_viewer(ret_stl_viewer);
+                if(STL_VIEWER_INVALID_ARGUMENT == ret_stl_viewer) {
+                    ret = APPLICATION_DATA_CORRUPTED;
+                }
+                ERROR_MESSAGE("application_run(%s) - stl_viewer_render_packet_build failed.", application_result_to_str(ret));
+                goto cleanup;
+            }
         }
 
         ret_renderer_frontend = renderer_frontend_draw_packet(s_application_state->render_packet, s_application_state->renderer_frontend);
