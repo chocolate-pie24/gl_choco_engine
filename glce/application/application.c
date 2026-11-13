@@ -68,10 +68,8 @@
 #include "application/diagnostics/application_diagnostics.h"
 
 // Demos
-#include "application/demos/sample_robot/core/sample_robot_types.h"
+#include "application/demos/core/scene_types.h"
 #include "application/demos/sample_robot/sample_robot_demo.h"
-
-#include "application/demos/stl_viewer/core/stl_viewer_types.h"
 #include "application/demos/stl_viewer/stl_viewer.h"
 
 typedef enum {
@@ -160,8 +158,7 @@ application_result_t application_create(void) {
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
     light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
     render_packet_result_t ret_render_packet = RENDER_PACKET_INVALID_ARGUMENT;
-    sample_robot_result_t ret_sample_robot = SAMPLE_ROBOT_INVALID_ARGUMENT;
-    stl_viewer_result_t ret_stl_viewer = STL_VIEWER_INVALID_ARGUMENT;
+    scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
 
     application_state_t* tmp_state = NULL;
     subsystem_allocator_t* tmp_subsystem_allocator = NULL;
@@ -176,7 +173,6 @@ application_result_t application_create(void) {
     stl_viewer_t* tmp_stl_viewer_demo = NULL;
 
     size_t subsystem_memory_pool_size = 0;
-    untextured_mesh_config_t stl_viewer_mesh_config = { 0 };
 
     // Preconditions
     if(NULL != s_application_state) {
@@ -283,10 +279,10 @@ application_result_t application_create(void) {
     switch(s_demo_type) {
     case APPLICATION_DEMO_TYPE_SAMPLE_ROBOT:
         INFO_MESSAGE("Creating sample robot demo...");
-        ret_sample_robot = sample_robot_demo_create(tmp_renderer_frontend, fs_path_fullpath_get(tmp_asset_root_path), tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_sample_robot_demo);
-        if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
-            ret = application_result_convert_sample_robot_demo(ret_sample_robot);
-            if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+        ret_scene = sample_robot_demo_create(tmp_renderer_frontend, fs_path_fullpath_get(tmp_asset_root_path), tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_sample_robot_demo);
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
             ERROR_MESSAGE("application_create(%s) - sample_robot_demo_create failed.", application_result_to_str(ret));
@@ -296,16 +292,10 @@ application_result_t application_create(void) {
         break;
     case APPLICATION_DEMO_TYPE_STL_VIEWER:
         INFO_MESSAGE("Creating STL viewer demo...");
-        stl_viewer_mesh_config.geometry_subdirectory = "stl/demo_stl_viewer";
-        stl_viewer_mesh_config.geometry_resource_name = "utah_teapot_ascii";
-        stl_viewer_mesh_config.geometry_extension = "stl";
-        stl_viewer_mesh_config.material_subdirectory = "materials/demo_stl_viewer";
-        stl_viewer_mesh_config.material_resource_name = "utah_teapot";
-        stl_viewer_mesh_config.material_extension = "untextured_mat";
-        ret_stl_viewer = stl_viewer_create(fs_path_fullpath_get(tmp_asset_root_path), &stl_viewer_mesh_config, tmp_renderer_frontend, &tmp_stl_viewer_demo);
-        if(STL_VIEWER_SUCCESS != ret_stl_viewer) {
-            ret = application_result_convert_stl_viewer(ret_stl_viewer);
-            if(STL_VIEWER_INVALID_ARGUMENT == ret_stl_viewer) {
+        ret_scene = stl_viewer_create(tmp_renderer_frontend, fs_path_fullpath_get(tmp_asset_root_path), tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_stl_viewer_demo);
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
             ERROR_MESSAGE("application_create(%s) - stl_viewer_create failed.", application_result_to_str(ret));
@@ -563,10 +553,10 @@ application_result_t application_run(void) {
         //         goto cleanup;
         //     }
         // } else if(APPLICATION_DEMO_TYPE_STL_VIEWER == s_demo_type) {
-        //     ret_stl_viewer = stl_viewer_render_packet_build(s_application_state->stl_viewer_demo, s_application_state->render_packet);
-        //     if(STL_VIEWER_SUCCESS != ret_stl_viewer) {
-        //         ret = application_result_convert_stl_viewer(ret_stl_viewer);
-        //         if(STL_VIEWER_INVALID_ARGUMENT == ret_stl_viewer) {
+        //     ret_scene = stl_viewer_render_packet_build(s_application_state->stl_viewer_demo, s_application_state->render_packet);
+        //     if(SCENE_SUCCESS != ret_scene) {
+        //         ret = application_result_convert_scene(ret_scene);
+        //         if(SCENE_INVALID_ARGUMENT == ret_scene) {
         //             ret = APPLICATION_DATA_CORRUPTED;
         //         }
         //         ERROR_MESSAGE("application_run(%s) - stl_viewer_render_packet_build failed.", application_result_to_str(ret));
@@ -645,7 +635,7 @@ cleanup:
 static application_result_t scene_initialize() {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    sample_robot_result_t ret_sample_robot = SAMPLE_ROBOT_INVALID_ARGUMENT;
+    scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
 
     if(NULL == s_application_state) {
         ret = APPLICATION_BAD_OPERATION;
@@ -655,20 +645,20 @@ static application_result_t scene_initialize() {
 
     switch(s_demo_type) {
     case APPLICATION_DEMO_TYPE_SAMPLE_ROBOT:
-        ret_sample_robot = sample_robot_demo_view_matrix_get(s_application_state->sample_robot_demo, &s_application_state->view_matrix);
-        if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
-            ret = application_result_convert_sample_robot_demo(ret_sample_robot);
-            if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+        ret_scene = sample_robot_demo_view_matrix_get(s_application_state->sample_robot_demo, &s_application_state->view_matrix);
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
             ERROR_MESSAGE("scene_initialize(%s) - sample_robot_demo_view_matrix_get failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
-        ret_sample_robot = sample_robot_demo_perspective_matrix_get(s_application_state->sample_robot_demo, &s_application_state->projection_matrix);
-        if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
-            ret = application_result_convert_sample_robot_demo(ret_sample_robot);
-            if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+        ret_scene = sample_robot_demo_perspective_matrix_get(s_application_state->sample_robot_demo, &s_application_state->projection_matrix);
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
             ERROR_MESSAGE("scene_initialize(%s) - sample_robot_demo_perspective_matrix_get failed.", application_result_to_str(ret));
@@ -692,7 +682,7 @@ cleanup:
 static application_result_t scene_update(float delta_time_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    sample_robot_result_t ret_sample_robot = SAMPLE_ROBOT_INVALID_ARGUMENT;
+    scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
 
     bool view_changed = false;
     bool projection_changed = false;
@@ -705,17 +695,17 @@ static application_result_t scene_update(float delta_time_) {
 
     switch(s_demo_type) {
     case APPLICATION_DEMO_TYPE_SAMPLE_ROBOT:
-        ret_sample_robot = sample_robot_demo_posture_update(delta_time_, s_application_state->sample_robot_demo);
-        if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
-            ret = application_result_convert_sample_robot_demo(ret_sample_robot);
-            if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+        ret_scene = sample_robot_demo_posture_update(delta_time_, s_application_state->sample_robot_demo);
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
             ERROR_MESSAGE("scene_update(%s) - sample_robot_demo_posture_update failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
-        ret_sample_robot = sample_robot_demo_view_update(
+        ret_scene = sample_robot_demo_view_update(
             s_application_state->sample_robot_demo,
             s_application_state->engine_event_view,
             delta_time_,
@@ -723,9 +713,9 @@ static application_result_t scene_update(float delta_time_) {
             s_application_state->frame_state.framebuffer_width,
             s_application_state->frame_state.framebuffer_height,
             &view_changed, &projection_changed);
-        if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
-            ret = application_result_convert_sample_robot_demo(ret_sample_robot);
-            if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
             ERROR_MESSAGE("scene_update(%s) - sample_robot_demo_view_update failed.", application_result_to_str(ret));
@@ -733,10 +723,10 @@ static application_result_t scene_update(float delta_time_) {
         }
 
         if(view_changed) {
-            ret_sample_robot = sample_robot_demo_view_matrix_get(s_application_state->sample_robot_demo, &s_application_state->view_matrix);
-            if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
-                ret = application_result_convert_sample_robot_demo(ret_sample_robot);
-                if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+            ret_scene = sample_robot_demo_view_matrix_get(s_application_state->sample_robot_demo, &s_application_state->view_matrix);
+            if(SCENE_SUCCESS != ret_scene) {
+                ret = application_result_convert_scene(ret_scene);
+                if(SCENE_INVALID_ARGUMENT == ret_scene) {
                     ret = APPLICATION_DATA_CORRUPTED;
                 }
                 ERROR_MESSAGE("scene_update(%s) - sample_robot_demo_view_matrix_get failed.", application_result_to_str(ret));
@@ -744,10 +734,10 @@ static application_result_t scene_update(float delta_time_) {
             }
         }
         if(projection_changed) {
-            ret_sample_robot = sample_robot_demo_perspective_matrix_get(s_application_state->sample_robot_demo, &s_application_state->projection_matrix);
-            if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
-                ret = application_result_convert_sample_robot_demo(ret_sample_robot);
-                if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+            ret_scene = sample_robot_demo_perspective_matrix_get(s_application_state->sample_robot_demo, &s_application_state->projection_matrix);
+            if(SCENE_SUCCESS != ret_scene) {
+                ret = application_result_convert_scene(ret_scene);
+                if(SCENE_INVALID_ARGUMENT == ret_scene) {
                     ret = APPLICATION_DATA_CORRUPTED;
                 }
                 ERROR_MESSAGE("scene_update(%s) - sample_robot_demo_perspective_matrix_get failed.", application_result_to_str(ret));
@@ -776,24 +766,23 @@ cleanup:
 static application_result_t scene_render_packet_build(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    sample_robot_result_t ret_sample_robot = SAMPLE_ROBOT_INVALID_ARGUMENT;
-    stl_viewer_result_t ret_stl_viewer = STL_VIEWER_INVALID_ARGUMENT;
+    scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
 
     if(APPLICATION_DEMO_TYPE_SAMPLE_ROBOT == s_demo_type) {
-        ret_sample_robot = sample_robot_demo_render_packet_build(s_application_state->sample_robot_demo, s_application_state->render_packet);
-        if(SAMPLE_ROBOT_SUCCESS != ret_sample_robot) {
-            ret = application_result_convert_sample_robot_demo(ret_sample_robot);
-            if(SAMPLE_ROBOT_INVALID_ARGUMENT == ret_sample_robot) {
+        ret_scene = sample_robot_demo_render_packet_build(s_application_state->sample_robot_demo, s_application_state->render_packet);
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
             ERROR_MESSAGE("scene_render_packet_build(%s) - sample_robot_demo_render_packet_build failed.", application_result_to_str(ret));
             goto cleanup;
         }
     } else if(APPLICATION_DEMO_TYPE_STL_VIEWER == s_demo_type) {
-        ret_stl_viewer = stl_viewer_render_packet_build(s_application_state->stl_viewer_demo, s_application_state->render_packet);
-        if(STL_VIEWER_SUCCESS != ret_stl_viewer) {
-            ret = application_result_convert_stl_viewer(ret_stl_viewer);
-            if(STL_VIEWER_INVALID_ARGUMENT == ret_stl_viewer) {
+        ret_scene = stl_viewer_render_packet_build(s_application_state->stl_viewer_demo, s_application_state->render_packet);
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
             ERROR_MESSAGE("scene_render_packet_build(%s) - stl_viewer_render_packet_build failed.", application_result_to_str(ret));

@@ -28,8 +28,7 @@
 
 #include "application/core/application_types.h"
 
-#include "application/demos/sample_robot/core/sample_robot_types.h"
-#include "application/demos/stl_viewer/core/stl_viewer_types.h"
+#include "application/demos/core/scene_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
@@ -425,50 +424,25 @@ application_result_t application_result_convert_render_packet(render_packet_resu
     }
 }
 
-application_result_t application_result_convert_sample_robot_demo(sample_robot_result_t result_) {
+application_result_t application_result_convert_scene(scene_result_t result_) {
     switch(result_) {
-    case SAMPLE_ROBOT_SUCCESS:
+    case SCENE_SUCCESS:
         return APPLICATION_SUCCESS;
-    case SAMPLE_ROBOT_NO_MEMORY:
+    case SCENE_NO_MEMORY:
         return APPLICATION_NO_MEMORY;
-    case SAMPLE_ROBOT_RUNTIME_ERROR:
+    case SCENE_RUNTIME_ERROR:
         return APPLICATION_RUNTIME_ERROR;
-    case SAMPLE_ROBOT_INVALID_ARGUMENT:
+    case SCENE_INVALID_ARGUMENT:
         return APPLICATION_INVALID_ARGUMENT;
-    case SAMPLE_ROBOT_DATA_CORRUPTED:
+    case SCENE_DATA_CORRUPTED:
         return APPLICATION_DATA_CORRUPTED;
-    case SAMPLE_ROBOT_BAD_OPERATION:
+    case SCENE_BAD_OPERATION:
         return APPLICATION_BAD_OPERATION;
-    case SAMPLE_ROBOT_OVERFLOW:
+    case SCENE_OVERFLOW:
         return APPLICATION_OVERFLOW;
-    case SAMPLE_ROBOT_LIMIT_EXCEEDED:
+    case SCENE_LIMIT_EXCEEDED:
         return APPLICATION_LIMIT_EXCEEDED;
-    case SAMPLE_ROBOT_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
-application_result_t application_result_convert_stl_viewer(stl_viewer_result_t result_) {
-    switch(result_) {
-    case STL_VIEWER_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case STL_VIEWER_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case STL_VIEWER_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case STL_VIEWER_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case STL_VIEWER_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case STL_VIEWER_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case STL_VIEWER_OVERFLOW:
-        return APPLICATION_OVERFLOW;
-    case STL_VIEWER_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case STL_VIEWER_UNDEFINED_ERROR:
+    case SCENE_UNDEFINED_ERROR:
         return APPLICATION_UNDEFINED_ERROR;
     default:
         return APPLICATION_UNDEFINED_ERROR;

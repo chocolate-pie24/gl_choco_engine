@@ -23,11 +23,11 @@
 #include "application/model_framework/assembly/untextured_model/model_assembly_config.h"
 #include "application/model_framework/assembly/untextured_model/model_resource_map.h"
 
-#include "application/demos/sample_robot/core/sample_robot_types.h"
-#include "application/demos/sample_robot/core/sample_robot_err_utils.h"
+#include "application/demos/core/scene_types.h"
+#include "application/demos/core/scene_err_utils.h"
 
-sample_robot_result_t sample_robot_create(const untextured_model_resource_map_t* resource_map_, sample_robot_t** out_robot_) {
-    sample_robot_result_t ret = SAMPLE_ROBOT_INVALID_ARGUMENT;
+scene_result_t sample_robot_create(const untextured_model_resource_map_t* resource_map_, sample_robot_t** out_robot_) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -37,24 +37,24 @@ sample_robot_result_t sample_robot_create(const untextured_model_resource_map_t*
 
     sample_robot_posture_t default_posture = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SAMPLE_ROBOT_INVALID_ARGUMENT, sample_robot_result_to_str(SAMPLE_ROBOT_INVALID_ARGUMENT), "sample_robot_create", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, SAMPLE_ROBOT_INVALID_ARGUMENT, sample_robot_result_to_str(SAMPLE_ROBOT_INVALID_ARGUMENT), "sample_robot_create", "out_robot_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, SAMPLE_ROBOT_BAD_OPERATION, sample_robot_result_to_str(SAMPLE_ROBOT_BAD_OPERATION), "sample_robot_create", "*out_robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "out_robot_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "sample_robot_create", "*out_robot_")
 
     ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_robot);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = sample_robot_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("sample_robot_create(%s) - general_allocator_allocate failed.", sample_robot_result_to_str(ret));
+        ret = scene_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("sample_robot_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     ret_model_framework = untextured_model_resource_map_transform_tree_clone(resource_map_, &tmp_transform_tree);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
+        ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+            ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_create(%s) - model_resource_map_transform_tree_clone failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_create(%s) - model_resource_map_transform_tree_clone failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -65,8 +65,8 @@ sample_robot_result_t sample_robot_create(const untextured_model_resource_map_t*
 
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!sample_robot_is_valid(tmp_robot)) {
-        ret = SAMPLE_ROBOT_DATA_CORRUPTED;
-        ERROR_MESSAGE("sample_robot_create(%s) - Result validation failed for 'tmp_robot'.", sample_robot_result_to_str(ret));
+        ret = SCENE_DATA_CORRUPTED;
+        ERROR_MESSAGE("sample_robot_create(%s) - Result validation failed for 'tmp_robot'.", scene_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -75,10 +75,10 @@ sample_robot_result_t sample_robot_create(const untextured_model_resource_map_t*
     tmp_transform_tree = NULL;
     tmp_robot = NULL;
 
-    ret = SAMPLE_ROBOT_SUCCESS;
+    ret = SCENE_SUCCESS;
 
 cleanup:
-    if(SAMPLE_ROBOT_DATA_CORRUPTED == ret || SAMPLE_ROBOT_SUCCESS == ret) {
+    if(SCENE_DATA_CORRUPTED == ret || SCENE_SUCCESS == ret) {
         return ret;
     }
     if(NULL != tmp_transform_tree) {
@@ -96,7 +96,7 @@ void sample_robot_destroy(sample_robot_t** robot_) {
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!sample_robot_is_valid(*robot_)) {
-        ERROR_MESSAGE("sample_robot_destroy(%s) - Precondition validation failed for '*robot_'.", sample_robot_result_to_str(SAMPLE_ROBOT_DATA_CORRUPTED));
+        ERROR_MESSAGE("sample_robot_destroy(%s) - Precondition validation failed for '*robot_'.", scene_result_to_str(SCENE_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -104,34 +104,34 @@ void sample_robot_destroy(sample_robot_t** robot_) {
     general_allocator_free((void**)robot_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
-sample_robot_result_t sample_robot_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_t* robot_) {
-    sample_robot_result_t ret = SAMPLE_ROBOT_INVALID_ARGUMENT;
+scene_result_t sample_robot_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_t* robot_) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SAMPLE_ROBOT_INVALID_ARGUMENT, sample_robot_result_to_str(SAMPLE_ROBOT_INVALID_ARGUMENT), "sample_robot_placement_set", "robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_placement_set", "robot_")
 
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 14, rotation_);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
+        ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+            ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_rotation_set failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     ret_model_framework = model_transform_tree_translate_set(robot_->transform_tree, 14, translate_);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
+        ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+            ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_translate_set failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_placement_set(%s) - model_transform_tree_translate_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = SAMPLE_ROBOT_SUCCESS;
+    ret = SCENE_SUCCESS;
 
 cleanup:
     return ret;
@@ -141,25 +141,25 @@ cleanup:
 // NOTE: MotorとCoordinate IDのbindingはAssembly Configに従う。
 // NOTE: 現状ではMotor AngleとLink Angleが一致すると仮定する。
 // NOTE: 可動範囲等の調整はまだ行わない。
-sample_robot_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_) {
-    sample_robot_result_t ret = SAMPLE_ROBOT_INVALID_ARGUMENT;
+scene_result_t sample_robot_posture_update(const sample_robot_posture_t* posture_, sample_robot_t* robot_) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     vec3f_t tmp_rotation = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, SAMPLE_ROBOT_INVALID_ARGUMENT, sample_robot_result_to_str(SAMPLE_ROBOT_INVALID_ARGUMENT), "sample_robot_posture_update", "posture_")
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SAMPLE_ROBOT_INVALID_ARGUMENT, sample_robot_result_to_str(SAMPLE_ROBOT_INVALID_ARGUMENT), "sample_robot_posture_update", "robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_posture_update", "posture_")
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_posture_update", "robot_")
 
     // Base Motor (Yaw, Z-axis)
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->base_motor_angle);
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 1, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
+        ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+            ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -167,11 +167,11 @@ sample_robot_result_t sample_robot_posture_update(const sample_robot_posture_t* 
     tmp_rotation = vec3f_initialize(0.0f, posture_->shoulder_motor_angle, 0.0f);
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 2, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
+        ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+            ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -179,11 +179,11 @@ sample_robot_result_t sample_robot_posture_update(const sample_robot_posture_t* 
     tmp_rotation = vec3f_initialize(0.0f, posture_->elbow_motor_angle, 0.0f);
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 3, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
+        ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+            ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -191,11 +191,11 @@ sample_robot_result_t sample_robot_posture_update(const sample_robot_posture_t* 
     tmp_rotation = vec3f_initialize(posture_->wrist_motor_angle, 0.0f, 0.0f);
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 4, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
+        ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+            ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -203,11 +203,11 @@ sample_robot_result_t sample_robot_posture_update(const sample_robot_posture_t* 
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->left_finger_angle);
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 5, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
+        ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+            ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -215,17 +215,17 @@ sample_robot_result_t sample_robot_posture_update(const sample_robot_posture_t* 
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->right_finger_angle);
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 6, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-        ret = sample_robot_result_convert_model_framework(ret_model_framework);
+        ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+            ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     robot_->posture = *posture_;
 
-    ret = SAMPLE_ROBOT_SUCCESS;
+    ret = SCENE_SUCCESS;
 
 cleanup:
     return ret;
@@ -246,8 +246,8 @@ void sample_robot_posture_default_get(sample_robot_posture_t* posture_) {
 
 // NOTE: ChatGPT Generated.
 // NOTE: dummyの一時関数なので正式なエラー処理は一旦おいておく
-sample_robot_result_t sample_robot_dummy_config_loader(untextured_model_assembly_config_t** out_config_) {
-    sample_robot_result_t ret = SAMPLE_ROBOT_INVALID_ARGUMENT;
+scene_result_t sample_robot_dummy_config_loader(untextured_model_assembly_config_t** out_config_) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
@@ -308,28 +308,28 @@ sample_robot_result_t sample_robot_dummy_config_loader(untextured_model_assembly
     uint16_t* coordinate_ids = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, SAMPLE_ROBOT_INVALID_ARGUMENT, sample_robot_result_to_str(SAMPLE_ROBOT_INVALID_ARGUMENT), "sample_robot_dummy_config_loader", "out_config_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, SAMPLE_ROBOT_BAD_OPERATION, sample_robot_result_to_str(SAMPLE_ROBOT_BAD_OPERATION), "sample_robot_dummy_config_loader", "*out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_dummy_config_loader", "out_config_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "sample_robot_dummy_config_loader", "*out_config_")
 
     // Prepare.
     ret_general_allocator = general_allocator_allocate(sizeof(*coordinates) * coordinate_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&coordinates);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = sample_robot_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate coordinates.", sample_robot_result_to_str(ret));
+        ret = scene_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate coordinates.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     ret_general_allocator = general_allocator_allocate(sizeof(*untextured_mesh_configs) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&untextured_mesh_configs);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = sample_robot_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate mesh configs.", sample_robot_result_to_str(ret));
+        ret = scene_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate mesh configs.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     ret_general_allocator = general_allocator_allocate(sizeof(*coordinate_ids) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&coordinate_ids);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
-        ret = sample_robot_result_convert_general_allocator(ret_general_allocator);
-        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate mesh coordinate IDs.", sample_robot_result_to_str(ret));
+        ret = scene_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - Failed to allocate mesh coordinate IDs.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -341,11 +341,11 @@ sample_robot_result_t sample_robot_dummy_config_loader(untextured_model_assembly
             vec3f_initialize(coordinate_definitions[i].rotation[0], coordinate_definitions[i].rotation[1], coordinate_definitions[i].rotation[2]),
             &coordinates[i]);
         if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = sample_robot_result_convert_model_framework(ret_model_framework);
+            ret = scene_result_convert_model_framework(ret_model_framework);
             if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+                ret = SCENE_DATA_CORRUPTED;
             }
-            ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - model_coordinate_config_initialize failed (index = %zu).", sample_robot_result_to_str(ret), i);
+            ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - model_coordinate_config_initialize failed (index = %zu).", scene_result_to_str(ret), i);
             goto cleanup;
         }
     }
@@ -366,11 +366,11 @@ sample_robot_result_t sample_robot_dummy_config_loader(untextured_model_assembly
         untextured_mesh_count, &coordinate_ids, &untextured_mesh_configs,
         &tmp_assembly_config);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = sample_robot_result_convert_model_framework(ret_model_framework);
+            ret = scene_result_convert_model_framework(ret_model_framework);
             if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = SAMPLE_ROBOT_DATA_CORRUPTED;
+                ret = SCENE_DATA_CORRUPTED;
             }
-        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - model_assembly_config_create failed.", sample_robot_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_dummy_config_loader(%s) - model_assembly_config_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -378,10 +378,10 @@ sample_robot_result_t sample_robot_dummy_config_loader(untextured_model_assembly
     *out_config_ = tmp_assembly_config;
     tmp_assembly_config = NULL;
 
-    ret = SAMPLE_ROBOT_SUCCESS;
+    ret = SCENE_SUCCESS;
 
 cleanup:
-    if(SAMPLE_ROBOT_DATA_CORRUPTED == ret || SAMPLE_ROBOT_SUCCESS == ret) {
+    if(SCENE_DATA_CORRUPTED == ret || SCENE_SUCCESS == ret) {
         return ret;
     }
     // createが成功していれば上でOutputして終了する。以下は失敗時の局所Rollback。
