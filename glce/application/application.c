@@ -69,7 +69,7 @@
 
 // Demos
 #include "application/demos/core/scene_types.h"
-#include "application/demos/sample_robot/sample_robot_demo.h"
+#include "application/demos/sample_robot/sample_robot.h"
 #include "application/demos/stl_viewer/stl_viewer.h"
 
 typedef enum {
@@ -104,27 +104,15 @@ typedef struct application_state {
     event_system_t* event_system;
     const engine_event_view_t* engine_event_view;
 
-    // Camera System
-    // application_flight_camera_t* flight_camera;
-
-    // Light
-    directional_light_t directional_light;
-    ambient_light_t ambient_light;
-
     // Renderer System
     renderer_frontend_config_t renderer_frontend_config;
     renderer_frontend_t* renderer_frontend;
 
     // Frame State
     application_frame_state_t frame_state;
-    mat4x4f_t projection_matrix;
-    mat4x4f_t view_matrix;
-
-    // Render Packet
-    render_packet_t* render_packet;
 
     // Demo scenes
-    sample_robot_demo_t* sample_robot_demo;
+    sample_robot_t* sample_robot_demo;
     stl_viewer_t* stl_viewer_demo;
 } application_state_t;
 
@@ -132,13 +120,7 @@ static const application_demo_type_t s_demo_type = APPLICATION_DEMO_TYPE_SAMPLE_
 static application_state_t* s_application_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
 // Frame Orchestration.
-// static application_result_t app_state_update(void);
-static application_result_t scene_initialize(void);
-static application_result_t scene_update(float delta_time_);
-static application_result_t scene_render_packet_build(void);
 static application_result_t application_events_update(void);
-// static application_result_t application_camera_update(void);
-static application_result_t application_renderer_update(void);
 
 // Subsystem Configuration.
 static void platform_system_config_initialize(platform_system_config_t* config_);
@@ -156,20 +138,17 @@ application_result_t application_create(void) {
     event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
-    light_result_t ret_light_result = LIGHT_INVALID_ARGUMENT;
-    render_packet_result_t ret_render_packet = RENDER_PACKET_INVALID_ARGUMENT;
     scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
 
     application_state_t* tmp_state = NULL;
     subsystem_allocator_t* tmp_subsystem_allocator = NULL;
     platform_system_t* tmp_platform_system = NULL;
-    render_packet_t* tmp_render_packet = NULL;
     renderer_frontend_t* tmp_renderer_frontend = NULL;
-    // application_flight_camera_t* tmp_flight_camera = NULL;
-    sample_robot_demo_t* tmp_sample_robot_demo = NULL;
     event_system_t* tmp_event_system = NULL;
     fs_path_t* tmp_executable_directory = NULL;
     fs_path_t* tmp_asset_root_path = NULL;
+
+    sample_robot_t* tmp_sample_robot_demo = NULL;
     stl_viewer_t* tmp_stl_viewer_demo = NULL;
 
     size_t subsystem_memory_pool_size = 0;
@@ -231,34 +210,6 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("Event system created successfully.");
 
-    // Camera / Lighting.
-    // INFO_MESSAGE("Creating flight camera system...");
-    // ret = application_flight_camera_create(8, tmp_subsystem_allocator, tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_flight_camera);
-    // if(APPLICATION_SUCCESS != ret) {
-    //     ERROR_MESSAGE("application_create(%s) - application_flight_camera_create failed.", application_result_to_str(ret));
-    //     goto cleanup;
-    // }
-    // INFO_MESSAGE("Flight camera system created successfully.");
-
-    INFO_MESSAGE("Creating directional light...");
-    // NOTE: 設定値の意味
-    // direction: 正面から少し斜め上の光で、面の違いが見やすい
-    // color: 白色光。色による影響を除外できる
-    // intensity: 明るさの計算と結果を比較しやすい
-    ret_light_result = directional_light_initialize(vec3f_initialize(0.4f, 0.8f, 1.0f), vec3f_initialize(1.0f, 1.0f, 1.0f), 1.0f, &tmp_state->directional_light);
-    if(LIGHT_SUCCESS != ret_light_result) {
-        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
-        ERROR_MESSAGE("application_create(%s) - directional_light_initialize failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_light_result = ambient_light_initialize(vec3f_initialize(1.0f, 1.0f, 1.0f), 1.0f, &tmp_state->ambient_light);
-    if(LIGHT_SUCCESS != ret_light_result) {
-        ret = APPLICATION_RUNTIME_ERROR;    // TODO: エラーコード変換
-        ERROR_MESSAGE("application_create(%s) - ambient_light_initialize failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("Directional light created successfully.");
-
     // Renderer System.
     INFO_MESSAGE("Creating renderer frontend...");
     renderer_frontend_config_initialize(&tmp_state->renderer_frontend_config);
@@ -279,13 +230,13 @@ application_result_t application_create(void) {
     switch(s_demo_type) {
     case APPLICATION_DEMO_TYPE_SAMPLE_ROBOT:
         INFO_MESSAGE("Creating sample robot demo...");
-        ret_scene = sample_robot_demo_create(tmp_renderer_frontend, fs_path_fullpath_get(tmp_asset_root_path), tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_sample_robot_demo);
+        ret_scene = sample_robot_create(tmp_renderer_frontend, fs_path_fullpath_get(tmp_asset_root_path), tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_sample_robot_demo);
         if(SCENE_SUCCESS != ret_scene) {
             ret = application_result_convert_scene(ret_scene);
             if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
-            ERROR_MESSAGE("application_create(%s) - sample_robot_demo_create failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
             goto cleanup;
         }
         INFO_MESSAGE("Sample robot demo created successfully.");
@@ -309,19 +260,6 @@ application_result_t application_create(void) {
         goto cleanup;
     }
 
-    // Render packet
-    INFO_MESSAGE("Creating render packet...");
-    ret_render_packet = render_packet_create(16 * MIB, &tmp_render_packet);
-    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-        ret = application_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = APPLICATION_DATA_CORRUPTED;
-        }
-        ERROR_MESSAGE("application_create(%s) - render_packet_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("Render packet created successfully.");
-
     ret = application_diagnostics_status_report(tmp_subsystem_allocator);
     if(APPLICATION_SUCCESS != ret) {
         ERROR_MESSAGE("application_create(%s) - application_diagnostics_status_report failed.", application_result_to_str(ret));
@@ -331,9 +269,7 @@ application_result_t application_create(void) {
     // Commit.
     tmp_state->platform_system = tmp_platform_system;
     tmp_state->subsystem_allocator = tmp_subsystem_allocator;
-    tmp_state->render_packet = tmp_render_packet;
     tmp_state->renderer_frontend = tmp_renderer_frontend;
-    // tmp_state->flight_camera = tmp_flight_camera;
     tmp_state->sample_robot_demo = tmp_sample_robot_demo;
     tmp_state->asset_root_path = tmp_asset_root_path;
     tmp_state->executable_directory = tmp_executable_directory;
@@ -344,9 +280,7 @@ application_result_t application_create(void) {
     tmp_state = NULL;
     tmp_subsystem_allocator = NULL;
     tmp_platform_system = NULL;
-    tmp_render_packet = NULL;
     tmp_renderer_frontend = NULL;
-    // tmp_flight_camera = NULL;
     tmp_sample_robot_demo = NULL;
     tmp_event_system = NULL;
     tmp_executable_directory = NULL;
@@ -360,21 +294,15 @@ cleanup:
     if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
         return ret;
     }
-    if(NULL != tmp_render_packet) {
-        render_packet_destroy(&tmp_render_packet);
-    }
     if(NULL != tmp_stl_viewer_demo && NULL != tmp_renderer_frontend) {
         stl_viewer_destroy(tmp_renderer_frontend, &tmp_stl_viewer_demo);
     }
     if(NULL != tmp_sample_robot_demo && NULL != tmp_renderer_frontend) {
-        sample_robot_demo_destroy(tmp_renderer_frontend, &tmp_sample_robot_demo);
+        sample_robot_destroy(tmp_renderer_frontend, &tmp_sample_robot_demo);
     }
     if(NULL != tmp_renderer_frontend) {
         renderer_frontend_deinitialize(tmp_renderer_frontend);
     }
-    // if(NULL != tmp_flight_camera) {
-    //     application_flight_camera_deinitialize(tmp_flight_camera);
-    // }
     if(NULL != tmp_event_system) {
         event_system_deinitialize(tmp_event_system);
     }
@@ -404,21 +332,15 @@ void application_destroy(void) {
         goto cleanup;
     }
 
-    if(NULL != s_application_state->render_packet) {
-        render_packet_destroy(&s_application_state->render_packet);
-    }
     if(NULL != s_application_state->stl_viewer_demo) {
         stl_viewer_destroy(s_application_state->renderer_frontend, &s_application_state->stl_viewer_demo);
     }
     if(NULL != s_application_state->sample_robot_demo) {
-        sample_robot_demo_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_demo);
+        sample_robot_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_demo);
     }
     if(NULL != s_application_state->renderer_frontend) {
         renderer_frontend_deinitialize(s_application_state->renderer_frontend);
     }
-    // if(NULL != s_application_state->flight_camera) {
-    //     application_flight_camera_deinitialize(s_application_state->flight_camera);
-    // }
     if(NULL != s_application_state->event_system) {
         event_system_deinitialize(s_application_state->event_system);
     }
@@ -446,7 +368,7 @@ cleanup:
 application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
 
-    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+    scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
 
     struct timespec  req = {0, 1000000};
     const float demo_delta_time = 1.0f / 60.0f; // 暫定固定値
@@ -458,39 +380,6 @@ application_result_t application_run(void) {
     }
 
     glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
-
-    ret = scene_initialize();
-    if(APPLICATION_SUCCESS != ret) {
-        ERROR_MESSAGE("application_run(%s) - scene_initialize failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // // MVP Matrix
-    // mat4f_identity(&s_application_state->projection_matrix);
-    // mat4f_identity(&s_application_state->view_matrix);
-
-    // ret = application_flight_camera_perspective_matrix_get(s_application_state->flight_camera, &s_application_state->projection_matrix);
-    // if(APPLICATION_SUCCESS != ret) {
-    //     ERROR_MESSAGE("application_run(%s) - application_flight_camera_perspective_matrix_get failed.", application_result_to_str(ret));
-    //     goto cleanup;
-    // }
-
-    // ret = application_flight_camera_view_matrix_get(s_application_state->flight_camera, &s_application_state->view_matrix);
-    // if(APPLICATION_SUCCESS != ret) {
-    //     ERROR_MESSAGE("application_run(%s) - application_flight_camera_view_matrix_get failed.", application_result_to_str(ret));
-    //     goto cleanup;
-    // }
-
-    // application_frame_state_begin_frame(&s_application_state->frame_state);
-    // s_application_state->frame_state.projection_dirty = true;
-    // s_application_state->frame_state.view_dirty = true;
-    // s_application_state->frame_state.window_resized = true;
-    // ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
-    // if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-    //     ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-    //     ERROR_MESSAGE("application_run(%s) - renderer_frontend_untextured_mesh_render_update failed.", application_result_to_str(ret));
-    //     goto cleanup;
-    // }
 
     // TODO: window NULLチェック
     while(!s_application_state->window_should_close) {
@@ -510,20 +399,6 @@ application_result_t application_run(void) {
             goto cleanup;
         }
 
-        // Demo Update.
-        ret = scene_update(demo_delta_time);
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - scene_update failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        // Renderer Update.
-        ret = application_renderer_update();
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - application_renderer_update failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
         // Diagnostics.
         if(s_application_state->frame_state.runtime_status_report_requested) {
             ret = application_diagnostics_status_report(s_application_state->subsystem_allocator);
@@ -533,6 +408,17 @@ application_result_t application_run(void) {
             }
         } else if(s_application_state->frame_state.validation_report_requested) {
             WARN_MESSAGE("application_run(%s) - not impremented yet...");
+        }
+
+        // Scene Update.
+        ret_scene = sample_robot_update(s_application_state->sample_robot_demo, s_application_state->engine_event_view, demo_delta_time, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
+                ret = APPLICATION_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("application_run(%s) - sample_robot_update failed.", application_result_to_str(ret));
+            goto cleanup;
         }
 
         // Render Frame.
@@ -545,253 +431,20 @@ application_result_t application_run(void) {
         glEnable(GL_DEPTH_TEST);
         glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
 
-        // TODO: scene_render_packet_build整理
-        // if(APPLICATION_DEMO_TYPE_SAMPLE_ROBOT == s_demo_type) {
-        //     ret = scene_render_packet_build(s_application_state->sample_robot_demo, s_application_state->render_packet);
-        //     if(APPLICATION_SUCCESS != ret) {
-        //         ERROR_MESSAGE("application_run(%s) - scene_render_packet_build failed.", application_result_to_str(ret));
-        //         goto cleanup;
-        //     }
-        // } else if(APPLICATION_DEMO_TYPE_STL_VIEWER == s_demo_type) {
-        //     ret_scene = stl_viewer_render_packet_build(s_application_state->stl_viewer_demo, s_application_state->render_packet);
-        //     if(SCENE_SUCCESS != ret_scene) {
-        //         ret = application_result_convert_scene(ret_scene);
-        //         if(SCENE_INVALID_ARGUMENT == ret_scene) {
-        //             ret = APPLICATION_DATA_CORRUPTED;
-        //         }
-        //         ERROR_MESSAGE("application_run(%s) - stl_viewer_render_packet_build failed.", application_result_to_str(ret));
-        //         goto cleanup;
-        //     }
-        // }
-
-        ret = scene_render_packet_build();
-        if(APPLICATION_SUCCESS != ret) {
-            ERROR_MESSAGE("application_run(%s) - scene_render_packet_build failed. continuer...", application_result_to_str(ret));
-            continue;
-        }
-
-        ret_renderer_frontend = renderer_frontend_draw_packet(s_application_state->render_packet, s_application_state->renderer_frontend);
-        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-            ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-            if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
+        ret_scene = sample_robot_draw(s_application_state->sample_robot_demo, s_application_state->renderer_frontend);
+        if(SCENE_SUCCESS != ret_scene) {
+            ret = application_result_convert_scene(ret_scene);
+            if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
-                ERROR_MESSAGE("application_run(%s) - renderer_frontend_draw_packet failed.", application_result_to_str(ret));
-                goto cleanup;
             }
-            ERROR_MESSAGE("application_run(%s) - renderer_frontend_draw_packet failed.", application_result_to_str(ret));
-            continue;
+            ERROR_MESSAGE("application_run(%s) - sample_robot_draw failed.", application_result_to_str(ret));
+            goto cleanup;
         }
 
         platform_system_swap_buffers(s_application_state->platform_system);
 
         nanosleep(&req, NULL);
     }
-cleanup:
-    return ret;
-}
-
-// static application_result_t app_state_update(void) {
-//     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-//     // Preconditions.
-//     if(NULL == s_application_state) {
-//         ret = APPLICATION_BAD_OPERATION;
-//         ERROR_MESSAGE("app_state_update(%s) - Application state is not initialized.", application_result_to_str(ret));
-//         goto cleanup;
-//     }
-
-//     ret = application_events_update();
-//     if(APPLICATION_SUCCESS != ret) {
-//         ERROR_MESSAGE("app_state_update(%s) - application_events_update failed.", application_result_to_str(ret));
-//         goto cleanup;
-//     }
-
-    // ret = application_camera_update();
-    // if(APPLICATION_SUCCESS != ret) {
-    //     ERROR_MESSAGE("app_state_update(%s) - application_camera_update failed.", application_result_to_str(ret));
-    //     goto cleanup;
-    // }
-
-    // Diagnostics.
-//     ret = application_diagnostics_update(&s_application_state->diag_config, s_application_state->engine_event_view, &s_application_state->frame_state);
-//     if(APPLICATION_SUCCESS != ret) {
-//         ERROR_MESSAGE("app_state_update(%s) - application_diagnostics_update failed.", application_result_to_str(ret));
-//         goto cleanup;
-//     }
-
-//     // Postconditions.
-// #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-//     if(!application_frame_state_is_valid(&s_application_state->frame_state)) {
-//         ret = APPLICATION_DATA_CORRUPTED;
-//         ERROR_MESSAGE("app_state_update(%s) - Postcondition validation failed for 's_application_state->frame_state'.", application_result_to_str(ret));
-//         goto cleanup;
-//     }
-// #endif
-
-// cleanup:
-//     return ret;
-// }
-
-static application_result_t scene_initialize() {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
-
-    if(NULL == s_application_state) {
-        ret = APPLICATION_BAD_OPERATION;
-        ERROR_MESSAGE("scene_initialize(%s) - Application state is not initialized.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    switch(s_demo_type) {
-    case APPLICATION_DEMO_TYPE_SAMPLE_ROBOT:
-        ret_scene = sample_robot_demo_view_matrix_get(s_application_state->sample_robot_demo, &s_application_state->view_matrix);
-        if(SCENE_SUCCESS != ret_scene) {
-            ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("scene_initialize(%s) - sample_robot_demo_view_matrix_get failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_scene = sample_robot_demo_perspective_matrix_get(s_application_state->sample_robot_demo, &s_application_state->projection_matrix);
-        if(SCENE_SUCCESS != ret_scene) {
-            ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("scene_initialize(%s) - sample_robot_demo_perspective_matrix_get failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        break;
-    case APPLICATION_DEMO_TYPE_STL_VIEWER:
-        break;
-    default:
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("scene_initialize(%s) - Invalid demo type.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-static application_result_t scene_update(float delta_time_) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
-
-    bool view_changed = false;
-    bool projection_changed = false;
-
-    if(NULL == s_application_state) {
-        ret = APPLICATION_BAD_OPERATION;
-        ERROR_MESSAGE("scene_update(%s) - Application state is not initialized.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    switch(s_demo_type) {
-    case APPLICATION_DEMO_TYPE_SAMPLE_ROBOT:
-        ret_scene = sample_robot_demo_posture_update(delta_time_, s_application_state->sample_robot_demo);
-        if(SCENE_SUCCESS != ret_scene) {
-            ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("scene_update(%s) - sample_robot_demo_posture_update failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        ret_scene = sample_robot_demo_view_update(
-            s_application_state->sample_robot_demo,
-            s_application_state->engine_event_view,
-            delta_time_,
-            s_application_state->frame_state.window_resized,
-            s_application_state->frame_state.framebuffer_width,
-            s_application_state->frame_state.framebuffer_height,
-            &view_changed, &projection_changed);
-        if(SCENE_SUCCESS != ret_scene) {
-            ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("scene_update(%s) - sample_robot_demo_view_update failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-
-        if(view_changed) {
-            ret_scene = sample_robot_demo_view_matrix_get(s_application_state->sample_robot_demo, &s_application_state->view_matrix);
-            if(SCENE_SUCCESS != ret_scene) {
-                ret = application_result_convert_scene(ret_scene);
-                if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                    ret = APPLICATION_DATA_CORRUPTED;
-                }
-                ERROR_MESSAGE("scene_update(%s) - sample_robot_demo_view_matrix_get failed.", application_result_to_str(ret));
-                goto cleanup;
-            }
-        }
-        if(projection_changed) {
-            ret_scene = sample_robot_demo_perspective_matrix_get(s_application_state->sample_robot_demo, &s_application_state->projection_matrix);
-            if(SCENE_SUCCESS != ret_scene) {
-                ret = application_result_convert_scene(ret_scene);
-                if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                    ret = APPLICATION_DATA_CORRUPTED;
-                }
-                ERROR_MESSAGE("scene_update(%s) - sample_robot_demo_perspective_matrix_get failed.", application_result_to_str(ret));
-                goto cleanup;
-            }
-        }
-
-        break;
-    case APPLICATION_DEMO_TYPE_STL_VIEWER:
-        break;
-    default:
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("scene_update(%s) - Invalid demo type.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    s_application_state->frame_state.view_dirty = view_changed;
-    s_application_state->frame_state.projection_dirty = projection_changed;
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
-static application_result_t scene_render_packet_build(void) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
-
-    if(APPLICATION_DEMO_TYPE_SAMPLE_ROBOT == s_demo_type) {
-        ret_scene = sample_robot_demo_render_packet_build(s_application_state->sample_robot_demo, s_application_state->render_packet);
-        if(SCENE_SUCCESS != ret_scene) {
-            ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("scene_render_packet_build(%s) - sample_robot_demo_render_packet_build failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-    } else if(APPLICATION_DEMO_TYPE_STL_VIEWER == s_demo_type) {
-        ret_scene = stl_viewer_render_packet_build(s_application_state->stl_viewer_demo, s_application_state->render_packet);
-        if(SCENE_SUCCESS != ret_scene) {
-            ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("scene_render_packet_build(%s) - stl_viewer_render_packet_build failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-    }
-
-    ret = APPLICATION_SUCCESS;
-
 cleanup:
     return ret;
 }
@@ -831,77 +484,6 @@ static application_result_t application_events_update(void) {
 cleanup:
     return ret;
 }
-
-// static application_result_t application_camera_update(void) {
-//     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-//     if(NULL == s_application_state) {
-//         ret = APPLICATION_BAD_OPERATION;
-//         ERROR_MESSAGE("application_camera_update(%s) - Application state is not initialized.", application_result_to_str(ret));
-//         goto cleanup;
-//     }
-
-//     // Camera System.
-//     //   Camera command execution
-//     //   View / Projection matrices
-//     ret = application_flight_camera_update(s_application_state->flight_camera, 0.1f, 1.0f, s_application_state->engine_event_view, &s_application_state->frame_state);
-//     if(APPLICATION_SUCCESS != ret) {
-//         ERROR_MESSAGE("application_camera_update(%s) - application_flight_camera_update failed.", application_result_to_str(ret));
-//         goto cleanup;
-//     }
-
-//     ret = application_flight_camera_view_matrix_get(s_application_state->flight_camera, &s_application_state->view_matrix);
-//     if(APPLICATION_SUCCESS != ret) {
-//         ERROR_MESSAGE("application_camera_update(%s) - application_flight_camera_view_matrix_get failed.", application_result_to_str(ret));
-//         goto cleanup;
-//     }
-
-//     ret = application_flight_camera_perspective_matrix_get(s_application_state->flight_camera, &s_application_state->projection_matrix);
-//     if(APPLICATION_SUCCESS != ret) {
-//         ERROR_MESSAGE("application_camera_update(%s) - application_flight_camera_perspective_matrix_get failed.", application_result_to_str(ret));
-//         goto cleanup;
-//     }
-
-//     ret = APPLICATION_SUCCESS;
-
-// cleanup:
-//     return ret;
-// }
-
-static application_result_t application_renderer_update(void) {
-    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
-
-    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
-
-    if(NULL == s_application_state) {
-        ret = APPLICATION_BAD_OPERATION;
-        ERROR_MESSAGE("application_renderer_update(%s) - Application state is not initialized.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // Renderer State.
-    //   Untextured Mesh
-    //   Line Mesh
-    ret_renderer_frontend = renderer_frontend_untextured_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix, &s_application_state->directional_light, &s_application_state->ambient_light);
-    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-        ERROR_MESSAGE("application_renderer_update(%s) - renderer_frontend_untextured_mesh_render_update failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_renderer_frontend = renderer_frontend_line_mesh_render_update(s_application_state->renderer_frontend, &s_application_state->view_matrix, &s_application_state->projection_matrix);
-    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-        ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
-        ERROR_MESSAGE("application_renderer_update(%s) - renderer_frontend_line_mesh_render_update failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret = APPLICATION_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
 
 static void platform_system_config_initialize(platform_system_config_t* config_) {
     config_->max_keyboard_event_count = KEY_CODE_MAX;

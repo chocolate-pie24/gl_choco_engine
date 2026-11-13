@@ -217,3 +217,22 @@ scene_result_t scene_result_convert_camera(camera_result_t result_) {
         return SCENE_UNDEFINED_ERROR;
     }
 }
+
+scene_result_t scene_result_convert_light(light_result_t result_) {
+    switch(result_) {
+    case LIGHT_SUCCESS:
+        return SCENE_SUCCESS;
+    case LIGHT_INVALID_ARGUMENT:
+        return SCENE_INVALID_ARGUMENT;
+    case LIGHT_RUNTIME_ERROR:
+        return SCENE_RUNTIME_ERROR;
+    case LIGHT_BAD_OPERATION:
+        return SCENE_BAD_OPERATION;
+    case LIGHT_DATA_CORRUPTED:
+        return SCENE_DATA_CORRUPTED;
+    case LIGHT_UNDEFINED_ERROR:
+        return SCENE_UNDEFINED_ERROR;
+    default:
+        return SCENE_UNDEFINED_ERROR;
+    }
+}
