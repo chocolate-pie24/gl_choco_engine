@@ -116,7 +116,7 @@ typedef struct application_state {
     stl_viewer_t* stl_viewer_demo;
 } application_state_t;
 
-static const application_demo_type_t s_demo_type = APPLICATION_DEMO_TYPE_SAMPLE_ROBOT;
+static const application_demo_type_t s_demo_type = APPLICATION_DEMO_TYPE_STL_VIEWER;
 static application_state_t* s_application_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
 // Frame Orchestration.
@@ -411,13 +411,22 @@ application_result_t application_run(void) {
         }
 
         // Scene Update.
-        ret_scene = sample_robot_update(s_application_state->sample_robot_demo, s_application_state->engine_event_view, demo_delta_time, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
+        // ret_scene = sample_robot_update(s_application_state->sample_robot_demo, s_application_state->engine_event_view, demo_delta_time, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
+        // if(SCENE_SUCCESS != ret_scene) {
+        //     ret = application_result_convert_scene(ret_scene);
+        //     if(SCENE_INVALID_ARGUMENT == ret_scene) {
+        //         ret = APPLICATION_DATA_CORRUPTED;
+        //     }
+        //     ERROR_MESSAGE("application_run(%s) - sample_robot_update failed.", application_result_to_str(ret));
+        //     goto cleanup;
+        // }
+        ret_scene = stl_viewer_update(s_application_state->stl_viewer_demo, s_application_state->engine_event_view, demo_delta_time, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
         if(SCENE_SUCCESS != ret_scene) {
             ret = application_result_convert_scene(ret_scene);
             if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
-            ERROR_MESSAGE("application_run(%s) - sample_robot_update failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("application_run(%s) - stl_viewer_update failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
@@ -431,13 +440,22 @@ application_result_t application_run(void) {
         glEnable(GL_DEPTH_TEST);
         glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
 
-        ret_scene = sample_robot_draw(s_application_state->sample_robot_demo, s_application_state->renderer_frontend);
+        // ret_scene = sample_robot_draw(s_application_state->sample_robot_demo, s_application_state->renderer_frontend);
+        // if(SCENE_SUCCESS != ret_scene) {
+        //     ret = application_result_convert_scene(ret_scene);
+        //     if(SCENE_INVALID_ARGUMENT == ret_scene) {
+        //         ret = APPLICATION_DATA_CORRUPTED;
+        //     }
+        //     ERROR_MESSAGE("application_run(%s) - sample_robot_draw failed.", application_result_to_str(ret));
+        //     goto cleanup;
+        // }
+        ret_scene = stl_viewer_draw(s_application_state->stl_viewer_demo, s_application_state->renderer_frontend);
         if(SCENE_SUCCESS != ret_scene) {
             ret = application_result_convert_scene(ret_scene);
             if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
-            ERROR_MESSAGE("application_run(%s) - sample_robot_draw failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("application_run(%s) - stl_viewer_draw failed.", application_result_to_str(ret));
             goto cleanup;
         }
 

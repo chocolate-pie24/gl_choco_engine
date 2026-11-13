@@ -405,7 +405,7 @@ scene_result_t sample_robot_update(
         ret_camera = flight_camera_command_update(sample_robot_->flight_camera, &event_view_->keyboard_events[i]);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = scene_result_convert_camera(ret_camera);
-            ERROR_MESSAGE("sample_robot_view_update(%s) - flight_camera_command_update failed.", scene_result_to_str(ret));
+            ERROR_MESSAGE("sample_robot_update(%s) - flight_camera_command_update failed.", scene_result_to_str(ret));
             goto cleanup;
         }
     }
@@ -413,7 +413,7 @@ scene_result_t sample_robot_update(
     ret_camera = flight_camera_command_execute(sample_robot_->flight_camera, sample_robot_->camera_speed, delta_time_, &view_changed);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = scene_result_convert_camera(ret_camera);
-        ERROR_MESSAGE("sample_robot_view_update(%s) - flight_camera_command_execute failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_update(%s) - flight_camera_command_execute failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -422,7 +422,7 @@ scene_result_t sample_robot_update(
         ret_camera = flight_camera_viewing_frustum_update(sample_robot_->flight_camera, s_default_fovy, aspect, s_default_near_clip, s_default_far_clip);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = scene_result_convert_camera(ret_camera);
-            ERROR_MESSAGE("sample_robot_view_update(%s) - flight_camera_viewing_frustum_update failed.", scene_result_to_str(ret));
+            ERROR_MESSAGE("sample_robot_update(%s) - flight_camera_viewing_frustum_update failed.", scene_result_to_str(ret));
             goto cleanup;
         }
         projection_changed = true;
@@ -432,7 +432,7 @@ scene_result_t sample_robot_update(
         ret_camera = flight_camera_view_matrix_get(sample_robot_->flight_camera, &sample_robot_->view_matrix);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = scene_result_convert_camera(ret_camera);
-            ERROR_MESSAGE("sample_robot_draw(%s) - flight_camera_view_matrix_get failed.", scene_result_to_str(ret));
+            ERROR_MESSAGE("sample_robot_update(%s) - flight_camera_view_matrix_get failed.", scene_result_to_str(ret));
             goto cleanup;
         }
     }
@@ -441,7 +441,7 @@ scene_result_t sample_robot_update(
         ret_camera = flight_camera_perspective_matrix_get(sample_robot_->flight_camera, &sample_robot_->projection_matrix);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = scene_result_convert_camera(ret_camera);
-            ERROR_MESSAGE("sample_robot_draw(%s) - flight_camera_perspective_matrix_get failed.", scene_result_to_str(ret));
+            ERROR_MESSAGE("sample_robot_update(%s) - flight_camera_perspective_matrix_get failed.", scene_result_to_str(ret));
             goto cleanup;
         }
     }

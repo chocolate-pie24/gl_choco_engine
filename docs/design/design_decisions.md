@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-08
+最終更新: 2026-11-13
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -491,7 +491,9 @@ Flight Camera設計時点では、将来別Camera種別を追加する可能性�
 
 ## Decision: Camera identityはRegistry、active selectionとkeybinding policyはApplicationが所有する
 
-**Status:** Accepted  
+**Status:** Partially Superseded（Camera identity分離は維持、active selection / keybinding policyのOwnerを2026-11-13にSceneへ移管）  
+**Update (2026-11-13):** Active Cameraの選択・Key Binding・Camera操作・Resizeへの反映は、現在のScene構造では各Sceneが所有するPolicyへ移行した。Sample Robot Sceneは`flight_camera_t`を直接生成・所有し、Flight Camera Registryを介さずに利用する。Registryを使用する場合のresource identity / ownership authorityの分離、およびConcrete Camera自身へactive selectionや具体的Key Layoutを埋め込まない原則は維持する。以下の「Application owns」は2026-09-07時点の構造を記録したものであり、現行Sample RobotのStorage Ownerを表さない。
+
 **Date:** 2026-09-07  
 **Scope:** Camera / Identity / Application Policy
 
@@ -842,7 +844,9 @@ Application内部に一時的にEngine-likeなfacade / service / orchestration m
 
 ## Decision: Application Frame Stateをframe-local coordination stateとする
 
-**Status:** Accepted  
+**Status:** Partially Superseded（frame-local coordinationの基本方針は維持。Camera / Renderer間のdirty signal伝搬は2026-11-13にSample Robotで廃止）  
+**Update (2026-11-13):** Frame StateをApplicationが所有し、framebuffer sizeやwindow resize等のApplication側coordinationを扱う方針は維持する。ただしSample RobotのCamera操作・View / Projection Matrix反映はScene内部へ移行したため、`projection_dirty` / `view_dirty`をApplication Frame State経由でRendererへ伝搬する従来の経路は、現行Sample Robotでは使用しない。両FieldがSourceに残っていることと、Frame Stateに置く設計上の必要性とは区別する。Frame StateのField削除・最終的な簡素化は後続のリファクタリングで検討する。
+
 **Date:** 2026-09-13  
 **Scope:** Application / Frame Coordination
 
@@ -3866,7 +3870,9 @@ Loaderが成功した後の`untextured_material_config_t`には、すべてのfi
 ## Decision: Ambient LightとDirectional Lightを独立したLight Valueとして扱う
 
 **Date:** 2026-10-14  
-**Status:** Accepted / Implemented  
+**Status:** Accepted / Partially Superseded（Light Value仕様は維持。Ownerを2026-11-13にSceneへ移管）  
+**Update (2026-11-13):** 2つの独立したLight Value、各Initializer / Validator、Phong LightingのSemanticsは維持する。所有者だけを更新し、現行Sample RobotではSceneが`directional_light_t`と`ambient_light_t`を保持・初期化し、`draw()`でRenderer Frontendへ渡す。下記の「Applicationが各Lightを1つ保持」は当時の実装履歴であり、Scene共通の現行Ownership Contractではない。STL ViewerにおけるLightの実装は同Sceneの独立化時に確定する。
+
 **Scope:** Engine Light / Untextured Mesh Lighting / Application State
 
 ### Decision
@@ -4470,7 +4476,9 @@ Meshは描画Resourceの組合せ、Coordinateは空間的基準、Modelは両�
 
 ## Decision: Render PacketをShader別Draw Collectionとし、Model連携を先に検証してからOrchestrationを抽出する
 
-**Status:** Accepted / Deferred（Packetの方向性は候補として維持。2026-10-27のMesh + Matrix直接Draw成立により、Packet導入は必須前提としない）  
+**Status:** Accepted / Partially Implemented（Sample RobotのPacket描画経路は成立、他Sceneへの展開と共通化は未確定）  
+**Update (2026-11-13):** Render Packetは現在Engine側Moduleとして実装され、Sample Robot Sceneでは自身がPacketを所有し、`draw()`内でDraw Requestを構築してRenderer Frontendへ渡す経路が成立した。Shader / Mesh種別ごとのCollectionと、Mesh + Matrixを用いるRenderer Boundaryという基本方針を維持する。2026-10-27時点の「未実装・将来候補」は当時の履歴である。ただしSTL Viewerへの展開、Scene間共通化、Packetの容量管理・Frame Storage・Render Pass等は今回確定しない。
+
 **Update (2026-10-27):** Render Packetの将来のCollection案は維持する。一方、2026-10-27の静止Robot描画はFrontendのMesh + Matrix Drawで成立したため、PacketがModel描画の前提条件であるかのようには扱わない。
 **Date:** 2026-10-16  
 **Scope:** Renderer / Render Packet / Model Integration / Application Prototyping / Configuration / Module Extraction
@@ -5834,6 +5842,8 @@ Untexturedの単独Drawが成功した時点でLine / Point / UIを一括してF
 ## Decision: 個体姿勢から描画Matrixへの変換はApplication固有Moduleが担当し、Render PacketをFrontendの入力境界とする
 
 **Status:** Partially Superseded（機種固有PostureのApplication所有を維持。汎用Matrix取得とFrontend Draw入力は2026-10-27 Decisionで更新）  
+**Update (2026-11-13):** このDecisionで未実装としていたRender Packetは、現在Sample Robot Sceneで所有・構築・Drawへの入力として利用されている。機種固有PostureをApplication側のModel Moduleが解釈し、Renderer FrontendへRobot固有Semanticsを持ち込まない原則は維持する。旧記述の「ApplicationがPacketを構築」はApplication Layer内のSceneが担当する形へ具体化した。
+
 **Update (2026-10-27):** 汎用的な階層World Matrixは現在のRender Model Getterが計算し、Renderer FrontendはMeshとMatrixを直接受け取る。Robot固有の関節の意味はApplicationに維持する。Render Packetは未実装の将来候補であり、現行描画の必須Interfaceではない。
 **Date:** 2026-10-24  
 **Scope:** Application Model / Posture / Model Transform Tree / Render Packet / Renderer Frontend / Future Render Pass
@@ -6579,6 +6589,8 @@ FrontendがMesh単位のImportを公開すれば、Application側のModel Pipeli
 ## Decision: Modelの組立図・Resource参照Map・個体状態を概念分離し、型名とApplication内の命名を再編する
 
 **Status:** Partially Superseded（組立図・Resource Map・個体の概念分離と型名は維持。Resource Mapの責務、ConfigのLifetime、Model Pipelineの扱いを2026-10-30 Decisionで更新）  
+**Update (2026-11-13):** Sceneの独立化により`sample_robot_demo_t`は`sample_robot_t`（Scene）へ、以前の機体個体`sample_robot_t`は`sample_robot_model_t`へ改名した。以下に残る旧`sample_robot_t`という型名は2026-10-28当時の機体個体を指す。組立図・Resource Map・独立した個体状態の三者分離は維持する。
+
 **Update (2026-10-30):** 命名と三者分離は採用したが、当初却下した「Resource Mapで初期Transform Treeを保持し、RobotへCloneする」案を再評価して採用した。さらにCoordinate BindingのRuntime用コピーをMapが保持し、ConfigをMap生成直後に破棄可能とした。独立Model Pipelineも廃止。以下の「MapはCoordinate IDを持たない」「TreeはRobotがConfigから生成する」「Configを描画時まで保持する」とする記述は2026-10-28時点の履歴であり、現行仕様ではない。  
 **Update (2026-11-02):** Config / Map / Instanceの概念分離と2026-10-30更新後のLifetimeを維持。2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」でScene固有InstanceをFramework外へ移し、2026-11-02「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」でModel内の通常Mesh種類とDirectoryを再定義する。過去の全Mesh種別横展開・旧Directoryは履歴として保持する。  
 **Date:** 2026-10-28  
@@ -6724,6 +6736,8 @@ sample_robot_create(&sample_robot_assembly, &arm_robot);
 ## Decision: Model Assembly Configを「組立図」、Resource Mapを「製造準備済みの共有定義」、Robotを「個別の実機」とする
 
 **Status:** Accepted / Partially Superseded（Config / Map / Instanceの三者分離とLifecycleは維持。全Mesh種別への横展開・Directory構成は2026-11-02 Decisionで更新）  
+**Update (2026-11-13):** このDecisionで機体個体を指した`sample_robot_t` / `sample_robot_create()`は、Scene独立化後の実装ではそれぞれ`sample_robot_model_t` / `sample_robot_model_create()`に改名した。現行`sample_robot_t`はSample Robot Sceneであり、複数の機体個体、共有Resource Map、Camera、Light、Render Packet等を所有する。三段階のModel Lifecycle自体は維持する。
+
 **Update (2026-11-02):** Config / Map / Instanceの三者分離、Resource Reference Right、Config早期破棄、初期Tree Template / 個体Clone等は維持。2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」および2026-11-02「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」で、ModelをUntextured / Texturedの独立Sliceに分離し、通常Line / Point / UI等のModel所属を撤回し、機種固有InstanceをScene側へ配置するTargetへ更新。既存の実装済みUntextured経路は移行まで維持する。  
 **Date:** 2026-10-30  
 **Scope:** Application Model / Assembly Configuration / Model Resource Map / Transform Tree Template / Instance Lifecycle / Ownership / Renderer Boundary
@@ -7660,3 +7674,122 @@ Calleeが受け取るInputについて、Caller側ではすでにValidである�
 - `validation_policy.md`
 - 2026-10-03「caller-controlled input failureとestablished internal state corruptionを区別し、`DATA_CORRUPTED`をvalidator failureから機械的に導出しない」
 - `boundary_model.md`
+
+---
+
+## Decision: SceneをApplication固有Stateと描画処理のOwnerとし、Applicationを実行基盤のOrchestratorとする
+
+**Status:** Accepted / Partially Implemented（Sample Robot Sceneで成立。STL ViewerのOrbit Camera・Light・Lifecycle統合およびScene共通Interfaceは後続Work）  
+**Date:** 2026-11-13  
+**Scope:** Application / Scene / Lifecycle / Camera / Light / Render Packet / Renderer Frontend / Ownership / Result Domain / Abstraction Timing
+
+### Decision
+
+GLCEのApplication Layerでは、実行基盤を管理する`application.c`と、個別の表示・操作内容を管理するScene Moduleを明確に分離する。
+
+1. **Applicationは実行基盤のOrchestratorとする。** ApplicationはPlatform System、Event System、Renderer Frontend、Application Frame State、Diagnostics、Asset Root等の共通基盤を管理し、frameごとのevent取得、diagnostics、Scene Update / Drawの呼び出し、framebuffer操作、buffer swap等を組み立てる。Applicationは特定SceneのRobot Posture、Camera操作、Light設定、Render Packetの構築内容を直接管理しない。現在Application側に残るOpenGL framebuffer操作のEngineへの移管は別Workとし、本Decisionでは変更しない。
+2. **SceneはそのSceneの成立に必要なStateとResourceのOwnerとする。** Sceneは、自身で利用するModelの共有Resource Map、個体状態、Scene固有のLine / Point等の表示Resource、Camera、Light、Render Packet等の構築・利用・破棄を担う。これは、Scene固有の値をApplicationへ集約しないというOwnershipの判断であって、全Sceneに同一のResource構成を強制するものではない。
+3. **SceneのLifecycleを`create / destroy / update / draw`の4操作を基本として整理する。** `create`はScene Resourceと初期Stateを成立させ、`destroy`は所有ResourceのLifetimeを終了する。`update`はEngine Event Viewや経過時間等をもとに、Robot Posture、Camera入力・視錐台等のScene Stateを更新する。`draw`はSceneの現在状態から必要な描画情報を組み立て、Renderer Frontendへ描画Stateを設定してDrawを実行する。描画前にModel Matrix等を求める処理も、その用途に従ってScene内部で構成する。
+4. **CameraとLightのScene固有PolicyをSceneへ置く。** Sample Robotでは`flight_camera_t`、Camera Key Binding / Speed、Window Resize時の視錐台更新、View / Projection Matrix取得、`directional_light_t`および`ambient_light_t`の初期化・利用をSceneで管理する。View / Projection Matrixの現在の保持・キャッシュ方法はSceneの実装詳細であり、全Sceneに同じField構成を要求しない。Engine側のCamera Primitive、Light ValueおよびそれぞれのSemanticsは変更しない。
+5. **SceneはRender Packetの生成・利用を担当し、Renderer FrontendはModelやScene固有Semanticsを解釈しない。** 現行Sample RobotはScene-ownedなRender Packetを`draw`で構築し、Untextured / Line Meshに必要なView・Projection・Light StateをRenderer Frontendへ設定してから`renderer_frontend_draw_packet()`を実行する。Draw RequestはEngine側から見たMeshとMatrix等の描画情報とし、Robot関節・Model Assembly・Scene Identity等をRendererへ持ち込まない。Packet内の個別Resource参照のLifetimeは、元のResource OwnerとPacket利用期間との関係で保証する。
+6. **Renderer FrontendはApplicationが所有し、Sceneが必要なOperationでBorrowする。** SceneがRenderer Registry、Shader、VBO Manager等を個別所有することは要求しない。Sceneは自身がAcquire / ImportしたMesh Resource Reference Rightを管理し、Renderer Frontendが有効な間にReleaseする。Scene終了時に必要なReleaseを済ませてから共通Rendererを終了する順序を維持する。現時点でRenderer FrontendをScene Fieldとして長期Borrow保持することは確定しない。
+7. **Scene全体で共通のResult Domainを使用する。** `sample_robot`、`stl_viewer`および各Scene内の専用構成Moduleでは`scene_result_t`を使用し、Sceneごとの同型Result Codeを重複定義しない。一方、独立した`model_framework`やEngine ModuleのResult Domainは維持し、Scene境界で明示的に変換する。
+8. **Scene固有Configは原則としてSceneが構築する。** STL Viewerの`untextured_mesh_config_t`はApplicationで生成せず、`stl_viewer_create()`内で構築する。ApplicationはAsset Root等の共通の配置Policyを提供するが、STL Viewer固有のMaterial / Geometry指定を知る必要はない。
+9. **Scene共通のvtable、Scene Manager、Scene Registry、Scene Graph等を先行導入しない。** まずSample Robotを独立したSceneとして完成させ、次にSTL ViewerへOrbit Camera・Light・Render Packet・`create / destroy / update / draw`を導入して動作を確認する。その後、2つの具体的実装を比較し、実際に一致するLifecycle / Ownership / API Contractをもとに共通化する。vtableはその最終段階で検討・導入する。
+
+### Current Responsibility / Ownership（2026-11-13時点）
+
+```text
+Application                                  [common execution / orchestration]
+├── Platform System                         [owned]
+├── Event System                            [owned]
+├── Renderer Frontend                        [owned / shared with Scenes by borrow]
+├── Application Frame State                 [owned / framebuffer and frame coordination]
+├── Diagnostics                             [Application policy]
+├── Asset Root / common path policy        [owned]
+└── Selected Scene                          [owned]
+    └── Sample Robot                        [implemented Scene]
+        ├── Model Resource Map              [owned / shared by two robot models]
+        ├── Robot Model 1 / 2               [owned / individual posture and Transform Tree]
+        ├── Floor Grid Mesh                 [owned reference right]
+        ├── Flight Camera                   [owned]
+        ├── Directional / Ambient Light     [owned values]
+        └── Render Packet                   [owned storage / per-frame contents]
+
+Renderer Frontend                            [Engine draw / resource boundary]
+    └── Mesh + Draw Parameters / Packet     [does not interpret Scene / Robot semantics]
+```
+
+この図はSample Robotの現在の実装を表す。STL Viewerに同一のScene内部構造を強制するものではない。Sceneが共有RendererをBorrowすることと、SceneがRenderer Resource Reference RightをOwnすることは別のLifetime関係である。
+
+### Context / Discovery Process
+
+#### ApplicationからScene固有の処理を取り除いた
+
+従来、ApplicationはCamera Matrix、LightおよびRender Packetを直接管理し、Scene固有のPosture更新や描画要求の生成を個別APIで呼び出していた。Cameraの更新結果をApplication側へ戻してRenderer Stateを設定するため、ApplicationがSceneの内部構成と描画手順を知る必要があった。
+
+Sample Robotの独立化では、Scene Module自身へCamera、Light、Render Packetと描画手順を移し、ApplicationはSceneのLifecycle APIを呼び出す側に整理した。これによりApplication側の実行経路は簡潔になり、各Sceneを作る開発者が、何を構築・更新・描画・解放する必要があるかが明確になった。
+
+#### Scene側の実装負担も顕在化した
+
+責務を移した結果、Sample Robot SceneのSource量は増え、Model ResourceのImport / Release、Camera操作、Render PacketのCount計算やRequest追加、Renderer State設定、失敗時Rollback等をScene開発者が組み立てる必要があることも明らかになった。
+
+この負担はSceneへのOwnership移管を撤回する理由ではない。**責務のOwnerが誰か**と、**Ownerが使う共通Operationを誰が実装・提供するか**は異なる。2つ目のScene完成後、重複や実際の利用負担を観察し、Model FrameworkやEngineへ移すべき共通機構を判断する。
+
+#### 共通抽象化は2種類のScene完成後に決める
+
+Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一STL表示とOrbit Cameraという異なる用途を持つ。Sample RobotだけからScene共通Interfaceを設計すると、RobotやFlight Camera固有の事情を一般Scene Contractへ混入させる可能性がある。
+
+そのため、先に双方を独立して動作させ、共通性を実装から抽出する順序を採用した。この順序は、未成熟な機能をApplication側で育て、成立した責務をEngineへ移す既存Decisionと整合する。
+
+### Rationale
+
+- Applicationを共通実行基盤のOrchestrationに集中させ、Sceneを追加するたびにApplicationへCamera / Light / Model固有Fieldや描画手順を増やさずに済む。
+- Camera、Light、Model、Render Packetの利用PolicyとLifetimeを、実際にそれらを必要とするSceneへ対応させられる。
+- `update`と`draw`の役割を分離し、Scene Stateの変更とRenderer向け描画準備・実行を区別できる。
+- Model / Robot / SceneのDomain MeaningをRenderer Frontendへ漏らさず、EngineのMesh / Draw Parameter Boundaryを維持できる。
+- Scene共通Result Domainにより、Scene内Moduleの重複したError Type / Converterを抑制できる。
+- Scene固有ConfigをApplicationから排除し、Applicationが各DemoのAssetや描画条件を知る範囲を狭められる。
+- Sample RobotとSTL Viewerの相違を観測してから抽象化することで、推測に基づくInterfaceや不要な中間Moduleを固定せずに済む。
+- Scene開発者の負担を実装によって把握でき、共通化やEngine側API改善の対象を具体的に選べる。
+
+### Considered / Rejected or Deferred Alternatives
+
+- **Camera / Light / Render Packetを引き続きApplicationへ集約する。** Sceneごとの構成にApplicationが依存し、Scene追加のたびにApplicationのFieldと処理分岐が増えるため採用しない。
+- **Scene固有の描画処理をApplicationが個別に組み立てる。** Model / Posture / Camera / Light / Render Packetの知識がScene境界から漏れるため採用しない。
+- **Sample Robotだけを基準にScene vtableや共通Managerを直ちに導入する。** Orbit Cameraを持つSTL Viewerの実装が未成立であり、共通Contractを判断する材料が揃っていないため延期する。vtable自体を恒久的に否定する判断ではない。
+- **Scene実装の重複を見つけた時点で、共通Helperを全面的にEngineへ移す。** 単一Sceneの利用経験からEngine APIを固定することを避け、両Scene完成後に具体的な共通処理とOwnershipを確認する。
+- **SceneごとのResult Domainを維持する。** 現在のScene専用Module群では区別の利益に比べてType / Converterの重複が大きく、Scene共通の`scene_result_t`を採用した。
+
+### Consequences / Current Implementation
+
+- Sample Robotは`sample_robot_demo`から`sample_robot`へ改名し、Scene Lifecycleを`sample_robot_create / destroy / update / draw`へ整理した。
+- 旧`sample_robot`機体個体Moduleは`sample_robot_model`へ改名し、Sceneの`sample_robot_t`が複数の`sample_robot_model_t`を所有する。機体個体のPosture / Transform TreeとScene全体の責務を区別する。
+- Sample Robot Sceneの正常描画はユーザーによって確認された。一方、Cameraの全操作、異常系、Cleanup全経路について同程度の実行検証が済んでいるとは扱わない。
+- STL ViewerのConfigは`stl_viewer_create()`内部へ移管した。Orbit Camera、Light、Render Packet Ownership、4操作のLifecycle統合は後続作業であり、Sample Robotと同じ完成状態にあると見なさない。
+- Sample Robotの`draw`ではRenderer Frontendの`untextured_mesh_render_update`および`line_mesh_render_update`を実行する。これらはScene Stateそのものではなく描画用Renderer Stateを更新するOperationであり、`update`ではなく`draw`に置く。
+- Frame Stateの`projection_dirty` / `view_dirty`をRendererへ伝搬する旧Application経路はSample Robotで不要になった。Sourceに残る未使用Fieldや旧Camera Wrapper等の削除は、別途リファクタリング対象とする。
+- Resource Packetの内部Buffer管理、RobotのDraw Request生成共通化、SceneがBorrowするRenderer Frontendの保持方法、`destroy`の`void`戻り値やFailure Handling、Validatorの再設計等は、このDecisionでは結論を出さない。
+- Cleanup時に`DATA_CORRUPTED`を検出した場合は以後のResource解放を行わない。`DATA_CORRUPTED`以外の失敗では、後続Resource解放を継続するという現在のSample Robotでの方針を維持する。`destroy` APIのError Propagationの具体的な再設計は後続Taskとする。
+
+### Revisit Conditions
+
+- STL Viewerの完成により、Scene間に明確な共通Lifecycle / Data / Ownership Contractが確認できた場合。
+- 複数Scene同時実行、Scene切替、Shared Camera / Light / Render Packet等が必要となり、現在の1 Scene単位のOwner構造で扱いにくくなった場合。
+- Scene実装のResource Import / Release、Packet構築、Renderer設定等に重複や変更コストが顕在化した場合。
+- Render Packet / Renderer FrontendのLifetimeやDraw Orderingが新しいScene用途で問題となった場合。
+- Camera / Lightの複数化、Scene外の共有、Scene間継承等の具体的要件が生じた場合。
+
+### Related Decisions / Documents
+
+- 2026-09-07「Camera identityはRegistry、active selectionとkeybinding policyはApplicationが所有する」（2026-11-13 Update）
+- 2026-09-12「Application↔Engineの当面の論理boundaryをapplication.h/.cとする」
+- 2026-09-13「Application Frame Stateをframe-local coordination stateとする」（2026-11-13 Update）
+- 2026-10-14「Ambient LightとDirectional Lightを独立したLight Valueとして扱う」（2026-11-13 Update）
+- 2026-10-16「Render PacketをShader別Draw Collectionとし、Model連携を先に検証してからOrchestrationを抽出する」（2026-11-13 Update）
+- 2026-10-25「Renderer FrontendをRenderer SubsystemのOwnership Rootとし、Modelの所有をApplication / Sceneへ分離する」
+- 2026-10-30「Model Assembly Configを『組立図』、Resource Mapを『製造準備済みの共有定義』、Robotを『個別の実機』とする」（2026-11-13 Update）
+- 2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」
+- `glce_near_term_todo.md` — 次のSTL Viewer実装と、両Scene完成後の共通化・Refactoringを扱う
+- `validation_policy.md` — `DATA_CORRUPTED` / Cleanup / Fail-stopの一般Policyの正本
+

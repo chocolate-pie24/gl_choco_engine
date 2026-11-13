@@ -14,10 +14,8 @@ extern "C" {
 
 typedef struct sample_robot sample_robot_t;
 
-typedef struct render_packet render_packet_t;
 typedef struct renderer_frontend renderer_frontend_t;
 typedef struct engine_event_view engine_event_view_t;
-typedef struct mat4x4f mat4x4f_t;
 
 scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, sample_robot_t** out_sample_robot_);
 
