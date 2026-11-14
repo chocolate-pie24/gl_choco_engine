@@ -23,6 +23,7 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
+#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
@@ -38,6 +39,12 @@
 #include "engine/systems/platform_system/config/platform_system_config.h"
 #include "engine/systems/platform_system/vtables/platform_backend_vtable.h"
 
+enum {
+    GLFW_MAX_WINDOW_EVENT_COUNT = 1,
+    GLFW_MAX_KEYBOARD_EVENT_COUNT = KEY_CODE_MAX,
+    GLFW_MAX_MOUSE_EVENT_COUNT = 4
+};
+
 /**
  * @brief 入力状態格納構造体
  *
@@ -45,6 +52,8 @@
 typedef struct platform_glfw_snapshot {
     double cursor_x;    /**< マウス座標x */
     double cursor_y;    /**< マウス座標y */
+    double scroll_x_offset;
+    double scroll_y_offset;
 
     int window_width;   /**< ウィンドウ幅 */
     int window_height;  /**< ウィンドウ高さ */
@@ -61,21 +70,18 @@ typedef struct platform_glfw_snapshot {
 } platform_glfw_snapshot_t;
 
 typedef struct window_event_storage {
-    size_t max_event_count;
     size_t current_event_count;
-    window_event_t* event_storage;
+    window_event_t event_storage[GLFW_MAX_WINDOW_EVENT_COUNT];
 } window_event_storage_t;
 
 typedef struct keyboard_event_storage {
-    size_t max_event_count;
     size_t current_event_count;
-    keyboard_event_t* event_storage;
+    keyboard_event_t event_storage[GLFW_MAX_KEYBOARD_EVENT_COUNT];
 } keyboard_event_storage_t;
 
 typedef struct mouse_event_storage {
-    size_t max_event_count;
     size_t current_event_count;
-    mouse_event_t* event_storage;
+    mouse_event_t event_storage[GLFW_MAX_MOUSE_EVENT_COUNT];
 } mouse_event_storage_t;
 
 /**
@@ -106,17 +112,16 @@ static bool platform_glfw_is_valid(const platform_backend_t* backend_);
 // Initialization / lifecycle helpers
 static platform_system_result_t glfw_runtime_initialize(void);
 static platform_system_result_t glfw_window_create(const char* window_label_, int window_width_, int window_height_, int* out_framebuffer_width_, int* out_framebuffer_height_, GLFWwindow** out_window_);
-static platform_system_result_t event_storage_initialize(const platform_system_config_t* config_, subsystem_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_);
 static void snapshot_reset(platform_glfw_snapshot_t* snapshot_);
 
 // Per-frame update helpers
 static platform_system_result_t snapshot_collect(platform_backend_t* backend_);
 static void event_storage_counts_reset(window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_);
-static platform_system_result_t event_count(const platform_glfw_snapshot_t* prev_, const platform_glfw_snapshot_t* current_, size_t* out_window_event_count_, size_t* out_keyboard_event_count_, size_t* out_mouse_event_count_);
 static platform_system_result_t window_events_generate(const platform_glfw_snapshot_t* prev_, const platform_glfw_snapshot_t* current_, window_event_storage_t* event_storage_);
 static platform_system_result_t keyboard_events_generate(const platform_glfw_snapshot_t* prev_, const platform_glfw_snapshot_t* current_, keyboard_event_storage_t* event_storage_);
 static platform_system_result_t mouse_events_generate(const platform_glfw_snapshot_t* prev_, const platform_glfw_snapshot_t* current_, mouse_event_storage_t* event_storage_);
 static platform_system_result_t event_view_refresh(bool window_close_requested_, const window_event_storage_t* window_event_storage_, const keyboard_event_storage_t* keyboard_event_storage_, const mouse_event_storage_t* mouse_event_storage_, platform_event_view_t* event_view_);
+static void scroll_callback(GLFWwindow* window_, double x_offset_, double y_offset_);
 
 // Event storage primitive operations
 static platform_system_result_t window_event_storage_push(window_event_storage_t* event_storage_, const window_event_t* event_);
@@ -179,13 +184,6 @@ static platform_system_result_t platform_glfw_create(const platform_system_confi
         goto cleanup;
     }
 
-    // event array, event count
-    ret = event_storage_initialize(config_, allocator_, &tmp_backend->window_event_storage, &tmp_backend->keyboard_event_storage, &tmp_backend->mouse_event_storage);
-    if(PLATFORM_SYSTEM_SUCCESS != ret) {
-        ERROR_MESSAGE("platform_glfw_create(%s) - event_storage_initialize failed.", platform_system_result_to_str(ret));
-        goto cleanup;
-    }
-
     // event view
     ret = event_view_refresh(false, &tmp_backend->window_event_storage, &tmp_backend->keyboard_event_storage, &tmp_backend->mouse_event_storage, &tmp_backend->event_view);
     if(PLATFORM_SYSTEM_SUCCESS != ret) {
@@ -216,8 +214,17 @@ static platform_system_result_t platform_glfw_create(const platform_system_confi
         ERROR_MESSAGE("platform_glfw_create(%s) - glfw_window_create failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
+
+    // GLFW callback
+    glfwSetWindowUserPointer(tmp_window, tmp_backend);
+    glfwSetScrollCallback(tmp_window, scroll_callback);
+
     snapshot_reset(&tmp_backend->prev);
     snapshot_reset(&tmp_backend->current);
+    glfwGetCursorPos(tmp_window, &tmp_backend->prev.cursor_x, &tmp_backend->prev.cursor_y);
+    tmp_backend->current.cursor_x = tmp_backend->prev.cursor_x;
+    tmp_backend->current.cursor_y = tmp_backend->prev.cursor_y;
+
     tmp_backend->prev.framebuffer_height = tmp_framebuffer_height;
     tmp_backend->prev.framebuffer_width = tmp_framebuffer_width;
     tmp_backend->window = tmp_window;
@@ -225,6 +232,10 @@ static platform_system_result_t platform_glfw_create(const platform_system_confi
 
     tmp_backend->prev.window_height = config_->window_height;
     tmp_backend->prev.window_width = config_->window_width;
+
+    tmp_backend->keyboard_event_storage.current_event_count = 0;
+    tmp_backend->mouse_event_storage.current_event_count = 0;
+    tmp_backend->window_event_storage.current_event_count = 0;
 
     *out_backend_ = tmp_backend;
     *out_framebuffer_height_ = tmp_framebuffer_height;
@@ -270,9 +281,6 @@ static platform_system_result_t platform_glfw_update(platform_backend_t* backend
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
     bool tmp_window_close_requested = false;
-    size_t window_event_count = 0;
-    size_t keyboard_event_count = 0;
-    size_t mouse_event_count = 0;
 
     // 毎ループcallされるAPIであるため、*out_event_view_ != NULLは許容する
     IF_ARG_NULL_GOTO_CLEANUP(backend_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_glfw_update", "backend_")
@@ -286,6 +294,9 @@ static platform_system_result_t platform_glfw_update(platform_backend_t* backend
     }
 #endif
 
+    backend_->current.scroll_x_offset = 0.0;
+    backend_->current.scroll_y_offset = 0.0;
+
     glfwPollEvents();
 
     ret = snapshot_collect(backend_);
@@ -294,37 +305,10 @@ static platform_system_result_t platform_glfw_update(platform_backend_t* backend
         goto cleanup;
     }
 
+    event_storage_counts_reset(&backend_->window_event_storage, &backend_->keyboard_event_storage, &backend_->mouse_event_storage);
     if(backend_->current.window_should_close) {    // 後続処理でエラーが発生しても無視したいためウィンドウクローズは独立で処理する
-        event_storage_counts_reset(&backend_->window_event_storage, &backend_->keyboard_event_storage, &backend_->mouse_event_storage);
         tmp_window_close_requested = true;
     } else {
-        ret = event_count(&backend_->prev, &backend_->current, &window_event_count, &keyboard_event_count, &mouse_event_count);
-        if(PLATFORM_SYSTEM_SUCCESS != ret) {
-            ret = PLATFORM_SYSTEM_UNDEFINED_ERROR; // ここではエラーは出ないはず
-            ERROR_MESSAGE("platform_glfw_update(%s) - event_count failed.", platform_system_result_to_str(ret));
-            goto cleanup;
-        }
-
-        if(window_event_count > backend_->window_event_storage.max_event_count) {
-            ret = PLATFORM_SYSTEM_LIMIT_EXCEEDED;
-            ERROR_MESSAGE("platform_glfw_update(%s) - window event count limit exceeded.", platform_system_result_to_str(ret));
-            goto cleanup;
-        }
-
-        if(keyboard_event_count > backend_->keyboard_event_storage.max_event_count) {
-            ret = PLATFORM_SYSTEM_LIMIT_EXCEEDED;
-            ERROR_MESSAGE("platform_glfw_update(%s) - keyboard event count limit exceeded.", platform_system_result_to_str(ret));
-            goto cleanup;
-        }
-
-        if(mouse_event_count > backend_->mouse_event_storage.max_event_count) {
-            ret = PLATFORM_SYSTEM_LIMIT_EXCEEDED;
-            ERROR_MESSAGE("platform_glfw_update(%s) - mouse event count limit exceeded.", platform_system_result_to_str(ret));
-            goto cleanup;
-        }
-
-        event_storage_counts_reset(&backend_->window_event_storage, &backend_->keyboard_event_storage, &backend_->mouse_event_storage);
-
         ret = window_events_generate(&backend_->prev, &backend_->current, &backend_->window_event_storage);
         if(PLATFORM_SYSTEM_SUCCESS != ret) {
             ERROR_MESSAGE("platform_glfw_update(%s) - window_events_generate failed.", platform_system_result_to_str(ret));
@@ -491,86 +475,6 @@ cleanup:
     return ret;
 }
 
-static platform_system_result_t event_storage_initialize(const platform_system_config_t* config_, subsystem_allocator_t* allocator_, window_event_storage_t* window_event_storage_, keyboard_event_storage_t* keyboard_event_storage_, mouse_event_storage_t* mouse_event_storage_) {
-    platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
-
-    subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
-
-    size_t allocation_size = 0;
-
-    window_event_t* tmp_window_event_storage = NULL;
-    keyboard_event_t* tmp_keyboard_event_storage = NULL;
-    mouse_event_t* tmp_mouse_event_storage = NULL;
-
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_storage_initialize", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_storage_initialize", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(window_event_storage_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_storage_initialize", "window_event_storage_")
-    IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_storage_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_storage_initialize", "keyboard_event_storage_")
-    IF_ARG_NULL_GOTO_CLEANUP(mouse_event_storage_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_storage_initialize", "mouse_event_storage_")
-
-    // window event
-    if((SIZE_MAX / config_->max_window_event_count) < sizeof(window_event_t)) {
-        ret = PLATFORM_SYSTEM_OVERFLOW;
-        ERROR_MESSAGE("event_storage_initialize(%s) - window event array size overflow.", platform_system_result_to_str(ret));
-        goto cleanup;
-    }
-    allocation_size = sizeof(window_event_t) * config_->max_window_event_count;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM, (void**)&tmp_window_event_storage);
-    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
-        ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // keyboard event
-    if((SIZE_MAX / config_->max_keyboard_event_count) < sizeof(keyboard_event_t)) {
-        ret = PLATFORM_SYSTEM_OVERFLOW;
-        ERROR_MESSAGE("event_storage_initialize(%s) - keyboard event array size overflow.", platform_system_result_to_str(ret));
-        goto cleanup;
-    }
-    allocation_size = sizeof(keyboard_event_t) * config_->max_keyboard_event_count;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM, (void**)&tmp_keyboard_event_storage);
-    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
-        ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // mouse event
-    if((SIZE_MAX / config_->max_mouse_event_count) < sizeof(mouse_event_t)) {
-        ret = PLATFORM_SYSTEM_OVERFLOW;
-        ERROR_MESSAGE("event_storage_initialize(%s) - mouse event array size overflow.", platform_system_result_to_str(ret));
-        goto cleanup;
-    }
-    allocation_size = sizeof(mouse_event_t) * config_->max_mouse_event_count;
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, allocation_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM, (void**)&tmp_mouse_event_storage);
-    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
-        ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("event_storage_initialize(%s) - subsystem_allocator_allocate failed.", platform_system_result_to_str(ret));
-        goto cleanup;
-    }
-
-    window_event_storage_->current_event_count = 0;
-    window_event_storage_->max_event_count = config_->max_window_event_count;
-    window_event_storage_->event_storage = tmp_window_event_storage;
-    tmp_window_event_storage = NULL;
-
-    keyboard_event_storage_->current_event_count = 0;
-    keyboard_event_storage_->max_event_count = config_->max_keyboard_event_count;
-    keyboard_event_storage_->event_storage = tmp_keyboard_event_storage;
-    tmp_keyboard_event_storage = NULL;
-
-    mouse_event_storage_->current_event_count = 0;
-    mouse_event_storage_->max_event_count = config_->max_mouse_event_count;
-    mouse_event_storage_->event_storage = tmp_mouse_event_storage;
-    tmp_mouse_event_storage = NULL;
-
-    ret = PLATFORM_SYSTEM_SUCCESS;
-
-cleanup:
-    return ret;
-}
-
 static void snapshot_reset(platform_glfw_snapshot_t* snapshot_) {
     if(NULL == snapshot_) {
         return;
@@ -579,6 +483,8 @@ static void snapshot_reset(platform_glfw_snapshot_t* snapshot_) {
     snapshot_->right_button_pressed = false;
     snapshot_->cursor_x = 0.0;
     snapshot_->cursor_y = 0.0;
+    snapshot_->scroll_x_offset = 0.0;
+    snapshot_->scroll_y_offset = 0.0;
     snapshot_->window_width = 0;
     snapshot_->window_height = 0;
     snapshot_->framebuffer_width = 0;
@@ -637,50 +543,6 @@ static void event_storage_counts_reset(window_event_storage_t* window_event_stor
     window_event_storage_->current_event_count = 0;
     keyboard_event_storage_->current_event_count = 0;
     mouse_event_storage_->current_event_count = 0;
-}
-
-static platform_system_result_t event_count(const platform_glfw_snapshot_t* prev_, const platform_glfw_snapshot_t* current_, size_t* out_window_event_count_, size_t* out_keyboard_event_count_, size_t* out_mouse_event_count_) {
-    platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
-
-    size_t tmp_window_event_count = 0;
-    size_t tmp_keyboard_event_count = 0;
-    size_t tmp_mouse_event_count = 0;
-
-    IF_ARG_NULL_GOTO_CLEANUP(prev_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_count", "prev_")
-    IF_ARG_NULL_GOTO_CLEANUP(current_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_count", "current_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_window_event_count_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_count", "out_window_event_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_keyboard_event_count_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_count", "out_keyboard_event_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mouse_event_count_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "event_count", "out_mouse_event_count_")
-
-    if((current_->window_width != prev_->window_width || current_->window_height != prev_->window_height) ||
-       (current_->framebuffer_width != prev_->framebuffer_width || current_->framebuffer_height != prev_->framebuffer_height)) {
-        tmp_window_event_count++;
-    }
-
-    for(int i = KEY_1; i != KEY_CODE_MAX; ++i) {
-        if(prev_->keycode_state[i] != current_->keycode_state[i]) {
-            tmp_keyboard_event_count++;
-        }
-    }
-
-    // 左クリックイベント
-    if(prev_->left_button_pressed != current_->left_button_pressed) {
-        tmp_mouse_event_count++;
-    }
-
-    // 右クリックイベント
-    if(prev_->right_button_pressed != current_->right_button_pressed) {
-        tmp_mouse_event_count++;
-    }
-
-    *out_window_event_count_ = tmp_window_event_count;
-    *out_keyboard_event_count_ = tmp_keyboard_event_count;
-    *out_mouse_event_count_ = tmp_mouse_event_count;
-
-    ret = PLATFORM_SYSTEM_SUCCESS;
-
-cleanup:
-    return ret;
 }
 
 static platform_system_result_t window_events_generate(const platform_glfw_snapshot_t* prev_, const platform_glfw_snapshot_t* current_, window_event_storage_t* event_storage_) {
@@ -752,10 +614,11 @@ static platform_system_result_t mouse_events_generate(const platform_glfw_snapsh
     if(prev_->left_button_pressed != current_->left_button_pressed) {
         mouse_event_t tmp_event;
 
-        tmp_event.button = MOUSE_BUTTON_LEFT;
-        tmp_event.event_args.pressed = current_->left_button_pressed;
-        tmp_event.event_args.x = (int)current_->cursor_x;
-        tmp_event.event_args.y = (int)current_->cursor_y;
+        tmp_event.event_code = MOUSE_EVENT_BUTTON;
+        tmp_event.event_args.button.button = MOUSE_BUTTON_LEFT;
+        tmp_event.event_args.button.pressed = current_->left_button_pressed;
+        tmp_event.event_args.button.x = current_->cursor_x;
+        tmp_event.event_args.button.y = current_->cursor_y;
 
         ret = mouse_event_storage_push(event_storage_, &tmp_event);
         if(PLATFORM_SYSTEM_SUCCESS != ret) {
@@ -768,10 +631,44 @@ static platform_system_result_t mouse_events_generate(const platform_glfw_snapsh
     if(prev_->right_button_pressed != current_->right_button_pressed) {
         mouse_event_t tmp_event;
 
-        tmp_event.button = MOUSE_BUTTON_RIGHT;
-        tmp_event.event_args.pressed = current_->right_button_pressed;
-        tmp_event.event_args.x = (int)current_->cursor_x;
-        tmp_event.event_args.y = (int)current_->cursor_y;
+        tmp_event.event_code = MOUSE_EVENT_BUTTON;
+        tmp_event.event_args.button.button = MOUSE_BUTTON_RIGHT;
+        tmp_event.event_args.button.pressed = current_->right_button_pressed;
+        tmp_event.event_args.button.x = current_->cursor_x;
+        tmp_event.event_args.button.y = current_->cursor_y;
+
+        ret = mouse_event_storage_push(event_storage_, &tmp_event);
+        if(PLATFORM_SYSTEM_SUCCESS != ret) {
+            ERROR_MESSAGE("mouse_events_generate(%s) - mouse_event_storage_push failed.", platform_system_result_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    // マウス移動イベント
+    if(!is_equal_double(prev_->cursor_x, current_->cursor_x) || !is_equal_double(prev_->cursor_y, current_->cursor_y)) {
+        mouse_event_t tmp_event;
+        tmp_event.event_code = MOUSE_EVENT_MOVE;
+
+        tmp_event.event_args.move.x = current_->cursor_x;
+        tmp_event.event_args.move.y = current_->cursor_y;
+
+        tmp_event.event_args.move.x_offset = current_->cursor_x - prev_->cursor_x;
+        tmp_event.event_args.move.y_offset = current_->cursor_y - prev_->cursor_y;
+
+        ret = mouse_event_storage_push(event_storage_, &tmp_event);
+        if(PLATFORM_SYSTEM_SUCCESS != ret) {
+            ERROR_MESSAGE("mouse_events_generate(%s) - mouse_event_storage_push failed.", platform_system_result_to_str(ret));
+            goto cleanup;
+        }
+    }
+
+    // マウススクロールイベント
+    if(!is_equal_double(current_->scroll_x_offset, 0.0) || !is_equal_double(current_->scroll_y_offset, 0.0)) {
+        mouse_event_t tmp_event;
+        tmp_event.event_code = MOUSE_EVENT_SCROLL;
+
+        tmp_event.event_args.scroll.x_offset = current_->scroll_x_offset;
+        tmp_event.event_args.scroll.y_offset = current_->scroll_y_offset;
 
         ret = mouse_event_storage_push(event_storage_, &tmp_event);
         if(PLATFORM_SYSTEM_SUCCESS != ret) {
@@ -810,6 +707,19 @@ cleanup:
     return ret;
 }
 
+static void scroll_callback(GLFWwindow* window_, double x_offset_, double y_offset_) {
+    if(NULL == window_) {
+        return;
+    }
+    platform_backend_t* backend = (platform_backend_t*)glfwGetWindowUserPointer(window_);
+    if(NULL == backend) {
+        return;
+    }
+
+    backend->current.scroll_x_offset += x_offset_;
+    backend->current.scroll_y_offset += y_offset_;
+}
+
 // ============================================================
 // Event storage primitive operations
 // ============================================================
@@ -818,7 +728,7 @@ static platform_system_result_t window_event_storage_push(window_event_storage_t
 
     IF_ARG_NULL_GOTO_CLEANUP(event_storage_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "window_event_storage_push", "event_storage_")
     IF_ARG_NULL_GOTO_CLEANUP(event_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "window_event_storage_push", "event_")
-    if(event_storage_->current_event_count >= event_storage_->max_event_count) {
+    if(event_storage_->current_event_count >= GLFW_MAX_WINDOW_EVENT_COUNT) {
         ret = PLATFORM_SYSTEM_LIMIT_EXCEEDED;
         ERROR_MESSAGE("window_event_storage_push(%s) - window event storage limit exceeded.", platform_system_result_to_str(ret));
         goto cleanup;
@@ -838,7 +748,7 @@ static platform_system_result_t keyboard_event_storage_push(keyboard_event_stora
 
     IF_ARG_NULL_GOTO_CLEANUP(event_storage_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "keyboard_event_storage_push", "event_storage_")
     IF_ARG_NULL_GOTO_CLEANUP(event_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "keyboard_event_storage_push", "event_")
-    if(event_storage_->current_event_count >= event_storage_->max_event_count) {
+    if(event_storage_->current_event_count >= GLFW_MAX_KEYBOARD_EVENT_COUNT) {
         ret = PLATFORM_SYSTEM_LIMIT_EXCEEDED;
         ERROR_MESSAGE("keyboard_event_storage_push(%s) - keyboard event storage limit exceeded.", platform_system_result_to_str(ret));
         goto cleanup;
@@ -858,7 +768,7 @@ static platform_system_result_t mouse_event_storage_push(mouse_event_storage_t* 
 
     IF_ARG_NULL_GOTO_CLEANUP(event_storage_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "mouse_event_storage_push", "event_storage_")
     IF_ARG_NULL_GOTO_CLEANUP(event_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "mouse_event_storage_push", "event_")
-    if(event_storage_->current_event_count >= event_storage_->max_event_count) {
+    if(event_storage_->current_event_count >= GLFW_MAX_MOUSE_EVENT_COUNT) {
         ret = PLATFORM_SYSTEM_LIMIT_EXCEEDED;
         ERROR_MESSAGE("mouse_event_storage_push(%s) - mouse event storage limit exceeded.", platform_system_result_to_str(ret));
         goto cleanup;
@@ -1011,13 +921,7 @@ static bool window_event_storage_is_valid(const window_event_storage_t* event_st
     if(NULL == event_storage_) {
         return false;
     }
-    if(0 == event_storage_->max_event_count) {
-        return false;
-    }
-    if(event_storage_->current_event_count > event_storage_->max_event_count) {
-        return false;
-    }
-    if(NULL == event_storage_->event_storage) {
+    if(event_storage_->current_event_count > GLFW_MAX_WINDOW_EVENT_COUNT) {
         return false;
     }
     return true;
@@ -1027,13 +931,7 @@ static bool keyboard_event_storage_is_valid(const keyboard_event_storage_t* even
     if(NULL == event_storage_) {
         return false;
     }
-    if(0 == event_storage_->max_event_count) {
-        return false;
-    }
-    if(event_storage_->current_event_count > event_storage_->max_event_count) {
-        return false;
-    }
-    if(NULL == event_storage_->event_storage) {
+    if(event_storage_->current_event_count > GLFW_MAX_KEYBOARD_EVENT_COUNT) {
         return false;
     }
     return true;
@@ -1043,13 +941,7 @@ static bool mouse_event_storage_is_valid(const mouse_event_storage_t* event_stor
     if(NULL == event_storage_) {
         return false;
     }
-    if(0 == event_storage_->max_event_count) {
-        return false;
-    }
-    if(event_storage_->current_event_count > event_storage_->max_event_count) {
-        return false;
-    }
-    if(NULL == event_storage_->event_storage) {
+    if(event_storage_->current_event_count > GLFW_MAX_MOUSE_EVENT_COUNT) {
         return false;
     }
     return true;
@@ -1063,33 +955,6 @@ static bool is_valid_shallow(const platform_backend_t* backend_) {
         return false;
     }
     if(NULL == backend_->window) {
-        return false;
-    }
-    if(NULL == backend_->keyboard_event_storage.event_storage) {
-        return false;
-    }
-    if(NULL == backend_->mouse_event_storage.event_storage) {
-        return false;
-    }
-    if(NULL == backend_->window_event_storage.event_storage) {
-        return false;
-    }
-    if(0 == backend_->keyboard_event_storage.max_event_count) {
-        return false;
-    }
-    if(0 == backend_->mouse_event_storage.max_event_count) {
-        return false;
-    }
-    if(0 == backend_->window_event_storage.max_event_count) {
-        return false;
-    }
-    if(backend_->window_event_storage.current_event_count > backend_->window_event_storage.max_event_count) {
-        return false;
-    }
-    if(backend_->keyboard_event_storage.current_event_count > backend_->keyboard_event_storage.max_event_count) {
-        return false;
-    }
-    if(backend_->mouse_event_storage.current_event_count > backend_->mouse_event_storage.max_event_count) {
         return false;
     }
     if(backend_->keyboard_event_storage.event_storage != backend_->event_view.keyboard_events) {

@@ -12,10 +12,6 @@ extern "C" {
 #include <stddef.h>
 
 typedef struct platform_system_config {
-    size_t max_window_event_count;
-    size_t max_keyboard_event_count;
-    size_t max_mouse_event_count;
-
     const char* window_label;
 
     int window_width;

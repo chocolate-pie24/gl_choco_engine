@@ -19,32 +19,42 @@ extern "C" {
 
 #include <stdbool.h>
 
-/**
- * @brief マウスボタン種別リスト(中ボタンは多分使わないので省略した)
- *
- */
 typedef enum {
-    MOUSE_BUTTON_LEFT,  /**< マウス左ボタン */
-    MOUSE_BUTTON_RIGHT, /**< マウス右ボタン */
+    MOUSE_EVENT_BUTTON,
+    MOUSE_EVENT_MOVE,
+    MOUSE_EVENT_SCROLL,
+} mouse_event_code_t;
+
+typedef enum {
+    MOUSE_BUTTON_LEFT,
+    MOUSE_BUTTON_RIGHT,
 } mouse_button_t;
 
-/**
- * @brief マウスイベント付随情報
- *
- */
-typedef struct mouse_event_args {
-    int x;          /**< イベントが発生した際のウィンドウ内でのマウス座標 */
-    int y;          /**< イベントが発生した際のウィンドウ内でのマウス座標 */
-    bool pressed;   /**< イベントが発生した際のマウスボタン状態(true: 押下 / false: 離した) */
+typedef union mouse_event_args {
+    struct {
+        mouse_button_t button;
+        bool pressed;
+        double x;
+        double y;
+    } button;
+
+    struct {
+        double x;
+        double y;
+
+        double x_offset;
+        double y_offset;
+    } move;
+
+    struct {
+        double x_offset;
+        double y_offset;
+    } scroll;
 } mouse_event_args_t;
 
-/**
- * @brief マウスイベント構造体
- *
- */
 typedef struct mouse_event {
-    mouse_button_t      button;         /**< イベントが発生したマウスボタン */
-    mouse_event_args_t  event_args;     /**< イベント付随情報 */
+    mouse_event_code_t event_code;
+    mouse_event_args_t event_args;
 } mouse_event_t;
 
 #ifdef __cplusplus

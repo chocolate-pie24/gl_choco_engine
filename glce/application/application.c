@@ -504,9 +504,6 @@ cleanup:
 }
 
 static void platform_system_config_initialize(platform_system_config_t* config_) {
-    config_->max_keyboard_event_count = KEY_CODE_MAX;
-    config_->max_mouse_event_count = 8;
-    config_->max_window_event_count = 8;
     config_->window_height = 768;
     config_->window_width = 1024;
     config_->window_label = "test_window";
