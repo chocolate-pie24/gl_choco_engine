@@ -39,10 +39,13 @@
 
 typedef struct stl_viewer {
     untextured_mesh_t untextured_mesh;
-    // line_mesh_t floor_grid_mesh;
     // untextured_mesh_t debug_axis_mesh;
     // line_mesh_t debug_aabb_mesh;
     mat4x4f_t model_matrix;
+
+    // Floor Grid.
+    line_mesh_t* floor_grid_mesh;
+    mat4x4f_t floor_grid_model_matrix;
 
     // Camera(Temporary)
     orbit_camera_t* orbit_camera;
@@ -62,14 +65,16 @@ static const float s_default_fovy = 45.0f;
 static const float s_default_near_clip = 0.1f;
 static const float s_default_far_clip = 3000.0f;
 
-// Camera Configuration.
-static void flight_camera_keybinds_initialize(void);
+// Floor Grid Resource.
+static scene_result_t floor_grid_mesh_create(renderer_frontend_t* renderer_frontend_, line_mesh_t** out_mesh_);
+static scene_result_t floor_grid_mesh_destroy(renderer_frontend_t* renderer_frontend_, line_mesh_t** mesh_);
 
 // Render Packet.
 static scene_result_t render_packet_build(const stl_viewer_t* stl_viewer_, render_packet_t* packet_);
 
 scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, stl_viewer_t** out_viewer_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
+    scene_result_t ret_cleanup = SCENE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
@@ -80,9 +85,11 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     stl_viewer_t* tmp_stl_viewer = NULL;
     orbit_camera_t* tmp_orbit_camera = NULL;  // Temporary
     render_packet_t* tmp_render_packet = NULL;
+    line_mesh_t* tmp_floor_grid = NULL;
 
     untextured_mesh_t tmp_untextured_mesh = { 0 };
     untextured_mesh_config_t stl_viewer_mesh_config = { 0 };
+    mat4x4f_t tmp_floor_grid_model_matrix = { 0 };
 
     bool untextured_mesh_imported = false;
 
@@ -179,11 +186,24 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     }
     untextured_mesh_imported = true;
 
+    // Floor Grid.
+    ret = floor_grid_mesh_create(renderer_frontend_, &tmp_floor_grid);
+    if(SCENE_SUCCESS != ret) {
+        if(SCENE_INVALID_ARGUMENT == ret) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("stl_viewer_create(%s) - floor_grid_mesh_create failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    mat4f_identity(&tmp_floor_grid_model_matrix);
+
     mat4f_identity(&tmp_stl_viewer->model_matrix);
     tmp_stl_viewer->untextured_mesh = tmp_untextured_mesh;
     tmp_stl_viewer->camera_speed = 5.0f;
     tmp_stl_viewer->render_packet = tmp_render_packet;
     tmp_stl_viewer->orbit_camera = tmp_orbit_camera;
+    tmp_stl_viewer->floor_grid_mesh = tmp_floor_grid;
+    tmp_stl_viewer->floor_grid_model_matrix = tmp_floor_grid_model_matrix;
 
     // Result validation.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -202,6 +222,13 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
 cleanup:
     if(SCENE_DATA_CORRUPTED == ret || SCENE_SUCCESS == ret) {
         return ret;
+    }
+    if(NULL != renderer_frontend_ && NULL != tmp_floor_grid) {
+        ret_cleanup = floor_grid_mesh_destroy(renderer_frontend_, &tmp_floor_grid);
+        if(SCENE_DATA_CORRUPTED == ret_cleanup) {
+            ERROR_MESSAGE("stl_viewer_create(%s) - floor_grid_mesh_destroy failed.", scene_result_to_str(ret_cleanup));
+            return ret_cleanup;
+        }
     }
     if(untextured_mesh_imported) {
         ret_renderer_frontend = renderer_frontend_untextured_mesh_release(renderer_frontend_, &tmp_untextured_mesh);
@@ -237,6 +264,14 @@ void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, stl_viewer_t** 
         return;
     }
 #endif
+
+    if(NULL != (*stl_viewer_)->floor_grid_mesh) {
+        ret = floor_grid_mesh_destroy(renderer_frontend_, &(*stl_viewer_)->floor_grid_mesh);
+        if(SCENE_DATA_CORRUPTED == ret) {
+            ERROR_MESSAGE("stl_viewer_destroy(%s) - floor_grid_mesh_destroy failed.", scene_result_to_str(ret));
+            return;
+        }
+    }
 
     ret_renderer_frontend = renderer_frontend_untextured_mesh_release(renderer_frontend_, &(*stl_viewer_)->untextured_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
@@ -360,12 +395,12 @@ scene_result_t stl_viewer_draw(stl_viewer_t* stl_viewer_, renderer_frontend_t* r
         goto cleanup;
     }
 
-    // ret_renderer_frontend = renderer_frontend_line_mesh_render_update(renderer_frontend_, &stl_viewer_->view_matrix, &stl_viewer_->projection_matrix);
-    // if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
-    //     ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-    //     ERROR_MESSAGE("stl_viewer_draw(%s) - renderer_frontend_line_mesh_render_update failed.", scene_result_to_str(ret));
-    //     goto cleanup;
-    // }
+    ret_renderer_frontend = renderer_frontend_line_mesh_render_update(renderer_frontend_, &stl_viewer_->view_matrix, &stl_viewer_->projection_matrix);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("stl_viewer_draw(%s) - renderer_frontend_line_mesh_render_update failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret_renderer_frontend = renderer_frontend_draw_packet(stl_viewer_->render_packet, renderer_frontend_);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
@@ -392,6 +427,97 @@ bool stl_viewer_is_valid(const stl_viewer_t* viewer_) {
     return true;
 }
 
+// TODO: 格子間隔、描画領域自動生成
+static scene_result_t floor_grid_mesh_create(renderer_frontend_t* renderer_frontend_, line_mesh_t** out_mesh_) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
+
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+
+    line_vertex_t* tmp_vertices = NULL;
+    size_t tmp_vertex_count = 0;
+    line_mesh_t* tmp_mesh = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_create", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_create", "out_mesh_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_mesh_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "floor_grid_mesh_create", "*out_mesh_")
+
+    ret_general_allocator = general_allocator_allocate(sizeof(line_mesh_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_mesh);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = scene_result_convert_general_allocator(ret_general_allocator);
+        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("floor_grid_mesh_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_geometry = line_grid_geometry_vertices_create(LINE_GRID_PLANE_XY, vec4u8_initialize(128, 128, 128, 255), vec3f_initialize(-20.0f, -20.0f, 0.0f), vec3f_initialize(20.0f, 20.0f, 0.0f), 5.0f, &tmp_vertices, &tmp_vertex_count);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = scene_result_convert_geometry(ret_geometry);
+        if(GEOMETRY_INVALID_ARGUMENT == ret_geometry) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("floor_grid_mesh_create(%s) - line_grid_geometry_vertices_create failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_frontend = renderer_frontend_line_mesh_import_from_vertices(renderer_frontend_, "floor_grid_line", tmp_vertices, tmp_vertex_count, tmp_mesh);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("floor_grid_mesh_create(%s) - renderer_frontend_line_mesh_import_from_vertices failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_mesh_ = tmp_mesh;
+    tmp_mesh = NULL;
+    general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+
+    ret = SCENE_SUCCESS;
+
+cleanup:
+    if(SCENE_DATA_CORRUPTED == ret || SCENE_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != tmp_vertices) {
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != tmp_mesh) {
+        general_allocator_free((void**)&tmp_mesh, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    return ret;
+}
+
+static scene_result_t floor_grid_mesh_destroy(renderer_frontend_t* renderer_frontend_, line_mesh_t** mesh_) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
+
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_destroy", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_destroy", "mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(*mesh_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "floor_grid_mesh_destroy", "*mesh_")
+
+    ret_renderer_frontend = renderer_frontend_line_mesh_release(renderer_frontend_, *mesh_);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("floor_grid_mesh_destroy(%s) - renderer_frontend_line_mesh_release failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    general_allocator_free((void**)mesh_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+
+    ret = SCENE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 static scene_result_t render_packet_build(const stl_viewer_t* viewer_, render_packet_t* packet_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
@@ -401,7 +527,7 @@ static scene_result_t render_packet_build(const stl_viewer_t* viewer_, render_pa
     IF_ARG_NULL_GOTO_CLEANUP(packet_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "render_packet_build", "packet_")
 
     render_packet_deinitialize(packet_);
-    ret_render_packet = render_packet_initialize(0, 0, 0, 1, packet_);
+    ret_render_packet = render_packet_initialize(1, 0, 0, 1, packet_);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
         if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
@@ -418,6 +544,16 @@ static scene_result_t render_packet_build(const stl_viewer_t* viewer_, render_pa
             ret = SCENE_DATA_CORRUPTED;
         }
         ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_packet = render_packet_line_mesh_push(viewer_->floor_grid_mesh, &viewer_->floor_grid_model_matrix, packet_);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = scene_result_convert_render_packet(ret_render_packet);
+        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("render_packet_build(%s) - render_packet_line_mesh_push failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
