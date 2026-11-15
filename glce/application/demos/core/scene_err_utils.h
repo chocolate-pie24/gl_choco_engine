@@ -13,6 +13,8 @@ extern "C" {
 #include "engine/camera/core/camera_types.h"
 #include "engine/light/core/light_types.h"
 
+#include "engine/containers/choco_string.h"
+
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
@@ -40,6 +42,8 @@ scene_result_t scene_result_convert_render_packet(render_packet_result_t result_
 scene_result_t scene_result_convert_camera(camera_result_t result_);
 
 scene_result_t scene_result_convert_light(light_result_t result_);
+
+scene_result_t scene_result_convert_choco_string(choco_string_result_t result_);
 
 #ifdef __cplusplus
 }

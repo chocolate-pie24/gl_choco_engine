@@ -236,3 +236,28 @@ scene_result_t scene_result_convert_light(light_result_t result_) {
         return SCENE_UNDEFINED_ERROR;
     }
 }
+
+scene_result_t scene_result_convert_choco_string(choco_string_result_t result_) {
+    switch(result_) {
+    case CHOCO_STRING_SUCCESS:
+        return SCENE_SUCCESS;
+    case CHOCO_STRING_DATA_CORRUPTED:
+        return SCENE_DATA_CORRUPTED;
+    case CHOCO_STRING_BAD_OPERATION:
+        return SCENE_BAD_OPERATION;
+    case CHOCO_STRING_NO_MEMORY:
+        return SCENE_NO_MEMORY;
+    case CHOCO_STRING_INVALID_ARGUMENT:
+        return SCENE_INVALID_ARGUMENT;
+    case CHOCO_STRING_RUNTIME_ERROR:
+        return SCENE_RUNTIME_ERROR;
+    case CHOCO_STRING_UNDEFINED_ERROR:
+        return SCENE_UNDEFINED_ERROR;
+    case CHOCO_STRING_OVERFLOW:
+        return SCENE_OVERFLOW;
+    case CHOCO_STRING_LIMIT_EXCEEDED:
+        return SCENE_LIMIT_EXCEEDED;
+    default:
+        return SCENE_UNDEFINED_ERROR;
+    }
+}
