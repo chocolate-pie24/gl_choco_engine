@@ -14,7 +14,9 @@
 #include "engine/core/geometry_primitive/cone.h"
 #include "engine/core/geometry_primitive/cylinder.h"
 
-#include "engine/camera/flight_camera.h"    // TODO: remove this.
+#include "engine/core/event/mouse_event.h"
+
+#include "engine/camera/orbit_camera.h"
 
 #include "engine/light/directional_light.h"
 #include "engine/light/ambient_light.h"
@@ -43,7 +45,7 @@ typedef struct stl_viewer {
     mat4x4f_t model_matrix;
 
     // Camera(Temporary)
-    flight_camera_t* flight_camera;
+    orbit_camera_t* orbit_camera;
     float camera_speed;
     mat4x4f_t view_matrix;
     mat4x4f_t projection_matrix;
@@ -56,7 +58,6 @@ typedef struct stl_viewer {
     render_packet_t* render_packet;
 } stl_viewer_t;
 
-static flight_camera_key_bind_t s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MAX];
 static const float s_default_fovy = 45.0f;
 static const float s_default_near_clip = 0.1f;
 static const float s_default_far_clip = 3000.0f;
@@ -77,7 +78,7 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     light_result_t ret_light = LIGHT_INVALID_ARGUMENT;
 
     stl_viewer_t* tmp_stl_viewer = NULL;
-    flight_camera_t* tmp_flight_camera = NULL;  // Temporary
+    orbit_camera_t* tmp_orbit_camera = NULL;  // Temporary
     render_packet_t* tmp_render_packet = NULL;
 
     untextured_mesh_t tmp_untextured_mesh = { 0 };
@@ -123,24 +124,23 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     }
 
     // Camera.
-    flight_camera_keybinds_initialize();
     aspect = (float)framebuffer_width_ / (float)framebuffer_height_;
-    ret_camera = flight_camera_create(s_flight_camera_keybinds, s_default_fovy, aspect, s_default_near_clip, s_default_far_clip, &tmp_flight_camera);
+    ret_camera = orbit_camera_create(s_default_fovy, aspect, s_default_near_clip, s_default_far_clip, &tmp_orbit_camera);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = scene_result_convert_camera(ret_camera);
-        ERROR_MESSAGE("stl_viewer_create(%s) - flight_camera_create failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("stl_viewer_create(%s) - orbit_camera_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
-    ret_camera = flight_camera_view_matrix_get(tmp_flight_camera, &tmp_stl_viewer->view_matrix);
+    ret_camera = orbit_camera_view_matrix_get(tmp_orbit_camera, &tmp_stl_viewer->view_matrix);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = scene_result_convert_camera(ret_camera);
-        ERROR_MESSAGE("stl_viewer_create(%s) - flight_camera_view_matrix_get failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("stl_viewer_create(%s) - orbit_camera_view_matrix_get failed.", scene_result_to_str(ret));
         goto cleanup;
     }
-    ret_camera = flight_camera_perspective_matrix_get(tmp_flight_camera, &tmp_stl_viewer->projection_matrix);
+    ret_camera = orbit_camera_perspective_matrix_get(tmp_orbit_camera, &tmp_stl_viewer->projection_matrix);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = scene_result_convert_camera(ret_camera);
-        ERROR_MESSAGE("stl_viewer_create(%s) - flight_camera_perspective_matrix_get failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("stl_viewer_create(%s) - orbit_camera_perspective_matrix_get failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -183,7 +183,7 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     tmp_stl_viewer->untextured_mesh = tmp_untextured_mesh;
     tmp_stl_viewer->camera_speed = 5.0f;
     tmp_stl_viewer->render_packet = tmp_render_packet;
-    tmp_stl_viewer->flight_camera = tmp_flight_camera;
+    tmp_stl_viewer->orbit_camera = tmp_orbit_camera;
 
     // Result validation.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -214,8 +214,8 @@ cleanup:
     if(NULL != tmp_render_packet) {
         render_packet_destroy(&tmp_render_packet);
     }
-    if(NULL != tmp_flight_camera) {
-        flight_camera_destroy(&tmp_flight_camera);
+    if(NULL != tmp_orbit_camera) {
+        orbit_camera_destroy(&tmp_orbit_camera);
     }
     if(NULL != tmp_stl_viewer) {
         general_allocator_free((void**)&tmp_stl_viewer, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
@@ -248,7 +248,7 @@ void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, stl_viewer_t** 
     }
 
     render_packet_destroy(&(*stl_viewer_)->render_packet);
-    flight_camera_destroy(&(*stl_viewer_)->flight_camera);
+    orbit_camera_destroy(&(*stl_viewer_)->orbit_camera);
 
     general_allocator_free((void**)stl_viewer_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
@@ -256,7 +256,6 @@ void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, stl_viewer_t** 
 scene_result_t stl_viewer_update(
     stl_viewer_t* stl_viewer_,
     const engine_event_view_t* event_view_,
-    float delta_time_,
     bool window_resized_,
     int framebuffer_width_,
     int framebuffer_height_) {
@@ -279,47 +278,47 @@ scene_result_t stl_viewer_update(
     }
 #endif
 
-    for(size_t i = 0; i != event_view_->keyboard_event_count; ++i) {
-        ret_camera = flight_camera_command_update(stl_viewer_->flight_camera, &event_view_->keyboard_events[i]);
+    for(size_t i = 0; i != event_view_->mouse_event_count; ++i) {
+        ret_camera = orbit_camera_command_update(stl_viewer_->orbit_camera, &event_view_->mouse_events[i]);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = scene_result_convert_camera(ret_camera);
-            ERROR_MESSAGE("stl_viewer_update(%s) - flight_camera_command_update failed.", scene_result_to_str(ret));
+            ERROR_MESSAGE("stl_viewer_update(%s) - orbit_camera_command_update failed.", scene_result_to_str(ret));
             goto cleanup;
         }
     }
 
-    ret_camera = flight_camera_command_execute(stl_viewer_->flight_camera, stl_viewer_->camera_speed, delta_time_, &view_changed);
+    ret_camera = orbit_camera_command_execute(stl_viewer_->orbit_camera, &view_changed);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = scene_result_convert_camera(ret_camera);
-        ERROR_MESSAGE("stl_viewer_update(%s) - flight_camera_command_execute failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("stl_viewer_update(%s) - orbit_camera_command_execute failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     if(window_resized_ && 0 < framebuffer_height_ && 0 < framebuffer_width_) { // window最小化等でframebuffer_heightが0の場合は視錐台の更新は行わない
         aspect = (float)framebuffer_width_ / (float)framebuffer_height_;
-        ret_camera = flight_camera_viewing_frustum_update(stl_viewer_->flight_camera, s_default_fovy, aspect, s_default_near_clip, s_default_far_clip);
+        ret_camera = orbit_camera_viewing_frustum_update(stl_viewer_->orbit_camera, s_default_fovy, aspect, s_default_near_clip, s_default_far_clip);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = scene_result_convert_camera(ret_camera);
-            ERROR_MESSAGE("stl_viewer_update(%s) - flight_camera_viewing_frustum_update failed.", scene_result_to_str(ret));
+            ERROR_MESSAGE("stl_viewer_update(%s) - orbit_camera_viewing_frustum_update failed.", scene_result_to_str(ret));
             goto cleanup;
         }
         projection_changed = true;
     }
 
     if(view_changed) {
-        ret_camera = flight_camera_view_matrix_get(stl_viewer_->flight_camera, &stl_viewer_->view_matrix);
+        ret_camera = orbit_camera_view_matrix_get(stl_viewer_->orbit_camera, &stl_viewer_->view_matrix);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = scene_result_convert_camera(ret_camera);
-            ERROR_MESSAGE("stl_viewer_update(%s) - flight_camera_view_matrix_get failed.", scene_result_to_str(ret));
+            ERROR_MESSAGE("stl_viewer_update(%s) - orbit_camera_view_matrix_get failed.", scene_result_to_str(ret));
             goto cleanup;
         }
     }
 
     if(projection_changed) {
-        ret_camera = flight_camera_perspective_matrix_get(stl_viewer_->flight_camera, &stl_viewer_->projection_matrix);
+        ret_camera = orbit_camera_perspective_matrix_get(stl_viewer_->orbit_camera, &stl_viewer_->projection_matrix);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = scene_result_convert_camera(ret_camera);
-            ERROR_MESSAGE("stl_viewer_update(%s) - flight_camera_perspective_matrix_get failed.", scene_result_to_str(ret));
+            ERROR_MESSAGE("stl_viewer_update(%s) - orbit_camera_perspective_matrix_get failed.", scene_result_to_str(ret));
             goto cleanup;
         }
     }
@@ -391,20 +390,6 @@ bool stl_viewer_is_valid(const stl_viewer_t* viewer_) {
         return false;
     }
     return true;
-}
-
-// TODO: remove this.
-static void flight_camera_keybinds_initialize(void) {
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_FORWARD].key = KEY_W;         // カメラ前進コマンド(キーバインド: KEY_W)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_BACKWARD].key = KEY_S;        // カメラ後進コマンド(キーバインド: KEY_S)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_RIGHT].key = KEY_D;           // カメラ右移動コマンド(キーバインド: KEY_D)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_LEFT].key = KEY_A;            // カメラ左移動コマンド(キーバインド: KEY_A)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_UP].key = KEY_E;              // カメラ上方向移動コマンド(キーバインド: KEY_E)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_DOWN].key = KEY_Q;            // カメラ下方向移動コマンド(キーバインド: KEY_Q)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_PLUS].key = KEY_UP;      // カメラピッチ方向(+)回転コマンド(キーバインド: KEY_UP)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_MINUS].key = KEY_DOWN;   // カメラピッチ方向(-)回転コマンド(キーバインド: KEY_DOWN)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_PLUS].key = KEY_LEFT;      // カメラヨー方向(+)回転コマンド(キーバインド: KEY_LEFT)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_MINUS].key = KEY_RIGHT;    // カメラヨー方向(-)回転コマンド(キーバインド: KEY_RIGHT)
 }
 
 static scene_result_t render_packet_build(const stl_viewer_t* viewer_, render_packet_t* packet_) {

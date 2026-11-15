@@ -420,7 +420,7 @@ application_result_t application_run(void) {
         //     ERROR_MESSAGE("application_run(%s) - sample_robot_update failed.", application_result_to_str(ret));
         //     goto cleanup;
         // }
-        ret_scene = stl_viewer_update(s_application_state->stl_viewer_demo, s_application_state->engine_event_view, demo_delta_time, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
+        ret_scene = stl_viewer_update(s_application_state->stl_viewer_demo, s_application_state->engine_event_view, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
         if(SCENE_SUCCESS != ret_scene) {
             ret = application_result_convert_scene(ret_scene);
             if(SCENE_INVALID_ARGUMENT == ret_scene) {

@@ -294,8 +294,10 @@ static platform_system_result_t platform_glfw_update(platform_backend_t* backend
     }
 #endif
 
-    backend_->current.scroll_x_offset = 0.0;
-    backend_->current.scroll_y_offset = 0.0;
+    // Reset.
+    snapshot_reset(&backend_->current);
+
+    event_storage_counts_reset(&backend_->window_event_storage, &backend_->keyboard_event_storage, &backend_->mouse_event_storage);
 
     glfwPollEvents();
 
@@ -305,7 +307,6 @@ static platform_system_result_t platform_glfw_update(platform_backend_t* backend
         goto cleanup;
     }
 
-    event_storage_counts_reset(&backend_->window_event_storage, &backend_->keyboard_event_storage, &backend_->mouse_event_storage);
     if(backend_->current.window_should_close) {    // 後続処理でエラーが発生しても無視したいためウィンドウクローズは独立で処理する
         tmp_window_close_requested = true;
     } else {
@@ -328,14 +329,13 @@ static platform_system_result_t platform_glfw_update(platform_backend_t* backend
         }
     }
 
-    backend_->prev = backend_->current;
-
     ret = event_view_refresh(tmp_window_close_requested, &backend_->window_event_storage, &backend_->keyboard_event_storage, &backend_->mouse_event_storage, &backend_->event_view);
     if(PLATFORM_SYSTEM_SUCCESS != ret) {
             ERROR_MESSAGE("platform_glfw_update(%s) - event_view_refresh failed.", platform_system_result_to_str(ret));
             goto cleanup;
     }
 
+    backend_->prev = backend_->current;
     *out_event_view_ = &backend_->event_view;
 
     ret = PLATFORM_SYSTEM_SUCCESS;

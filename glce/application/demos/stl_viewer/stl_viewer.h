@@ -24,7 +24,6 @@ void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, stl_viewer_t** 
 scene_result_t stl_viewer_update(
     stl_viewer_t* stl_viewer_,
     const engine_event_view_t* event_view_,
-    float delta_time_,
     bool window_resized_,
     int framebuffer_width_,
     int framebuffer_height_);
