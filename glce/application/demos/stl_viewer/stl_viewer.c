@@ -30,6 +30,10 @@
 
 #include "engine/systems/renderer/resources/geometries/line_mesh_geometry.h"
 #include "engine/systems/renderer/resources/geometries/generators/line_grid_geometry.h"
+#include "engine/systems/renderer/resources/geometries/generators/untextured_cone_geometry.h"
+#include "engine/systems/renderer/resources/geometries/generators/untextured_cylinder_geometry.h"
+
+#include "engine/systems/renderer/resources/materials/material_types.h"
 
 #include "engine/systems/renderer/resources/meshes/line_mesh.h"
 #include "engine/systems/renderer/resources/meshes/untextured_mesh.h"
@@ -41,11 +45,12 @@
 #include "application/demos/core/scene_err_utils.h"
 
 typedef struct stl_viewer {
+    // 描画対象STLモデル
     untextured_mesh_t untextured_mesh;
     mat4x4f_t model_matrix;
 
     // Debug Axis / Debug AABB.
-    // untextured_mesh_t debug_axis_mesh;
+    untextured_mesh_t debug_axis_mesh[3];
     line_mesh_t debug_aabb_mesh;
 
     // Floor Grid.
@@ -70,10 +75,11 @@ static const float s_default_fovy = 45.0f;
 static const float s_default_near_clip = 0.1f;
 static const float s_default_far_clip = 3000.0f;
 
-// Floor Grid Resource.
+// Resource Initializer.
+static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_frontend_, const char* src_resource_name_, const cone_t* debug_axis_cone_, const cylinder_t* debug_axis_cylinder_, uint16_t debug_axis_segment_count_, untextured_mesh_t out_mesh_[3]);
+static scene_result_t debug_axis_vertices_create(vec3f_t rotation_, const cone_t* cone_, const cylinder_t* cylinder_, uint16_t segment_count_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_);
+static scene_result_t debug_axis_mesh_resource_name_create(const char* resource_map_name_, const char* resource_category_, const char* axis_name_, choco_string_t** out_string_);
 static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_frontend_, line_mesh_t* out_mesh_);
-
-// Debug AABB Resource.
 static scene_result_t debug_aabb_mesh_initialize(const untextured_mesh_t* src_mesh_, const char* src_mesh_resource_name_, renderer_frontend_t* renderer_frontend_, line_mesh_t* out_mesh_);
 
 // Render Packet.
@@ -81,7 +87,6 @@ static scene_result_t render_packet_build(const stl_viewer_t* stl_viewer_, rende
 
 scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, stl_viewer_t** out_viewer_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
-    scene_result_t ret_cleanup = SCENE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
@@ -95,6 +100,7 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
 
     line_mesh_t tmp_floor_grid = { 0 };
     line_mesh_t tmp_aabb_mesh = { 0 };
+    untextured_mesh_t tmp_debug_axis_mesh[3];
 
     untextured_mesh_t tmp_untextured_mesh = { 0 };
     untextured_mesh_config_t stl_viewer_mesh_config = { 0 };
@@ -103,11 +109,13 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     bool untextured_mesh_imported = false;
     bool floor_grid_mesh_imported = false;
     bool debug_aabb_mesh_imported = false;
+    bool debug_axis_mesh_imported = false;
 
     // Debug Axis Configuration.
-    // const uint32_t segment_count = 32;
-    // const cone_t cone = { .height = 10.0f, .radius = 10.0f };
-    // const cylinder_t cylinder = { .height = 30.0f, .radius = 5.0f };
+    // TODO: サイズ自動調整
+    const uint32_t segment_count = 32;
+    const cone_t cone = { .height = 5.0f, .radius = 1.0f };
+    const cylinder_t cylinder = { .height = 15.0f, .radius = 0.5f };
 
     float aspect = 0.0f;
 
@@ -180,6 +188,7 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
         goto cleanup;
     }
 
+    // 描画対象STLモデル
     stl_viewer_mesh_config.geometry_subdirectory = "stl/demo_stl_viewer";
     stl_viewer_mesh_config.geometry_resource_name = "utah_teapot_ascii";
     stl_viewer_mesh_config.geometry_extension = "stl";
@@ -220,6 +229,17 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     }
     debug_aabb_mesh_imported = true;
 
+    // Debug Axis.
+    ret = debug_axis_mesh_initialize(renderer_frontend_, "utah_teapot_ascii", &cone, &cylinder, segment_count, tmp_debug_axis_mesh);
+    if(SCENE_SUCCESS != ret) {
+        if(SCENE_INVALID_ARGUMENT == ret) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("stl_viewer_create(%s) - debug_axis_mesh_initialize failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    debug_axis_mesh_imported = true;
+
     mat4f_identity(&tmp_stl_viewer->model_matrix);
     tmp_stl_viewer->untextured_mesh = tmp_untextured_mesh;
     tmp_stl_viewer->camera_speed = 5.0f;
@@ -228,6 +248,9 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     tmp_stl_viewer->floor_grid_mesh = tmp_floor_grid;
     tmp_stl_viewer->floor_grid_model_matrix = tmp_floor_grid_model_matrix;
     tmp_stl_viewer->debug_aabb_mesh = tmp_aabb_mesh;
+    tmp_stl_viewer->debug_axis_mesh[0] = tmp_debug_axis_mesh[0];
+    tmp_stl_viewer->debug_axis_mesh[1] = tmp_debug_axis_mesh[1];
+    tmp_stl_viewer->debug_axis_mesh[2] = tmp_debug_axis_mesh[2];
 
     // Result validation.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -261,6 +284,16 @@ cleanup:
             ret = SCENE_DATA_CORRUPTED;
             ERROR_MESSAGE("stl_viewer_create(%s) - renderer_frontend_line_mesh_release failed.", scene_result_to_str(ret));
             return ret;
+        }
+    }
+    if(NULL != renderer_frontend_ && debug_axis_mesh_imported) {
+        for(size_t i = 0; i != 3; ++i) {
+            ret_renderer_frontend = renderer_frontend_untextured_mesh_release(renderer_frontend_, &tmp_debug_axis_mesh[i]);
+            if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+                ret = SCENE_DATA_CORRUPTED;
+                ERROR_MESSAGE("stl_viewer_create(%s) - renderer_frontend_untextured_mesh_release failed.", scene_result_to_str(ret));
+                return ret;
+            }
         }
     }
     if(untextured_mesh_imported) {
@@ -470,7 +503,292 @@ bool stl_viewer_is_valid(const stl_viewer_t* viewer_) {
     return true;
 }
 
-// TODO: 格子間隔、描画領域自動生成
+static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_frontend_, const char* src_resource_name_, const cone_t* debug_axis_cone_, const cylinder_t* debug_axis_cylinder_, uint16_t debug_axis_segment_count_, untextured_mesh_t out_mesh_[3]) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
+
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
+    choco_string_t* tmp_geometry_resource_name = NULL;
+    choco_string_t* tmp_material_resource_name = NULL;
+    point_normal_vertex_t* tmp_vertices = NULL;
+
+    untextured_mesh_t tmp_mesh[3];
+    const char* axis_names[3] = { "x", "y", "z" };
+    const vec3f_t axis_rotations[3] = { vec3f_initialize(0.0f, 90.0f, 0.0f), vec3f_initialize(-90.0f, 0.0f, 0.0f), vec3f_initialize(0.0f, 0.0f, 0.0f) };
+    const untextured_mesh_material_t axis_materials[3] = {
+        {
+            .diffuse = vec3f_initialize(1.0f, 0.0f, 0.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f)
+        },
+        {
+            .diffuse = vec3f_initialize(0.0f, 1.0f, 0.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f)
+        },
+        {
+            .diffuse = vec3f_initialize(0.0f, 0.0f, 1.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f)
+        }
+    };
+    size_t tmp_vertex_count = 0;
+    size_t imported_mesh_count = 0;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "src_resource_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(debug_axis_cone_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "debug_axis_cone_")
+    IF_ARG_NULL_GOTO_CLEANUP(debug_axis_cylinder_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "debug_axis_cylinder_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "out_mesh_")
+    if('\0' == src_resource_name_[0]) {
+        ret = SCENE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - Provided src_resource_name_ is not valid.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Generate Geometry, Mesh Import.
+    for(size_t i = 0; i != 3; ++i) {    // X, Y, Z各軸ループ
+        // Geometry, Materialは共有するので生成は各軸1回でok
+        ret = debug_axis_mesh_resource_name_create(src_resource_name_, "geometry", axis_names[i], &tmp_geometry_resource_name);
+        if(SCENE_SUCCESS != ret) {
+            ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - debug_axis_mesh_resource_name_create failed.", scene_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret = debug_axis_mesh_resource_name_create(src_resource_name_, "material", axis_names[i], &tmp_material_resource_name);
+        if(SCENE_SUCCESS != ret) {
+            ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - debug_axis_mesh_resource_name_create failed.", scene_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret = debug_axis_vertices_create(axis_rotations[i], debug_axis_cone_, debug_axis_cylinder_, debug_axis_segment_count_, &tmp_vertex_count, &tmp_vertices);
+        if(SCENE_SUCCESS != ret) {
+            ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - debug_axis_vertices_create failed.", scene_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret_renderer_frontend = renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_, choco_string_c_str(tmp_geometry_resource_name), choco_string_c_str(tmp_material_resource_name), tmp_vertices, tmp_vertex_count, &axis_materials[i], &tmp_mesh[imported_mesh_count]);
+        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+            ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+            ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - renderer_frontend_untextured_mesh_import_from_vertices failed.", scene_result_to_str(ret));
+            goto cleanup;
+        }
+        imported_mesh_count++;
+
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        choco_string_destroy(&tmp_geometry_resource_name);
+        choco_string_destroy(&tmp_material_resource_name);
+    }
+
+    out_mesh_[0] = tmp_mesh[0];
+    out_mesh_[1] = tmp_mesh[1];
+    out_mesh_[2] = tmp_mesh[2];
+
+    ret = SCENE_SUCCESS;
+
+cleanup:
+    if(SCENE_DATA_CORRUPTED == ret || SCENE_SUCCESS == ret) {
+        return ret;
+    }
+    for(size_t i = 0; i != imported_mesh_count; ++i) {
+        if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_untextured_mesh_release(renderer_frontend_, &tmp_mesh[i])) {
+            ret = SCENE_DATA_CORRUPTED;
+            ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - renderer_frontend_untextured_mesh_release failed.", scene_result_to_str(ret));
+            return ret;
+        }
+    }
+    if(NULL != tmp_vertices) {
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    return ret;
+}
+
+static scene_result_t debug_axis_vertices_create(vec3f_t rotation_, const cone_t* cone_, const cylinder_t* cylinder_, uint16_t segment_count_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
+
+    general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
+    geometry_result_t ret_geometry = GEOMETRY_INVALID_ARGUMENT;
+
+    point_normal_vertex_t* tmp_vertices = NULL;
+    point_normal_vertex_t* tmp_cylinder_vertices = NULL;
+    point_normal_vertex_t* tmp_cone_vertices = NULL;
+
+    size_t allocation_size = 0;
+    size_t tmp_vertex_count = 0;
+    size_t tmp_cylinder_vertex_count = 0;
+    size_t tmp_cone_vertex_count = 0;
+    size_t index = 0;
+    mat4x4f_t model_mat = { 0 };
+
+    bool cylinder_generated = false;
+    bool cone_generated = false;
+
+    // Preconditions.
+    IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_vertices_create", "cone_")
+    IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_vertices_create", "cylinder_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_vertices_create", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_vertices_create", "out_vertices_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_vertices_create", "*out_vertices_")
+    if(!cone_is_valid(cone_)) {
+        ret = SCENE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - Provided cone_ is not valid.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!cylinder_is_valid(cylinder_)) {
+        ret = SCENE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - Provided cylinder_ is not valid.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!vec3f_is_finite(rotation_)) {
+        ret = SCENE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - Provided rotation_ is not valid.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Generate Geometry.
+    ret_geometry = untextured_cylinder_geometry_vertices_create(cylinder_, segment_count_, &tmp_cylinder_vertices, &tmp_cylinder_vertex_count);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = scene_result_convert_geometry(ret_geometry);
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - untextured_cylinder_geometry_vertices_create failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    cylinder_generated = true;
+
+    ret_geometry = untextured_cone_geometry_vertices_create(cone_, segment_count_, &tmp_cone_vertices, &tmp_cone_vertex_count);
+    if(GEOMETRY_SUCCESS != ret_geometry) {
+        ret = scene_result_convert_geometry(ret_geometry);
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - untextured_cone_geometry_vertices_create failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    cone_generated = true;
+
+    // ConeをCylinderの上面に移動
+    mat4f_translation(vec3f_initialize(0.0f, 0.0f, cylinder_->height), &model_mat);
+    if(!point_normal_vertices_transform(tmp_cone_vertices, tmp_cone_vertex_count, &model_mat)) {
+        ret = SCENE_RUNTIME_ERROR;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - point_normal_vertices_transform failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Cylinder, Coneを1つのGeometryにするため両方の頂点情報を格納する配列リソース確保
+    if(!size_add_checked(tmp_cone_vertex_count, tmp_cylinder_vertex_count, &tmp_vertex_count)) {
+        ret = SCENE_OVERFLOW;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - vertex count overflow.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!size_mul_checked(tmp_vertex_count, sizeof(point_normal_vertex_t), &allocation_size)) {
+        ret = SCENE_OVERFLOW;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - allocation size overflow.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vertices);
+    if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
+        ret = scene_result_convert_general_allocator(ret_general_allocator);
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // 頂点情報コピー
+    for(size_t i = 0; i != tmp_cylinder_vertex_count; ++i) {
+        tmp_vertices[index] = tmp_cylinder_vertices[i];
+        index++;
+    }
+    for(size_t i = 0; i != tmp_cone_vertex_count; ++i) {
+        tmp_vertices[index] = tmp_cone_vertices[i];
+        index++;
+    }
+
+    // 各軸用に回転
+    mat4f_rot_xyz(CHOCO_DEG_TO_RAD(rotation_.elem[0]), CHOCO_DEG_TO_RAD(rotation_.elem[1]), CHOCO_DEG_TO_RAD(rotation_.elem[2]), &model_mat);
+    if(!point_normal_vertices_transform(tmp_vertices, tmp_vertex_count, &model_mat)) {
+        ret = SCENE_RUNTIME_ERROR;
+        ERROR_MESSAGE("debug_axis_vertices_create(%s) - point_normal_vertices_transform failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_vertex_count_ = tmp_vertex_count;
+    *out_vertices_ = tmp_vertices;
+    tmp_vertices = NULL;
+
+    ret = SCENE_SUCCESS;
+
+cleanup:
+    if(SCENE_DATA_CORRUPTED == ret) {
+        return ret;
+    }
+    if(cylinder_generated) {
+        general_allocator_free((void**)&tmp_cylinder_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(cone_generated) {
+        general_allocator_free((void**)&tmp_cone_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    if(NULL != tmp_vertices) {
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    }
+    return ret;
+}
+
+// NOTE:
+// - *out_string_ = resource_map_name_ + "_debug_axis_" + resource_category_ + "_" + axis_name_
+// - resource_category_ = material or geometry
+// - axis_name_ = x or y or z
+static scene_result_t debug_axis_mesh_resource_name_create(const char* resource_map_name_, const char* resource_category_, const char* axis_name_, choco_string_t** out_string_) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
+
+    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
+
+    choco_string_t* tmp_string = NULL;
+
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_resource_name_create", "resource_map_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_category_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_resource_name_create", "resource_category_")
+    IF_ARG_NULL_GOTO_CLEANUP(axis_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_resource_name_create", "axis_name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_resource_name_create", "out_string_")
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "debug_axis_mesh_resource_name_create", "*out_string_")
+
+    ret_choco_string = choco_string_create_from_c_string(resource_map_name_, &tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = scene_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_axis_mesh_resource_name_create(%s) - choco_string_create_from_c_string failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_concat_from_c_string("_debug_axis_", tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = scene_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_axis_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_concat_from_c_string(resource_category_, tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = scene_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_axis_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_concat_from_c_string("_", tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = scene_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_axis_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_choco_string = choco_string_concat_from_c_string(axis_name_, tmp_string);
+    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
+        ret = scene_result_convert_choco_string(ret_choco_string);
+        ERROR_MESSAGE("debug_axis_mesh_resource_name_create(%s) - choco_string_concat_from_c_string failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    *out_string_ = tmp_string;
+    tmp_string = NULL;
+
+    ret = SCENE_SUCCESS;
+
+cleanup:
+    if(SCENE_DATA_CORRUPTED == ret || SCENE_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != tmp_string) {
+        choco_string_destroy(&tmp_string);
+    }
+    return ret;
+}
+
 static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_frontend_, line_mesh_t* out_mesh_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
@@ -586,7 +904,7 @@ static scene_result_t render_packet_build(const stl_viewer_t* viewer_, render_pa
     IF_ARG_NULL_GOTO_CLEANUP(packet_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "render_packet_build", "packet_")
 
     render_packet_deinitialize(packet_);
-    ret_render_packet = render_packet_initialize(2, 0, 0, 1, packet_);
+    ret_render_packet = render_packet_initialize(2, 0, 0, 4, packet_);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
         if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
@@ -597,6 +915,36 @@ static scene_result_t render_packet_build(const stl_viewer_t* viewer_, render_pa
     }
 
     ret_render_packet = render_packet_untextured_mesh_push(&viewer_->untextured_mesh, &viewer_->model_matrix, packet_);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = scene_result_convert_render_packet(ret_render_packet);
+        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_packet = render_packet_untextured_mesh_push(&viewer_->debug_axis_mesh[0], &viewer_->model_matrix, packet_);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = scene_result_convert_render_packet(ret_render_packet);
+        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_packet = render_packet_untextured_mesh_push(&viewer_->debug_axis_mesh[1], &viewer_->model_matrix, packet_);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = scene_result_convert_render_packet(ret_render_packet);
+        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+            ret = SCENE_DATA_CORRUPTED;
+        }
+        ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_packet = render_packet_untextured_mesh_push(&viewer_->debug_axis_mesh[2], &viewer_->model_matrix, packet_);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
         if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
