@@ -34,6 +34,8 @@ static camera_result_t rot_yaw_plus(camera_t* camera_, float speed_, float delta
 static camera_result_t rot_yaw_minus(camera_t* camera_, float speed_, float delta_time_);
 static camera_result_t camera_position_movement_apply(camera_t* camera_, vec3f_t translation_);
 
+static void flight_rotation_matrix_build(vec3f_t euler_, mat4x4f_t* out_rotation_);
+
 static bool flight_camera_key_bind_is_valid(flight_camera_key_bind_t key_binds_);
 static bool is_valid_shallow(const flight_camera_t* flight_camera_);
 static void destroy_unchecked(flight_camera_t** flight_camera_);
@@ -73,7 +75,7 @@ camera_result_t flight_camera_create(const flight_camera_key_bind_t keybinds_[FL
         goto cleanup;
     }
 
-    ret = camera_create(fovy_, aspect_, near_clip_, far_clip_, &tmp_camera);
+    ret = camera_create(fovy_, aspect_, near_clip_, far_clip_, flight_rotation_matrix_build, &tmp_camera);
     if(CAMERA_SUCCESS != ret) {
         ERROR_MESSAGE("flight_camera_create(%s) - camera_create failed.", camera_result_to_str(ret));
         goto cleanup;
@@ -572,6 +574,13 @@ static camera_result_t camera_position_movement_apply(camera_t* camera_, vec3f_t
 
 cleanup:
     return ret;
+}
+
+static void flight_rotation_matrix_build(vec3f_t euler_, mat4x4f_t* out_rotation_) {
+    if(NULL == out_rotation_) {
+        return;
+    }
+    mat4f_rot_xyz(CHOCO_DEG_TO_RAD(euler_.elem[0]), CHOCO_DEG_TO_RAD(euler_.elem[1]), CHOCO_DEG_TO_RAD(euler_.elem[2]), out_rotation_);
 }
 
 static bool flight_camera_key_bind_is_valid(flight_camera_key_bind_t key_binds_) {
