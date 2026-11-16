@@ -57,7 +57,7 @@ typedef struct stl_viewer {
     line_mesh_t floor_grid_mesh;
     mat4x4f_t floor_grid_model_matrix;
 
-    // Camera(Temporary)
+    // Camera
     orbit_camera_t* orbit_camera;
     float camera_speed;
     mat4x4f_t view_matrix;
@@ -76,10 +76,10 @@ static const float s_default_near_clip = 0.1f;
 static const float s_default_far_clip = 3000.0f;
 
 // Resource Initializer.
-static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_frontend_, const char* src_resource_name_, const cone_t* debug_axis_cone_, const cylinder_t* debug_axis_cylinder_, uint16_t debug_axis_segment_count_, untextured_mesh_t out_mesh_[3]);
+static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_frontend_, const char* src_resource_name_, const aabb_3d_t* aabb_, untextured_mesh_t out_mesh_[3]);
 static scene_result_t debug_axis_vertices_create(vec3f_t rotation_, const cone_t* cone_, const cylinder_t* cylinder_, uint16_t segment_count_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_);
 static scene_result_t debug_axis_mesh_resource_name_create(const char* resource_map_name_, const char* resource_category_, const char* axis_name_, choco_string_t** out_string_);
-static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_frontend_, line_mesh_t* out_mesh_);
+static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_frontend_, const aabb_3d_t* aabb_, line_mesh_t* out_mesh_);
 static scene_result_t debug_aabb_mesh_initialize(const untextured_mesh_t* src_mesh_, const char* src_mesh_resource_name_, renderer_frontend_t* renderer_frontend_, line_mesh_t* out_mesh_);
 
 // Render Packet.
@@ -98,6 +98,7 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     orbit_camera_t* tmp_orbit_camera = NULL;  // Temporary
     render_packet_t* tmp_render_packet = NULL;
 
+    aabb_3d_t aabb = { 0 };
     line_mesh_t tmp_floor_grid = { 0 };
     line_mesh_t tmp_aabb_mesh = { 0 };
     untextured_mesh_t tmp_debug_axis_mesh[3];
@@ -110,12 +111,6 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     bool floor_grid_mesh_imported = false;
     bool debug_aabb_mesh_imported = false;
     bool debug_axis_mesh_imported = false;
-
-    // Debug Axis Configuration.
-    // TODO: サイズ自動調整
-    const uint32_t segment_count = 32;
-    const cone_t cone = { .height = 5.0f, .radius = 1.0f };
-    const cylinder_t cylinder = { .height = 15.0f, .radius = 0.5f };
 
     float aspect = 0.0f;
 
@@ -206,8 +201,15 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     }
     untextured_mesh_imported = true;
 
+    ret_renderer_frontend = renderer_frontend_untextured_mesh_local_aabb_get(renderer_frontend_, &tmp_untextured_mesh, &aabb);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("stl_viewer_create(%s) - renderer_frontend_untextured_mesh_local_aabb_get failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
     // Floor Grid.
-    ret = floor_grid_mesh_initialize(renderer_frontend_, &tmp_floor_grid);
+    ret = floor_grid_mesh_initialize(renderer_frontend_, &aabb, &tmp_floor_grid);
     if(SCENE_SUCCESS != ret) {
         if(SCENE_INVALID_ARGUMENT == ret) {
             ret = SCENE_DATA_CORRUPTED;
@@ -230,7 +232,7 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     debug_aabb_mesh_imported = true;
 
     // Debug Axis.
-    ret = debug_axis_mesh_initialize(renderer_frontend_, "utah_teapot_ascii", &cone, &cylinder, segment_count, tmp_debug_axis_mesh);
+    ret = debug_axis_mesh_initialize(renderer_frontend_, "utah_teapot_ascii", &aabb, tmp_debug_axis_mesh);
     if(SCENE_SUCCESS != ret) {
         if(SCENE_INVALID_ARGUMENT == ret) {
             ret = SCENE_DATA_CORRUPTED;
@@ -514,7 +516,7 @@ bool stl_viewer_is_valid(const stl_viewer_t* viewer_) {
     return true;
 }
 
-static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_frontend_, const char* src_resource_name_, const cone_t* debug_axis_cone_, const cylinder_t* debug_axis_cylinder_, uint16_t debug_axis_segment_count_, untextured_mesh_t out_mesh_[3]) {
+static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_frontend_, const char* src_resource_name_, const aabb_3d_t* aabb_, untextured_mesh_t out_mesh_[3]) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
@@ -540,16 +542,39 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
     size_t tmp_vertex_count = 0;
     size_t imported_mesh_count = 0;
 
+    float max_length = 0.0f;
+    float axis_length = 0.0f;
+    vec3f_t aabb_length = { 0 };
+
+    cylinder_t cylinder = { 0 };
+    cone_t cone = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "renderer_frontend_")
     IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "src_resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(debug_axis_cone_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "debug_axis_cone_")
-    IF_ARG_NULL_GOTO_CLEANUP(debug_axis_cylinder_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "debug_axis_cylinder_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "aabb_")
     IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "out_mesh_")
     if('\0' == src_resource_name_[0]) {
         ret = SCENE_INVALID_ARGUMENT;
         ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - Provided src_resource_name_ is not valid.", scene_result_to_str(ret));
         goto cleanup;
     }
+
+    for(size_t i = 0; i != 3; ++i) {
+        aabb_length.elem[i] = aabb_->max.elem[i] - aabb_->min.elem[i];
+        max_length = (max_length < aabb_length.elem[i]) ? aabb_length.elem[i] : max_length;
+    }
+    if(!(max_length > 0.0f)) {
+        ret = SCENE_RUNTIME_ERROR;
+        ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - Provided aabb_ is not valid.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    axis_length = max_length * 0.7f;
+
+    cylinder.height = axis_length * 0.8f;
+    cone.height = axis_length * 0.2f;
+
+    cylinder.radius = axis_length * 0.01f;
+    cone.radius = cylinder.radius * 2.0f;
 
     // Generate Geometry, Mesh Import.
     for(size_t i = 0; i != 3; ++i) {    // X, Y, Z各軸ループ
@@ -566,7 +591,7 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
             goto cleanup;
         }
 
-        ret = debug_axis_vertices_create(axis_rotations[i], debug_axis_cone_, debug_axis_cylinder_, debug_axis_segment_count_, &tmp_vertex_count, &tmp_vertices);
+        ret = debug_axis_vertices_create(axis_rotations[i], &cone, &cylinder, 16, &tmp_vertex_count, &tmp_vertices);
         if(SCENE_SUCCESS != ret) {
             ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - debug_axis_vertices_create failed.", scene_result_to_str(ret));
             goto cleanup;
@@ -601,6 +626,13 @@ cleanup:
             ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - renderer_frontend_untextured_mesh_release failed.", scene_result_to_str(ret));
             return ret;
         }
+    }
+    if(NULL != tmp_geometry_resource_name) {
+        choco_string_destroy(&tmp_geometry_resource_name);
+    }
+
+    if(NULL != tmp_material_resource_name) {
+        choco_string_destroy(&tmp_material_resource_name);
     }
     if(NULL != tmp_vertices) {
         general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
@@ -800,7 +832,7 @@ cleanup:
     return ret;
 }
 
-static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_frontend_, line_mesh_t* out_mesh_) {
+static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_frontend_, const aabb_3d_t* aabb_, line_mesh_t* out_mesh_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
@@ -810,10 +842,37 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     size_t tmp_vertex_count = 0;
     line_mesh_t tmp_mesh = { 0 };
 
+    float max_length = 0.0f;
+    vec3f_t aabb_length = { 0 };
+    vec3f_t center = { 0 };
+    vec3f_t corner1 = { 0 };
+    vec3f_t corner2 = { 0 };
+
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "aabb_")
     IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "out_mesh_")
 
-    ret_geometry = line_grid_geometry_vertices_create(LINE_GRID_PLANE_XY, vec4u8_initialize(128, 128, 128, 255), vec3f_initialize(-20.0f, -20.0f, 0.0f), vec3f_initialize(20.0f, 20.0f, 0.0f), 5.0f, &tmp_vertices, &tmp_vertex_count);
+    for(size_t i = 0; i != 2; ++i) {    // XY平面へのGrid生成なので、zは除外
+        aabb_length.elem[i] = aabb_->max.elem[i] - aabb_->min.elem[i];
+        max_length = (max_length < aabb_length.elem[i]) ? aabb_length.elem[i] : max_length;
+    }
+    if(!(max_length > 0.0f)) {
+        ret = SCENE_RUNTIME_ERROR;
+        ERROR_MESSAGE("floor_grid_mesh_initialize(%s) - Provided aabb is not valid.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    center.elem[0] = (aabb_->max.elem[0] + aabb_->min.elem[0]) / 2.0f;
+    center.elem[1] = (aabb_->max.elem[1] + aabb_->min.elem[1]) / 2.0f;
+    center.elem[2] = aabb_->min.elem[2];
+    for(size_t i = 0; i != 2; ++i) {
+        corner1.elem[i] = center.elem[i] - (max_length / 2.0f);
+        corner2.elem[i] = center.elem[i] + (max_length / 2.0f);
+    }
+    corner1.elem[2] = center.elem[2];
+    corner2.elem[2] = center.elem[2];
+
+    ret_geometry = line_grid_geometry_vertices_create(LINE_GRID_PLANE_XY, vec4u8_initialize(128, 128, 128, 255), corner1, corner2, max_length / 10.0f, &tmp_vertices, &tmp_vertex_count);
     if(GEOMETRY_SUCCESS != ret_geometry) {
         ret = scene_result_convert_geometry(ret_geometry);
         if(GEOMETRY_INVALID_ARGUMENT == ret_geometry) {
