@@ -15,6 +15,7 @@
 #include "engine/core/geometry_primitive/cylinder.h"
 #include "engine/core/geometry_primitive/aabb_3d.h"
 
+#include "engine/core/event/keyboard_event.h"
 #include "engine/core/event/mouse_event.h"
 
 #include "engine/containers/choco_string.h"
@@ -62,6 +63,8 @@ typedef struct stl_viewer {
     float camera_speed;
     mat4x4f_t view_matrix;
     mat4x4f_t projection_matrix;
+    float near_clip;
+    float far_clip;
 
     // Lighting.
     directional_light_t directional_light;
@@ -69,11 +72,10 @@ typedef struct stl_viewer {
 
     // Rendering.
     render_packet_t* render_packet;
+    bool enable_debug_view;
 } stl_viewer_t;
 
 static const float s_default_fovy = 45.0f;
-static const float s_default_near_clip = 0.1f;
-static const float s_default_far_clip = 3000.0f;
 
 // Resource Initializer.
 static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_frontend_, const char* src_resource_name_, const aabb_3d_t* aabb_, untextured_mesh_t out_mesh_[3]);
@@ -81,6 +83,9 @@ static scene_result_t debug_axis_vertices_create(vec3f_t rotation_, const cone_t
 static scene_result_t debug_axis_mesh_resource_name_create(const char* resource_map_name_, const char* resource_category_, const char* axis_name_, choco_string_t** out_string_);
 static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_frontend_, const aabb_3d_t* aabb_, line_mesh_t* out_mesh_);
 static scene_result_t debug_aabb_mesh_initialize(const untextured_mesh_t* src_mesh_, const char* src_mesh_resource_name_, renderer_frontend_t* renderer_frontend_, line_mesh_t* out_mesh_);
+
+// Camera.
+static scene_result_t initial_camera_parameter_initialize(const aabb_3d_t* aabb_, float fovy_, vec3f_t* out_target_, float* out_distance_, float* out_near_clip_, float* out_far_clip_);
 
 // Render Packet.
 static scene_result_t render_packet_build(const stl_viewer_t* stl_viewer_, render_packet_t* packet_);
@@ -106,6 +111,11 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     untextured_mesh_t tmp_untextured_mesh = { 0 };
     untextured_mesh_config_t stl_viewer_mesh_config = { 0 };
     mat4x4f_t tmp_floor_grid_model_matrix = { 0 };
+
+    vec3f_t tmp_target = { 0 };
+    float tmp_distance = 0.0f;
+    float tmp_near_clip = 0.0f;
+    float tmp_far_clip = 0.0f;
 
     bool untextured_mesh_imported = false;
     bool floor_grid_mesh_imported = false;
@@ -141,27 +151,6 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
             ret = SCENE_DATA_CORRUPTED;
         }
         ERROR_MESSAGE("stl_viewer_create(%s) - render_packet_create failed.", scene_result_to_str(ret));
-        goto cleanup;
-    }
-
-    // Camera.
-    aspect = (float)framebuffer_width_ / (float)framebuffer_height_;
-    ret_camera = orbit_camera_create(s_default_fovy, aspect, s_default_near_clip, s_default_far_clip, &tmp_orbit_camera);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = scene_result_convert_camera(ret_camera);
-        ERROR_MESSAGE("stl_viewer_create(%s) - orbit_camera_create failed.", scene_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_camera = orbit_camera_view_matrix_get(tmp_orbit_camera, &tmp_stl_viewer->view_matrix);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = scene_result_convert_camera(ret_camera);
-        ERROR_MESSAGE("stl_viewer_create(%s) - orbit_camera_view_matrix_get failed.", scene_result_to_str(ret));
-        goto cleanup;
-    }
-    ret_camera = orbit_camera_perspective_matrix_get(tmp_orbit_camera, &tmp_stl_viewer->projection_matrix);
-    if(CAMERA_SUCCESS != ret_camera) {
-        ret = scene_result_convert_camera(ret_camera);
-        ERROR_MESSAGE("stl_viewer_create(%s) - orbit_camera_perspective_matrix_get failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -205,6 +194,32 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("stl_viewer_create(%s) - renderer_frontend_untextured_mesh_local_aabb_get failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Camera.
+    ret = initial_camera_parameter_initialize(&aabb, s_default_fovy, &tmp_target, &tmp_distance, &tmp_near_clip, &tmp_far_clip);
+    if(SCENE_SUCCESS != ret) {
+        ERROR_MESSAGE("stl_viewer_create(%s) - initial_camera_parameter_initialize failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    aspect = (float)framebuffer_width_ / (float)framebuffer_height_;
+    ret_camera = orbit_camera_create(s_default_fovy, aspect, tmp_near_clip, tmp_far_clip, tmp_target, tmp_distance, &tmp_orbit_camera);
+    if(CAMERA_SUCCESS != ret_camera) {
+        ret = scene_result_convert_camera(ret_camera);
+        ERROR_MESSAGE("stl_viewer_create(%s) - orbit_camera_create failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_camera = orbit_camera_view_matrix_get(tmp_orbit_camera, &tmp_stl_viewer->view_matrix);
+    if(CAMERA_SUCCESS != ret_camera) {
+        ret = scene_result_convert_camera(ret_camera);
+        ERROR_MESSAGE("stl_viewer_create(%s) - orbit_camera_view_matrix_get failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    ret_camera = orbit_camera_perspective_matrix_get(tmp_orbit_camera, &tmp_stl_viewer->projection_matrix);
+    if(CAMERA_SUCCESS != ret_camera) {
+        ret = scene_result_convert_camera(ret_camera);
+        ERROR_MESSAGE("stl_viewer_create(%s) - orbit_camera_perspective_matrix_get failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -253,6 +268,9 @@ scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const 
     tmp_stl_viewer->debug_axis_mesh[0] = tmp_debug_axis_mesh[0];
     tmp_stl_viewer->debug_axis_mesh[1] = tmp_debug_axis_mesh[1];
     tmp_stl_viewer->debug_axis_mesh[2] = tmp_debug_axis_mesh[2];
+    tmp_stl_viewer->near_clip = tmp_near_clip;
+    tmp_stl_viewer->far_clip = tmp_far_clip;
+    tmp_stl_viewer->enable_debug_view = true;
 
     // Result validation.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -402,6 +420,12 @@ scene_result_t stl_viewer_update(
     }
 #endif
 
+    for(size_t i = 0; i != event_view_->keyboard_event_count; ++i) {
+        if(KEY_D == event_view_->keyboard_events[i].key && event_view_->keyboard_events[i].event_args.pressed) {
+            stl_viewer_->enable_debug_view = !stl_viewer_->enable_debug_view;
+        }
+    }
+
     for(size_t i = 0; i != event_view_->mouse_event_count; ++i) {
         ret_camera = orbit_camera_command_update(stl_viewer_->orbit_camera, &event_view_->mouse_events[i]);
         if(CAMERA_SUCCESS != ret_camera) {
@@ -420,7 +444,7 @@ scene_result_t stl_viewer_update(
 
     if(window_resized_ && 0 < framebuffer_height_ && 0 < framebuffer_width_) { // window最小化等でframebuffer_heightが0の場合は視錐台の更新は行わない
         aspect = (float)framebuffer_width_ / (float)framebuffer_height_;
-        ret_camera = orbit_camera_viewing_frustum_update(stl_viewer_->orbit_camera, s_default_fovy, aspect, s_default_near_clip, s_default_far_clip);
+        ret_camera = orbit_camera_viewing_frustum_update(stl_viewer_->orbit_camera, s_default_fovy, aspect, stl_viewer_->near_clip, stl_viewer_->far_clip);
         if(CAMERA_SUCCESS != ret_camera) {
             ret = scene_result_convert_camera(ret_camera);
             ERROR_MESSAGE("stl_viewer_update(%s) - orbit_camera_viewing_frustum_update failed.", scene_result_to_str(ret));
@@ -965,6 +989,50 @@ cleanup:
     return ret;
 }
 
+static scene_result_t initial_camera_parameter_initialize(const aabb_3d_t* aabb_, float fovy_, vec3f_t* out_target_, float* out_distance_, float* out_near_clip_, float* out_far_clip_) {
+    scene_result_t ret = SCENE_INVALID_ARGUMENT;
+
+    vec3f_t tmp_target = { 0 };
+    vec3f_t length = { 0 };
+    float radius = 0.0f;
+    float tmp_distance = 0.0f;
+    float tmp_near_clip = 0.0f;
+    float tmp_far_clip = 0.0f;
+
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameter_initialize", "aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_target_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameter_initialize", "out_target_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_distance_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameter_initialize", "out_distance_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_near_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameter_initialize", "out_near_clip_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_far_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameter_initialize", "out_far_clip_")
+
+    // AABBを包含するbounding sphereの半径を求める
+    for(size_t i = 0; i != 3; ++i) {
+        tmp_target.elem[i] = aabb_->min.elem[i] + (aabb_->max.elem[i] - aabb_->min.elem[i]) * 0.5f;
+        length.elem[i] = aabb_->max.elem[i] - aabb_->min.elem[i];
+    }
+    radius = vec3f_length(length) * 0.5f;
+
+    // NOTE: 視点, 中視点, 視点からbounding sphereへの接線によりできる直角三角形の斜辺がdistance
+    tmp_distance = 1.2f * radius / (sinf(CHOCO_DEG_TO_RAD(fovy_ / 2.0f))); // 1.2fは固定の余白係数
+
+    // NOTE: Bounding Sphere全体が描画範囲に収まるようにNear/Far Clipを設定する。
+    // - Sphereの手前端はdistance - radius、奥端はdistance + radius。
+    // - 描画範囲に余裕を持たせるため、radiusを1.5倍してNear/Farを計算する。
+    // - Near Clipは正値が必要なので、radiusの1%を下限とする。
+    tmp_near_clip = (0.01f * radius < (tmp_distance - 1.5f * radius)) ? (tmp_distance - 1.5f * radius) : 0.01f * radius;
+    tmp_far_clip = 1.5f * radius + tmp_distance;
+
+    *out_distance_ = tmp_distance;
+    *out_target_ = tmp_target;
+    *out_near_clip_ = tmp_near_clip;
+    *out_far_clip_ = tmp_far_clip;
+
+    ret = SCENE_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 static scene_result_t render_packet_build(const stl_viewer_t* viewer_, render_packet_t* packet_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
@@ -994,36 +1062,6 @@ static scene_result_t render_packet_build(const stl_viewer_t* viewer_, render_pa
         goto cleanup;
     }
 
-    ret_render_packet = render_packet_untextured_mesh_push(&viewer_->debug_axis_mesh[0], &viewer_->model_matrix, packet_);
-    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-        ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
-        ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_render_packet = render_packet_untextured_mesh_push(&viewer_->debug_axis_mesh[1], &viewer_->model_matrix, packet_);
-    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-        ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
-        ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
-        goto cleanup;
-    }
-
-    ret_render_packet = render_packet_untextured_mesh_push(&viewer_->debug_axis_mesh[2], &viewer_->model_matrix, packet_);
-    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-        ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
-        ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
-        goto cleanup;
-    }
-
     ret_render_packet = render_packet_line_mesh_push(&viewer_->floor_grid_mesh, &viewer_->floor_grid_model_matrix, packet_);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
@@ -1034,14 +1072,46 @@ static scene_result_t render_packet_build(const stl_viewer_t* viewer_, render_pa
         goto cleanup;
     }
 
-    ret_render_packet = render_packet_line_mesh_push(&viewer_->debug_aabb_mesh, &viewer_->model_matrix, packet_);
-    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
-        ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
+    if(viewer_->enable_debug_view) {
+        ret_render_packet = render_packet_untextured_mesh_push(&viewer_->debug_axis_mesh[0], &viewer_->model_matrix, packet_);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = scene_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = SCENE_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
+            goto cleanup;
         }
-        ERROR_MESSAGE("render_packet_build(%s) - render_packet_line_mesh_push failed.", scene_result_to_str(ret));
-        goto cleanup;
+
+        ret_render_packet = render_packet_untextured_mesh_push(&viewer_->debug_axis_mesh[1], &viewer_->model_matrix, packet_);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = scene_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = SCENE_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret_render_packet = render_packet_untextured_mesh_push(&viewer_->debug_axis_mesh[2], &viewer_->model_matrix, packet_);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = scene_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = SCENE_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
+            goto cleanup;
+        }
+
+        ret_render_packet = render_packet_line_mesh_push(&viewer_->debug_aabb_mesh, &viewer_->model_matrix, packet_);
+        if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+            ret = scene_result_convert_render_packet(ret_render_packet);
+            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
+                ret = SCENE_DATA_CORRUPTED;
+            }
+            ERROR_MESSAGE("render_packet_build(%s) - render_packet_line_mesh_push failed.", scene_result_to_str(ret));
+            goto cleanup;
+        }
     }
 
     ret = SCENE_SUCCESS;

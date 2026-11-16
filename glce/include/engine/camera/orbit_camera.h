@@ -10,6 +10,8 @@ extern "C" {
 
 #include <stdbool.h>
 
+#include "engine/base/choco_math/math_types.h"
+
 #include "engine/camera/core/camera_types.h"
 
 typedef struct orbit_camera orbit_camera_t;
@@ -27,7 +29,7 @@ typedef enum {
     ORBIT_CAMERA_COMMAND_MAX,
 } orbit_camera_command_t;
 
-camera_result_t orbit_camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, orbit_camera_t** out_camera_);
+camera_result_t orbit_camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, vec3f_t initial_target_, float initial_distance_, orbit_camera_t** out_camera_);
 
 void orbit_camera_destroy(orbit_camera_t** camera_);
 

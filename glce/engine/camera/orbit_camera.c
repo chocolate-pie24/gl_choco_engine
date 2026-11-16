@@ -45,16 +45,13 @@ static camera_result_t position_from_target_update(camera_t* camera_, vec3f_t ta
 
 static void orbit_rotation_matrix_build(vec3f_t euler_, mat4x4f_t* out_rotation_);
 
-camera_result_t orbit_camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, orbit_camera_t** out_camera_) {
+camera_result_t orbit_camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, vec3f_t initial_target_, float initial_distance_, orbit_camera_t** out_camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     camera_t* tmp_camera = NULL;
     orbit_camera_t* tmp_orbit_camera = NULL;
-
-    vec3f_t initial_target;
-    float initial_distance = 10.0f;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_create", "out_camera_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_camera_, ret, CAMERA_BAD_OPERATION, camera_result_to_str(CAMERA_BAD_OPERATION), "orbit_camera_create", "*out_camera_")
@@ -75,8 +72,7 @@ camera_result_t orbit_camera_create(float fovy_, float aspect_, float near_clip_
         goto cleanup;
     }
 
-    initial_target = vec3f_initialize(0.0f, 0.0f, 0.0f);
-    ret = position_from_target_update(tmp_camera, initial_target, initial_distance);
+    ret = position_from_target_update(tmp_camera, initial_target_, initial_distance_);
     if(CAMERA_SUCCESS != ret) {
         if(CAMERA_INVALID_ARGUMENT == ret) {
             ret = CAMERA_DATA_CORRUPTED;
@@ -91,7 +87,7 @@ camera_result_t orbit_camera_create(float fovy_, float aspect_, float near_clip_
     tmp_orbit_camera->commands.rotating = false;
 
     tmp_orbit_camera->camera = tmp_camera;
-    tmp_orbit_camera->distance = initial_distance;
+    tmp_orbit_camera->distance = initial_distance_;
     tmp_camera = NULL;
 
     *out_camera_ = tmp_orbit_camera;
