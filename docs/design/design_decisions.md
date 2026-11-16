@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-13
+最終更新: 2026-11-16
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -7679,8 +7679,9 @@ Calleeが受け取るInputについて、Caller側ではすでにValidである�
 
 ## Decision: SceneをApplication固有Stateと描画処理のOwnerとし、Applicationを実行基盤のOrchestratorとする
 
-**Status:** Accepted / Partially Implemented（Sample Robot Sceneで成立。STL ViewerのOrbit Camera・Light・Lifecycle統合およびScene共通Interfaceは後続Work）  
+**Status:** Accepted / Implemented in Sample Robot and STL Viewer（Scene共通Interfaceの抽出は未実施）  
 **Date:** 2026-11-13  
+**Update (2026-11-16):** STL Viewerも独立SceneとしてOrbit Camera、Light、Render Packet、STL / Debug Geometry Resourceおよび`create / destroy / update / draw`を実装し、描画・Camera初期配置の動作を確認した。2種類のConcrete Sceneで基本的なLifecycleとRenderer Frontend Borrowの構造が成立した。Scene共通Interface、Scene Manager、vtable等の抽出は引き続き未決定とする。  
 **Scope:** Application / Scene / Lifecycle / Camera / Light / Render Packet / Renderer Frontend / Ownership / Result Domain / Abstraction Timing
 
 ### Decision
@@ -7695,9 +7696,9 @@ GLCEのApplication Layerでは、実行基盤を管理する`application.c`と�
 6. **Renderer FrontendはApplicationが所有し、Sceneが必要なOperationでBorrowする。** SceneがRenderer Registry、Shader、VBO Manager等を個別所有することは要求しない。Sceneは自身がAcquire / ImportしたMesh Resource Reference Rightを管理し、Renderer Frontendが有効な間にReleaseする。Scene終了時に必要なReleaseを済ませてから共通Rendererを終了する順序を維持する。現時点でRenderer FrontendをScene Fieldとして長期Borrow保持することは確定しない。
 7. **Scene全体で共通のResult Domainを使用する。** `sample_robot`、`stl_viewer`および各Scene内の専用構成Moduleでは`scene_result_t`を使用し、Sceneごとの同型Result Codeを重複定義しない。一方、独立した`model_framework`やEngine ModuleのResult Domainは維持し、Scene境界で明示的に変換する。
 8. **Scene固有Configは原則としてSceneが構築する。** STL Viewerの`untextured_mesh_config_t`はApplicationで生成せず、`stl_viewer_create()`内で構築する。ApplicationはAsset Root等の共通の配置Policyを提供するが、STL Viewer固有のMaterial / Geometry指定を知る必要はない。
-9. **Scene共通のvtable、Scene Manager、Scene Registry、Scene Graph等を先行導入しない。** まずSample Robotを独立したSceneとして完成させ、次にSTL ViewerへOrbit Camera・Light・Render Packet・`create / destroy / update / draw`を導入して動作を確認する。その後、2つの具体的実装を比較し、実際に一致するLifecycle / Ownership / API Contractをもとに共通化する。vtableはその最終段階で検討・導入する。
+9. **Scene共通のvtable、Scene Manager、Scene Registry、Scene Graph等を先行導入しない。** Sample RobotとSTL Viewerの双方を独立したSceneとして実装・描画確認した。今後は2つの具体的実装を比較し、実際に一致するLifecycle / Ownership / API Contractが確認できた場合に限って共通化を検討する。vtable等は恒久的に否定せず、具体的な必要性が生じてから判断する。
 
-### Current Responsibility / Ownership（2026-11-13時点）
+### Current Responsibility / Ownership（2026-11-16時点）
 
 ```text
 Application                                  [common execution / orchestration]
@@ -7720,7 +7721,21 @@ Renderer Frontend                            [Engine draw / resource boundary]
     └── Mesh + Draw Parameters / Packet     [does not interpret Scene / Robot semantics]
 ```
 
-この図はSample Robotの現在の実装を表す。STL Viewerに同一のScene内部構造を強制するものではない。Sceneが共有RendererをBorrowすることと、SceneがRenderer Resource Reference RightをOwnすることは別のLifetime関係である。
+上記の図はSample Robotの構成例である。STL Viewerでは、選択されるSceneを次の構成に置き換える。
+
+```text
+Selected Scene: STL Viewer                  [owned by Application]
+├── STL Untextured Mesh                    [owned reference right]
+├── Debug Axis Mesh × 3                    [owned reference rights]
+├── Debug AABB Line Mesh                   [owned reference right]
+├── Floor Grid Line Mesh                   [owned reference right]
+├── Orbit Camera                           [owned]
+├── Directional / Ambient Light            [owned values]
+├── View / Projection Matrix               [scene-held values]
+└── Render Packet                          [owned storage / per-frame contents]
+```
+
+いずれもSceneが共有Renderer Frontendを必要なOperationでBorrowする。SceneがRenderer FrontendをOwnすることと、Sceneが自身のMesh Resource Reference RightをOwnすることは異なる。Sample RobotとSTL Viewerの内部構成は同一である必要がない。
 
 ### Context / Discovery Process
 
@@ -7740,7 +7755,7 @@ Sample Robotの独立化では、Scene Module自身へCamera、Light、Render Pa
 
 Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一STL表示とOrbit Cameraという異なる用途を持つ。Sample RobotだけからScene共通Interfaceを設計すると、RobotやFlight Camera固有の事情を一般Scene Contractへ混入させる可能性がある。
 
-そのため、先に双方を独立して動作させ、共通性を実装から抽出する順序を採用した。この順序は、未成熟な機能をApplication側で育て、成立した責務をEngineへ移す既存Decisionと整合する。
+そのため、先に双方を独立して動作させ、共通性を実装から抽出する順序を採用した。2026-11-16にはSTL Viewerも独立Sceneとして動作確認できたため、次の共通化判断では両実装の比較が可能になった。この順序は、未成熟な機能をApplication側で育て、成立した責務をEngineへ移す既存Decisionと整合する。
 
 ### Rationale
 
@@ -7757,7 +7772,7 @@ Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一
 
 - **Camera / Light / Render Packetを引き続きApplicationへ集約する。** Sceneごとの構成にApplicationが依存し、Scene追加のたびにApplicationのFieldと処理分岐が増えるため採用しない。
 - **Scene固有の描画処理をApplicationが個別に組み立てる。** Model / Posture / Camera / Light / Render Packetの知識がScene境界から漏れるため採用しない。
-- **Sample Robotだけを基準にScene vtableや共通Managerを直ちに導入する。** Orbit Cameraを持つSTL Viewerの実装が未成立であり、共通Contractを判断する材料が揃っていないため延期する。vtable自体を恒久的に否定する判断ではない。
+- **Sample Robotだけを基準にScene vtableや共通Managerを直ちに導入する。** 当初はOrbit Cameraを持つSTL Viewerが未成立だったため延期した。現在は両Sceneが動作しているが、共通Interfaceを必要とする具体的な契約・利用方法の検討前に導入することは引き続き避ける。vtable自体を恒久的に否定する判断ではない。
 - **Scene実装の重複を見つけた時点で、共通Helperを全面的にEngineへ移す。** 単一Sceneの利用経験からEngine APIを固定することを避け、両Scene完成後に具体的な共通処理とOwnershipを確認する。
 - **SceneごとのResult Domainを維持する。** 現在のScene専用Module群では区別の利益に比べてType / Converterの重複が大きく、Scene共通の`scene_result_t`を採用した。
 
@@ -7766,7 +7781,7 @@ Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一
 - Sample Robotは`sample_robot_demo`から`sample_robot`へ改名し、Scene Lifecycleを`sample_robot_create / destroy / update / draw`へ整理した。
 - 旧`sample_robot`機体個体Moduleは`sample_robot_model`へ改名し、Sceneの`sample_robot_t`が複数の`sample_robot_model_t`を所有する。機体個体のPosture / Transform TreeとScene全体の責務を区別する。
 - Sample Robot Sceneの正常描画はユーザーによって確認された。一方、Cameraの全操作、異常系、Cleanup全経路について同程度の実行検証が済んでいるとは扱わない。
-- STL ViewerのConfigは`stl_viewer_create()`内部へ移管した。Orbit Camera、Light、Render Packet Ownership、4操作のLifecycle統合は後続作業であり、Sample Robotと同じ完成状態にあると見なさない。
+- STL ViewerのConfigは`stl_viewer_create()`内部へ配置し、Orbit Camera、Light、Render Packet、Mesh Reference RightをSceneが管理する構成にした。`create / destroy / update / draw`の4操作と正常描画を確認した。これは異常系・全Cleanup経路の検証完了を意味しない。Camera初期配置と補助Geometryの個別Decisionは2026-11-16付で別記する。
 - Sample Robotの`draw`ではRenderer Frontendの`untextured_mesh_render_update`および`line_mesh_render_update`を実行する。これらはScene Stateそのものではなく描画用Renderer Stateを更新するOperationであり、`update`ではなく`draw`に置く。
 - Frame Stateの`projection_dirty` / `view_dirty`をRendererへ伝搬する旧Application経路はSample Robotで不要になった。Sourceに残る未使用Fieldや旧Camera Wrapper等の削除は、別途リファクタリング対象とする。
 - Resource Packetの内部Buffer管理、RobotのDraw Request生成共通化、SceneがBorrowするRenderer Frontendの保持方法、`destroy`の`void`戻り値やFailure Handling、Validatorの再設計等は、このDecisionでは結論を出さない。
@@ -7774,7 +7789,7 @@ Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一
 
 ### Revisit Conditions
 
-- STL Viewerの完成により、Scene間に明確な共通Lifecycle / Data / Ownership Contractが確認できた場合。
+- 両Sceneの実装を比較し、共通化すべきLifecycle / Data / Ownership Contractと、それを要求する具体的な利用場面が明確になった場合。
 - 複数Scene同時実行、Scene切替、Shared Camera / Light / Render Packet等が必要となり、現在の1 Scene単位のOwner構造で扱いにくくなった場合。
 - Scene実装のResource Import / Release、Packet構築、Renderer設定等に重複や変更コストが顕在化した場合。
 - Render Packet / Renderer FrontendのLifetimeやDraw Orderingが新しいScene用途で問題となった場合。
@@ -7790,6 +7805,170 @@ Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一
 - 2026-10-25「Renderer FrontendをRenderer SubsystemのOwnership Rootとし、Modelの所有をApplication / Sceneへ分離する」
 - 2026-10-30「Model Assembly Configを『組立図』、Resource Mapを『製造準備済みの共有定義』、Robotを『個別の実機』とする」（2026-11-13 Update）
 - 2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」
-- `glce_near_term_todo.md` — 次のSTL Viewer実装と、両Scene完成後の共通化・Refactoringを扱う
+- 2026-11-16「STL ViewerのCamera初期配置をAABBから導出し、配置PolicyをSceneが所有する」
+- 2026-11-16「STL Viewerの補助GeometryをScene固有Resourceとして構築し、表示をRender Packetで制御する」
+- `glce_near_term_todo.md` — 両Sceneの共通化検討と残るRefactoringを扱う
 - `validation_policy.md` — `DATA_CORRUPTED` / Cleanup / Fail-stopの一般Policyの正本
 
+
+
+---
+
+## Decision: STL ViewerのCamera初期配置をAABBから導出し、配置PolicyをSceneが所有する
+
+**Status:** Accepted / Initial Implementation Verified  
+**Date:** 2026-11-16  
+**Scope:** STL Viewer / Camera Framing / Orbit Camera / AABB / Viewing Frustum / Scene Policy
+
+### Decision
+
+STL Viewerの初期Camera配置は、読み込んだSTL MeshのLocal AABBからSceneが算出する。Cameraの初期配置Policyと、与えられたTarget / Distanceに従ってCamera Stateを成立させるMechanismを分離する。
+
+- STL ViewerはMesh Import後にLocal AABBを取得し、Camera初期配置用のPrivate HelperでTarget、Distance、Near / Far Clipを導出する。
+- 初期TargetはAABB中心とし、初期Model MatrixはIdentityを使用する。
+- Camera Framing用のBounding Radiusは、AABBの対角線長の半分から算出する。これはAABB中心から8頂点への距離が等しいことを利用した外接球の半径であり、8頂点の列挙や独立したSphere Resource生成を必要としない。
+- 初期DistanceはBounding RadiusとFOVから導出し、モデル全体が画角に収まるように余白を設定する。
+- Near / Far Clipも初期DistanceとBounding Radiusから導出し、初期表示に必要な奥行き範囲に余白を持たせる。
+- `orbit_camera_create()`は初期Targetと初期Distanceを受け取る。`orbit_camera`はSTL / AABB / Geometry Resourceの存在を認識せず、渡されたCamera Parameterに従って自身のStateを構築する。
+- 現時点のSTL ViewerではVertical FOVを45度の固定値とし、初期DistanceはVertical FOVを使って計算する。AspectはPerspective Projectionに渡すが、初期DistanceのFraming式には使用しない。
+
+現在の具体的な初期配置計算は、AABBの各辺長を`Lx`, `Ly`, `Lz`、Bounding Radiusを`r`、Camera Distanceを`d`とすると、概念的に以下である。
+
+```text
+Target = AABB.min + (AABB.max - AABB.min) / 2
+r      = sqrt(Lx² + Ly² + Lz²) / 2
+d      = 1.2 * r / sin(FOVy / 2)
+near   = max(0.01 * r, d - 1.5 * r)
+far    = d + 1.5 * r
+```
+
+`1.2`、`1.5`、`0.01`は現在の表示上の調整係数であり、Engine-wideな固定Contractとはしない。Angleは三角関数へ渡す際にRadianへ変換する。
+
+### Context
+
+従来のOrbit Cameraは、初期TargetをWorld Origin、初期Distanceを固定値とするため、原点からずれたSTLやサイズの異なるSTLでは、初期表示の構図がモデルに合わなかった。
+
+一方、Orbit Camera自身にAABBやSTL Resourceを渡してFramingを任せると、汎用のConcrete CameraがScene / Geometry固有の情報に依存する。STL Viewerには、読み込んだMeshのAABBという配置判断に必要な情報が既に存在する。
+
+そこで、STL Viewerが初期配置を計算し、Orbit Cameraには配置済みの値を渡す方式を採用した。
+
+Framingの距離計算は、CameraからBounding Sphereに引いた接線と半径が直交することに基づく。視野の半画角を`α`とすれば、`sin(α) = r / d`となるため、`d = r / sin(α)`で球全体が画角内に収まる距離を得られる。球中心を通る平面上の断面だけを対象にする`tan`による計算とは目的が異なる。
+
+初期配置の実装後、STL Viewerの描画・操作を実際に確認し、固定値を使用した場合よりモデルが見やすい初期構図を得られた。
+
+### Rationale
+
+- Modelの位置・寸法に応じた初期表示を、Scene内の情報だけから決定できる。
+- `orbit_camera`にSTL / AABB / Resource Manager等のScene固有Dependencyを追加せずに済む。
+- FramingのPolicyとCameraの姿勢・Projection生成Mechanismを分離できる。
+- AABBの対角線長から外接球半径を計算でき、Sphere Resourceや共通Moduleを新設する必要がない。
+- FOVを固定することで、モデルサイズに応じてDistanceを変更するという役割が明確になる。
+- Near / Far Clipの初期値をモデルサイズに応じて設定でき、無関係な固定の奥行き範囲に依存しなくて済む。
+
+### Considered / Rejected or Deferred Alternatives
+
+- **Orbit CameraにAABBを渡し、初期Framingを内部で計算する。** CameraへScene / Geometry固有の意味を持ち込むため採用しない。
+- **AABBの全頂点を列挙してTargetからの最遠距離を求める。** TargetがAABB中心である限り全頂点までの距離が等しく、対角線長の半分で同じ値を取得できるため不要とした。
+- **`geometry_primitive`へAABBのBounding Radius取得APIを追加する。** 複数Moduleからの具体的な利用要求が生じるまで共通化を見送る。
+- **固定Cameraを使い、モデルのModel Matrixを回転させるViewerへ変更する。** Debug Axisを描画することで現行Orbit Cameraの操作軸が視覚的に分かり、当初の違和感が解消されたため、現段階では移行を保留する。
+- **Aspectを反映し、水平・垂直の狭い方のFOVで初期Distanceを算出する。** 縦長WindowでのFramingには有効だが、現時点ではVertical FOVのみを使う実装を維持する。
+- **Zoom操作に応じてNear / Far Clipを逐次再計算する。** 現時点では初期配置計算のみを実装し、動的なClip更新は別Workで扱う。
+
+### Consequences / Current Implementation
+
+- `stl_viewer_create()`はSTL ImportとLocal AABB取得を行った後、初期Camera Parameterを算出して`orbit_camera_create()`を呼ぶ。
+- `initial_camera_parameter_initialize()`はTarget / Distance / Near / Far Clipを算出するScene-private Helperとなる。
+- `orbit_camera_create()`は初期Target / Distanceを受け取るConstructorとなり、初期値を固定しない。
+- `stl_viewer_t`は初期Near / Far Clipを保持し、現在のWindow Resize処理で使用する。
+- 現行FramingはInitial Displayに対するものであり、Windowを縦長にResizeした場合の再Framingや、Zoom中のClipping回避を保証しない。
+- Camera Framingの共通化は要求しない。別Sceneで具体的な再利用要求が生じた段階で検討する。
+
+### Revisit Conditions
+
+- 縦長WindowへのResize等で初期FramingのAspect非対応が実際の問題になった場合。
+- Zoom等のCamera操作によってNear / Far Clipが表示を阻害する場合。
+- 複数Sceneで同一のFraming計算とAPI Contractが必要になった場合。
+- 固定CameraとModel Matrix操作への移行を正当化する表示・操作上の要件が生じた場合。
+
+### Related Decisions / Documents
+
+- 2026-09-07「`camera_t`はinternal primitiveとしgeneric Camera abstractionを先行導入しない」
+- 2026-11-13「SceneをApplication固有Stateと描画処理のOwnerとし、Applicationを実行基盤のOrchestratorとする」（2026-11-16 Update）
+- `glce_near_term_todo.md`
+
+---
+
+## Decision: STL Viewerの補助GeometryをScene固有Resourceとして構築し、表示をRender Packetで制御する
+
+**Status:** Accepted / Initial Implementation Verified  
+**Date:** 2026-11-16  
+**Scope:** STL Viewer / Debug Geometry / Floor Grid / Model Matrix / Render Packet / Scene Ownership
+
+### Decision
+
+STL Viewerは表示対象のSTL Meshに加え、空間的な配置と座標系を理解するための補助GeometryをScene自身のResourceとして構築・管理する。
+
+- **Debug AABB**：読み込んだSTL MeshのLocal AABBをLine Meshとして可視化する。STL本体と同じModel Matrixを適用する。
+- **Debug Axis**：モデルのLocal Coordinate OriginからX / Y / Z軸を矢印形状で可視化する。STL本体と同じModel Matrixを適用する。軸の長さ・太さはLocal AABBの寸法から比例計算するが、軸の起点をAABB中心へ移動しない。
+- **Floor Grid**：モデルを空間内で把握するためのXY平面上のGridを生成する。Gridの水平範囲は主にAABBのXY方向の寸法・中心から求め、高さはAABBのZ方向の最小値に合わせる。
+
+**Floor Gridには、STL本体およびDebug AABB / Debug Axisとは独立したModel Matrixを保持する。**
+
+これは、現在のOrbit Camera方式では両者のMatrixがIdentityであっても、将来的に**Cameraを固定し、表示対象モデルのModel Matrixを回転させる操作方式へ変更する可能性を残すため**である。その場合でも、Debug Axis / Debug AABBはモデルに追従させ、Floor Gridは独立して床の基準を保てる構造にする。現時点で操作方式の変更を決定したものではない。
+
+Debug表示はSceneが描画要求を組み立てる時点で制御する。`D`キーでDebug表示を切り替える場合、Debug AABB / Debug AxisのRender PacketへのDraw Request登録を切り替え、STL本体とFloor Gridは常時描画する。Debug表示のON / OFFに応じてMesh ResourceをImport / Releaseし直さない。
+
+### Context / Discovery
+
+STL Viewerの補助描画を固定寸法で構築していた段階では、STLのサイズが変わるとGridやAxisの大きさが不自然になる可能性があった。また、Orbit Cameraを回転させる操作に違和感があり、固定Cameraとモデル側Model Matrixの回転方式への変更を検討した。
+
+そこでSTLのLocal AABBを用いてFloor Grid / Debug Axisの寸法を調整し、Local Coordinate Originを示すDebug Axisを表示した。
+
+実際の描画結果を確認すると、操作対象の座標軸が見えることでOrbit Cameraの挙動が理解しやすくなり、当初感じていた違和感が解消された。このため、Camera操作方式そのものを直ちに変更する必要はないと判断した。
+
+また、Floor Gridの外周4辺が必ず描画されない現象は、現在のGrid Generatorが指定範囲内にある原点基準のStep整数倍位置に格子線を生成する仕様によるものである。現段階では利用上の問題となっていないため、外周を保証する仕様への変更は見送る。
+
+### Rationale
+
+- Debug AABB、Debug Axis、Floor Gridの表示目的とModel Matrixの追従範囲を区別できる。
+- Debug AxisはLocal Coordinate Frameの可視化であり、Bounding Boxの中心を新たな原点として誤認させない。
+- Floor Gridを独立したModel Matrixで扱うことで、将来モデル側を回転させる方式へ移行しても床をモデルと一緒に回転させずに済む。
+- ResourceのLifetimeとVisible / Hiddenの表示状態を分離できる。
+- Scene固有のDebug表示PolicyをRenderer Frontendへ流入させず、RendererへはMesh + MatrixによるDraw Requestだけを渡せる。
+- Debug Axisの可視化によって操作理解が改善されたという実機評価を、将来のCamera方式検討でも参照できる。
+
+### Validation / Boundary Considerations
+
+`aabb_3d_t`としてのValid Stateと、補助Geometryを生成できる寸法条件を区別する。ある軸、あるいは全軸で`min == max`となるAABBを、それだけでAABB ModuleのCanonical Invalidityとはしない。
+
+Floor Gridの生成ではXY方向の代表寸法、Debug Axisの生成ではXYZ方向の代表寸法がそれぞれ正であることが必要となる。これらはAABB一般のValidityではなく、それぞれのGeometry生成Operation固有の成立条件としてScene-private Helperが判定する。
+
+### Considered / Rejected or Deferred Alternatives
+
+- **Floor GridへSTL本体と共通のModel Matrixを適用する。** 現状はIdentityで動作するが、将来モデルMatrixを回転させる方式に変更した場合、床も一緒に回転するため採用しない。
+- **Orbit Cameraを直ちに廃止し、モデル側のModel Matrixを操作する。** Debug Axisの表示によって操作上の違和感が解消したため見送る。
+- **Grid Generatorで指定矩形の外周4辺を常に保証する。** 格子線の生成範囲と閉じた外枠の描画は別のSemanticsであり、現在のGeneratorの契約を変更する必要性が明確ではないため保留する。
+- **Debug表示切り替えのたびにMesh Resourceを生成・解放する。** Visibilityだけの変更にResource Lifecycleを連動させる必要がないため採用しない。
+- **補助Geometryの寸法条件をAABB ModuleのCanonical Validatorへ組み込む。** AABBの幾何学的なValidityとGeometry生成OperationのFeasibilityを混同するため採用しない。
+
+### Consequences / Current Implementation
+
+- STL ViewerはDebug Axis Mesh 3本、Debug AABB Line Mesh、Floor Grid Line MeshのReference Rightを管理する。
+- STL Mesh / Debug Axis / Debug AABBのDraw Requestには共通のModel Matrixを使用し、Floor Gridは独立したModel Matrixを使用する。
+- Floor GridとSTL本体はDebug表示の状態に依存せず描画し、Debug Axis / Debug AABBのみRender Packet登録を切り替える。
+- Grid Generatorの外周線保証は変更しない。外枠が必要になった場合、Generatorの範囲Semanticsおよび外枠追加の方法を別途検討する。
+- Debug AABB生成Helperは元MeshからLocal AABBを取得してよい。取得の重複を解消するためだけに、現在のHelperの責務変更を要求しない。
+
+### Revisit Conditions
+
+- Viewerを固定Camera + Model Matrix操作方式へ移行する具体的な必要性が生じた場合。
+- 補助Geometryがモデル以外のCoordinate Spaceへ追従すべき用途が発生した場合。
+- Floor Gridの外枠やGrid Origin / Step / Rangeについて新たな表示Contractが必要になった場合。
+- 補助Geometryの種類が増え、Scene-private Helperでは管理が困難になった場合。
+
+### Related Decisions / Documents
+
+- 2026-11-13「SceneをApplication固有Stateと描画処理のOwnerとし、Applicationを実行基盤のOrchestratorとする」（2026-11-16 Update）
+- 2026-11-16「STL ViewerのCamera初期配置をAABBから導出し、配置PolicyをSceneが所有する」
+- 2026-10-16「Render PacketをShader別Draw Collectionとし、Model連携を先に検証してからOrchestrationを抽出する」
+- `glce_near_term_todo.md`
