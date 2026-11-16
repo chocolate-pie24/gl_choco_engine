@@ -349,6 +349,17 @@ void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, stl_viewer_t** 
         }
     }
 
+    for(size_t i = 0; i != 3; ++i) {
+        ret_renderer_frontend = renderer_frontend_untextured_mesh_release(renderer_frontend_, &(*stl_viewer_)->debug_axis_mesh[i]);
+        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+            ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+            ERROR_MESSAGE("stl_viewer_destroy(%s) - renderer_frontend_untextured_mesh_release failed.", scene_result_to_str(ret));
+            if(SCENE_DATA_CORRUPTED == ret) {
+                return;
+            }
+        }
+    }
+
     ret_renderer_frontend = renderer_frontend_untextured_mesh_release(renderer_frontend_, &(*stl_viewer_)->untextured_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
