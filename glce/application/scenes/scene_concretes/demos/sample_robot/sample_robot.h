@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#ifndef GLCE_APPLICATION_DEMOS_SAMPLE_ROBOT_SAMPLE_ROBOT_H
-#define GLCE_APPLICATION_DEMOS_SAMPLE_ROBOT_SAMPLE_ROBOT_H
+#ifndef GLCE_APPLICATION_SCENES_SCENE_CONCRETES_DEMOS_SAMPLE_ROBOT_SAMPLE_ROBOT_H
+#define GLCE_APPLICATION_SCENES_SCENE_CONCRETES_DEMOS_SAMPLE_ROBOT_SAMPLE_ROBOT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,7 +10,7 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "application/demos/core/scene_types.h"
+#include "application/scenes/core/scene_types.h"
 
 typedef struct sample_robot sample_robot_t;
 

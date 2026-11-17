@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#ifndef GLCE_APPLICATION_DEMOS_CORE_SCENE_ERR_UTILS_H
-#define GLCE_APPLICATION_DEMOS_CORE_SCENE_ERR_UTILS_H
+#ifndef GLCE_APPLICATION_SCENES_CORE_SCENE_ERR_UTILS_H
+#define GLCE_APPLICATION_SCENES_CORE_SCENE_ERR_UTILS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,7 +23,7 @@ extern "C" {
 
 #include "application/model_framework/core/model_framework_types.h"
 
-#include "application/demos/core/scene_types.h"
+#include "application/scenes/core/scene_types.h"
 
 const char* scene_result_to_str(scene_result_t result_);
 

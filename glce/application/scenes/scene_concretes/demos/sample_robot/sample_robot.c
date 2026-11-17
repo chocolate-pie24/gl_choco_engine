@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "application/demos/sample_robot/sample_robot.h"
+#include "application/scenes/scene_concretes/demos/sample_robot/sample_robot.h"
 
 #include <stdbool.h>
 #include <math.h>
@@ -41,10 +41,10 @@
 #include "application/model_framework/assembly/untextured_model/model_resource_map.h"
 #include "application/model_framework/coordinates/model_transform_tree.h"
 
-#include "application/demos/core/scene_types.h"
-#include "application/demos/core/scene_err_utils.h"
+#include "application/scenes/core/scene_types.h"
+#include "application/scenes/core/scene_err_utils.h"
 
-#include "application/demos/sample_robot/model_instance/sample_robot_model.h"
+#include "application/scenes/scene_concretes/demos/sample_robot/model_instance/sample_robot_model.h"
 
 struct sample_robot {
     // Robot Models.

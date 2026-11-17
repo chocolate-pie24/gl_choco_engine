@@ -44,7 +44,7 @@ extern "C" {
 
 #include "application/model_framework/core/model_framework_types.h"
 
-#include "application/demos/core/scene_types.h"
+#include "application/scenes/core/scene_types.h"
 
 /**
  * @brief アプリケーションレイヤー実行結果コードを文字列に変換する

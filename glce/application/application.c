@@ -23,8 +23,6 @@
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
-#include "engine/base/choco_math/math_types.h"
-#include "engine/base/choco_math/choco_math.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
@@ -32,10 +30,6 @@
 #include "engine/core/event/keyboard_event.h"
 
 #include "engine/io_utils/fs_path.h"
-
-#include "engine/light/core/light_types.h"
-#include "engine/light/directional_light.h"
-#include "engine/light/ambient_light.h"
 
 // Platform System
 #include "engine/systems/platform_system/core/platform_system_types.h"
@@ -56,26 +50,16 @@
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 #include "engine/systems/renderer/renderer_frontend/renderer_frontend.h"
 
-#include "engine/systems/renderer/render_packet/core/render_packet_types.h"
-#include "engine/systems/renderer/render_packet/render_packet.h"
-
 // Application Layer
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
 
 #include "application/event/application_frame_state.h"
-#include "application/cameras/application_flight_camera.h"
 #include "application/diagnostics/application_diagnostics.h"
 
 // Demos
-#include "application/demos/core/scene_types.h"
-#include "application/demos/sample_robot/sample_robot.h"
-#include "application/demos/stl_viewer/stl_viewer.h"
-
-typedef enum {
-    APPLICATION_DEMO_TYPE_SAMPLE_ROBOT,
-    APPLICATION_DEMO_TYPE_STL_VIEWER,
-} application_demo_type_t;
+#include "application/scenes/core/scene_types.h"
+#include "application/scenes/scene_context.h"
 
 /**
  * @brief アプリケーション内部状態とエンジン各サブシステム状態管理構造体インスタンスを保持する
@@ -112,11 +96,9 @@ typedef struct application_state {
     application_frame_state_t frame_state;
 
     // Demo scenes
-    sample_robot_t* sample_robot_demo;
-    stl_viewer_t* stl_viewer_demo;
+    scene_context_t* scene_context;
 } application_state_t;
 
-static const application_demo_type_t s_demo_type = APPLICATION_DEMO_TYPE_STL_VIEWER;
 static application_state_t* s_application_state = NULL; /**< アプリケーション内部状態およびエンジン各サブシステム内部状態 */
 
 // Frame Orchestration.
@@ -147,9 +129,7 @@ application_result_t application_create(void) {
     event_system_t* tmp_event_system = NULL;
     fs_path_t* tmp_executable_directory = NULL;
     fs_path_t* tmp_asset_root_path = NULL;
-
-    sample_robot_t* tmp_sample_robot_demo = NULL;
-    stl_viewer_t* tmp_stl_viewer_demo = NULL;
+    scene_context_t* tmp_scene_context = NULL;
 
     size_t subsystem_memory_pool_size = 0;
 
@@ -226,39 +206,15 @@ application_result_t application_create(void) {
     tmp_state->diag_config.runtime_status_report = KEY_1;
     tmp_state->diag_config.validation_report = KEY_2;
 
-    // Demo.
-    switch(s_demo_type) {
-    case APPLICATION_DEMO_TYPE_SAMPLE_ROBOT:
-        INFO_MESSAGE("Creating sample robot demo...");
-        ret_scene = sample_robot_create(tmp_renderer_frontend, fs_path_fullpath_get(tmp_asset_root_path), tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_sample_robot_demo);
-        if(SCENE_SUCCESS != ret_scene) {
-            ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_create(%s) - sample_robot_create failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        INFO_MESSAGE("Sample robot demo created successfully.");
-        break;
-    case APPLICATION_DEMO_TYPE_STL_VIEWER:
-        INFO_MESSAGE("Creating STL viewer demo...");
-        ret_scene = stl_viewer_create(tmp_renderer_frontend, fs_path_fullpath_get(tmp_asset_root_path), tmp_state->frame_state.framebuffer_width, tmp_state->frame_state.framebuffer_height, &tmp_stl_viewer_demo);
-        if(SCENE_SUCCESS != ret_scene) {
-            ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
-            ERROR_MESSAGE("application_create(%s) - stl_viewer_create failed.", application_result_to_str(ret));
-            goto cleanup;
-        }
-        INFO_MESSAGE("STL viewer demo created successfully.");
-        break;
-    default:
-        ret = APPLICATION_RUNTIME_ERROR;
-        ERROR_MESSAGE("application_create(%s) - Invalid demo type.", application_result_to_str(ret));
+    // Scene.
+    INFO_MESSAGE("Creating scene...");
+    ret_scene = scene_context_create(&tmp_scene_context);
+    if(SCENE_SUCCESS != ret_scene) {
+        ret = application_result_convert_scene(ret_scene);
+        ERROR_MESSAGE("application_create(%s) - scene_context_create failed.", application_result_to_str(ret));
         goto cleanup;
     }
+    INFO_MESSAGE("Scene context created successfully.");
 
     ret = application_diagnostics_status_report(tmp_subsystem_allocator);
     if(APPLICATION_SUCCESS != ret) {
@@ -270,22 +226,20 @@ application_result_t application_create(void) {
     tmp_state->platform_system = tmp_platform_system;
     tmp_state->subsystem_allocator = tmp_subsystem_allocator;
     tmp_state->renderer_frontend = tmp_renderer_frontend;
-    tmp_state->sample_robot_demo = tmp_sample_robot_demo;
     tmp_state->asset_root_path = tmp_asset_root_path;
     tmp_state->executable_directory = tmp_executable_directory;
     tmp_state->event_system = tmp_event_system;
-    tmp_state->stl_viewer_demo = tmp_stl_viewer_demo;
+    tmp_state->scene_context = tmp_scene_context;
 
     s_application_state = tmp_state;
     tmp_state = NULL;
     tmp_subsystem_allocator = NULL;
     tmp_platform_system = NULL;
     tmp_renderer_frontend = NULL;
-    tmp_sample_robot_demo = NULL;
     tmp_event_system = NULL;
     tmp_executable_directory = NULL;
     tmp_asset_root_path = NULL;
-    tmp_stl_viewer_demo = NULL;
+    tmp_scene_context = NULL;
     INFO_MESSAGE("Application created successfully.");
 
     ret = APPLICATION_SUCCESS;
@@ -294,11 +248,8 @@ cleanup:
     if(APPLICATION_DATA_CORRUPTED == ret || APPLICATION_SUCCESS == ret) {
         return ret;
     }
-    if(NULL != tmp_stl_viewer_demo && NULL != tmp_renderer_frontend) {
-        stl_viewer_destroy(tmp_renderer_frontend, &tmp_stl_viewer_demo);
-    }
-    if(NULL != tmp_sample_robot_demo && NULL != tmp_renderer_frontend) {
-        sample_robot_destroy(tmp_renderer_frontend, &tmp_sample_robot_demo);
+    if(NULL != tmp_scene_context && NULL != tmp_renderer_frontend) {
+        scene_context_destroy(tmp_renderer_frontend, &tmp_scene_context);
     }
     if(NULL != tmp_renderer_frontend) {
         renderer_frontend_deinitialize(tmp_renderer_frontend);
@@ -332,11 +283,8 @@ void application_destroy(void) {
         goto cleanup;
     }
 
-    if(NULL != s_application_state->stl_viewer_demo) {
-        stl_viewer_destroy(s_application_state->renderer_frontend, &s_application_state->stl_viewer_demo);
-    }
-    if(NULL != s_application_state->sample_robot_demo) {
-        sample_robot_destroy(s_application_state->renderer_frontend, &s_application_state->sample_robot_demo);
+    if(NULL != s_application_state->scene_context) {
+        scene_context_destroy(s_application_state->renderer_frontend, &s_application_state->scene_context);
     }
     if(NULL != s_application_state->renderer_frontend) {
         renderer_frontend_deinitialize(s_application_state->renderer_frontend);
@@ -379,6 +327,14 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
+    // TODO: scene 切り替えイベント実装
+    ret_scene = scene_context_change_scene(s_application_state->scene_context, s_application_state->renderer_frontend, fs_path_fullpath_get(s_application_state->asset_root_path), s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height, SCENE_STL_VIEWER);
+    if(SCENE_SUCCESS != ret_scene) {
+        ret = application_result_convert_scene(ret_scene);
+        ERROR_MESSAGE("application_run(%s) - scene_context_change_scene failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
+
     glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
 
     // TODO: window NULLチェック
@@ -411,22 +367,13 @@ application_result_t application_run(void) {
         }
 
         // Scene Update.
-        // ret_scene = sample_robot_update(s_application_state->sample_robot_demo, s_application_state->engine_event_view, demo_delta_time, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
-        // if(SCENE_SUCCESS != ret_scene) {
-        //     ret = application_result_convert_scene(ret_scene);
-        //     if(SCENE_INVALID_ARGUMENT == ret_scene) {
-        //         ret = APPLICATION_DATA_CORRUPTED;
-        //     }
-        //     ERROR_MESSAGE("application_run(%s) - sample_robot_update failed.", application_result_to_str(ret));
-        //     goto cleanup;
-        // }
-        ret_scene = stl_viewer_update(s_application_state->stl_viewer_demo, s_application_state->engine_event_view, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
+        ret_scene = scene_context_update(s_application_state->scene_context, s_application_state->engine_event_view, demo_delta_time, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
         if(SCENE_SUCCESS != ret_scene) {
             ret = application_result_convert_scene(ret_scene);
             if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
-            ERROR_MESSAGE("application_run(%s) - stl_viewer_update failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("application_run(%s) - scene_context_update failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
@@ -440,22 +387,14 @@ application_result_t application_run(void) {
         glEnable(GL_DEPTH_TEST);
         glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
 
-        // ret_scene = sample_robot_draw(s_application_state->sample_robot_demo, s_application_state->renderer_frontend);
-        // if(SCENE_SUCCESS != ret_scene) {
-        //     ret = application_result_convert_scene(ret_scene);
-        //     if(SCENE_INVALID_ARGUMENT == ret_scene) {
-        //         ret = APPLICATION_DATA_CORRUPTED;
-        //     }
-        //     ERROR_MESSAGE("application_run(%s) - sample_robot_draw failed.", application_result_to_str(ret));
-        //     goto cleanup;
-        // }
-        ret_scene = stl_viewer_draw(s_application_state->stl_viewer_demo, s_application_state->renderer_frontend);
+
+        ret_scene = scene_context_draw(s_application_state->scene_context, s_application_state->renderer_frontend);
         if(SCENE_SUCCESS != ret_scene) {
             ret = application_result_convert_scene(ret_scene);
             if(SCENE_INVALID_ARGUMENT == ret_scene) {
                 ret = APPLICATION_DATA_CORRUPTED;
             }
-            ERROR_MESSAGE("application_run(%s) - stl_viewer_draw failed.", application_result_to_str(ret));
+            ERROR_MESSAGE("application_run(%s) - scene_context_draw failed.", application_result_to_str(ret));
             goto cleanup;
         }
 

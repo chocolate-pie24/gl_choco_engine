@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#ifndef GLCE_APPLICATION_DEMOS_CORE_SCENE_TYPES_H
-#define GLCE_APPLICATION_DEMOS_CORE_SCENE_TYPES_H
+#ifndef GLCE_APPLICATION_SCENES_CORE_SCENE_TYPES_H
+#define GLCE_APPLICATION_SCENES_CORE_SCENE_TYPES_H
 
 #ifdef __cplusplus
 extern "C" {

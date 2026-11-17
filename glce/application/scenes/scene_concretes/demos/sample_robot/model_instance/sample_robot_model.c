@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "application/demos/sample_robot/model_instance/sample_robot_model.h"
+#include "application/scenes/scene_concretes/demos/sample_robot/model_instance/sample_robot_model.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -23,8 +23,8 @@
 #include "application/model_framework/assembly/untextured_model/model_assembly_config.h"
 #include "application/model_framework/assembly/untextured_model/model_resource_map.h"
 
-#include "application/demos/core/scene_types.h"
-#include "application/demos/core/scene_err_utils.h"
+#include "application/scenes/core/scene_types.h"
+#include "application/scenes/core/scene_err_utils.h"
 
 scene_result_t sample_robot_model_create(const untextured_model_resource_map_t* resource_map_, sample_robot_model_t** out_robot_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;

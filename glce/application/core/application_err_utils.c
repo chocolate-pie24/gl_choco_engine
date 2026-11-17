@@ -28,7 +28,7 @@
 
 #include "application/core/application_types.h"
 
-#include "application/demos/core/scene_types.h"
+#include "application/scenes/core/scene_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
 static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */

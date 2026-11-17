@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#ifndef GLCE_APPLICATION_DEMOS_SAMPLE_ROBOT_MODEL_INSTANCE_SAMPLE_ROBOT_MODEL_H
-#define GLCE_APPLICATION_DEMOS_SAMPLE_ROBOT_MODEL_INSTANCE_SAMPLE_ROBOT_MODEL_H
+#ifndef GLCE_APPLICATION_SCENES_SCENE_CONCRETES_DEMOS_SAMPLE_ROBOT_MODEL_INSTANCE_SAMPLE_ROBOT_MODEL_H
+#define GLCE_APPLICATION_SCENES_SCENE_CONCRETES_DEMOS_SAMPLE_ROBOT_MODEL_INSTANCE_SAMPLE_ROBOT_MODEL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,7 +12,7 @@ extern "C" {
 
 #include "engine/base/choco_math/math_types.h"
 
-#include "application/demos/core/scene_types.h"
+#include "application/scenes/core/scene_types.h"
 
 typedef struct untextured_model_resource_map untextured_model_resource_map_t;
 typedef struct model_transform_tree model_transform_tree_t;

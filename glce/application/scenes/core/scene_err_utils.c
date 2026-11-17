@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "application/demos/core/scene_err_utils.h"
+#include "application/scenes/core/scene_err_utils.h"
 
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
@@ -10,7 +10,7 @@
 
 #include "application/model_framework/core/model_framework_types.h"
 
-#include "application/demos/core/scene_types.h"
+#include "application/scenes/core/scene_types.h"
 
 static const char* const s_result_str_success = "SUCCESS";
 static const char* const s_result_str_no_memory = "NO_MEMORY";

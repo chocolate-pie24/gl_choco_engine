@@ -16,11 +16,7 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-
 #include "engine/systems/platform_system/vtables/platform_backend_vtable.h"
-
-typedef struct platform_backend platform_backend_t;
 
 /**
  * @brief GLFWプラットフォームを使用する際の仮想関数テーブルを取得する
