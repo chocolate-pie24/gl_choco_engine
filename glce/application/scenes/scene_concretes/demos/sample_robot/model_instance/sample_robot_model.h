@@ -45,7 +45,6 @@ void sample_robot_model_posture_default_get(sample_robot_posture_t* posture_);
 
 scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_config_t** out_config_);
 
-// TODO: 実装
 bool sample_robot_model_is_valid(const sample_robot_model_t* robot_);
 
 #ifdef __cplusplus

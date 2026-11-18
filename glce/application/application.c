@@ -328,7 +328,7 @@ application_result_t application_run(void) {
     }
 
     // TODO: scene 切り替えイベント実装
-    ret_scene = scene_context_change_scene(s_application_state->scene_context, s_application_state->renderer_frontend, fs_path_fullpath_get(s_application_state->asset_root_path), s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height, SCENE_STL_VIEWER);
+    ret_scene = scene_context_change_scene(s_application_state->scene_context, s_application_state->renderer_frontend, fs_path_fullpath_get(s_application_state->asset_root_path), s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height, SCENE_SAMPLE_ROBOT);
     if(SCENE_SUCCESS != ret_scene) {
         ret = application_result_convert_scene(ret_scene);
         ERROR_MESSAGE("application_run(%s) - scene_context_change_scene failed.", application_result_to_str(ret));

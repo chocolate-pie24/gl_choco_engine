@@ -86,9 +86,14 @@ void scene_context_destroy(renderer_frontend_t* renderer_frontend_, scene_contex
 #endif
 
     if(NULL == (*scene_)->vtable) {
+        general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
         return;
     }
     (*scene_)->vtable->scene_destroy(renderer_frontend_, &(*scene_)->scene);
+    if(NULL != (*scene_)->scene) {
+        ERROR_MESSAGE("scene_context_change_scene(%s) - scene_destroy failed.", scene_result_to_str(SCENE_DATA_CORRUPTED));
+        return;
+    }
     general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
 }
 
@@ -245,12 +250,12 @@ bool scene_context_is_valid(const scene_context_t* scene_) {
        SCENE_NONE != scene_->current_scene) {
         return false;
     }
-    if(NULL == scene_->vtable && NULL == scene_->scene && SCENE_NONE == scene_->current_scene) {
-        return true;
+    if(SCENE_NONE == scene_->current_scene) {
+        return (NULL == scene_->scene && NULL == scene_->vtable);
     }
-    // if(SCENE_SAMPLE_ROBOT == scene_->current_scene && (scene_->vtable != sample_robot_vtable_get() || NULL == scene_->scene)) {
-    //     return false;
-    // }
+    if(SCENE_SAMPLE_ROBOT == scene_->current_scene && (scene_->vtable != sample_robot_vtable_get() || NULL == scene_->scene)) {
+        return false;
+    }
     if(SCENE_STL_VIEWER == scene_->current_scene && (scene_->vtable != stl_viewer_vtable_get() || NULL == scene_->scene)) {
         return false;
     }
@@ -267,8 +272,7 @@ static const scene_vtable_t* scene_vtable_get(scene_list_t scene_) {
     case SCENE_STL_VIEWER:
         return stl_viewer_vtable_get();
     case SCENE_SAMPLE_ROBOT:
-        // TODO: vtable対応後に追加
-        return NULL;
+        return sample_robot_vtable_get();
     default:
         return NULL;
     }

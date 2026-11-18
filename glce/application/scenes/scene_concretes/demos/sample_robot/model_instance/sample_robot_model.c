@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -400,10 +401,32 @@ cleanup:
     return ret;
 }
 
-// TODO: 実装
+// ChatGPT Generated
 bool sample_robot_model_is_valid(const sample_robot_model_t* robot_) {
     if(NULL == robot_) {
         return false;
     }
+
+    // Owned Transform Tree.
+    if(NULL == robot_->transform_tree) {
+        return false;
+    }
+    if(!general_allocator_ptr_is_allocated(robot_->transform_tree)) {
+        return false;
+    }
+    if(!model_transform_tree_is_valid(robot_->transform_tree)) {
+        return false;
+    }
+
+    // Robot Posture.
+    if(!isfinite(robot_->posture.base_motor_angle) ||
+       !isfinite(robot_->posture.shoulder_motor_angle) ||
+       !isfinite(robot_->posture.elbow_motor_angle) ||
+       !isfinite(robot_->posture.wrist_motor_angle) ||
+       !isfinite(robot_->posture.left_finger_angle) ||
+       !isfinite(robot_->posture.right_finger_angle)) {
+        return false;
+    }
+
     return true;
 }

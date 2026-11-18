@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-16
+最終更新: 2026-11-18
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -7679,10 +7679,11 @@ Calleeが受け取るInputについて、Caller側ではすでにValidである�
 
 ## Decision: SceneをApplication固有Stateと描画処理のOwnerとし、Applicationを実行基盤のOrchestratorとする
 
-**Status:** Accepted / Implemented in Sample Robot and STL Viewer（Scene共通Interfaceの抽出は未実施）  
+**Status:** Accepted / Scene Context・共通vtableを導入（STL Viewer接続・描画確認済み、Sample Robotのvtable対応は未完了）  
 **Date:** 2026-11-13  
-**Update (2026-11-16):** STL Viewerも独立SceneとしてOrbit Camera、Light、Render Packet、STL / Debug Geometry Resourceおよび`create / destroy / update / draw`を実装し、描画・Camera初期配置の動作を確認した。2種類のConcrete Sceneで基本的なLifecycleとRenderer Frontend Borrowの構造が成立した。Scene共通Interface、Scene Manager、vtable等の抽出は引き続き未決定とする。  
-**Scope:** Application / Scene / Lifecycle / Camera / Light / Render Packet / Renderer Frontend / Ownership / Result Domain / Abstraction Timing
+**Update (2026-11-16):** STL Viewerも独立SceneとしてOrbit Camera、Light、Render Packet、STL / Debug Geometry Resourceおよび`create / destroy / update / draw`を実装し、描画・Camera初期配置の動作を確認した。2種類のConcrete Sceneで基本的なLifecycleとRenderer Frontend Borrowの構造が成立した。当時はScene共通Interface、Scene Manager、vtable等の抽出を未決定としていた。  
+**Update (2026-11-18):** 2種類のConcreteが存在する状態でScene共通Lifecycleを検討した結果、`scene_context_t`と`scene_vtable_t`を導入した。Applicationが保持するSceneの所有先をScene Contextへ一本化し、STL Viewerは共通vtable経由で描画できることを確認した。Adapter / 動的Registry / 汎用Scene Graphは導入しない。Sample RobotのConcrete自体は存在するが、共通vtableへの接続は未完了である。  
+**Scope:** Application / Scene / Scene Context / Lifecycle / Camera / Light / Render Packet / Renderer Frontend / Ownership / Result Domain / Abstraction Timing
 
 ### Decision
 
@@ -7696,35 +7697,25 @@ GLCEのApplication Layerでは、実行基盤を管理する`application.c`と�
 6. **Renderer FrontendはApplicationが所有し、Sceneが必要なOperationでBorrowする。** SceneがRenderer Registry、Shader、VBO Manager等を個別所有することは要求しない。Sceneは自身がAcquire / ImportしたMesh Resource Reference Rightを管理し、Renderer Frontendが有効な間にReleaseする。Scene終了時に必要なReleaseを済ませてから共通Rendererを終了する順序を維持する。現時点でRenderer FrontendをScene Fieldとして長期Borrow保持することは確定しない。
 7. **Scene全体で共通のResult Domainを使用する。** `sample_robot`、`stl_viewer`および各Scene内の専用構成Moduleでは`scene_result_t`を使用し、Sceneごとの同型Result Codeを重複定義しない。一方、独立した`model_framework`やEngine ModuleのResult Domainは維持し、Scene境界で明示的に変換する。
 8. **Scene固有Configは原則としてSceneが構築する。** STL Viewerの`untextured_mesh_config_t`はApplicationで生成せず、`stl_viewer_create()`内で構築する。ApplicationはAsset Root等の共通の配置Policyを提供するが、STL Viewer固有のMaterial / Geometry指定を知る必要はない。
-9. **Scene共通のvtable、Scene Manager、Scene Registry、Scene Graph等を先行導入しない。** Sample RobotとSTL Viewerの双方を独立したSceneとして実装・描画確認した。今後は2つの具体的実装を比較し、実際に一致するLifecycle / Ownership / API Contractが確認できた場合に限って共通化を検討する。vtable等は恒久的に否定せず、具体的な必要性が生じてから判断する。
+9. **共通Scene Interfaceは成立済みConcreteの共通契約から抽出し、`scene_context`でTop-level Sceneを管理する。** Sample RobotとSTL Viewerの独立実装を経た後、`create / destroy / update / draw / is_valid`を共通の`scene_vtable_t`に整理した。Concreteは共通vtableを直接実装し、Concrete専用のAdapter Layerは設けない。`scene_context_t`は選択中のScene種別、Concrete Instance、vtableを保持し、ApplicationへScene共通のLifecycle / Update / Draw入口を提供する。Concreteの対応付けは静的な`switch`で明示し、動的Scene Registryや汎用Scene Graphを導入しない。なお、Sample Robotのvtable接続は未完了である。
+10. **`scene_context`の管理対象は一つのTop-level Sceneとする。** `SCENE_NONE`を正規の空状態とする。Scene切替では次のSceneの種別・共通入力を先に確認し、旧SceneをDestroyしてから新SceneをCreateする。旧Sceneの保持と新Sceneの同時生成によるtransactional replacementは現在の方針としない。新SceneのCreateが失敗した場合は、成立済みSceneを保持しない`SCENE_NONE`へ戻す。Scene内部での子Scene合成・Resource共有の設計は別Decision「Scene ContextをTop-level Sceneの実行境界とし、Scene内部の合成とResource共有を利用者へ委ねる」に従う。
 
-### Current Responsibility / Ownership（2026-11-16時点）
+### Current Responsibility / Ownership（2026-11-18時点）
 
 ```text
 Application                                  [common execution / orchestration]
 ├── Platform System                         [owned]
 ├── Event System                            [owned]
-├── Renderer Frontend                        [owned / shared with Scenes by borrow]
-├── Application Frame State                 [owned / framebuffer and frame coordination]
+├── Renderer Frontend                        [owned / borrowed by active Scene]
+├── Application Frame State                 [owned / frame coordination]
 ├── Diagnostics                             [Application policy]
 ├── Asset Root / common path policy        [owned]
-└── Selected Scene                          [owned]
-    └── Sample Robot                        [implemented Scene]
-        ├── Model Resource Map              [owned / shared by two robot models]
-        ├── Robot Model 1 / 2               [owned / individual posture and Transform Tree]
-        ├── Floor Grid Mesh                 [owned reference right]
-        ├── Flight Camera                   [owned]
-        ├── Directional / Ambient Light     [owned values]
-        └── Render Packet                   [owned storage / per-frame contents]
+└── Scene Context                           [owned]
+    ├── scene_list_t                        [selected Top-level Scene / SCENE_NONE]
+    ├── Concrete Scene Instance             [owned / one active Scene]
+    └── const scene_vtable_t*               [selected Concrete operations]
 
-Renderer Frontend                            [Engine draw / resource boundary]
-    └── Mesh + Draw Parameters / Packet     [does not interpret Scene / Robot semantics]
-```
-
-上記の図はSample Robotの構成例である。STL Viewerでは、選択されるSceneを次の構成に置き換える。
-
-```text
-Selected Scene: STL Viewer                  [owned by Application]
+Current active example: STL Viewer          [Scene Context-owned Concrete]
 ├── STL Untextured Mesh                    [owned reference right]
 ├── Debug Axis Mesh × 3                    [owned reference rights]
 ├── Debug AABB Line Mesh                   [owned reference right]
@@ -7733,9 +7724,14 @@ Selected Scene: STL Viewer                  [owned by Application]
 ├── Directional / Ambient Light            [owned values]
 ├── View / Projection Matrix               [scene-held values]
 └── Render Packet                          [owned storage / per-frame contents]
+
+Renderer Frontend                            [Engine draw / resource boundary]
+└── Mesh + Draw Parameters / Packet         [does not interpret Scene / Robot semantics]
 ```
 
-いずれもSceneが共有Renderer Frontendを必要なOperationでBorrowする。SceneがRenderer FrontendをOwnすることと、Sceneが自身のMesh Resource Reference RightをOwnすることは異なる。Sample RobotとSTL Viewerの内部構成は同一である必要がない。
+`scene_context`は各Concreteの内部Resource構成を知らず、共有Renderer FrontendはApplicationが所有する。STL ViewerのScene Context経由の描画は確認済み。Sample Robotも独立したSceneとして実装され、Model Resource Map、Robot Model 1 / 2、Floor Grid、Flight Camera、Light、Render Packetを自身の責務として管理するが、Scene Contextのvtable経由での実行は未対応である。
+
+Scene ContextとScene内部の階層化は別概念である。Scene Contextが一つのTop-level Sceneを保持することは、そのSceneが複数の子Sceneや共有Resourceを内部管理することを禁止しない。
 
 ### Context / Discovery Process
 
@@ -7751,11 +7747,15 @@ Sample Robotの独立化では、Scene Module自身へCamera、Light、Render Pa
 
 この負担はSceneへのOwnership移管を撤回する理由ではない。**責務のOwnerが誰か**と、**Ownerが使う共通Operationを誰が実装・提供するか**は異なる。2つ目のScene完成後、重複や実際の利用負担を観察し、Model FrameworkやEngineへ移すべき共通機構を判断する。
 
-#### 共通抽象化は2種類のScene完成後に決める
+#### 共通抽象化は2種類のSceneを観察してから導入した
 
-Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一STL表示とOrbit Cameraという異なる用途を持つ。Sample RobotだけからScene共通Interfaceを設計すると、RobotやFlight Camera固有の事情を一般Scene Contractへ混入させる可能性がある。
+Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一STL表示とOrbit Cameraという異なる用途を持つ。Sample RobotだけからScene共通Interfaceを設計すると、RobotやFlight Camera固有の事情を一般Scene Contractへ混入させる可能性があった。
 
-そのため、先に双方を独立して動作させ、共通性を実装から抽出する順序を採用した。2026-11-16にはSTL Viewerも独立Sceneとして動作確認できたため、次の共通化判断では両実装の比較が可能になった。この順序は、未成熟な機能をApplication側で育て、成立した責務をEngineへ移す既存Decisionと整合する。
+そのため、先に双方を独立して動作させ、共通性を実装から抽出する順序を採用した。2026-11-16にはSTL Viewerも独立Sceneとして動作確認でき、共通のLifecycleとRenderer Frontend Borrowを比較できる状態になった。
+
+その後、Applicationから個々のSceneの選択・Lifecycle・Update / Drawの呼出しを分離するため、2026-11-17以降に`scene_context`と共通vtableを導入した。Scene ContextだけがConcreteを選択し、Concrete自身は共通vtableを直接実装する。AdapterやRegistryを追加せず、静的で追跡しやすいdispatchを採用した。STL ViewerのContext経由の描画を確認した一方、Sample Robotのvtable接続は後続の作業とする。
+
+この順序は、未成熟な機能をApplication側で育て、成立した責務を抽出する既存Decisionと整合する。なお、共通Scene Interfaceが導入されたことは、直ちにEngineへ移設する判断を意味しない。
 
 ### Rationale
 
@@ -7765,14 +7765,18 @@ Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一
 - Model / Robot / SceneのDomain MeaningをRenderer Frontendへ漏らさず、EngineのMesh / Draw Parameter Boundaryを維持できる。
 - Scene共通Result Domainにより、Scene内Moduleの重複したError Type / Converterを抑制できる。
 - Scene固有ConfigをApplicationから排除し、Applicationが各DemoのAssetや描画条件を知る範囲を狭められる。
-- Sample RobotとSTL Viewerの相違を観測してから抽象化することで、推測に基づくInterfaceや不要な中間Moduleを固定せずに済む。
+- Sample RobotとSTL Viewerの相違を観測してから共通vtableを抽出することで、推測に基づくInterfaceや不要な中間Moduleを固定せずに済む。
+- Scene ContextにTop-level Sceneの切替とLifecycleを集め、Applicationの実行経路からConcrete選択分岐を分離できる。
+- Adapterや動的Registryを設けず、Concrete選択と呼出し経路をSourceから明示的に追跡できる。
 - Scene開発者の負担を実装によって把握でき、共通化やEngine側API改善の対象を具体的に選べる。
 
 ### Considered / Rejected or Deferred Alternatives
 
 - **Camera / Light / Render Packetを引き続きApplicationへ集約する。** Sceneごとの構成にApplicationが依存し、Scene追加のたびにApplicationのFieldと処理分岐が増えるため採用しない。
 - **Scene固有の描画処理をApplicationが個別に組み立てる。** Model / Posture / Camera / Light / Render Packetの知識がScene境界から漏れるため採用しない。
-- **Sample Robotだけを基準にScene vtableや共通Managerを直ちに導入する。** 当初はOrbit Cameraを持つSTL Viewerが未成立だったため延期した。現在は両Sceneが動作しているが、共通Interfaceを必要とする具体的な契約・利用方法の検討前に導入することは引き続き避ける。vtable自体を恒久的に否定する判断ではない。
+- **Sample Robotだけを基準にScene vtableや共通Managerを直ちに導入する。** 当初はOrbit Cameraを持つSTL Viewerが未成立だったため延期した。2つのConcreteを比較した後、共通Lifecycleの必要性が明確になったため共通vtableは採用した。当時の保留は、vtableそのものを否定したのではなく導入時期を判断したものである。
+- **ConcreteごとにAdapterを置いて共通vtableへ変換する。** Concrete側で共通Interfaceを直接実装すればよく、Forwarding専用ModuleとそのLifecycleを増やす必要がない。
+- **動的なScene Registryや汎用Scene GraphをScene Contextへ導入する。** 現在必要なConcrete選択は静的な`switch`で表現でき、階層・共有Resourceの管理はScene利用者が独自に構成できる。
 - **Scene実装の重複を見つけた時点で、共通Helperを全面的にEngineへ移す。** 単一Sceneの利用経験からEngine APIを固定することを避け、両Scene完成後に具体的な共通処理とOwnershipを確認する。
 - **SceneごとのResult Domainを維持する。** 現在のScene専用Module群では区別の利益に比べてType / Converterの重複が大きく、Scene共通の`scene_result_t`を採用した。
 
@@ -7783,14 +7787,18 @@ Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一
 - Sample Robot Sceneの正常描画はユーザーによって確認された。一方、Cameraの全操作、異常系、Cleanup全経路について同程度の実行検証が済んでいるとは扱わない。
 - STL ViewerのConfigは`stl_viewer_create()`内部へ配置し、Orbit Camera、Light、Render Packet、Mesh Reference RightをSceneが管理する構成にした。`create / destroy / update / draw`の4操作と正常描画を確認した。これは異常系・全Cleanup経路の検証完了を意味しない。Camera初期配置と補助Geometryの個別Decisionは2026-11-16付で別記する。
 - Sample Robotの`draw`ではRenderer Frontendの`untextured_mesh_render_update`および`line_mesh_render_update`を実行する。これらはScene Stateそのものではなく描画用Renderer Stateを更新するOperationであり、`update`ではなく`draw`に置く。
-- Frame Stateの`projection_dirty` / `view_dirty`をRendererへ伝搬する旧Application経路はSample Robotで不要になった。Sourceに残る未使用Fieldや旧Camera Wrapper等の削除は、別途リファクタリング対象とする。
+- Frame Stateの`projection_dirty` / `view_dirty`をRendererへ伝搬する旧Application経路はSample Robotで不要になった。Scene固有CameraのOwnership移管に伴い、未使用の`application_flight_camera` Wrapperは2026-11-17のRefactoringで削除した。Frame Stateの残存Field整理は別途判断する。
+- Scene Contextは現在のScene種別・Concrete Instance・共通vtableを保持し、`SCENE_NONE`を正規状態として扱う。`scene_context_change_scene()`は旧SceneをDestroyした後で新SceneをCreateする。切替のPreflightで検出可能な入力不正は旧Sceneの破棄前にRejectする。
+- STL ViewerはScene Context経由の共通vtableで正常描画を確認した。Sample Robotのvtable接続は未完了であり、Scene切替全体の動作検証やFailure Injectionまで完了したとは扱わない。
+- Scene ContextのDestroy / Validatorに関する未修正箇所は後続のSource Review対象として扱う。Design Decisionの確定と実装・異常系検証の完了を混同しない。
 - Resource Packetの内部Buffer管理、RobotのDraw Request生成共通化、SceneがBorrowするRenderer Frontendの保持方法、`destroy`の`void`戻り値やFailure Handling、Validatorの再設計等は、このDecisionでは結論を出さない。
 - Cleanup時に`DATA_CORRUPTED`を検出した場合は以後のResource解放を行わない。`DATA_CORRUPTED`以外の失敗では、後続Resource解放を継続するという現在のSample Robotでの方針を維持する。`destroy` APIのError Propagationの具体的な再設計は後続Taskとする。
 
 ### Revisit Conditions
 
-- 両Sceneの実装を比較し、共通化すべきLifecycle / Data / Ownership Contractと、それを要求する具体的な利用場面が明確になった場合。
-- 複数Scene同時実行、Scene切替、Shared Camera / Light / Render Packet等が必要となり、現在の1 Scene単位のOwner構造で扱いにくくなった場合。
+- 共通vtableのLifecycle / API Contractが、Sample Robotへの横展開や新しいConcreteの追加で実際に不自然となった場合。
+- 複数のTop-level SceneをContext自身が同時に保持・実行する必要が明確になり、ユーザー定義の親Sceneによる合成だけでは要件を満たせない場合。
+- Scene Contextの静的なConcrete選択では対処できない、Runtimeでの動的Scene登録等の具体的要求が発生した場合。
 - Scene実装のResource Import / Release、Packet構築、Renderer設定等に重複や変更コストが顕在化した場合。
 - Render Packet / Renderer FrontendのLifetimeやDraw Orderingが新しいScene用途で問題となった場合。
 - Camera / Lightの複数化、Scene外の共有、Scene間継承等の具体的要件が生じた場合。
@@ -7807,6 +7815,8 @@ Sample Robotは複数個体とFlight Cameraを持つ一方、STL Viewerは単一
 - 2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」
 - 2026-11-16「STL ViewerのCamera初期配置をAABBから導出し、配置PolicyをSceneが所有する」
 - 2026-11-16「STL Viewerの補助GeometryをScene固有Resourceとして構築し、表示をRender Packetで制御する」
+- 2026-11-18「交換可能性が必要な境界に実装選択の抽象化を限定し、Engine内部はConcreteを直接接続する」
+- 2026-11-18「Scene ContextをTop-level Sceneの実行境界とし、Scene内部の合成とResource共有を利用者へ委ねる」
 - `glce_near_term_todo.md` — 両Sceneの共通化検討と残るRefactoringを扱う
 - `validation_policy.md` — `DATA_CORRUPTED` / Cleanup / Fail-stopの一般Policyの正本
 
@@ -7972,3 +7982,175 @@ Floor Gridの生成ではXY方向の代表寸法、Debug Axisの生成ではXYZ�
 - 2026-11-16「STL ViewerのCamera初期配置をAABBから導出し、配置PolicyをSceneが所有する」
 - 2026-10-16「Render PacketをShader別Draw Collectionとし、Model連携を先に検証してからOrchestrationを抽出する」
 - `glce_near_term_todo.md`
+
+---
+
+## Decision: 交換可能性が必要な境界に実装選択の抽象化を限定し、Engine内部はConcreteを直接接続する
+
+**Status:** Accepted  
+**Date:** 2026-11-18  
+**Scope:** GLCE-wide Architecture / Polymorphism / Platform / Renderer Backend / Scene / Vertical Slice / Human–AI Collaboration
+
+### Decision
+
+GLCEは、**実装の交換可能性が具体的な設計上の要求となる境界**に、vtable等の実装選択を伴う抽象化を配置する。現在その代表となるのは次の3か所である。
+
+```text
+Application-specific behavior
+          ↓
+Scene Interface                 利用者が構築するSceneの違いを受け入れる
+          ↓
+Application / Engine modules    明示的なConcrete同士の依存と処理
+          ↓
+Renderer Backend Interface      Graphics APIの違いを吸収する
+Platform Interface              OS / Window Systemの違いを吸収する
+```
+
+- **Scene:** Applicationごとに異なる処理・状態・描画構成を、共通のScene Lifecycle / Update / Drawから実行できるようにする。
+- **Renderer Backend:** 異なるGraphics APIやBackend実装を、Rendererの上位処理から切り離す。
+- **Platform:** OS / Window System等の環境差を、Platformより上位の処理から切り離す。
+
+これらの境界の間にあるGLCE内部では、**将来の実装差し替えだけを理由として汎用vtable、Strategy、Type Erasure、Plugin Registry等を先行導入しない**。具体的なModuleの公開APIとContractを通じて、依存先と実行経路を明示することを基本とする。
+
+本Decisionが制限するのは、主として**複数Concreteの選択・置換を目的とした多態的抽象化**である。Module Boundary、Encapsulation、Opaque Type、共通データ型、Stateless Utility、必要な共通Service等の利用を否定しない。また、明確な実需要がある内部境界に、後から多態的抽象化を導入することも禁止しない。
+
+### Context / Design Philosophy
+
+GLCEは、汎用ゲームエンジンの機能を網羅することよりも、利用者がシステムの構造と実行動作を把握し、必要な部分を自身で制御できることを重視する。産業機械、CAD、Model Visualization、工学シミュレーション等では、対象の構造やLifecycleが用途固有の明確な意味を持つ場合がある。その意味を汎用Frameworkの管理構造へ無条件に押し込むと、実際の工学モデルとSoftware内部の管理構造が乖離し得る。
+
+従来からRenderer BackendとPlatformには外部環境の差異を吸収する明確な理由があった。Sceneについても、Application固有の処理を共通の実行基盤から呼ぶために、独立したConcreteを確認した後で共通Interfaceを導入した。
+
+一方、Engine内部を多数の交換可能なInterfaceで分割すると、Concreteの選択、間接呼出し、Runtime State、Dependencyを追跡するための情報が増える。現在具体的な差し替え要求のない場所では、この追加の間接性よりも、直接的な依存関係とModule Contractの明確さを優先する。
+
+さらにGLCEでは、AIを設計議論、Code Review、変更影響の探索、推奨コードの生成、Documentation更新に利用する。AIが全Codebaseの暗黙の関係を正確に推測することへ依存するより、個別Moduleの責務、依存方向、Ownership、Lifecycle、Result Contractが明示された構造を選ぶ方が、AIと人間の双方が検討しやすいと考える。
+
+これはAIによるReview精度の定量的な改善が実証されたという主張ではなく、**AIとの協働を考慮したArchitectureの設計目標**である。
+
+### Rationale
+
+- **Understandability（理解可能性）:** 処理の入口から具体的な実装まで、実行経路を追跡しやすい。
+- **Controllability（制御可能性）:** 何を、どこで、どの順序で生成・更新・破棄するかを、明確なOwnerが判断できる。
+- **Predictability（予測可能性）:** Runtimeで選ばれるConcreteや暗黙のState Transitionを必要以上に増やさず、動作を推測しやすくする。
+- Vertical Sliceの独立性を維持し、兄弟Module間の依存や変更波及を抑える。
+- モジュールの契約を中心に、局所的なCode Reviewや変更影響の評価を行える。
+- AIへの入力として、特定Moduleとその依存先のContractを切り出しやすくする。
+- 抽象化が実際に必要となったときに、要求を確認してからInterfaceを設計できる。
+
+この方針は、**抽象化の数を少なくすること自体を目的としない**。重視するのは、問題領域の本質的な複雑さを正しく表現し、実装方式による不要な複雑さを持ち込まないことである。Contractの明確化、Validation、Ownershipの整備等によるCode量の増加は、この目的と矛盾しない。
+
+### Considered / Rejected Alternatives
+
+- **Engine内部のすべての主要Moduleへ共通vtable / Plugin Interfaceを導入する。** Runtimeで差し替える具体的要求がない場合、追跡する間接性とInterface管理の負担が増えるため先行導入しない。
+- **将来の拡張性だけを理由に、実装が一つしかないModuleもStrategy / Type Erasureへ変換する。** 交換対象が未確定の段階でContractを固定することになるため採用しない。
+- **逆に、抽象化そのものを一切使用しない。** Scene、Renderer Backend、Platformには異なるConcreteを共通境界から扱う現実の要求があり、抽象化を排除することが目的ではない。
+- **同じ処理は重複の有無だけを基準に必ず共通化する。** 共有Moduleが兄弟Slice間の結合や広範な変更波及を生む場合がある。共通化の価値は実際の責務、Contract、変更コストで判断する。
+
+### Consequences
+
+- 新しい汎用Interfaceを導入する際は、交換対象、選択タイミング、Owner、Lifecycle、既存Concreteとの差異を説明できることを重視する。
+- Engine内部の直接的なModule依存を、それだけで設計上の欠点とは扱わない。
+- Scene / Platform / Renderer Backendの多態性と、内部のModule Boundary / Encapsulationを混同しない。
+- AI向けDocumentationでは、抽象化の存在だけでなく、Concreteの選択位置、Ownership、依存方向、実行経路の理由を復元できるようにする。
+- AIの生成・Review結果が正しいことをArchitectureのみから保証するものではなく、Source Review、Build / Runtime、必要なValidationで確認する。
+
+### Revisit Conditions
+
+- Engine内部で複数のConcreteを切り替える具体的な要求が生じた場合。
+- 直接的なDependencyによる変更波及が実際に大きくなり、共通Interfaceの方が全体の複雑さを下げられる場合。
+- Asset / Pluginの動的ロード、外部拡張、複数Backendの同時利用等によって、現在の境界では要求を表現できなくなった場合。
+- 工学用途やAI協働の実測・利用経験により、理解可能性・制御可能性のために異なる抽象化配置が合理的と分かった場合。
+
+### Related Decisions / Documents
+
+- 2026-09-07「`camera_t`はinternal primitiveとしgeneric Camera abstractionを先行導入しない」
+- 2026-09-12「Application↔Engineの当面の論理boundaryをapplication.h/.cとする」
+- 2026-11-13「SceneをApplication固有Stateと描画処理のOwnerとし、Applicationを実行基盤のOrchestratorとする」（2026-11-18 Update）
+- 2026-11-18「Scene ContextをTop-level Sceneの実行境界とし、Scene内部の合成とResource共有を利用者へ委ねる」
+- `boundary_model.md`
+- `coding_style.md`
+
+---
+
+## Decision: Scene ContextをTop-level Sceneの実行境界とし、Scene内部の合成とResource共有を利用者へ委ねる
+
+**Status:** Accepted / Scene Context導入済み（STL Viewer接続・描画確認済み、Sample Robot vtable接続は未完了）  
+**Date:** 2026-11-18  
+**Scope:** Scene Architecture / Composition / Scene Context / Ownership / Resource Sharing / Lifetime / Application Policy
+
+### Decision
+
+`scene_context`は**一つのTop-level Sceneを選択・保持し、そのLifecycleとUpdate / Drawを実行する境界**とする。`scene_context`はScene内部の構成を認識しない。
+
+`scene_context_t`は現在のScene種別、Concrete InstanceへのPointer、共通`scene_vtable_t`を保持する。`SCENE_NONE`を正規の空状態とする。Concrete選択は明示的な`switch`と各Concreteが直接実装するvtableで成立させる。Concrete Adapter、動的Scene Registry、汎用Scene Graph、共有Resource専用のScene Managerは設けない。
+
+Sceneの内部に、別のScene、Model、Resource、Controller、Application固有のManager等をどのように組み合わせるかは、**Sceneを実装する利用者自身が決める**。子Sceneは、必ずしもScene Contextへ個別登録する必要がなく、親Sceneから通常のC APIでCreate / Update / Draw / Destroyしてよい。共通vtableの利用を子Sceneへ強制しない。
+
+例えばScene AとScene BでResourceを共有する場合、利用者がScene CをTop-level Sceneとして設計し、Scene CにShared ResourceとScene A / Bを所有または適切に管理させられる。
+
+```text
+Scene Context
+    └── Scene C                           [Top-level Scene / owner]
+          ├── Shared Resource             [owner: C]
+          ├── Scene A                     [created / destroyed by C]
+          │     └── borrows Shared Resource
+          └── Scene B                     [created / destroyed by C]
+                └── borrows Shared Resource
+```
+
+この構成では、Scene AとScene Bの生成順序、同時存在、Update / Drawの実行順序、Destroyの時期、Shared Resourceの解放順序等をScene Cの開発者が定める。Cは共有Resourceを参照するConsumerの利用終了後にResourceを解放するなど、必要なLifetime Contractを自ら成立させる。
+
+**Scene間の共有や合成はサポート対象外なのではなく、Scene Systemが共有方法と合成方法を規定しない**という判断である。
+
+### Context / Design Philosophy
+
+汎用ゲームエンジンでは、多数のSceneやEntityの管理、Streaming、Asset Cache、非同期Load、共有ResourceのReference Counting等をScene Managerへ統合する設計も考えられる。
+
+しかしGLCEが想定する産業機械、CAD、可視化、工学シミュレーション等では、対象のModel構造や運転・表示Modeが用途固有であり、汎用Scene Managerによる複雑な管理が必ずしも必要ではない。利用者が自身の問題領域を最もよく理解している場合、必要なOwnerやLifetimeを利用者自身が明示する方が構造を把握しやすい。
+
+Scene AからScene Bへの切替時にResourceを共有する問題についても、Scene Contextが両者を直接切り替えることを前提にする必要はない。共通OwnerとなるScene CをScene Contextへ保持させ、その内部でA / Bと共有Resourceを管理すれば、Scene Contextの単一Top-level Sceneという契約を変更せずに成立させられる。
+
+これは共有ResourceのLifetime Contractが不要になるという意味ではない。**そのContractのOwnerがScene Contextではなく、利用者が構築したScene Cになる**という責務分担である。
+
+### Rationale
+
+- Scene Contextの責務をTop-level Sceneの選択・Lifecycle・Update / Drawに限定できる。
+- 単純な用途へScene Tree、共有Resource Registry、Reference Counting等の状態管理を持ち込まずに済む。
+- Sceneの階層、同時実行、共有方法を、用途固有の意味に合わせて構築できる。
+- Shared ResourceのOwnerとConsumerの関係を、利用者が直接把握・制御できる。
+- 工学的なModelや運転Modeの構造を、汎用Framework上の管理構造へ無理に変換せずに済む。
+- Scene Contextが子Sceneの存在や共有Resourceの内部構造を知らないため、SceneごとのVertical Slice独立性を維持しやすい。
+- Scene内部の複雑さを、それを必要とする利用者自身が所有し、Engineは共通実行契約だけを提供できる。
+
+### Considered / Rejected Alternatives
+
+- **Scene Contextへ階層型Scene Graphと子Scene Lifecycleを組み込む。** 現在のTop-level Scene実行という責務を超え、親子関係や内部構造を一律に規定するため採用しない。
+- **Scene間でResourceを共有するための汎用Scene ManagerをEngine側へ新設する。** 利用者が共通OwnerとなるSceneを設計すれば表現できる用途に対し、共通管理Stateを増やす必要はない。
+- **Scene Contextが同時に複数のTop-level Sceneを所有し、その間で共有Resourceを管理する。** 現時点でその所有形態をContext自身に要求する具体的な用途は確認されていない。複数Sceneの合成はまず利用者定義の親Sceneへ委ねる。
+- **子SceneにもScene Contextのvtable / Registryへの登録を必須化する。** Scene内部の構成と呼出し方法を不必要に制約するため採用しない。
+- **共有を一切認めず、各SceneへResourceの複製を強制する。** Resource共有を禁止する判断ではない。明示的なOwner / Borrow / Lifetime Contractに従った共有を許容する。
+
+### Consequences / Implementation Boundary
+
+- Scene Contextは内部Scene Treeや共有Resourceの参照関係を追跡しない。
+- Scene間共有のためにScene Context自身へ特別なResource Lifetime延長機能を追加しない。
+- Top-level Scene切替の既定動作は、旧SceneのDestroyを完了させてから次SceneをCreateする。前のSceneとの共有が必要な場合は、共通OwnerであるTop-level Sceneの内部に共有範囲を置くなど、利用者が構成する。
+- Sceneの内部に保持するResourceのOwnershipとBorrowの安全性は、そのSceneの公開Contract・内部Contractで定義する。
+- Scene Contextが提供する機能を利用せず、Scene内部で複数の独立した構成要素を組み立てることを許容する。
+- STL ViewerのScene Context経由での正常描画は確認済み。Sample Robotのvtable対応、全Scene切替経路、異常系等は別途実装・検証する。本Decisionはそれらの検証完了を宣言するものではない。
+
+### Revisit Conditions
+
+- 利用者定義の親Sceneによる合成では表現できず、Scene Context自身による複数Top-level Sceneの同時管理が明確に必要となった場合。
+- 複数の独立したTop-level Owner間でResource Lifetimeを統括することが必要となり、現在の明示的なOwner配置では要求を満たせない場合。
+- Runtime Scene Loading、Hot Reload、Streaming、外部Plugin管理等の具体的要求が生じ、静的なTop-level Scene選択を変更する必要が生じた場合。
+- 実際の工学用途でScene内部の合成を繰り返し実装した結果、共通Frameworkを提供した方が構造の理解可能性と実装負担をともに改善できると確認された場合。
+
+### Related Decisions / Documents
+
+- 2026-11-13「SceneをApplication固有Stateと描画処理のOwnerとし、Applicationを実行基盤のOrchestratorとする」（2026-11-18 Update）
+- 2026-11-18「交換可能性が必要な境界に実装選択の抽象化を限定し、Engine内部はConcreteを直接接続する」
+- 2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」
+- `boundary_model.md`
+- `validation_policy.md`
+
+---
