@@ -39,9 +39,9 @@ void sample_robot_model_destroy(sample_robot_model_t** robot_);
 
 scene_result_t sample_robot_model_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_model_t* robot_);
 
-scene_result_t sample_robot_model_posture_update(const sample_robot_posture_t* posture_, sample_robot_model_t* robot_);
+scene_result_t sample_robot_model_posture_set(const sample_robot_posture_t* posture_, sample_robot_model_t* robot_);
 
-void sample_robot_model_posture_default_get(sample_robot_posture_t* posture_);
+void sample_robot_model_posture_default_get(sample_robot_posture_t* out_posture_);
 
 scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_config_t** out_config_);
 

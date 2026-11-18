@@ -91,7 +91,7 @@ void scene_context_destroy(renderer_frontend_t* renderer_frontend_, scene_contex
     }
     (*scene_)->vtable->scene_destroy(renderer_frontend_, &(*scene_)->scene);
     if(NULL != (*scene_)->scene) {
-        ERROR_MESSAGE("scene_context_change_scene(%s) - scene_destroy failed.", scene_result_to_str(SCENE_DATA_CORRUPTED));
+        ERROR_MESSAGE("scene_context_destroy(%s) - scene_destroy failed.", scene_result_to_str(SCENE_DATA_CORRUPTED));
         return;
     }
     general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);

@@ -27,6 +27,23 @@
 #include "application/scenes/core/scene_types.h"
 #include "application/scenes/core/scene_err_utils.h"
 
+typedef enum {
+    ROBOT_COORDINATE_BASE_YAW = 1,
+    ROBOT_COORDINATE_SHOULDER_PITCH = 2,
+    ROBOT_COORDINATE_ELBOW_PITCH = 3,
+    ROBOT_COORDINATE_WRIST_ROLL = 4,
+    ROBOT_COORDINATE_LEFT_FINGER = 5,
+    ROBOT_COORDINATE_RIGHT_FINGER = 6,
+    ROBOT_COORDINATE_TCP = 7,
+    ROBOT_COORDINATE_TOOL_MOUNT = 8,
+    ROBOT_COORDINATE_BASE_MOTOR_HOUSING = 9,
+    ROBOT_COORDINATE_SHOULDER_MOTOR_MOUNT = 10,
+    ROBOT_COORDINATE_ELBOW_MOTOR_MOUNT = 11,
+    ROBOT_COORDINATE_WRIST_MOTOR_MOUNT = 12,
+    ROBOT_COORDINATE_FIXED_FOUNDATION = 13,
+    ROBOT_COORDINATE_ROOT = 14,
+} robot_coordinate_id_t;
+
 scene_result_t sample_robot_model_create(const untextured_model_resource_map_t* resource_map_, sample_robot_model_t** out_robot_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
@@ -112,7 +129,7 @@ scene_result_t sample_robot_model_placement_set(vec3f_t translate_, vec3f_t rota
 
     IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_placement_set", "robot_")
 
-    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 14, rotation_);
+    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_ROOT, rotation_);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
@@ -122,7 +139,7 @@ scene_result_t sample_robot_model_placement_set(vec3f_t translate_, vec3f_t rota
         goto cleanup;
     }
 
-    ret_model_framework = model_transform_tree_translate_set(robot_->transform_tree, 14, translate_);
+    ret_model_framework = model_transform_tree_translate_set(robot_->transform_tree, ROBOT_COORDINATE_ROOT, translate_);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
@@ -142,85 +159,85 @@ cleanup:
 // NOTE: MotorとCoordinate IDのbindingはAssembly Configに従う。
 // NOTE: 現状ではMotor AngleとLink Angleが一致すると仮定する。
 // NOTE: 可動範囲等の調整はまだ行わない。
-scene_result_t sample_robot_model_posture_update(const sample_robot_posture_t* posture_, sample_robot_model_t* robot_) {
+scene_result_t sample_robot_model_posture_set(const sample_robot_posture_t* posture_, sample_robot_model_t* robot_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
     vec3f_t tmp_rotation = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_posture_update", "posture_")
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_posture_update", "robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_posture_set", "posture_")
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_posture_set", "robot_")
 
     // Base Motor (Yaw, Z-axis)
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->base_motor_angle);
-    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 1, tmp_rotation);
+    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_BASE_YAW, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
             ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_model_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     // Shoulder Motor (Pitch, Y-axis)
     tmp_rotation = vec3f_initialize(0.0f, posture_->shoulder_motor_angle, 0.0f);
-    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 2, tmp_rotation);
+    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_SHOULDER_PITCH, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
             ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_model_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     // Elbow Motor (Pitch, Y-axis)
     tmp_rotation = vec3f_initialize(0.0f, posture_->elbow_motor_angle, 0.0f);
-    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 3, tmp_rotation);
+    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_ELBOW_PITCH, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
             ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_model_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     // Wrist Motor (Roll, X-axis)
     tmp_rotation = vec3f_initialize(posture_->wrist_motor_angle, 0.0f, 0.0f);
-    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 4, tmp_rotation);
+    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_WRIST_ROLL, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
             ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_model_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     // Left Finger
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->left_finger_angle);
-    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 5, tmp_rotation);
+    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_LEFT_FINGER, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
             ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_model_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     // Right Finger
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->right_finger_angle);
-    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, 6, tmp_rotation);
+    ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_RIGHT_FINGER, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
         if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
             ret = SCENE_DATA_CORRUPTED;
         }
-        ERROR_MESSAGE("sample_robot_model_posture_update(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
+        ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
@@ -232,17 +249,17 @@ cleanup:
     return ret;
 }
 
-void sample_robot_model_posture_default_get(sample_robot_posture_t* posture_) {
-    if(NULL == posture_) {
+void sample_robot_model_posture_default_get(sample_robot_posture_t* out_posture_) {
+    if(NULL == out_posture_) {
         return;
     }
-    posture_->base_motor_angle = 0.0f;
-    posture_->shoulder_motor_angle = 0.0f;
-    posture_->elbow_motor_angle = 0.0f;
-    posture_->wrist_motor_angle = 0.0f;
+    out_posture_->base_motor_angle = 0.0f;
+    out_posture_->shoulder_motor_angle = 0.0f;
+    out_posture_->elbow_motor_angle = 0.0f;
+    out_posture_->wrist_motor_angle = 0.0f;
 
-    posture_->left_finger_angle = 0.0f;
-    posture_->right_finger_angle = 0.0f;
+    out_posture_->left_finger_angle = 0.0f;
+    out_posture_->right_finger_angle = 0.0f;
 }
 
 // NOTE: ChatGPT Generated.
@@ -262,20 +279,21 @@ scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_
         float translate[3];
         float rotation[3];
     } coordinate_definitions[] = {
-        { 14,  0, {0.0f, 0.0f, 0.0f}         , {0.0f, 0.0f, 0.0f} },
-        {  1, 14, {0.0f, 0.0f, 0.0f}         , {0.0f, 0.0f, 0.0f} },
-        {  2,  1, {0.0f, 0.0f, 140.0f}       , {0.0f, 0.0f, 0.0f} },
-        {  3,  2, {150.0f, 0.0f, 0.0f}       , {0.0f, 0.0f, 0.0f} },
-        {  4,  3, {120.0f, 0.0f, 0.0f}       , {0.0f, 0.0f, 0.0f} },
-        {  8,  4, {26.0f, 0.0f, 0.0f}        , {0.0f, 0.0f, 0.0f} },
-        {  5,  8, {10.0f, 18.0f, 0.0f}       , {0.0f, 0.0f, 0.0f} },
-        {  6,  8, {10.0f, -18.0f, 0.0f}      , {0.0f, 0.0f, 0.0f} },
-        {  7,  8, {62.0f, 0.0f, 0.0f}        , {0.0f, 0.0f, 0.0f} },
-        {  9, 14, {0.0f, 0.0f, 0.0f}         , {0.0f, 0.0f, 0.0f} },
-        { 13, 14, {0.0f, 0.0f, 0.0f}         , {0.0f, 0.0f, 0.0f} },
-        { 10,  1, {0.0f, 0.0f, 140.0f}       , {-90.0f, 0.0f, 0.0f} },
-        { 11,  2, {150.0f, 0.0f, 0.0f}       , {-90.0f, 0.0f, 0.0f} },
-        { 12,  3, {120.0f, 0.0f, 0.0f}       , {0.0f, 90.0f, 0.0f} },
+        // coordinate_id,                        parent_coordinate_id,            translate,               rotation
+        { ROBOT_COORDINATE_ROOT,                 0,                               { 0.0f, 0.0f, 0.0f },    { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_BASE_YAW,             ROBOT_COORDINATE_ROOT,           { 0.0f, 0.0f, 0.0f },    { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_SHOULDER_PITCH,       ROBOT_COORDINATE_BASE_YAW,       { 0.0f, 0.0f, 140.0f },  { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_ELBOW_PITCH,          ROBOT_COORDINATE_SHOULDER_PITCH, { 150.0f, 0.0f, 0.0f },  { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_WRIST_ROLL,           ROBOT_COORDINATE_ELBOW_PITCH,    { 120.0f, 0.0f, 0.0f },  { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_TOOL_MOUNT,           ROBOT_COORDINATE_WRIST_ROLL,     { 26.0f, 0.0f, 0.0f },   { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_LEFT_FINGER,          ROBOT_COORDINATE_TOOL_MOUNT,     { 10.0f, 18.0f, 0.0f },  { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_RIGHT_FINGER,         ROBOT_COORDINATE_TOOL_MOUNT,     { 10.0f, -18.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_TCP,                  ROBOT_COORDINATE_TOOL_MOUNT,     { 62.0f, 0.0f, 0.0f },   { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_BASE_MOTOR_HOUSING,   ROBOT_COORDINATE_ROOT,           { 0.0f, 0.0f, 0.0f },    { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_FIXED_FOUNDATION,     ROBOT_COORDINATE_ROOT,           { 0.0f, 0.0f, 0.0f },    { 0.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_SHOULDER_MOTOR_MOUNT, ROBOT_COORDINATE_BASE_YAW,       { 0.0f, 0.0f, 140.0f },  { -90.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_ELBOW_MOTOR_MOUNT,    ROBOT_COORDINATE_SHOULDER_PITCH, { 150.0f, 0.0f, 0.0f },  { -90.0f, 0.0f, 0.0f } },
+        { ROBOT_COORDINATE_WRIST_MOTOR_MOUNT,    ROBOT_COORDINATE_ELBOW_PITCH,    { 120.0f, 0.0f, 0.0f },  { 0.0f, 90.0f, 0.0f } },
     };
 
     // geometry名を共有する4つのmotor Meshは同じResourceをacquireする。
@@ -285,19 +303,20 @@ scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_
         const char* material_name;
         uint16_t coordinate_id;
     } untextured_mesh_definitions[] = {
-        { "base_motor_mount", "link_mat",  1 },
-        { "base_support", "link_mat", 13 },
-        { "motor", "actuator_mat",  9 },
-        { "motor", "actuator_mat", 10 },
-        { "motor", "actuator_mat", 11 },
-        { "motor", "actuator_mat", 12 },
-        { "shoulder_link", "link_mat", 2 },
-        { "elbow_link", "link_mat", 3 },
-        { "wrist_link", "link_mat", 4 },
-        { "tool_interface", "actuator_mat", 4 },
-        { "gripper_body", "end_tool_mat", 8 },
-        { "left_finger", "end_tool_mat", 5 },
-        { "right_finger", "end_tool_mat", 6 },
+        // geometry_name,     material_name,  coordinate_id
+        { "base_motor_mount", "link_mat",     ROBOT_COORDINATE_BASE_YAW },
+        { "base_support",     "link_mat",     ROBOT_COORDINATE_FIXED_FOUNDATION },
+        { "motor",            "actuator_mat", ROBOT_COORDINATE_BASE_MOTOR_HOUSING },
+        { "motor",            "actuator_mat", ROBOT_COORDINATE_SHOULDER_MOTOR_MOUNT },
+        { "motor",            "actuator_mat", ROBOT_COORDINATE_ELBOW_MOTOR_MOUNT },
+        { "motor",            "actuator_mat", ROBOT_COORDINATE_WRIST_MOTOR_MOUNT },
+        { "shoulder_link",    "link_mat",     ROBOT_COORDINATE_SHOULDER_PITCH },
+        { "elbow_link",       "link_mat",     ROBOT_COORDINATE_ELBOW_PITCH },
+        { "wrist_link",       "link_mat",     ROBOT_COORDINATE_WRIST_ROLL },
+        { "tool_interface",   "actuator_mat", ROBOT_COORDINATE_WRIST_ROLL },
+        { "gripper_body",     "end_tool_mat", ROBOT_COORDINATE_TOOL_MOUNT },
+        { "left_finger",      "end_tool_mat", ROBOT_COORDINATE_LEFT_FINGER },
+        { "right_finger",     "end_tool_mat", ROBOT_COORDINATE_RIGHT_FINGER },
     };
 
     const size_t coordinate_count = sizeof(coordinate_definitions) / sizeof(coordinate_definitions[0]);
