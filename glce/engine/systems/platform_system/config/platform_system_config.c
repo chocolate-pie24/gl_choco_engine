@@ -19,9 +19,6 @@ static bool is_valid_shallow(const platform_system_config_t* config_) {
     if(NULL == config_) {
         return false;
     }
-    if(0 == config_->max_keyboard_event_count || 0 == config_->max_mouse_event_count || 0 == config_->max_window_event_count) {
-        return false;
-    }
     if(NULL == config_->window_label) {
         return false;
     }

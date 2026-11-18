@@ -20,6 +20,7 @@
 
 #define DET_EPS 1.0e-6f           /**< 行列式ゼロ判定用閾値 */
 #define FLOAT_EQUAL_EPS 1.0e-6f   /**< 浮動小数点イコール判定用閾値 */
+#define DOUBLE_EQUAL_EPS 1.0e-6
 
 float choco_tanf(float radian_) {
     return tanf(radian_);
@@ -28,6 +29,15 @@ float choco_tanf(float radian_) {
 bool is_equal_float(float a_, float b_) {
     const float diff = (a_ > b_) ? (a_ - b_) : (b_ - a_);
     if(diff <= FLOAT_EQUAL_EPS) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool is_equal_double(double a_, double b_) {
+    const double diff = (a_ > b_) ? (a_ - b_) : (b_ - a_);
+    if(diff <= DOUBLE_EQUAL_EPS) {
         return true;
     } else {
         return false;

@@ -294,6 +294,8 @@ GLCE source code and project documentation are released under the MIT License.
 
 See [LICENSE](LICENSE) for details.
 
+Third-party assets may be distributed under separate licenses. See the README files accompanying individual assets for their respective license information.
+
 ## Author
 
 GitHub: https://github.com/chocolate-pie24

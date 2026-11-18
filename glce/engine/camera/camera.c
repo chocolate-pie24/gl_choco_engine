@@ -48,6 +48,8 @@ struct camera {
 
     bool posture_cache_dirty;           /**< true: 姿勢が更新されているが、姿勢由来の行列が更新されていない, false: 姿勢と姿勢由来の行列が同期済み */
     bool frustum_cache_dirty;           /**< true: 視錐台が更新されているが、視錐台由来の行列が更新されていない, false: 視錐台と視錐台由来の行列が同期済み */
+
+    pfn_camera_rotation_matrix_build rotation_matrix_build;
 };
 
 static camera_result_t camera_frustum_cache_sync(camera_t* camera_);
@@ -62,7 +64,7 @@ static bool camera_is_valid_shallow(const camera_t* camera_);
 
 static void destroy_unchecked(camera_t** camera_);
 
-camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t** out_camera_) {
+camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, pfn_camera_rotation_matrix_build rotation_matrix_build_, camera_t** out_camera_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -75,6 +77,7 @@ camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, floa
         .near_clip = near_clip_,
     };
 
+    IF_ARG_NULL_GOTO_CLEANUP(rotation_matrix_build_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "camera_create", "rotation_matrix_build_")
     IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "camera_create", "out_camera_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_camera_, ret, CAMERA_BAD_OPERATION, camera_result_to_str(CAMERA_BAD_OPERATION), "camera_create", "*out_camera_")
     if(!frustum_is_valid(&tmp_frustum)) {
@@ -101,6 +104,8 @@ camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, floa
 
     tmp_camera->euler = vec3f_initialize(0.0f, 0.0f, 0.0f);
     tmp_camera->position = vec3f_initialize(0.0f, 0.0f, 0.0f);
+
+    tmp_camera->rotation_matrix_build = rotation_matrix_build_;
 
     *out_camera_ = tmp_camera;
     tmp_camera = NULL;
@@ -509,7 +514,7 @@ static void camera_to_world_matrix_update(camera_t* camera_) {
     mat4x4f_t rot = { 0 };
     mat4x4f_t trans = { 0 };
 
-    mat4f_rot_xyz(CHOCO_DEG_TO_RAD(camera_->euler.elem[0]), CHOCO_DEG_TO_RAD(camera_->euler.elem[1]), CHOCO_DEG_TO_RAD(camera_->euler.elem[2]), &rot);
+    camera_->rotation_matrix_build(camera_->euler, &rot);
     mat4f_translation(camera_->position, &trans); // ある座標をtranslate分平行移動する行列 = translate分座標が増える = カメラ->ワールド座標系への変換行列
 
     // 後に変換するものを左から掛ける
@@ -565,6 +570,9 @@ static bool camera_is_valid_shallow(const camera_t* camera_) {
         return false;
     }
     if(!frustum_is_valid(&camera_->frustum)) {
+        return false;
+    }
+    if(NULL == camera_->rotation_matrix_build) {
         return false;
     }
     return true;

@@ -16,7 +16,9 @@ extern "C" {
 
 typedef struct camera camera_t; /**< カメラ内部状態管理構造体前方宣言 */
 
-camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, camera_t** out_camera_);
+typedef void (*pfn_camera_rotation_matrix_build)(vec3f_t euler_, mat4x4f_t* out_rotation_);
+
+camera_result_t camera_create(float fovy_, float aspect_, float near_clip_, float far_clip_, pfn_camera_rotation_matrix_build rotation_matrix_build_, camera_t** out_camera_);
 
 /**
  * @brief カメラ構造体インスタンスが管理するリソースを破棄し、自身のメモリも破棄する

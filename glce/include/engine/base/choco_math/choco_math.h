@@ -43,6 +43,8 @@ float choco_tanf(float radian_);
  */
 bool is_equal_float(float a_, float b_);
 
+bool is_equal_double(double a_, double b_);
+
 /**
  * @brief 2次元ベクトルxyを初期化する
  *
