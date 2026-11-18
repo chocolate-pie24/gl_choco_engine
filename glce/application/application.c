@@ -31,6 +31,8 @@
 
 #include "engine/io_utils/fs_path.h"
 
+#include "engine/camera/flight_camera.h"
+
 // Platform System
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/platform_system/config/platform_system_config.h"
@@ -58,6 +60,7 @@
 #include "application/diagnostics/application_diagnostics.h"
 
 // Demos
+#include "application/scenes/scene_concretes/demos/sample_robot/sample_robot.h"
 #include "application/scenes/core/scene_types.h"
 #include "application/scenes/scene_context.h"
 
@@ -69,7 +72,15 @@ typedef struct application_state {
     // SubSystem Configuration
     platform_system_config_t platform_system_config;
     event_system_config_t event_system_config;
+    renderer_frontend_config_t renderer_frontend_config;
+
+    // Application Input Configurations.
     application_diagnostics_config_t diag_config;
+    sample_robot_scene_config_t sample_robot_scene_config;
+
+    // Scene Selection Keybinds.
+    keycode_t sample_robot_scene_keybind;
+    keycode_t stl_viewer_scene_keybind;
 
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
@@ -89,7 +100,6 @@ typedef struct application_state {
     const engine_event_view_t* engine_event_view;
 
     // Renderer System
-    renderer_frontend_config_t renderer_frontend_config;
     renderer_frontend_t* renderer_frontend;
 
     // Frame State
@@ -103,11 +113,15 @@ static application_state_t* s_application_state = NULL; /**< アプリケーシ�
 
 // Frame Orchestration.
 static application_result_t application_events_update(void);
+static application_result_t scene_selection_update(void);
 
-// Subsystem Configuration.
+// Subsystem Configurations.
 static void platform_system_config_initialize(platform_system_config_t* config_);
 static void event_system_config_initialize(event_system_config_t* config_);
 static void renderer_frontend_config_initialize(renderer_frontend_config_t* config_);
+
+// Application Input Configuration.
+static application_result_t keybinds_initialize(application_state_t* state_);
 
 // Application Resource Setup.
 static application_result_t directory_path_initialize(fs_path_t** out_executable_directory_, fs_path_t** out_asset_root_path_);
@@ -201,11 +215,6 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("Renderer frontend created successfully.");
 
-    // Application Services.
-    //   Diagnostics
-    tmp_state->diag_config.runtime_status_report = KEY_1;
-    tmp_state->diag_config.validation_report = KEY_2;
-
     // Scene.
     INFO_MESSAGE("Creating scene...");
     ret_scene = scene_context_create(&tmp_scene_context);
@@ -215,6 +224,13 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     INFO_MESSAGE("Scene context created successfully.");
+
+    // Keybinds.
+    ret = keybinds_initialize(tmp_state);
+    if(APPLICATION_SUCCESS != ret) {
+        ERROR_MESSAGE("application_create(%s) - keybinds_initialize failed.", application_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = application_diagnostics_status_report(tmp_subsystem_allocator);
     if(APPLICATION_SUCCESS != ret) {
@@ -327,15 +343,10 @@ application_result_t application_run(void) {
         goto cleanup;
     }
 
-    // TODO: scene 切り替えイベント実装
-    ret_scene = scene_context_change_scene(s_application_state->scene_context, s_application_state->renderer_frontend, fs_path_fullpath_get(s_application_state->asset_root_path), s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height, SCENE_SAMPLE_ROBOT);
-    if(SCENE_SUCCESS != ret_scene) {
-        ret = application_result_convert_scene(ret_scene);
-        ERROR_MESSAGE("application_run(%s) - scene_context_change_scene failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-
     glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
+
+    // Scene選択ガイド
+    INFO_MESSAGE("Scene selection: Press 3 for Sample Robot, 4 for STL Viewer.");
 
     // TODO: window NULLチェック
     while(!s_application_state->window_should_close) {
@@ -345,6 +356,13 @@ application_result_t application_run(void) {
         ret = application_events_update();
         if(APPLICATION_SUCCESS != ret) {
             ERROR_MESSAGE("application_run(%s) - application_events_update failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
+
+        // Scene Selection Update.
+        ret = scene_selection_update();
+        if(APPLICATION_SUCCESS != ret) {
+            ERROR_MESSAGE("application_run(%s) - scene_selection_update failed.", application_result_to_str(ret));
             goto cleanup;
         }
 
@@ -442,6 +460,86 @@ cleanup:
     return ret;
 }
 
+static application_result_t scene_selection_update(void) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
+
+    if(NULL == s_application_state) {
+        ret = APPLICATION_BAD_OPERATION;
+        ERROR_MESSAGE("scene_selection_update(%s) - Application state is not initialized.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    if(NULL == s_application_state->engine_event_view) {
+        ret = APPLICATION_DATA_CORRUPTED;
+        ERROR_MESSAGE("scene_selection_update(%s) - Application state is corrupted.", application_result_to_str(ret));
+        goto cleanup;
+    }
+    if(0 == s_application_state->frame_state.framebuffer_width || 0 == s_application_state->frame_state.framebuffer_height) {   // window最小化中はscene切り替えを行わない
+        ret = APPLICATION_SUCCESS;
+        goto cleanup;
+    }
+
+    for(size_t i = 0; i != s_application_state->engine_event_view->keyboard_event_count; ++i) {
+        if(!s_application_state->engine_event_view->keyboard_events[i].event_args.pressed) {
+            continue;
+        }
+
+        if(s_application_state->engine_event_view->keyboard_events[i].key == s_application_state->sample_robot_scene_keybind) {
+            if(SCENE_SAMPLE_ROBOT != scene_context_current_scene_get(s_application_state->scene_context)) {
+                INFO_MESSAGE("Switching to Sample Robot scene...");
+                ret_scene = scene_context_change_scene(
+                    s_application_state->scene_context,
+                    s_application_state->renderer_frontend,
+                    (const void*)&s_application_state->sample_robot_scene_config,
+                    fs_path_fullpath_get(s_application_state->asset_root_path),
+                    s_application_state->frame_state.framebuffer_width,
+                    s_application_state->frame_state.framebuffer_height,
+                    SCENE_SAMPLE_ROBOT);
+
+                if(SCENE_SUCCESS != ret_scene) {
+                    ret = application_result_convert_scene(ret_scene);
+                    if(SCENE_INVALID_ARGUMENT == ret_scene) {
+                        ret = APPLICATION_DATA_CORRUPTED;
+                    }
+                    ERROR_MESSAGE("scene_selection_update(%s) - scene_context_change_scene failed.", application_result_to_str(ret));
+                    goto cleanup;
+                }
+                INFO_MESSAGE("Switched to Sample Robot scene.");
+            }
+            break;
+        } else if(s_application_state->engine_event_view->keyboard_events[i].key == s_application_state->stl_viewer_scene_keybind) {
+            if(SCENE_STL_VIEWER != scene_context_current_scene_get(s_application_state->scene_context)) {
+                INFO_MESSAGE("Switching to STL Viewer scene...");
+                ret_scene = scene_context_change_scene(
+                    s_application_state->scene_context,
+                    s_application_state->renderer_frontend,
+                    NULL,
+                    fs_path_fullpath_get(s_application_state->asset_root_path),
+                    s_application_state->frame_state.framebuffer_width,
+                    s_application_state->frame_state.framebuffer_height,
+                    SCENE_STL_VIEWER);
+
+                if(SCENE_SUCCESS != ret_scene) {
+                    ret = application_result_convert_scene(ret_scene);
+                    if(SCENE_INVALID_ARGUMENT == ret_scene) {
+                        ret = APPLICATION_DATA_CORRUPTED;
+                    }
+                    ERROR_MESSAGE("scene_selection_update(%s) - scene_context_change_scene failed.", application_result_to_str(ret));
+                    goto cleanup;
+                }
+                INFO_MESSAGE("Switched to STL Viewer scene.");
+            }
+            break;
+        }
+    }
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 static void platform_system_config_initialize(platform_system_config_t* config_) {
     config_->window_height = 768;
     config_->window_width = 1024;
@@ -467,6 +565,37 @@ static void renderer_frontend_config_initialize(renderer_frontend_config_t* conf
     config_->untextured_mesh_resource_config.vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
     config_->untextured_mesh_resource_config.vbo_config.max_allocation_count = 512;
     config_->untextured_mesh_resource_config.vbo_config.vbo_size = 1 * GIB;
+}
+
+static application_result_t keybinds_initialize(application_state_t* state_) {
+    application_result_t ret = APPLICATION_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "keybinds_initialize", "state_")
+
+    // Diagnostics.
+    state_->diag_config.runtime_status_report = KEY_1;
+    state_->diag_config.validation_report = KEY_2;
+
+    // Scene Select.
+    state_->sample_robot_scene_keybind = KEY_3;
+    state_->stl_viewer_scene_keybind = KEY_4;
+
+    // Sample Robot Scene.
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_FORWARD].key = KEY_W;         // カメラ前進コマンド(キーバインド: KEY_W)
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_BACKWARD].key = KEY_S;        // カメラ後進コマンド(キーバインド: KEY_S)
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_RIGHT].key = KEY_D;           // カメラ右移動コマンド(キーバインド: KEY_D)
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_LEFT].key = KEY_A;            // カメラ左移動コマンド(キーバインド: KEY_A)
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_UP].key = KEY_E;              // カメラ上方向移動コマンド(キーバインド: KEY_E)
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_DOWN].key = KEY_Q;            // カメラ下方向移動コマンド(キーバインド: KEY_Q)
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_PLUS].key = KEY_UP;      // カメラピッチ方向(+)回転コマンド(キーバインド: KEY_UP)
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_MINUS].key = KEY_DOWN;   // カメラピッチ方向(-)回転コマンド(キーバインド: KEY_DOWN)
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_PLUS].key = KEY_LEFT;      // カメラヨー方向(+)回転コマンド(キーバインド: KEY_LEFT)
+    state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_MINUS].key = KEY_RIGHT;    // カメラヨー方向(-)回転コマンド(キーバインド: KEY_RIGHT)
+
+    ret = APPLICATION_SUCCESS;
+
+cleanup:
+    return ret;
 }
 
 static application_result_t directory_path_initialize(fs_path_t** out_executable_directory_, fs_path_t** out_asset_root_path_) {

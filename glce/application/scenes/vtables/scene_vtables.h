@@ -15,7 +15,7 @@ extern "C" {
 typedef struct renderer_frontend renderer_frontend_t;
 typedef struct engine_event_view engine_event_view_t;
 
-typedef scene_result_t (*pfn_scene_create)(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_);
+typedef scene_result_t (*pfn_scene_create)(renderer_frontend_t* renderer_frontend_, const void* scene_config_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_);
 
 typedef void (*pfn_scene_destroy)(renderer_frontend_t* renderer_frontend_, void** scene_concrete_);
 

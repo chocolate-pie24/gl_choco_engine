@@ -88,7 +88,7 @@ static const untextured_mesh_config_t s_model_mesh_config = {
 static const float s_default_fovy_degrees = 45.0f;
 
 // Vtable Functions.
-static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_);
+static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const void* scene_config_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_);
 static void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, void** scene_concrete_);
 static scene_result_t stl_viewer_update(void* scene_concrete_, const engine_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_);
 static scene_result_t stl_viewer_draw(void* scene_concrete_, renderer_frontend_t* renderer_frontend_);
@@ -121,7 +121,8 @@ const scene_vtable_t* stl_viewer_vtable_get(void) {
     return &s_stl_viewer_vtable;
 }
 
-static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_) {
+static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const void* scene_config_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_) {
+    (void)scene_config_;    // scene_config_はstl_viewerでは不要
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;

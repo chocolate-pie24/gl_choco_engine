@@ -8,8 +8,14 @@
 extern "C" {
 #endif
 
+#include "engine/camera/flight_camera.h"
+
 #include "application/scenes/core/scene_types.h"
 #include "application/scenes/vtables/scene_vtables.h"
+
+typedef struct sample_robot_scene_config {
+    flight_camera_key_bind_t flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MAX];
+} sample_robot_scene_config_t;
 
 const scene_vtable_t* sample_robot_vtable_get(void);
 

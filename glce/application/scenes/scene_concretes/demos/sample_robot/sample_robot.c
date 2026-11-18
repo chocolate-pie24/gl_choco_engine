@@ -47,6 +47,9 @@
 #include "application/scenes/scene_concretes/demos/sample_robot/model_instance/sample_robot_model.h"
 
 typedef struct sample_robot {
+    // Scene Config.
+    sample_robot_scene_config_t scene_config;
+
     // Robot Models.
     untextured_model_resource_map_t* robot_resource_map;
     sample_robot_model_t* robot1;
@@ -71,14 +74,12 @@ typedef struct sample_robot {
     render_packet_t* render_packet;
 } sample_robot_t;
 
-static flight_camera_key_bind_t s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MAX];
 static const float s_default_fovy_degrees = 45.0f;
 static const float s_default_near_clip = 0.1f;
 static const float s_default_far_clip = 3000.0f;
 
-
 // Vtable Functions.
-static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete__);
+static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend_, const void* scene_config_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete__);
 static void sample_robot_destroy(renderer_frontend_t* renderer_frontend_, void** scene_concrete_);
 static scene_result_t sample_robot_update(void* scene_concrete_, const engine_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_);
 static scene_result_t sample_robot_draw(void* scene_concrete_, renderer_frontend_t* renderer_frontend_);
@@ -89,8 +90,7 @@ static scene_result_t robot_resource_map_create(renderer_frontend_t* renderer_fr
 static scene_result_t robot_animation_update(float delta_time_, sample_robot_t* sample_robot_);
 
 // Camera.
-static scene_result_t sample_robot_camera_create(int framebuffer_width_, int framebuffer_height_, mat4x4f_t* out_view_matrix_, mat4x4f_t* out_projection_matrix_, flight_camera_t** out_flight_camera_);
-static void flight_camera_keybinds_initialize(void);
+static scene_result_t sample_robot_camera_create(const flight_camera_key_bind_t* camera_key_binds_, int framebuffer_width_, int framebuffer_height_, mat4x4f_t* out_view_matrix_, mat4x4f_t* out_projection_matrix_, flight_camera_t** out_flight_camera_);
 
 // Floor Grid Resource.
 static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_frontend_, line_mesh_t* out_mesh_);
@@ -114,7 +114,7 @@ const scene_vtable_t* sample_robot_vtable_get(void) {
 }
 
 // TODO: リファクタリング
-static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_) {
+static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend_, const void* scene_config_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -123,6 +123,7 @@ static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend
     light_result_t ret_light = LIGHT_INVALID_ARGUMENT;
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
+    const sample_robot_scene_config_t* scene_config = NULL;
     sample_robot_t* tmp_sample_robot = NULL;
     untextured_model_resource_map_t* tmp_resource_map = NULL;
     flight_camera_t* tmp_flight_camera = NULL;
@@ -138,6 +139,7 @@ static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend
     bool floor_grid_mesh_imported = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_config_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "scene_config_")
     IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "asset_root_path_")
     IF_ARG_NULL_GOTO_CLEANUP(out_scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "out_scene_concrete_")
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_concrete_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "sample_robot_create", "*out_scene_concrete_")
@@ -178,7 +180,8 @@ static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend
     }
 
     // Camera.
-    ret = sample_robot_camera_create(framebuffer_width_, framebuffer_height_, &tmp_view_matrix, &tmp_projection_matrix, &tmp_flight_camera);
+    scene_config = (const sample_robot_scene_config_t*)scene_config_;
+    ret = sample_robot_camera_create(scene_config->flight_camera_keybinds, framebuffer_width_, framebuffer_height_, &tmp_view_matrix, &tmp_projection_matrix, &tmp_flight_camera);
     if(SCENE_SUCCESS != ret) {
         if(SCENE_INVALID_ARGUMENT == ret) {
             ret = SCENE_DATA_CORRUPTED;
@@ -253,6 +256,7 @@ static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend
     mat4f_identity(&tmp_floor_grid_model_matrix);
     floor_grid_mesh_imported = true;
 
+    tmp_sample_robot->scene_config = *(const sample_robot_scene_config_t*)scene_config_;
     tmp_sample_robot->robot_resource_map = tmp_resource_map;
     tmp_sample_robot->flight_camera = tmp_flight_camera;
     tmp_sample_robot->robot1 = tmp_robot1;
@@ -261,7 +265,7 @@ static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend
     tmp_sample_robot->floor_grid_model_matrix = tmp_floor_grid_model_matrix;
     tmp_sample_robot->render_packet = tmp_render_packet;
     tmp_sample_robot->robot_animation_time = 0.0f;
-    tmp_sample_robot->camera_speed = 5.0f;
+    tmp_sample_robot->camera_speed = 100.0f;
     tmp_sample_robot->view_matrix = tmp_view_matrix;
     tmp_sample_robot->projection_matrix = tmp_projection_matrix;
 
@@ -738,7 +742,7 @@ cleanup:
     return ret;
 }
 
-static scene_result_t sample_robot_camera_create(int framebuffer_width_, int framebuffer_height_, mat4x4f_t* out_view_matrix_, mat4x4f_t* out_projection_matrix_, flight_camera_t** out_flight_camera_) {
+static scene_result_t sample_robot_camera_create(const flight_camera_key_bind_t* camera_key_binds_, int framebuffer_width_, int framebuffer_height_, mat4x4f_t* out_view_matrix_, mat4x4f_t* out_projection_matrix_, flight_camera_t** out_flight_camera_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     camera_result_t ret_camera = CAMERA_INVALID_ARGUMENT;
@@ -749,6 +753,7 @@ static scene_result_t sample_robot_camera_create(int framebuffer_width_, int fra
     mat4x4f_t tmp_view_matrix = { 0 };
     mat4x4f_t tmp_projection_matrix = { 0 };
 
+    IF_ARG_NULL_GOTO_CLEANUP(camera_key_binds_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_camera_create", "camera_key_binds_")
     IF_ARG_NULL_GOTO_CLEANUP(out_view_matrix_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_camera_create", "out_view_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(out_projection_matrix_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_camera_create", "out_projection_matrix_")
     IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_camera_create", "out_flight_camera_")
@@ -759,9 +764,8 @@ static scene_result_t sample_robot_camera_create(int framebuffer_width_, int fra
         goto cleanup;
     }
 
-    flight_camera_keybinds_initialize();
     aspect = (float)framebuffer_width_ / (float)framebuffer_height_;
-    ret_camera = flight_camera_create(s_flight_camera_keybinds, s_default_fovy_degrees, aspect, s_default_near_clip, s_default_far_clip, &tmp_flight_camera);
+    ret_camera = flight_camera_create(camera_key_binds_, s_default_fovy_degrees, aspect, s_default_near_clip, s_default_far_clip, &tmp_flight_camera);
     if(CAMERA_SUCCESS != ret_camera) {
         ret = scene_result_convert_camera(ret_camera);
         ERROR_MESSAGE("sample_robot_camera_create(%s) - flight_camera_create failed.", scene_result_to_str(ret));
@@ -795,19 +799,6 @@ cleanup:
         flight_camera_destroy(&tmp_flight_camera);
     }
     return ret;
-}
-
-static void flight_camera_keybinds_initialize(void) {
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_FORWARD].key = KEY_W;         // カメラ前進コマンド(キーバインド: KEY_W)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_BACKWARD].key = KEY_S;        // カメラ後進コマンド(キーバインド: KEY_S)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_RIGHT].key = KEY_D;           // カメラ右移動コマンド(キーバインド: KEY_D)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_LEFT].key = KEY_A;            // カメラ左移動コマンド(キーバインド: KEY_A)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_UP].key = KEY_E;              // カメラ上方向移動コマンド(キーバインド: KEY_E)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_DOWN].key = KEY_Q;            // カメラ下方向移動コマンド(キーバインド: KEY_Q)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_PLUS].key = KEY_UP;      // カメラピッチ方向(+)回転コマンド(キーバインド: KEY_UP)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_MINUS].key = KEY_DOWN;   // カメラピッチ方向(-)回転コマンド(キーバインド: KEY_DOWN)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_PLUS].key = KEY_LEFT;      // カメラヨー方向(+)回転コマンド(キーバインド: KEY_LEFT)
-    s_flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_MINUS].key = KEY_RIGHT;    // カメラヨー方向(-)回転コマンド(キーバインド: KEY_RIGHT)
 }
 
 static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_frontend_, line_mesh_t* out_mesh_) {
