@@ -90,13 +90,7 @@ static const float s_default_fovy_degrees = 45.0f;
 // Vtable Functions.
 static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_viewer_);
 static void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, void** stl_viewer_);
-static scene_result_t stl_viewer_update(
-    void* stl_viewer_,
-    const engine_event_view_t* event_view_,
-    float delta_time_,
-    bool window_resized_,
-    int framebuffer_width_,
-    int framebuffer_height_);
+static scene_result_t stl_viewer_update(void* stl_viewer_, const engine_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_);
 static scene_result_t stl_viewer_draw(void* stl_viewer_, renderer_frontend_t* renderer_frontend_);
 static bool stl_viewer_is_valid(const void* stl_viewer_);
 
