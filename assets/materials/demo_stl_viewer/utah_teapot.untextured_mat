@@ -1,4 +1,5 @@
 
-diffuse = [0.18, 0.20, 0.23]
-specular = [0.30, 0.30, 0.30]
-shininess = 48.0
+ambient = [0.18, 0.17, 0.15]
+diffuse = [0.60, 0.57, 0.52]
+specular = [0.28, 0.28, 0.28]
+shininess = 64.0
