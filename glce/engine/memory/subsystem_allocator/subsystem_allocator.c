@@ -137,7 +137,6 @@ static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
 
 static const char* const s_memory_tag_platform = "PLATFORM_SYSTEM";
 static const char* const s_memory_tag_renderer = "RENDERER_SYSTEM";
-static const char* const s_memory_tag_event = "EVENT_SYSTEM";
 static const char* const s_memory_tag_camera = "CAMERA_SYSTEM";
 static const char* const s_memory_tag_undefined = "UNDEFINED";
 
@@ -725,8 +724,6 @@ const char* subsystem_allocator_memory_tag_to_str(subsystem_allocator_memory_tag
         return s_memory_tag_platform;
     case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER:
         return s_memory_tag_renderer;
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT:
-        return s_memory_tag_event;
     case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_CAMERA:
         return s_memory_tag_camera;
     case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX:

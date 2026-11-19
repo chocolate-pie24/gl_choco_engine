@@ -25,7 +25,7 @@
 #include "engine/light/directional_light.h"
 #include "engine/light/ambient_light.h"
 
-#include "engine/systems/event_system/core/engine_event_view.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -90,7 +90,7 @@ static const float s_default_fovy_degrees = 45.0f;
 // Vtable Functions.
 static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const void* scene_config_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_);
 static void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, void** scene_concrete_);
-static scene_result_t stl_viewer_update(void* scene_concrete_, const engine_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_);
+static scene_result_t stl_viewer_update(void* scene_concrete_, const platform_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_);
 static scene_result_t stl_viewer_draw(void* scene_concrete_, renderer_frontend_t* renderer_frontend_);
 static bool stl_viewer_is_valid(const void* scene_concrete_);
 
@@ -387,7 +387,7 @@ static void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, void** s
 
 static scene_result_t stl_viewer_update(
     void* scene_concrete_,
-    const engine_event_view_t* event_view_,
+    const platform_event_view_t* event_view_,
     float delta_time_,
     bool window_resized_,
     int framebuffer_width_,

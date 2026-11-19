@@ -222,31 +222,6 @@ application_result_t application_result_convert_fs_path(fs_path_result_t result_
     }
 }
 
-application_result_t application_result_convert_event_system(event_system_result_t result_) {
-    switch(result_) {
-    case EVENT_SYSTEM_SUCCESS:
-        return APPLICATION_SUCCESS;
-    case EVENT_SYSTEM_INVALID_ARGUMENT:
-        return APPLICATION_INVALID_ARGUMENT;
-    case EVENT_SYSTEM_RUNTIME_ERROR:
-        return APPLICATION_RUNTIME_ERROR;
-    case EVENT_SYSTEM_NO_MEMORY:
-        return APPLICATION_NO_MEMORY;
-    case EVENT_SYSTEM_DATA_CORRUPTED:
-        return APPLICATION_DATA_CORRUPTED;
-    case EVENT_SYSTEM_BAD_OPERATION:
-        return APPLICATION_BAD_OPERATION;
-    case EVENT_SYSTEM_OVERFLOW:
-        return APPLICATION_OVERFLOW;
-    case EVENT_SYSTEM_LIMIT_EXCEEDED:
-        return APPLICATION_LIMIT_EXCEEDED;
-    case EVENT_SYSTEM_UNDEFINED_ERROR:
-        return APPLICATION_UNDEFINED_ERROR;
-    default:
-        return APPLICATION_UNDEFINED_ERROR;
-    }
-}
-
 application_result_t application_result_convert_general_allocator(general_allocator_result_t result_) {
     switch(result_) {
     case GENERAL_ALLOCATOR_SUCCESS:

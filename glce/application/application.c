@@ -38,12 +38,6 @@
 #include "engine/systems/platform_system/config/platform_system_config.h"
 #include "engine/systems/platform_system/platform_system.h"
 
-// Event System
-#include "engine/systems/event_system/core/event_system_types.h"
-#include "engine/systems/event_system/core/engine_event_view.h"
-#include "engine/systems/event_system/config/event_system_config.h"
-#include "engine/systems/event_system/event_system.h"
-
 // Renderer System
 #include "engine/systems/renderer/core/renderer_types.h"
 
@@ -71,7 +65,6 @@
 typedef struct application_state {
     // SubSystem Configuration
     platform_system_config_t platform_system_config;
-    event_system_config_t event_system_config;
     renderer_frontend_config_t renderer_frontend_config;
 
     // Application Input Configurations.
@@ -94,10 +87,7 @@ typedef struct application_state {
 
     // Platform System
     platform_system_t* platform_system;
-
-    // Event System
-    event_system_t* event_system;
-    const engine_event_view_t* engine_event_view;
+    const platform_event_view_t* platform_event_view;
 
     // Renderer System
     renderer_frontend_t* renderer_frontend;
@@ -117,7 +107,6 @@ static application_result_t scene_selection_update(void);
 
 // Subsystem Configurations.
 static void platform_system_config_initialize(platform_system_config_t* config_);
-static void event_system_config_initialize(event_system_config_t* config_);
 static void renderer_frontend_config_initialize(renderer_frontend_config_t* config_);
 
 // Application Input Configuration.
@@ -131,7 +120,6 @@ application_result_t application_create(void) {
 
     subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
     platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
-    event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
     renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
     scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
@@ -140,7 +128,6 @@ application_result_t application_create(void) {
     subsystem_allocator_t* tmp_subsystem_allocator = NULL;
     platform_system_t* tmp_platform_system = NULL;
     renderer_frontend_t* tmp_renderer_frontend = NULL;
-    event_system_t* tmp_event_system = NULL;
     fs_path_t* tmp_executable_directory = NULL;
     fs_path_t* tmp_asset_root_path = NULL;
     scene_context_t* tmp_scene_context = NULL;
@@ -182,7 +169,7 @@ application_result_t application_create(void) {
     }
     INFO_MESSAGE("Application infrastructure created successfully.");
 
-    // Platform / Event Systems.
+    // Platform System.
     INFO_MESSAGE("Creating platform system...");
     platform_system_config_initialize(&tmp_state->platform_system_config);
 
@@ -193,16 +180,6 @@ application_result_t application_create(void) {
         goto cleanup;
     }
     INFO_MESSAGE("Platform system created successfully.");
-
-    INFO_MESSAGE("Creating event system...");
-    event_system_config_initialize(&tmp_state->event_system_config);
-    ret_event_system = event_system_create(&tmp_state->event_system_config, tmp_subsystem_allocator, tmp_platform_system, &tmp_event_system);
-    if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
-        ret = application_result_convert_event_system(ret_event_system);
-        ERROR_MESSAGE("application_create(%s) - event_system_create failed.", application_result_to_str(ret));
-        goto cleanup;
-    }
-    INFO_MESSAGE("Event system created successfully.");
 
     // Renderer System.
     INFO_MESSAGE("Creating renderer frontend...");
@@ -244,7 +221,6 @@ application_result_t application_create(void) {
     tmp_state->renderer_frontend = tmp_renderer_frontend;
     tmp_state->asset_root_path = tmp_asset_root_path;
     tmp_state->executable_directory = tmp_executable_directory;
-    tmp_state->event_system = tmp_event_system;
     tmp_state->scene_context = tmp_scene_context;
 
     s_application_state = tmp_state;
@@ -252,7 +228,6 @@ application_result_t application_create(void) {
     tmp_subsystem_allocator = NULL;
     tmp_platform_system = NULL;
     tmp_renderer_frontend = NULL;
-    tmp_event_system = NULL;
     tmp_executable_directory = NULL;
     tmp_asset_root_path = NULL;
     tmp_scene_context = NULL;
@@ -269,9 +244,6 @@ cleanup:
     }
     if(NULL != tmp_renderer_frontend) {
         renderer_frontend_deinitialize(tmp_renderer_frontend);
-    }
-    if(NULL != tmp_event_system) {
-        event_system_deinitialize(tmp_event_system);
     }
     if(NULL != tmp_platform_system) {
         platform_system_deinitialize(tmp_platform_system);
@@ -304,9 +276,6 @@ void application_destroy(void) {
     }
     if(NULL != s_application_state->renderer_frontend) {
         renderer_frontend_deinitialize(s_application_state->renderer_frontend);
-    }
-    if(NULL != s_application_state->event_system) {
-        event_system_deinitialize(s_application_state->event_system);
     }
     if(NULL != s_application_state->platform_system) {
         platform_system_deinitialize(s_application_state->platform_system);
@@ -367,7 +336,7 @@ application_result_t application_run(void) {
         }
 
         // Diagnostics Update.
-        ret = application_diagnostics_update(&s_application_state->diag_config, s_application_state->engine_event_view, &s_application_state->frame_state);
+        ret = application_diagnostics_update(&s_application_state->diag_config, s_application_state->platform_event_view, &s_application_state->frame_state);
         if(APPLICATION_SUCCESS != ret) {
             ERROR_MESSAGE("application_run(%s) - application_diagnostics_update failed.", application_result_to_str(ret));
             goto cleanup;
@@ -385,12 +354,9 @@ application_result_t application_run(void) {
         }
 
         // Scene Update.
-        ret_scene = scene_context_update(s_application_state->scene_context, s_application_state->engine_event_view, demo_delta_time, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
+        ret_scene = scene_context_update(s_application_state->scene_context, s_application_state->platform_event_view, demo_delta_time, s_application_state->frame_state.window_resized, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
         if(SCENE_SUCCESS != ret_scene) {
             ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("application_run(%s) - scene_context_update failed.", application_result_to_str(ret));
             goto cleanup;
         }
@@ -409,9 +375,6 @@ application_result_t application_run(void) {
         ret_scene = scene_context_draw(s_application_state->scene_context, s_application_state->renderer_frontend);
         if(SCENE_SUCCESS != ret_scene) {
             ret = application_result_convert_scene(ret_scene);
-            if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                ret = APPLICATION_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("application_run(%s) - scene_context_draw failed.", application_result_to_str(ret));
             goto cleanup;
         }
@@ -424,10 +387,28 @@ cleanup:
     return ret;
 }
 
+/*
+ * Event Integration Policy
+ *
+ * Platform SystemはPlatform由来のイベントを取得・提供する。
+ * 複数のイベントソースを統合する責務はApplicationが持つ。
+ *
+ * 現在はPlatformのみがイベントソースであるため、
+ * platform_event_view_tをコピーせず、そのまま借用して利用する。
+ *
+ * 将来、通信や他のSubsystem等からイベントを取得する場合は、
+ * このApplicationのイベント更新処理で各ソースの情報を収集し、
+ * Application側のhelper等で必要な統合を行う。
+ *
+ * 統合時のイベント形式、順序、競合処理、Storage、Lifetimeは
+ * 追加されるイベントソースの性質とApplicationの要求に基づいて決定する。
+ *
+ * Engine / Platform Systemにはイベント統合の責務を持たせない。
+ */
 static application_result_t application_events_update(void) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    event_system_result_t ret_event_system = EVENT_SYSTEM_INVALID_ARGUMENT;
+    platform_system_result_t ret_platform_system = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
     if(NULL == s_application_state) {
         ret = APPLICATION_BAD_OPERATION;
@@ -435,21 +416,18 @@ static application_result_t application_events_update(void) {
         goto cleanup;
     }
 
-    // Event System.
-    //   OS / Engine events
-    //   Window close request
-    ret_event_system = event_system_update(s_application_state->event_system, &s_application_state->engine_event_view);
-    if(EVENT_SYSTEM_SUCCESS != ret_event_system) {
-        ret = application_result_convert_event_system(ret_event_system);
-        ERROR_MESSAGE("application_events_update(%s) - event_system_update failed.", application_result_to_str(ret));
+    ret_platform_system = platform_system_update(s_application_state->platform_system, &s_application_state->platform_event_view);
+    if(PLATFORM_SYSTEM_SUCCESS != ret_platform_system) {
+        ret = application_result_convert_platform_system(ret_platform_system);
+        ERROR_MESSAGE("application_events_update(%s) - platform_system_update failed.", application_result_to_str(ret));
         goto cleanup;
     }
-    s_application_state->window_should_close = s_application_state->engine_event_view->window_close_requested;
+    s_application_state->window_should_close = s_application_state->platform_event_view->window_close_requested;
 
-    for(size_t i = 0; i != s_application_state->engine_event_view->window_event_count; ++i) {
-        if(WINDOW_EVENT_RESIZE == s_application_state->engine_event_view->window_events[i].event_code) {
-            s_application_state->frame_state.framebuffer_width = s_application_state->engine_event_view->window_events[i].event_args.framebuffer_width;
-            s_application_state->frame_state.framebuffer_height = s_application_state->engine_event_view->window_events[i].event_args.framebuffer_height;
+    for(size_t i = 0; i != s_application_state->platform_event_view->window_event_count; ++i) {
+        if(WINDOW_EVENT_RESIZE == s_application_state->platform_event_view->window_events[i].event_code) {
+            s_application_state->frame_state.framebuffer_width = s_application_state->platform_event_view->window_events[i].event_args.framebuffer_width;
+            s_application_state->frame_state.framebuffer_height = s_application_state->platform_event_view->window_events[i].event_args.framebuffer_height;
             s_application_state->frame_state.window_resized = true;
         }
     }
@@ -470,7 +448,7 @@ static application_result_t scene_selection_update(void) {
         ERROR_MESSAGE("scene_selection_update(%s) - Application state is not initialized.", application_result_to_str(ret));
         goto cleanup;
     }
-    if(NULL == s_application_state->engine_event_view) {
+    if(NULL == s_application_state->platform_event_view) {
         ret = APPLICATION_DATA_CORRUPTED;
         ERROR_MESSAGE("scene_selection_update(%s) - Application state is corrupted.", application_result_to_str(ret));
         goto cleanup;
@@ -480,12 +458,12 @@ static application_result_t scene_selection_update(void) {
         goto cleanup;
     }
 
-    for(size_t i = 0; i != s_application_state->engine_event_view->keyboard_event_count; ++i) {
-        if(!s_application_state->engine_event_view->keyboard_events[i].event_args.pressed) {
+    for(size_t i = 0; i != s_application_state->platform_event_view->keyboard_event_count; ++i) {
+        if(!s_application_state->platform_event_view->keyboard_events[i].event_args.pressed) {
             continue;
         }
 
-        if(s_application_state->engine_event_view->keyboard_events[i].key == s_application_state->sample_robot_scene_keybind) {
+        if(s_application_state->platform_event_view->keyboard_events[i].key == s_application_state->sample_robot_scene_keybind) {
             if(SCENE_SAMPLE_ROBOT != scene_context_current_scene_get(s_application_state->scene_context)) {
                 INFO_MESSAGE("Switching to Sample Robot scene...");
                 ret_scene = scene_context_change_scene(
@@ -499,16 +477,13 @@ static application_result_t scene_selection_update(void) {
 
                 if(SCENE_SUCCESS != ret_scene) {
                     ret = application_result_convert_scene(ret_scene);
-                    if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                        ret = APPLICATION_DATA_CORRUPTED;
-                    }
                     ERROR_MESSAGE("scene_selection_update(%s) - scene_context_change_scene failed.", application_result_to_str(ret));
                     goto cleanup;
                 }
                 INFO_MESSAGE("Switched to Sample Robot scene.");
             }
             break;
-        } else if(s_application_state->engine_event_view->keyboard_events[i].key == s_application_state->stl_viewer_scene_keybind) {
+        } else if(s_application_state->platform_event_view->keyboard_events[i].key == s_application_state->stl_viewer_scene_keybind) {
             if(SCENE_STL_VIEWER != scene_context_current_scene_get(s_application_state->scene_context)) {
                 INFO_MESSAGE("Switching to STL Viewer scene...");
                 ret_scene = scene_context_change_scene(
@@ -522,9 +497,6 @@ static application_result_t scene_selection_update(void) {
 
                 if(SCENE_SUCCESS != ret_scene) {
                     ret = application_result_convert_scene(ret_scene);
-                    if(SCENE_INVALID_ARGUMENT == ret_scene) {
-                        ret = APPLICATION_DATA_CORRUPTED;
-                    }
                     ERROR_MESSAGE("scene_selection_update(%s) - scene_context_change_scene failed.", application_result_to_str(ret));
                     goto cleanup;
                 }
@@ -544,12 +516,6 @@ static void platform_system_config_initialize(platform_system_config_t* config_)
     config_->window_height = 768;
     config_->window_width = 1024;
     config_->window_label = "test_window";
-}
-
-static void event_system_config_initialize(event_system_config_t* config_) {
-    config_->max_keyboard_event_count = KEY_CODE_MAX;
-    config_->max_mouse_event_count = 8;
-    config_->max_window_event_count = 8;
 }
 
 static void renderer_frontend_config_initialize(renderer_frontend_config_t* config_) {

@@ -9,7 +9,7 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
-#include "engine/systems/event_system/core/engine_event_view.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
@@ -21,7 +21,7 @@ static application_result_t subsystem_allocator_report(const subsystem_allocator
 
 static bool config_is_valid(const application_diagnostics_config_t* config_);
 
-application_result_t application_diagnostics_update(const application_diagnostics_config_t* config_, const engine_event_view_t* event_view_, application_frame_state_t* frame_state_) {
+application_result_t application_diagnostics_update(const application_diagnostics_config_t* config_, const platform_event_view_t* event_view_, application_frame_state_t* frame_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     bool runtime_status_report_requested = false;

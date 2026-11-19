@@ -15,7 +15,7 @@ extern "C" {
 typedef struct scene_context scene_context_t;
 
 typedef struct renderer_frontend renderer_frontend_t;
-typedef struct engine_event_view engine_event_view_t;
+typedef struct platform_event_view platform_event_view_t;
 
 typedef enum {
     SCENE_NONE,
@@ -31,7 +31,7 @@ scene_list_t scene_context_current_scene_get(const scene_context_t* scene_);
 
 scene_result_t scene_context_change_scene(scene_context_t* scene_, renderer_frontend_t* renderer_frontend_, const void* scene_config_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, scene_list_t next_scene_);
 
-scene_result_t scene_context_update(scene_context_t* scene_, const engine_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_);
+scene_result_t scene_context_update(scene_context_t* scene_, const platform_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_);
 
 scene_result_t scene_context_draw(scene_context_t* scene_, renderer_frontend_t* renderer_frontend_);
 

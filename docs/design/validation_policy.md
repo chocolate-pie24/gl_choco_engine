@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-08
+最終更新: 2026-11-19
 
 ## 1. 文書の位置づけ
 
@@ -147,7 +147,7 @@ API contractは、runtime validationの方式によって次のように区別�
 
 違反が通常利用時にcaller-controlled input、external factor、runtime state等から発生し得て、APIがrecoverable failureとして扱うconditionである。
 
-checked preconditionは、RELEASE_BUILDを含む通常buildでruntime validationする。
+checked preconditionはDEBUG_BUILD／TEST_BUILDでruntime validationする。RELEASE_BUILDでは、Memory Safetyに必要な検査と通常のOperationに必要なError Handlingだけを残す（Section 6.2）。省略した検査に対応する不正入力について、RELEASE_BUILDではrecoverable resultを保証しない。
 
 代表例:
 
@@ -227,9 +227,11 @@ canonical modelは、対象object自身の責務とownership closureについて
 
 ここでいう「対象object自身」は、そのobjectが定義するinternal representation、semantic state、およびfield間relationを指す。
 
-validatorへroot argumentとして渡されたobject自身のstorage validity、allocation livenessまたはallocation identityは、そのobject自身のownership closureには含めない。
+objectのcanonical modelに含まれるsemantic invariantと、そのstorageがAllocator上の有効なAllocationであるかというallocation-level validityは区別する。
 
-root objectをowned pointerとして保持するownerが存在する場合、そのstorage validityはowner側のownership closureとして扱う。独立したownerを持たずcaller-provided storage上に存在するobjectについては、root objectをdereference可能なlifetime中のstorageとして渡すことをcaller contractとして扱う。
+ModuleがAllocatorを使用してMemory Resourceを確保し、そのAllocationを保有・管理する場合、当該ResourceのAllocation Validityについては、そのModuleが検証責務を持つ。これはResourceがvalidatorのroot argumentであるか、owned childであるかによって変わらない。検証が必要かつAllocatorが対応するqueryを提供する場合は、そのModuleのcanonical validatorで`ptr_is_allocated`等を利用する（Section 4.3）。
+
+一方、caller-provided storageや他Moduleが確保・管理するResourceについて、validatorが自身のModuleによるAllocationであると仮定して検証することは要求しない。caller-provided storageをrootとして渡す場合、dereference可能なlifetime中のstorageを渡すことはcaller contractとする。Allocation Validityの確認可能性とObject Validityの保証範囲は区別し、`ptr_is_allocated`等の成功のみから型、allocation identityまたはlifetimeの完全性を証明したとは扱わない。
 
 Full Validationの対象例:
 
@@ -340,30 +342,29 @@ Module A
 Module B
     ↓ input validation failure
 INVALID_ARGUMENT
-    ↓ Aのcall siteでcontextを評価
-INVALID_ARGUMENTの伝播 または DATA_CORRUPTEDへの再分類
+    ↓ Module A
+原則としてINVALID_ARGUMENTのまま伝播
 ```
 
-一方、A自身が保証するestablished internal stateまたは成立済みinternal contractに照らし、Bから返された`INVALID_ARGUMENT`が正常なoperationでは成立し得ず、内部整合性の破綻を示すと判断できる場合、Aは**当該call siteに限って**`DATA_CORRUPTED`へ再分類してよい。
+Module Aは、Bから返された`INVALID_ARGUMENT`だけを根拠として、内部破損が発生したと推測しない。「Aの正しい実装ではBのPreconditionが成立するはず」という期待や、入力がEngine内部由来であるというprovenanceだけでは`DATA_CORRUPTED`への再分類を行わない。
 
-- 再分類の判断責務は、下位API Bではなく、そのcontextを知るCaller Aに置く。
-- Bは通常どおり自身のAPI contractに従ってresultを返す。
+- CallerはCalleeのresultを原則としてそのまま伝播する。異なるresult enum間の変換では、対応する意味を保持する。
 - 汎用result converterへ`INVALID_ARGUMENT`から`DATA_CORRUPTED`への一律変換を追加しない。
-- caller-controlled inputに起因する正当な`INVALID_ARGUMENT`を、内部corruptionとして扱わない。
-- 一時的temporary valueの誤生成や単なるprogramming errorだけで、established internal stateのintegrity failureが確認できない場合は、機械的に`DATA_CORRUPTED`へ再分類しない。
-- `DATA_CORRUPTED`へ再分類した時点からSection 7.3のFail-stopを適用する。
+- Caller自身による独立したValidation等で、成立済みinternal stateのintegrity failureが明確に確認された場合は、その確認結果に基づく`DATA_CORRUPTED`への分類・変換を認める。また、正規に成功したResource Operationに対する「対になるOperation」の失敗は、Section 7.2の基本契約に従う。これら以外に、Calleeの失敗理由を推測するだけの変換は認めない。
+- 一時的temporary valueの誤生成、単なるprogramming error、外部入力に由来するPrecondition違反を、確認済みのestablished internal state corruptionと同一視しない。
+- 内部破損の可能性が残る`INVALID_ARGUMENT`であっても、`DATA_CORRUPTED`が確認されていない限り通常のFailure Handlingに従う。
 
-Aのimplementation bugがその場で`DATA_CORRUPTED`として分類されない可能性は引き続き許容する。Aがestablished stateを破壊している場合はA自身のvalidator、Result validation、Postcondition validationまたは明示的diagnostic validationがcorruption detection pointとなり得る。
+Aのimplementation bugや内部破損がその場で`DATA_CORRUPTED`として検出されない可能性は許容する。必要な検出能力は、A自身のcanonical validator、Result validation、Postcondition validation、明示的diagnostic validation等によって補強する。
 
-この方式は、calleeの入力分類を単純に維持しつつ、Callerだけが知る確立済み契約の違反を必要な箇所でFail-stopへ接続するためのものである。既存call siteへの横断的な一括変更は要求せず、変更対象となるmoduleから順次適用してよい。
+この方針は、下位Moduleの内部事情をCallerへ持ち出して分類することを避け、誤検出と複雑なError変換を抑制するためのものである。`DATA_CORRUPTED`が確認された後のFail-stop規則はSection 7.3のまま維持する。既存call siteは変更対象Moduleから順次整合させてよい。
 
 #### 3.7.4 Established internal state
 
 正規のcreate / initialize / commit等を経て成立し、module contract上validであることを前提としてmoduleが管理しているobject、registry、allocator state、owned resource等はestablished internal stateとして扱う。
 
-このstateについてcanonical invariantの破損が確認された場合は、`DATA_CORRUPTED`へ分類する根拠になり得る。
+このstateについてcanonical invariantの破損が実際に確認された場合は、`DATA_CORRUPTED`へ分類する根拠になり得る。確認時点がAPIのPreconditions付近であっても、成立済みinternal stateのInvariant Diagnosticは、Caller InputのPrecondition Validationとは区別する。
 
-ただし、`is_valid() == false`という事実だけで機械的に`DATA_CORRUPTED`へ分類しない。そのvalidatorがcaller-controlled input、trust promotion前candidate、established internal stateのどれを検査していたかを確認する。
+ただし、`is_valid() == false`という事実だけで機械的に`DATA_CORRUPTED`へ分類しない。そのvalidatorがcaller-controlled input、trust promotion前candidate、established internal stateのどれを検査していたかを確認する。Calleeが`INVALID_ARGUMENT`を返したことだけでは、established internal stateの破損を確認したことにはならない。
 
 #### 3.7.5 External opaque resource
 
@@ -459,6 +460,8 @@ APIごとに`is_valid_for_*`形式のvalidatorを機械的に増やさない。�
 - 直接・間接の計算量を含めてSection 3.4の基準で分類する。
 - O(n)以上のValidationは、Validator自身（またはその内部で利用するvalidation helper）の条件付きコンパイルで無効化できる構造にする。
 - ValidatorのCallerは`ENABLE_VALID_DEEP`を参照しない。同じ`*_is_valid`を呼び出し、automaticに呼び出すかどうかはBUILD_MODEとAPI固有Policyによって決める。
+- 他Moduleのcanonical validatorを単一のchildについて呼び出す場合、その呼出しを`ENABLE_VALID_DEEP`で囲まない。呼び出されたvalidator内のO(n)以上の診断を制御する責務は、そのvalidatorを実装するModuleにある。
+- Caller自身が可変個数のchildを走査してvalidationする場合は、その走査がCaller自身のO(n)以上の診断用Validationに当たるため、Callerが`ENABLE_VALID_DEEP`で制御する。個々のchild validator内部の制御責務とは区別する。
 - O(1)とO(n)以上の検査は、処理上の依存関係に応じて適切な順序で配置する。O(1)をすべて先頭に集めることは要求しない。
 
 基本形:
@@ -483,25 +486,37 @@ bool xxx_is_valid(const xxx_t* object_) {
 
 子Objectに独立したcanonical validatorがある場合は、親Validatorが必要に応じてそのValidatorを呼び出す。子のValidatorも自身の`ENABLE_VALID_DEEP`規則に従う。可変個数の子を走査する処理自体はDeep Validationに分類する。
 
+例えば`platform_glfw_is_valid()`が単一の`window_label`に対して`choco_string_is_valid()`を呼ぶ場合、Platform GLFWはChoco Stringの内部走査がO(n)かどうかを判断して呼出しを切り替えない。Choco String内部の診断用走査や、診断目的のAllocation Queryが間接的にO(n)以上になる場合は、`choco_string_is_valid()`側で`ENABLE_VALID_DEEP`を適用する。Platform GLFW自身が可変個数の要素を走査する診断はPlatform GLFW側で制御する。
+
+この責務分担は、他ModuleのValidatorだけでなく、validator内部から診断目的で呼ぶ他ModuleのAPI／helperについても適用する。直接・間接のValidation Costを認識し、必要な条件付き実行を実装する責務は、そのAPIを診断目的で呼ぶvalidator自身にある。ただし他ModuleのValidatorが内部で行う検査のDepthは、そのValidator自身が制御する。
+
 複雑な実装ではprivate validation helperへ分割してよいが、Object ValidatorをDepth別に二重化しない。各Helperの粒度、名称および分割方法はmoduleに委ねる。
 
 既存のshallow validatorは移行時に`*_is_valid`へ統合する。全moduleを一括変更することは要求せず、変更対象moduleから順次適用する。
 
 ### 4.3 Ownershipとborrow
 
-parent objectのcanonical modelには、そのparentがlifetimeを所有するchildのownership closureを含める。実際にchildを検証するかどうかは各検査の計算量と`ENABLE_VALID_DEEP`に従う。
+parent objectのcanonical modelには、そのparentがlifetimeを所有するchildとのownership relationを含める。child object自身のsemantic validityは、そのchildのcanonical validatorに委譲してよい。実際にchildを検証するかどうかはoperation semanticsと各検査の計算量に従う。
 
-owned childをpointerとして保持し、そのpointerについてMemory moduleからallocation-level validityを確認できる場合、parent canonical validatorはchildをdereferenceまたはchild canonical validatorへ渡す前に、そのallocation validityを確認することを候補とする。ただし、そのallocation queryが間接的にO(n)以上の探索を行う場合は、診断用Validationとしての呼出しを`ENABLE_VALID_DEEP`の対象とする。
+#### Allocation Validityの検証責務
 
-owned childが独立したcanonical validatorを持つ場合、parentは必要なallocation-level validityを確認した後、child内部のcanonical validationをchild canonical validatorへ委譲してよい。
+各Moduleは、**自身がAllocatorを使用して確保し、Allocationを保有・管理するMemory Resource**について、Allocation Validityの検証責務を持つ。ここでの責務は、他ModuleによるObjectの利用やLifetime上のDestroy呼出しとは区別する。
 
-child canonical validatorは、自身へroot argumentとして渡されたobjectのallocation validityを重複して検証することを原則として要求しない。そのobject自身のstorage validityは、そのstorageを所有するowner側の責務とする。
+- Allocation Validityの診断を行う場合、そのAllocationを保有・管理するModuleのcanonical validatorが、対応するAllocatorの`ptr_is_allocated`等のqueryを利用する。対応するqueryが存在しない場合に、架空のAllocation Identityを仮定して検証しない。
+- この責務は、確保したResourceがvalidatorへroot argumentとして渡される場合と、Module内部のchild／buffer／arrayとして保持される場合とで変わらない。
+- 他ModuleがAllocatorを使用して確保・管理するObjectについては、Parent／Callerが具体的なAllocatorを推測して直接`ptr_is_allocated`等を呼び出さない。当該Objectの検証は、そのModuleのcanonical validatorへ委譲する。
+- Parent／Callerは、自身が定義するpointer existence、ownership relation、borrow lifetime等の契約を必要に応じて検証する。これらの検証と、他ModuleのAllocation方式の検証を混同しない。
+- Allocation Queryが直接・間接にO(n)以上の診断となる場合、呼出し元validator自身が`ENABLE_VALID_DEEP`で制御する（Section 3.4、4.2）。検証責務を持つことは毎回実行することを意味しない。
 
-embedded valueのように独立したallocationを持たないchildについては、allocation-level validationを要求しない。
+例えばPlatform GLFWが`choco_string_create_*()`によって生成した`window_label`を保有し、`choco_string_destroy()`によってそのLifetimeを終了させる場合でも、`choco_string_t`およびその内部BufferのAllocatorによる確保・管理はChoco Stringの責務である。`platform_glfw_is_valid()`はChoco StringのAllocatorの種類を知らず、必要に応じて`choco_string_is_valid()`を呼ぶ。`choco_string_is_valid()`は自身が確保・管理するResourceのAllocation Validityを、対応するAllocatorのqueryとValidation Cost Policyに従って検証する。
+
+embedded valueのように独立したAllocationを持たないObjectについては、そのObject自身のAllocation Queryを要求しない。caller-provided storageについても、対応するModuleが自身でAllocator確保したものと仮定しない。rootとして有効なstorageを渡す責務は、Section 3.5のcaller contractに従う。
+
+Allocation Queryの結果は、そのAllocatorが提供するallocation-levelの事実に限定して解釈し、Objectの型、lifetimeの完全性、semantic validityそのものを保証するものとはしない。
 
 owned arrayやowned collectionについて、canonical validator内部をどのprivate helperへ分割するかはmodule実装に委ねる。project-wide policyではraw array専用validatorの有無やhelper構成を規定しない。
 
-borrowed pointerの参照先全体はborrowerのownership closureに含めない。borrowed objectのcanonical modelに関するValidationは、そのobjectのownerまたはsystem側validatorが担当する。
+borrowed pointerの参照先全体はborrowerのownership closureに含めない。borrowed objectのcanonical modelに関するValidationは、そのobjectを定義するModuleのvalidatorまたはowner／system側validatorへ委譲する。
 
 borrower側では、必要に応じて次のようなborrower自身から判定できるconditionについてcontractを定義する。
 
@@ -526,8 +541,8 @@ canonical validatorは、実際に有効化された検査について、可能�
 - NULL、count、size、capacity、overflow等、dereference前に確認できるconditionを先に検査する。
 - traversalには管理上限または明確な終端条件を設ける。
 - cycleが存在し得るstructureでは無限loopを防止する。
-- 対象objectが所有するraw pointerについてallocation metadata等から安全性を確認できる場合は、検証コストと有効化設定に従う範囲で、dereference前に確認する。
-- validatorへroot argumentとして渡されたobject自身のstorage validityは、そのvalidator自身ではなく、そのstorageを所有するownerまたはcaller側のcontract responsibilityとして扱う。
+- Module自身がAllocatorを使用して確保・管理するMemory Resourceについてallocation metadata等から安全性を確認できる場合は、検証コストと有効化設定に従う範囲で、dereference前に確認する。対象がroot argumentかchildかでこの責務を変えない。
+- 他Moduleが確保・管理するObjectについて、そのAllocator実装を推測して独自に検証しない。caller-provided storageは有効なstorageを渡すというcaller contractに従う。
 - linkage pointer等のmetadataが破損し得る場合、そのpointerを次のdereference先として無条件に使用しない。
 - 既知の安全なrangeやphysical layoutから検査位置を導出できる場合は、その方法を優先してよい。
 
@@ -588,7 +603,7 @@ public APIがchecked precondition violationまたはその他のrecoverable fail
 - semantic Commit開始前に失敗した場合、原則としてoperationのsemantic effectを成立させず、既存のpublic state、ownershipおよびlifecycle relationを変更しない。
 - Commit開始後にrecoverable failureが発生し得るoperationでは、可能な範囲でrollbackし、仕様化されたstable stateおよびownership / lifecycle relationへ戻す。
 - constructor中のprivate partial stateはrecoverable failure時にrollbackしてよい。
-- rollback不能なinternal corruptionは通常のrecoverable errorと区別する。
+- rollback不能であることだけを理由として内部破損と推測しない。ただし、正規に取得したRollback Pointに対応するRollbackが失敗した場合は、Section 7.2の「対になるOperation」の規則に従う。
 
 trusted／hard precondition違反はrecoverable failure contractの対象外である。
 
@@ -697,25 +712,17 @@ BUILD_MODEと`ENABLE_VALID_DEEP`は独立したcompile-time設定として扱う
 
 #### RELEASE_BUILD
 
-次はRELEASE_BUILDでも通常のruntime validation／error handlingとして残す。
+RELEASE_BUILDでは、**Memory Safetyに必要な検査と、通常のOperationに必要なError Handlingのみを残す**ことを基本方針とし、実行速度を優先する。
 
-- checked precondition
-- external factorから通常発生し得るfailure
-- external APIが返すEOF／error／status
-- recoverable runtime state violation
+- Memory Safetyを守るために必要なpointer、range、size、overflow等の検査は残す。
+- allocation failure、I/O failure、external APIのerror／status等、Operationそのものに必要なFailure Handlingは残す。
+- それ以外のPrecondition ValidationやInternal Invariantの診断用Validationは原則省略する。
 
-次はRELEASE_BUILDでのautomatic validationを原則として要求しない。
-
-- trusted／hard preconditionの再検査
-- 正規APIを通して成立しているinternal invariantのdiagnostic validation
-- diagnostic目的の可変長buffer／array全要素validation
-- producer／converterが自身のoutput guaranteeを再確認するためだけのcanonical validation
-
-ただしmodule boundary、safety requirement、security requirement、external trust boundary等からRELEASE_BUILDでも必要と判断したvalidationは残してよい。
+DEBUG／TESTでは検出するChecked Precondition違反であっても、RELEASEで省略した検査についてはrecoverable resultを保証しない。正しい入力と成立済みのlifecycle／internal contractを前提として、診断のための追加コストを負担しない。
 
 #### DEBUG_BUILD／TEST_BUILD
 
-checked preconditionはRELEASE_BUILDと同じsemanticで検査する。
+checked preconditionはruntimeで検査し、検出した違反を対応するrecoverable resultへ分類する。
 
 trusted／hard preconditionおよびinternal invariantについて、bug局所化やsafety上の価値がある場合はassertion、direct check、canonical validator等をautomaticに実行してよい。
 
@@ -746,7 +753,7 @@ TEST_BUILDであることだけを理由に、DEBUG_BUILDより機械的に深�
 
 このため、DEBUG_BUILD / TEST_BUILDでは、initialized allocator stateを受け取り、そのstateに依存するPublic APIについて、API contract validationを行った後、state-dependentなoperationへ入る前にcanonical validatorを呼び出す。検証範囲は`ENABLE_VALID_DEEP`に従い、`ENABLE_VALID_DEEP = 0`ではAllocator全体のO(n)以上の診断は実行しない。
 
-これは一般的なoperation semanticsだけでは要求されない場合でも、allocation-level trust rootとしてbug局所化とmemory safetyを優先するmodule-specific policyである。
+これは一般的なoperation semanticsだけでは要求されない場合でも、allocation-level trust rootとしてbug局所化とmemory safetyを優先するmodule-specific policyである。Public APIの入口付近で実行していても、initialized allocator stateのcanonical invariantに対する検査は、Caller InputのPrecondition Validationとは区別する。検査対象が成立済み内部Stateであり、そのInvariant違反を明確に確認した場合はSection 7.1に従って分類する。
 
 この方針を採用する理由は次のとおりである。
 
@@ -767,7 +774,7 @@ canonical validator自身、およびinitialized allocator stateを受け取ら�
 
 canonical validatorを呼ぶと決めた場合、そのCallerがValidation Depthを個別に選択することはない。診断用Validationのコスト制御はValidator内部の`ENABLE_VALID_DEEP`に委ねる。
 
-checked preconditionや通常operationに必要な処理は、hot pathであることやO(n)以上であることだけを理由に削除しない。
+Memory Safetyに必要な検査や通常operationとして必要な処理は、hot pathであることやO(n)以上であることだけを理由に削除しない。
 
 `ENABLE_VALID_DEEP = 0`は、Sponza等の大規模ModelをDEBUG_BUILD／TEST_BUILDで扱うため、診断用Validationの規模依存コストを明示的に省略する手段である。Full Validationが必要な診断時には`ENABLE_VALID_DEEP = 1`で検証する。
 
@@ -795,15 +802,13 @@ validator failureのresult classificationは、`is_valid() == false`という事
 
 原則として次のように分類する。
 
-- caller-controlled inputをchecked preconditionとして検査し、required validityを満たさない場合は、通常`INVALID_ARGUMENT`、`BAD_OPERATION`その他のrecoverable resultへ分類する。
+- Caller InputのPrecondition Validationが失敗した場合は、原則として`INVALID_ARGUMENT`を返す。operation state、out slot等のAPI固有Contractに応じて`BAD_OPERATION`その他のrecoverable resultを使用する場合は、その分類に従う。内部Callerから渡された入力であっても、出所だけを根拠として`DATA_CORRUPTED`へ変更しない。
 - External Trust Boundaryでtrust promotion前のcandidateがrequired validityを満たさない場合は、`UNSUPPORTED_FILE`等、そのboundaryに対応するrecoverable rejectionへ分類する。
-- 正規APIを通して成立済みで、moduleがvalidであることを前提として管理しているestablished internal stateのcanonical invariantが破損している場合は、`DATA_CORRUPTED`へ分類する根拠となる。
-- validated / trusted inputからmodule自身が構築したresult candidateについて、Result validationのdiagnostic canonical validationが失敗し、そのfailureがmodule implementation / internal invariantの破損を示す場合は`DATA_CORRUPTED`へ分類してよい。Commit後のestablished internal stateに対するPostcondition validation failureも、同様にinternal integrity failureの根拠となり得る。
+- validated / trusted inputからModule自身が構築したresult candidateに対するResult Validation、またはCommit後のestablished internal stateに対するPostcondition Validationで、成立すべき内部Contractの違反が明確に確認された場合は、`DATA_CORRUPTED`へ分類する。
+- 正規APIによって成立済みのinternal stateを対象とする独立したCanonical／Invariant Diagnosticで、その破損が明確に確認された場合も`DATA_CORRUPTED`へ分類してよい。検査がAPIのPreconditions付近に置かれていても、Caller InputのPrecondition Validationと混同しない。
 - trusted / hard preconditionをDEBUG / TESTで診断してfailureした場合の扱いは、そのAPIのdiagnostic policyに従う。recoverable contractとして定義されていないconditionを、機械的に通常errorへ変換しない。
 
-Engine内部producerが生成したvalueを別moduleがinputとして受け取る場合、calleeはcaller contextやproducer provenanceを推測して`INVALID_ARGUMENT`を`DATA_CORRUPTED`へ再分類しない。calleeは自身が観測できるinput contractに従ってresultを返す。
-
-一方、そのcalleeを呼び出したCallerが、established internal stateまたは成立済み内部契約を根拠に`INVALID_ARGUMENT`が通常は成立し得ないと判断できる場合は、当該call siteで`DATA_CORRUPTED`へ再分類してよい。汎用result converterでの一律変換は行わない。再分類する根拠がない場合は元のresult classificationを維持する（Section 3.7.3）。
+CallerはCalleeのError Codeを原則そのまま伝播し、result enum間の変換が必要な場合も分類の意味を保持する。内部破損が明確に確認された場合、およびSection 7.2で定める「対になるOperation」が失敗した場合を除き、Calleeの`INVALID_ARGUMENT`の原因やCallerの実装上の期待から`DATA_CORRUPTED`へ推測的に変換しない。汎用result converterでは一律変換しない（Section 3.7.3）。
 
 ### 7.2 `DATA_CORRUPTED`
 
@@ -818,7 +823,13 @@ Engine内部producerが生成したvalueを別moduleがinputとして受け取�
 - owner管理情報の矛盾
 - validated / trusted inputからmodule自身が構築したresult candidateに対するdiagnostic Result validation failureで、module implementationまたはinternal invariant破損を示す場合
 - established internal stateに対するPostcondition validation failure
-- recoverable cleanup / rollback中に、成立済みinternal stateの安全性を確定できなくなった場合
+- recoverable cleanup / rollback中に、成立済みinternal invariantの破損が明確に確認された場合
+
+**対になるOperationの失敗:**
+
+GLCEでは、成功したResourceのCreate／Initialize／Allocate／Bind等に対して、正しく対応するResourceへのDestroy／Deinitialize／Free／Unbind等は成功することを基本契約とする。対になるOperationが失敗した場合は、内部Contractの破綻として`DATA_CORRUPTED`に分類する。
+
+正常に取得したRollback Pointに対するRollbackの失敗も同様に扱う。ただし、外部Systemに起因する通常のRecoverable Failureは、この規則の対象外とする。
 
 次は、それ自体を理由として`DATA_CORRUPTED`へ分類しない。
 
@@ -826,11 +837,16 @@ Engine内部producerが生成したvalueを別moduleがinputとして受け取�
 - malformed fileまたはunsupported format
 - external device / OS / libraryから取得したdataやstatusの異常
 - trust promotion前candidateがinternal representationとして受理できない
-- Engine内部producer由来である可能性があるvalueをconsumerがinputとして受け取り、そのinput validity checkに失敗しただけで、Callerが成立済み内部契約の破綻を示す根拠を持たない場合
+- Engine内部producer由来のvalueをconsumerがinputとして受け取り、そのinput validity checkに失敗しただけの場合
+- Cleanup / Rollbackの安全性を完全には証明できない、または未検出の内部破損が存在する可能性があるというだけの場合
 
 caller-controlled inputのinvalidityを`DATA_CORRUPTED`へ過剰分類すると、Application側のbugやrecoverable input failureをFATAL方向へ誤って伝播させることになる。`DATA_CORRUPTED`がfail-stopを伴う重いsignalであることを踏まえ、分類には「成立済みinternal stateのintegrityが失われている」という追加根拠を要求する。
 
-一方、internal producer bugがconsumer側では`INVALID_ARGUMENT`として観測され、`DATA_CORRUPTED`として即時分類されない場合があることは許容する。Callerが自身のestablished internal stateまたは成立済み内部契約の破綻を根拠として当該call siteで`DATA_CORRUPTED`へ再分類した場合は、その時点からFail-stopを適用する。temporary valueの誤生成だけでestablished stateが破壊されていない場合は、通常operation failureとして局所化されることを許容する。
+GLCEは、すべての内部破損を検出することよりも、`DATA_CORRUPTED`の誤検出を抑制し、Error ClassificationとError Propagationの規則およびコードの見通しを明確かつ単純に保つことを優先する。内部破損を漏れなく検出しようとすると、Callerによる下位APIの失敗原因の推測、重複Validation、複雑なError変換が増え、本来recoverableなfailureまでpanic-classへ誤分類する危険が生じる。誤分類によってSection 7.3のFail-stopが発動し、実行可能だったCleanup / Rollbackを止めてしまうことは避ける。
+
+このトレードオフとして、内部Producerのbugや未検出CorruptionがCallee側では`INVALID_ARGUMENT`等として観測され、`DATA_CORRUPTED`として即時分類されない場合を許容する。その場合は、内部破損の可能性が残っていても通常のFailure HandlingとCleanup / Rollbackを試みる。これはCleanupの完全な安全性を保証する判断ではなく、未確認の可能性だけを理由として回復処理を止めないという意図的な選択である。
+
+追加の検出能力が必要になった場合は、推測的なError変換を増やすのではなく、対象ModuleのCanonical Validator、Validation Report、Sanitizer、Failure Injection、unit test、fuzzing、独立したMemory Diagnostics等の手段を検討する。内部破損が明確に確認された時点で`DATA_CORRUPTED`として分類し、その後は従来どおりSection 7.3の厳格なFail-stopを適用する。
 
 DEBUG / TESTのstable-boundary canonical validatorによって、完成したはずのestablished internal objectが有効化されたinvariantを満たさないことが判明した場合は、stable-boundary failureとして`DATA_CORRUPTED`へ分類してよい。`ENABLE_VALID_DEEP = 0`で検査されなかった条件については、validator成功を根拠にintegrityを証明しない。
 
@@ -871,6 +887,10 @@ recoverable failureからcleanupへ入った後、cleanup operationの失敗に�
 ### 7.4 Recoverable cleanup
 
 recoverable failure時のrollback／cleanup方法、private unchecked cleanup helperの有無と構成はmoduleごとに決定してよい。
+
+`INVALID_ARGUMENT`等のrecoverable resultについて、未検出の内部破損が存在する可能性だけを理由として通常Cleanup / Rollbackを省略しない。Cleanup / Rollbackの直前にCorruptionの完全検出を目的とするCanonical Validatorを機械的に追加することも要求しない。Cleanup / Rollback自身は、それぞれのAPIが定義するPreconditionとValidation Policyに従う。必要な検査を追加するかどうかは、そのoperationの具体的なSafety Requirementから個別に判断する。
+
+通常Cleanupによって未検出のCorruptionが表面化する可能性は許容する。ただし、Cleanup中に`DATA_CORRUPTED`が明確に検出された場合は、Section 7.3に従って残りのCleanupを停止する。
 
 ただし、次を満たすこと。
 

@@ -10,7 +10,7 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/systems/event_system/core/engine_event_view.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "application/scenes/core/scene_types.h"
 #include "application/scenes/core/scene_err_utils.h"
@@ -189,7 +189,7 @@ cleanup:
     return ret;
 }
 
-scene_result_t scene_context_update(scene_context_t* scene_, const engine_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_) {
+scene_result_t scene_context_update(scene_context_t* scene_, const platform_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_update", "scene_")

@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-18
+最終更新: 2026-11-19
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -915,6 +915,7 @@ Event、Camera、Renderer等のApplication-side module間で、raw eventその�
 ## Decision: Platform SystemはOS / Window System境界のSource Systemとする
 
 **Status:** Accepted  
+**Update (2026-11-19):** PlatformがOS / Window System由来のFactを収集・Normalizeし、Platform-owned Event Viewを公開する責務は維持する。一方、下記のEngine Event Systemへの統合を前提とした記述は2026-09-13時点の履歴であり、現行構成ではEvent IntegrationをApplicationが担当する。2026-11-19「Event Integration Architecture — Event Systemの撤去」を参照する。  
 **Date:** 2026-09-13  
 **Scope:** Platform / System Boundary
 
@@ -994,7 +995,9 @@ Platform backend内部でcallback等を利用すること自体は許容する�
 
 ## Decision: 外部event ingressはSource Event ViewからEngine Event Systemへ集約する
 
-**Status:** Accepted  
+**Status:** Superseded（Engine Event Systemによる統合構造は廃止。Source Systemが自身のEvent Viewを公開する原則は維持）  
+**Superseded by:** 2026-11-19「Event Integration Architecture — Event Systemの撤去」  
+**Update (2026-11-19):** 統合対象のEvent Sourceの多くはApplication固有であるため、Event Integrationの責務をEngineではなくApplicationへ移した。`engine_event_view_t`および独立Engine Event Systemを前提とする以下の本文は、2026-09-13時点の設計履歴として残す。  
 **Date:** 2026-09-13  
 **Scope:** Platform / Event System / External Event Ingress
 
@@ -1093,6 +1096,7 @@ Platform Systemそのものの責務境界は、独立Decision「Platform System
 ## Decision: GLFW Platformのevent collectionは同期pollingとsnapshot差分方式とする
 
 **Status:** Accepted  
+**Update (2026-11-19):** GLFW Backendによる同期PollingとSnapshot差分方式は維持する。以下の旧Engine Event Systemへの言及は当時の接続構造を記録したものであり、現在はApplicationがPlatform Event Viewを直接利用する。  
 **Date:** 2026-09-15  
 **Scope:** Platform / GLFW / Event Collection
 
@@ -1182,6 +1186,7 @@ GLCEのApplication updateはframe単位で同期的に進むため、現在必�
 ## Decision: Window close requestは通常eventより強いdelivery guaranteeを持たせる
 
 **Status:** Accepted  
+**Update (2026-11-19):** Window Closeの優先Delivery契約は維持する。独立Engine Event System撤去後はApplicationが`platform_event_view_t.window_close_requested`を直接参照する。以下のEngine Event View経由の記述は当時の履歴である。  
 **Date:** 2026-09-15  
 **Scope:** Platform / Window Event / Shutdown Signaling
 
@@ -2068,6 +2073,7 @@ Subsystem AllocatorおよびFrame AllocatorはLinear Allocatorを利用し、そ
 ## Decision: Runtime StatusとValidation Reportを分離し、diagnostic policyをApplicationに配置する
 
 **Status:** Accepted  
+**Update (2026-11-19):** Runtime StatusとValidationの分離、およびDiagnostic Input PolicyをApplicationが所有する原則は維持する。現行Application DiagnosticsはPlatform Event Viewを使用し、独立Engine Event Systemを経由しない。以下のEvent System経由の図と説明は2026-09-26時点の履歴である。  
 **Date:** 2026-09-26  
 **Scope:** Diagnostics / Validation / Application / Event System
 
@@ -7680,6 +7686,7 @@ Calleeが受け取るInputについて、Caller側ではすでにValidである�
 ## Decision: SceneをApplication固有Stateと描画処理のOwnerとし、Applicationを実行基盤のOrchestratorとする
 
 **Status:** Accepted / Scene Context・共通vtableを導入（STL Viewer接続・描画確認済み、Sample Robotのvtable対応は未完了）  
+**Update (2026-11-19):** 独立Engine Event Systemを撤去した。ApplicationはPlatform Systemから`platform_event_view_t`をBorrowしてSceneへ渡す。以下の「Event SystemをApplicationがOwnする」「Engine Event ViewをSceneへ渡す」とする構成は2026-11-18時点の履歴であり、現在のEvent Integrationは2026-11-19 Decisionに従う。  
 **Date:** 2026-11-13  
 **Update (2026-11-16):** STL Viewerも独立SceneとしてOrbit Camera、Light、Render Packet、STL / Debug Geometry Resourceおよび`create / destroy / update / draw`を実装し、描画・Camera初期配置の動作を確認した。2種類のConcrete Sceneで基本的なLifecycleとRenderer Frontend Borrowの構造が成立した。当時はScene共通Interface、Scene Manager、vtable等の抽出を未決定としていた。  
 **Update (2026-11-18):** 2種類のConcreteが存在する状態でScene共通Lifecycleを検討した結果、`scene_context_t`と`scene_vtable_t`を導入した。Applicationが保持するSceneの所有先をScene Contextへ一本化し、STL Viewerは共通vtable経由で描画できることを確認した。Adapter / 動的Registry / 汎用Scene Graphは導入しない。Sample RobotのConcrete自体は存在するが、共通vtableへの接続は未完了である。  
@@ -8152,5 +8159,61 @@ Scene AからScene Bへの切替時にResourceを共有する問題について�
 - 2026-11-02「Model Frameworkを製造業のAssembly概念を主軸に構成し、Scene固有の表示責務から分離する」
 - `boundary_model.md`
 - `validation_policy.md`
+
+---
+
+---
+
+## Decision: Event Integration Architecture — Event Systemの撤去
+
+**Status:** Accepted  
+**Date:** 2026-11-19  
+**Scope:** Event Integration / Platform System / Application / Responsibility Boundary  
+**Supersedes:** 2026-09-13「外部event ingressはSource Event ViewからEngine Event Systemへ集約する」の統合構造
+
+### 背景・設計判断
+
+従来のGLCEでは、Platform Systemが取得したイベントをEngine Event Systemへ渡し、Engine Event Systemが複数Event Sourceを統合してApplicationへ提供する構造を採用していた。
+
+しかし、将来統合することが想定されるEvent Sourceの多くは、Application固有のものである。
+
+そのため、Application固有のイベントまで統合する仕組みをEngine側に保有することは、ApplicationとEngineの責務境界として適切ではないと判断した。
+
+### 決定
+
+独立したEngine Event Systemを撤去し、イベント統合の責務をApplication側へ移す。
+
+- Platform SystemはOSおよびPlatform由来のイベントを取得・管理し、Platform Event Viewとして提供する。
+- Applicationは必要なEvent Sourceから情報を取得し、イベントの統合と各Consumerへの提供を担当する。
+- 現在のEvent SourceはPlatform Systemのみであるため、Applicationは`platform_event_view_t`をそのままBorrowして利用する。
+
+### 維持する設計
+
+GLFW BackendによるSnapshot差分方式は維持する。
+
+Platform Systemは現在状態と前回状態の差分からWindow / Keyboard / Mouse Eventを生成し、Backendが保有するEvent StorageへのViewを提供する。
+
+Event ViewのOwnershipはPlatform System側にあり、Applicationへ移転しない。
+
+### 将来の拡張
+
+Application固有のEvent Sourceが追加された場合は、Application側に必要な統合処理を追加する。
+
+統合の方式、Event Representation、順序、Storage、Lifetime等については、具体的な要求に基づいて決定する。
+
+Engine側には、Application固有Event Sourceの統合を目的とする汎用Event Systemを設けない。
+
+### 以前の設計との関係
+
+旧Engine Event Systemによるイベント統合構造は、本決定によって廃止する。
+
+Snapshot差分によるPlatform Event生成方式は引き続き採用する。
+
+### Related Documents
+
+- `glce_near_term_todo.md`
+- `glce_renderer_resource_model_workplan.md`
+- `glce/include/engine/systems/platform_system/platform_system.h`
+- `glce/application/application.c`
 
 ---
