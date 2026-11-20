@@ -95,8 +95,12 @@ renderer_backend_result_t renderer_backend_vbo_vertex_subload(const renderer_bac
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BACKEND_BAD_OPERATION);
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_vertex_subload", "size_")
     IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(0 == size_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("renderer_backend_vbo_vertex_subload(%s) - Provided size_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vbo_vtable->vbo_vertex_subload(offset_, size_, load_data_);
     if(RENDERER_BACKEND_SUCCESS != ret) {

@@ -202,7 +202,11 @@ static renderer_backend_result_t gl33_vao_bind(const renderer_backend_vao_t* vao
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vao_->vao_handle, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_vao_bind", "vao_->vao_handle")
+    if(0 == vao_->vao_handle) {
+        ret = RENDERER_BACKEND_BAD_OPERATION;
+        ERROR_MESSAGE("gl33_vao_bind(%s) - Provided vao_ is not initialized.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     mock_glBindVertexArray(vao_->vao_handle);
 

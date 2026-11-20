@@ -158,11 +158,21 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
 
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_handle_, ret, RENDERER_BACKEND_BAD_OPERATION);
-    IF_ARG_FALSE_GOTO_CLEANUP(resolve_min_filter_config(min_filter_config_, &min_filter), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "min_filter_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolve_mag_filter_config(mag_filter_config_, &mag_filter), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "mag_filter_config_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_s_axis_, &wrap_config_s_axis), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_s_axis_")
-    IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_t_axis_, &wrap_config_t_axis), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_t_axis_")
-    IF_ARG_FALSE_GOTO_CLEANUP(texture_unit_index_ >= 0, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "texture_unit_index_")
+    if(0 > texture_unit_index_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("gl33_texture_create(%s) - Provided texture_unit_index_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!resolve_min_filter_config(min_filter_config_, &min_filter) || !resolve_mag_filter_config(mag_filter_config_, &mag_filter)) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("gl33_texture_create(%s) - Provided min_filter_config_ or mag_filter_config_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!resolve_wrap_config(wrap_config_s_axis_, &wrap_config_s_axis) || !resolve_wrap_config(wrap_config_t_axis_, &wrap_config_t_axis)) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("gl33_texture_create(%s) - Provided wrap_config_s_axis_ or wrap_config_t_axis_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_texture_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_texture);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -250,8 +260,16 @@ static renderer_backend_result_t gl33_texture_bind(const renderer_backend_textur
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_handle_->handle, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_result_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_bind", "texture_handle_->handle")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 <= texture_handle_->unit_number, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_result_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_bind", "texture_handle_->unit_number")
+    if(0 == texture_handle_->handle) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("gl33_texture_bind(%s) - Provided texture_handle_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(0 > texture_handle_->unit_number) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("gl33_texture_bind(%s) - Provided texture_handle_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     mock_glActiveTexture(GL_TEXTURE0 + texture_handle_->unit_number);
     mock_glBindTexture(GL_TEXTURE_2D, texture_handle_->handle);
@@ -277,8 +295,16 @@ static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_text
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != texture_handle_->handle, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_result_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_unbind", "texture_handle_->handle")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 <= texture_handle_->unit_number, ret, RENDERER_BACKEND_DATA_CORRUPTED, renderer_backend_result_to_str(RENDERER_BACKEND_DATA_CORRUPTED), "gl33_texture_unbind", "texture_handle_->unit_number")
+    if(0 == texture_handle_->handle) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("gl33_texture_unbind(%s) - Provided texture_handle_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(0 > texture_handle_->unit_number) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("gl33_texture_unbind(%s) - Provided texture_handle_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     mock_glActiveTexture(GL_TEXTURE0 + texture_handle_->unit_number);
     mock_glBindTexture(GL_TEXTURE_2D, 0);
@@ -333,8 +359,11 @@ static renderer_backend_result_t gl33_texture_pixel_upload(int32_t width_, int32
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_FALSE_GOTO_CLEANUP(0 < width_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "width_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 < height_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_pixel_upload", "height_")
+    if(0 >= width_ || 0 >= height_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("gl33_texture_pixel_upload(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     if(3 == channel_count_) {
         mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定

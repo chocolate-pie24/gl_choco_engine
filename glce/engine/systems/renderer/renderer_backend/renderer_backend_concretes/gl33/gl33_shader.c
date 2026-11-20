@@ -414,10 +414,22 @@ static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* sha
     char* err_mes = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_FALSE_GOTO_CLEANUP(0 == shader_handle_->program_id, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "shader_handle_->program_id")
+    if(0 != shader_handle_->program_id) {
+        ret = RENDERER_BACKEND_BAD_OPERATION;
+        ERROR_MESSAGE("gl33_shader_link(%s) - Provided shader is already linked.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
     // バーテックスシェーダーとフラグメントシェーダーは必須なので、有効な状態でなければエラー
-    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_STAGE_VERTEX, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "vertex_shader_handle")
-    IF_ARG_FALSE_GOTO_CLEANUP(SHADER_COMPILE_STATUS_COMPILED == shader_compile_status_get(SHADER_STAGE_FRAGMENT, shader_handle_), ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_link", "fragment_shader_handle")
+    if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_STAGE_VERTEX, shader_handle_)) {
+        ret = RENDERER_BACKEND_BAD_OPERATION;
+        ERROR_MESSAGE("gl33_shader_link(%s) - Provided vertex shader is not compiled.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_STAGE_FRAGMENT, shader_handle_)) {
+        ret = RENDERER_BACKEND_BAD_OPERATION;
+        ERROR_MESSAGE("gl33_shader_link(%s) - Provided fragment shader is not compiled.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     // プログラムをリンク
     tmp_program_id = mock_glCreateProgram();
@@ -497,7 +509,11 @@ static renderer_backend_result_t gl33_shader_use(const renderer_backend_shader_t
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != shader_handle_->program_id, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_shader_use", "shader_handle_->program_id")
+    if(0 == shader_handle_->program_id) {
+        ret = RENDERER_BACKEND_BAD_OPERATION;
+        ERROR_MESSAGE("gl33_shader_use(%s) - Provided shader program is not initialized.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     if(SHADER_COMPILE_STATUS_COMPILED != shader_compile_status_get(SHADER_STAGE_VERTEX, shader_handle_)) {
         // 既にprogram_idが0ではなく、リンクされているのにvertex_shaderがコンパイル済みではないのは異常

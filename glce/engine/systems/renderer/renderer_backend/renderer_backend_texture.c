@@ -85,9 +85,11 @@ renderer_backend_result_t renderer_backend_texture_pixel_upload(const renderer_b
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->texture_vtable, ret, RENDERER_BACKEND_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_FALSE_GOTO_CLEANUP(0 < width_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "width_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 < height_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_texture_pixel_upload", "height_")
-
+    if(0 >= width_ || 0 >= height_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
     if(3 != channel_count_ && 4 != channel_count_) {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
         ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Invalid channel_count_. expected = 3(RGB) or 4(RGBA), actual = %d", renderer_backend_result_to_str(ret), channel_count_);
