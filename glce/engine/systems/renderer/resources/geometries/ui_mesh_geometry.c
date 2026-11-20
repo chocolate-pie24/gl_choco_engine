@@ -195,9 +195,9 @@ geometry_result_t ui_mesh_geometry_create_from_vertices(size_t vertex_count_, co
     size_t allocation_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "ui_mesh_geometry_create_from_vertices", "out_geometry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "ui_mesh_geometry_create_from_vertices", "*out_geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_geometry_, ret, GEOMETRY_BAD_OPERATION);
     if(6 != vertex_count_) {
         ret = GEOMETRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("ui_mesh_geometry_create_from_vertices(%s) - Provided vertex_count_ is not valid.", geometry_result_to_str(ret));
@@ -334,10 +334,10 @@ geometry_result_t ui_mesh_geometry_vertices_get(const ui_mesh_geometry_t* geomet
     geometry_result_t ret = GEOMETRY_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "ui_mesh_geometry_vertices_get", "geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "ui_mesh_geometry_vertices_get", "out_vertices_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "ui_mesh_geometry_vertices_get", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "ui_mesh_geometry_vertices_get", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ui_mesh_geometry_is_valid(geometry_)) {
         ret = GEOMETRY_DATA_CORRUPTED;

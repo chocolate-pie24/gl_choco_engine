@@ -55,9 +55,9 @@ scene_result_t sample_robot_model_create(const untextured_model_resource_map_t* 
 
     sample_robot_posture_t default_posture = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_create", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_create", "out_robot_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "sample_robot_model_create", "*out_robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, SCENE_BAD_OPERATION);
 
     ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_model_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_robot);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -127,7 +127,7 @@ scene_result_t sample_robot_model_placement_set(vec3f_t translate_, vec3f_t rota
 
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_placement_set", "robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT);
 
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_ROOT, rotation_);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
@@ -166,8 +166,8 @@ scene_result_t sample_robot_model_posture_set(const sample_robot_posture_t* post
 
     vec3f_t tmp_rotation = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_posture_set", "posture_")
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_posture_set", "robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT);
 
     // Base Motor (Yaw, Z-axis)
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->base_motor_angle);
@@ -328,8 +328,8 @@ scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_
     uint16_t* coordinate_ids = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_dummy_config_loader", "out_config_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "sample_robot_model_dummy_config_loader", "*out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, SCENE_BAD_OPERATION);
 
     // Prepare.
     ret_general_allocator = general_allocator_allocate(sizeof(*coordinates) * coordinate_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&coordinates);

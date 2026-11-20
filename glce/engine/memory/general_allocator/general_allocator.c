@@ -291,8 +291,8 @@ general_allocator_result_t general_allocator_allocate(size_t allocation_size_, g
     void* tmp_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT, result_to_str(GENERAL_ALLOCATOR_INVALID_ARGUMENT), "general_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, GENERAL_ALLOCATOR_BAD_OPERATION, result_to_str(GENERAL_ALLOCATOR_BAD_OPERATION), "general_allocator_allocate", "*out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, GENERAL_ALLOCATOR_BAD_OPERATION);
     if(0 == allocation_size_) {
         ret = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("general_allocator_allocate(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));
@@ -507,7 +507,7 @@ general_allocator_result_t general_allocator_status_get(general_allocator_status
     size_t max_allocation_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT, result_to_str(GENERAL_ALLOCATOR_INVALID_ARGUMENT), "general_allocator_status_get", "out_status_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT);
     if(!general_allocator_is_initialized()) {
         ret = GENERAL_ALLOCATOR_BAD_OPERATION;
         ERROR_MESSAGE("general_allocator_status_get(%s) - general allocator is not initialized.", result_to_str(ret));

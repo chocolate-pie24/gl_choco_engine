@@ -351,10 +351,10 @@ loader_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* 
     size_t new_pixel_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "bmp_loader_load", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "bmp_loader_load", "out_resource_info_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "bmp_loader_load", "out_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION, loader_result_to_str(LOADER_BAD_OPERATION), "bmp_loader_load", "*out_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION);
     if('\0' == fullpath_[0]) {
         ret = LOADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("bmp_loader_load(%s) - Provided fullpath_ is not valid.", loader_result_to_str(ret));
@@ -451,9 +451,9 @@ static loader_result_t header_load(const char* fullpath_, file_header_t* out_fil
     info_header_t tmp_info_header = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "header_load", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_file_header_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "header_load", "out_file_header_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_info_header_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "header_load", "out_info_header_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_file_header_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_info_header_, ret, LOADER_INVALID_ARGUMENT);
 
     // Prepare.
     ret_fs_stream = fs_stream_create(&fs_stream, fullpath_, FS_OPEN_MODE_READ_BINARY);
@@ -515,10 +515,10 @@ static loader_result_t pixel_load(const char* fullpath_, const pixel_layout_t* p
     size_t read_size_all = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_load", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_load", "pixel_layout_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_load", "out_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION, loader_result_to_str(LOADER_BAD_OPERATION), "pixel_load", "*out_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION);
     // fullpath_, pixel_layout_は上位関数でvalidation済みであること
 
     ret_general_allocator = general_allocator_allocate(pixel_layout_->file_size, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_buffer);
@@ -590,8 +590,8 @@ static loader_result_t file_header_parse(const char header_[54], file_header_t* 
     file_header_t tmp_header = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(header_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "file_header_parse", "header_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_file_header_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "file_header_parse", "out_file_header_")
+    IF_ARG_NULL_GOTO_CLEANUP(header_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_file_header_, ret, LOADER_INVALID_ARGUMENT);
 
     // Prepare.
     tmp_header.bf_type = buffer_utils_le_uint16_t_get(header_);
@@ -615,8 +615,8 @@ static loader_result_t info_header_parse(const char header_[54], info_header_t* 
     info_header_t tmp_header = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(header_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "info_header_parse", "header_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_info_header_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "info_header_parse", "out_info_header_")
+    IF_ARG_NULL_GOTO_CLEANUP(header_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_info_header_, ret, LOADER_INVALID_ARGUMENT);
 
     // Prepare.
     tmp_header.bi_size = buffer_utils_le_uint32_t_get(header_ + 14);
@@ -651,12 +651,12 @@ static loader_result_t pixel_normalize(const pixel_layout_t* pixel_layout_, cons
     uint8_t tmp_channel_count = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_normalize", "pixel_layout_")
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_normalize", "pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_normalize", "out_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION, loader_result_to_str(LOADER_BAD_OPERATION), "pixel_normalize", "*out_pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_new_size_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_normalize", "out_new_size_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_channel_count_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_normalize", "out_channel_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_new_size_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_channel_count_, ret, LOADER_INVALID_ARGUMENT);
 
     // Prepare.
     if(0 < pixel_layout_->height) {
@@ -706,9 +706,9 @@ static loader_result_t pixel_bgr_to_rgb(const pixel_layout_t* pixel_layout_, uin
     int32_t bit_count = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_bgr_to_rgb", "pixel_layout_")
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_bgr_to_rgb", "pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_channel_count_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_bgr_to_rgb", "out_channel_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_channel_count_, ret, LOADER_INVALID_ARGUMENT);
     if(24 != pixel_layout_->bit_count && 32 != pixel_layout_->bit_count) {
         ret = LOADER_UNSUPPORTED_FILE;
         ERROR_MESSAGE("pixel_bgr_to_rgb(%s) - Provided pixel_layout_->bit_count is not valid.", loader_result_to_str(ret));
@@ -738,8 +738,8 @@ static loader_result_t pixel_flip(const pixel_layout_t* pixel_layout_, uint8_t* 
     loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_flip", "pixel_layout_")
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_flip", "pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, LOADER_INVALID_ARGUMENT);
 
     // Commit.
     if(1 == pixel_layout_->height) {
@@ -781,11 +781,11 @@ static loader_result_t padding_remove(const pixel_layout_t* pixel_layout_, const
     size_t height = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "bmp_loader_padding_remove", "pixel_layout_")
-    IF_ARG_NULL_GOTO_CLEANUP(src_pixels_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "bmp_loader_padding_remove", "src_pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "bmp_loader_padding_remove", "out_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION, loader_result_to_str(LOADER_BAD_OPERATION), "bmp_loader_padding_remove", "*out_pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_new_size_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "bmp_loader_padding_remove", "out_new_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(pixel_layout_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(src_pixels_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_new_size_, ret, LOADER_INVALID_ARGUMENT);
 
     // Prepare.
     height = (size_t)pixel_layout_->height;
@@ -834,9 +834,9 @@ static loader_result_t pixel_layout_initialize_from_header(const file_header_t* 
     bool flip_require = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(file_header_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_layout_initialize_from_header", "file_header_")
-    IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_layout_initialize_from_header", "info_header_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_layout_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "pixel_layout_initialize_from_header", "out_layout_")
+    IF_ARG_NULL_GOTO_CLEANUP(file_header_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(info_header_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_layout_, ret, LOADER_INVALID_ARGUMENT);
 
     // Prepare.
     width = (size_t)(info_header_->bi_width);

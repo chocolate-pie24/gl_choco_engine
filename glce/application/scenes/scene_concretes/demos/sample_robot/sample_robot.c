@@ -138,11 +138,11 @@ static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend
 
     bool floor_grid_mesh_imported = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(scene_config_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "scene_config_")
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "asset_root_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_create", "out_scene_concrete_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_concrete_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "sample_robot_create", "*out_scene_concrete_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(scene_config_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_scene_concrete_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_concrete_, ret, SCENE_BAD_OPERATION);
     if(0 >= framebuffer_width_ || 0 >= framebuffer_height_) {
         ret = SCENE_INVALID_ARGUMENT;
         ERROR_MESSAGE("sample_robot_create(%s) - Provided framebuffer_width_ or framebuffer_height_ is not valid.", scene_result_to_str(ret));
@@ -389,8 +389,8 @@ static scene_result_t sample_robot_update(
     bool projection_changed = false;
     bool view_changed = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_update", "scene_concrete_")
-    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_update", "event_view_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!sample_robot_is_valid(scene_concrete_)) {
         ret = SCENE_DATA_CORRUPTED;
@@ -468,8 +468,8 @@ static scene_result_t sample_robot_draw(void* scene_concrete_, renderer_frontend
 
     sample_robot_t* sample_robot = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_draw", "scene_concrete_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_draw", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!sample_robot_is_valid(scene_concrete_)) {
         ret = SCENE_DATA_CORRUPTED;
@@ -632,10 +632,10 @@ static scene_result_t robot_resource_map_create(renderer_frontend_t* renderer_fr
 
     bool config_created = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_resource_map_create", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_resource_map_create", "asset_root_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_map_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_resource_map_create", "out_resource_map_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_resource_map_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "robot_resource_map_create", "*out_resource_map_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_map_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_resource_map_, ret, SCENE_BAD_OPERATION);
 
     ret = sample_robot_model_dummy_config_loader(&config);
     if(SCENE_SUCCESS != ret) {
@@ -688,7 +688,7 @@ static scene_result_t robot_animation_update(float delta_time_, sample_robot_t* 
     float next_animation_time = 0.0f;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(sample_robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_animation_update", "sample_robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(sample_robot_, ret, SCENE_INVALID_ARGUMENT);
 
     // Prepare.
     next_animation_time = sample_robot_->robot_animation_time + delta_time_;
@@ -753,11 +753,11 @@ static scene_result_t sample_robot_camera_create(const flight_camera_key_bind_t*
     mat4x4f_t tmp_view_matrix = { 0 };
     mat4x4f_t tmp_projection_matrix = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_key_binds_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_camera_create", "camera_key_binds_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_view_matrix_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_camera_create", "out_view_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_projection_matrix_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_camera_create", "out_projection_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_camera_create", "out_flight_camera_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_flight_camera_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "sample_robot_camera_create", "*out_flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_key_binds_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_view_matrix_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_projection_matrix_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_flight_camera_, ret, SCENE_BAD_OPERATION);
     if(framebuffer_width_ <= 0 || framebuffer_height_ <= 0) {
         ret = SCENE_INVALID_ARGUMENT;
         ERROR_MESSAGE("sample_robot_camera_create(%s) - Provided framebuffer_width_ or framebuffer_height_ is not valid.", scene_result_to_str(ret));
@@ -811,8 +811,8 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     size_t tmp_vertex_count = 0;
     line_mesh_t tmp_mesh = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT);
 
     ret_geometry = line_grid_geometry_vertices_create(LINE_GRID_PLANE_XZ, vec4u8_initialize(128, 128, 128, 255), vec3f_initialize(-500.0f, 0.0f, -1300.0f), vec3f_initialize(500.0f, 0.0f, 100.0f), 50.0f, &tmp_vertices, &tmp_vertex_count);
     if(GEOMETRY_SUCCESS != ret_geometry) {
@@ -857,8 +857,8 @@ static scene_result_t render_packet_build(const sample_robot_t* sample_robot_, r
     size_t untextured_mesh_count = 0;
     size_t line_mesh_count = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(sample_robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "render_packet_build", "sample_robot_")
-    IF_ARG_NULL_GOTO_CLEANUP(packet_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "render_packet_build", "packet_")
+    IF_ARG_NULL_GOTO_CLEANUP(sample_robot_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(packet_, ret, SCENE_INVALID_ARGUMENT);
 
     ret = robot_draw_request_count_add(sample_robot_->robot_resource_map, &untextured_mesh_count, &line_mesh_count);
     if(SCENE_SUCCESS != ret) {
@@ -934,9 +934,9 @@ static scene_result_t robot_draw_request_count_add(const untextured_model_resour
     size_t result_untextured_mesh_count = 0;
     size_t result_line_mesh_count = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_draw_request_count_add", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(io_untextured_mesh_count_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_draw_request_count_add", "io_untextured_mesh_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(io_line_mesh_count_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_draw_request_count_add", "io_line_mesh_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(io_untextured_mesh_count_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(io_line_mesh_count_, ret, SCENE_INVALID_ARGUMENT);
 
     ret_model_framework = untextured_model_resource_map_untextured_mesh_count_get(resource_map_, &tmp_untextured_mesh_count);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
@@ -1006,9 +1006,9 @@ static scene_result_t robot_draw_requests_append(const untextured_model_resource
     mat4x4f_t model_matrix = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_draw_requests_append", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_draw_requests_append", "robot_")
-    IF_ARG_NULL_GOTO_CLEANUP(packet_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "robot_draw_requests_append", "packet_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(packet_, ret, SCENE_INVALID_ARGUMENT);
 
     // Untextured Mesh.
     ret_model_framework = untextured_model_resource_map_untextured_mesh_count_get(resource_map_, &mesh_count);

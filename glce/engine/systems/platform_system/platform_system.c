@@ -38,12 +38,12 @@ platform_system_result_t platform_system_create(const platform_system_config_t* 
     subsystem_allocator_rollback_point_t rollback_point = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_width_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "out_framebuffer_width_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_height_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "out_framebuffer_height_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "out_platform_system_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_system_, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_result_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_system_create", "*out_platform_system_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_width_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_height_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_system_, ret, PLATFORM_SYSTEM_BAD_OPERATION);
 
     // Prepare.
     ret_subsystem_allocator = subsystem_allocator_rollback_point_get(allocator_, &rollback_point);
@@ -131,10 +131,10 @@ platform_system_result_t platform_system_update(platform_system_t* platform_syst
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
     // 毎フレーム呼ばれるAPIであるため、*out_event_view_ != NULLは許容する
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_update", "platform_system_")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->vtable, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_update", "platform_system_->vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->backend, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_update", "platform_system_->backend")
-    IF_ARG_NULL_GOTO_CLEANUP(out_event_view_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_update", "out_event_view_")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->vtable, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->backend, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_event_view_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!platform_system_is_valid(platform_system_)) {
         ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
@@ -158,9 +158,9 @@ cleanup:
 platform_system_result_t platform_system_swap_buffers(platform_system_t* platform_system_) {
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_swap_buffers", "platform_system_")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->vtable, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_result_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_system_swap_buffers", "platform_system_->vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->backend, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_result_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_system_swap_buffers", "platform_system_->backend")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->vtable, ret, PLATFORM_SYSTEM_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->backend, ret, PLATFORM_SYSTEM_BAD_OPERATION);
 
     ret = platform_system_->vtable->platform_backend_swap_buffers(platform_system_->backend);
     if(PLATFORM_SYSTEM_SUCCESS != ret) {

@@ -17,7 +17,7 @@
 model_framework_result_t model_coordinate_config_initialize(uint16_t coordinate_id_, uint16_t parent_coordinate_id_, vec3f_t translate_, vec3f_t rotation_, model_coordinate_config_t* out_config_) {
     model_framework_result_t ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_coordinate_config_initialize", "out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
     if(0 == coordinate_id_) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
         ERROR_MESSAGE("model_coordinate_config_initialize(%s) - Provided coordinate_id_ is not valid.", model_framework_result_to_str(ret));

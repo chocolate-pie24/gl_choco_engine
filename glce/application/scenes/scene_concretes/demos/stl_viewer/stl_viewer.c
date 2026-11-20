@@ -146,10 +146,10 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     bool debug_aabb_mesh_imported = false;
     bool debug_axis_mesh_imported = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_create", "asset_root_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_create", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_create", "out_scene_concrete_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_concrete_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "stl_viewer_create", "*out_scene_concrete_")
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_scene_concrete_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_concrete_, ret, SCENE_BAD_OPERATION);
     if(0 >= framebuffer_width_ || 0 >= framebuffer_height_) {
         ret = SCENE_INVALID_ARGUMENT;
         ERROR_MESSAGE("stl_viewer_create(%s) - Provided framebuffer_width_ or framebuffer_height_ is not valid.", scene_result_to_str(ret));
@@ -404,8 +404,8 @@ static scene_result_t stl_viewer_update(
     bool projection_changed = false;
     bool view_changed = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_update", "scene_concrete_")
-    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_update", "event_view_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!stl_viewer_is_valid(scene_concrete_)) {
         ret = SCENE_DATA_CORRUPTED;
@@ -480,8 +480,8 @@ static scene_result_t stl_viewer_draw(void* scene_concrete_, renderer_frontend_t
 
     stl_viewer_t* stl_viewer = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_draw", "scene_concrete_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_draw", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!stl_viewer_is_valid(scene_concrete_)) {
         ret = SCENE_DATA_CORRUPTED;
@@ -606,10 +606,10 @@ static scene_result_t model_mesh_import(renderer_frontend_t* renderer_frontend_,
 
     bool mesh_imported = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "model_mesh_import", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "model_mesh_import", "asset_root_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "model_mesh_import", "out_mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_model_aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "model_mesh_import", "out_model_aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_model_aabb_, ret, SCENE_INVALID_ARGUMENT);
 
     ret_renderer_frontend = renderer_frontend_untextured_mesh_import(renderer_frontend_, &s_model_mesh_config, asset_root_path_, &tmp_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
@@ -687,10 +687,10 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
     cone_t cone = { 0 };
     mat4x4f_t axis_rotation_matrix = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "src_resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT);
     if('\0' == src_resource_name_[0]) {
         ret = SCENE_INVALID_ARGUMENT;
         ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - Provided src_resource_name_ is not valid.", scene_result_to_str(ret));
@@ -803,11 +803,11 @@ static scene_result_t debug_axis_resource_name_create(const char* source_resourc
 
     choco_string_t* tmp_string = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(source_resource_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_resource_name_create", "source_resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_category_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_resource_name_create", "resource_category_")
-    IF_ARG_NULL_GOTO_CLEANUP(axis_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_resource_name_create", "axis_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_resource_name_create", "out_string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "debug_axis_resource_name_create", "*out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(source_resource_name_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_category_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(axis_name_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, SCENE_BAD_OPERATION);
 
     ret_choco_string = choco_string_create_from_c_string(source_resource_name_, &tmp_string);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
@@ -875,9 +875,9 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     vec3f_t grid_min = { 0 };
     vec3f_t grid_max = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT);
 
     for(size_t i = 0; i != 2; ++i) {    // XY平面へのGrid生成なので、zは除外
         aabb_length.elem[i] = aabb_->max.elem[i] - aabb_->min.elem[i];
@@ -945,10 +945,10 @@ static scene_result_t debug_aabb_mesh_initialize(renderer_frontend_t* renderer_f
     choco_string_t* tmp_resource_name = NULL;
     line_mesh_t tmp_debug_aabb_mesh = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_aabb_mesh_initialize", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_aabb_mesh_initialize", "src_resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_aabb_mesh_initialize", "model_aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_aabb_mesh_initialize", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(model_aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT);
 
     ret_choco_string = choco_string_create_from_c_string(src_resource_name_, &tmp_resource_name);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
@@ -1006,13 +1006,13 @@ static scene_result_t viewer_camera_create(const aabb_3d_t* model_aabb_, int fra
 
     float aspect = 0.0f;
 
-    IF_ARG_NULL_GOTO_CLEANUP(model_aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "model_aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_view_matrix_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_view_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_projection_matrix_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_projection_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_near_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_near_clip_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_far_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_far_clip_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_orbit_camera_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_orbit_camera_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_orbit_camera_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "viewer_camera_create", "*out_orbit_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_view_matrix_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_projection_matrix_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_near_clip_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_far_clip_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_orbit_camera_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_orbit_camera_, ret, SCENE_BAD_OPERATION);
     if(framebuffer_width_ <= 0 || framebuffer_height_ <= 0) {
         ret = SCENE_INVALID_ARGUMENT;
         ERROR_MESSAGE("viewer_camera_create(%s) - Provided framebuffer_width_ or framebuffer_height_ is not valid.", scene_result_to_str(ret));
@@ -1081,11 +1081,11 @@ static scene_result_t initial_camera_parameters_calculate(const aabb_3d_t* aabb_
     float tmp_near_clip = 0.0f;
     float tmp_far_clip = 0.0f;
 
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_target_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "out_target_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_distance_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "out_distance_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_near_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "out_near_clip_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_far_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "out_far_clip_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_target_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_distance_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_near_clip_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_far_clip_, ret, SCENE_INVALID_ARGUMENT);
 
     // AABBを包含するbounding sphereの半径を求める
     for(size_t i = 0; i != 3; ++i) {
@@ -1120,7 +1120,7 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
 
     render_packet_result_t ret_render_packet = RENDER_PACKET_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(stl_viewer_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "render_packet_build", "stl_viewer_")
+    IF_ARG_NULL_GOTO_CLEANUP(stl_viewer_, ret, SCENE_INVALID_ARGUMENT);
     if(NULL == stl_viewer_->render_packet) {
         ret = SCENE_BAD_OPERATION;
         ERROR_MESSAGE("render_packet_build(%s) - Provided stl_viewer_ is not initialized.", scene_result_to_str(ret));

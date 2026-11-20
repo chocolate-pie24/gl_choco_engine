@@ -27,9 +27,9 @@ application_result_t application_diagnostics_update(const application_diagnostic
     bool runtime_status_report_requested = false;
     bool validation_report_requested = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_diagnostics_update", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_diagnostics_update", "event_view_")
-    IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_diagnostics_update", "frame_state_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, APPLICATION_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, APPLICATION_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT);
     if(!config_is_valid(config_)) {
         ret = APPLICATION_INVALID_ARGUMENT;
         ERROR_MESSAGE("application_diagnostics_update(%s) - Provided config_ is not valid.", application_result_to_str(ret));
@@ -57,7 +57,7 @@ cleanup:
 application_result_t application_diagnostics_status_report(const subsystem_allocator_t* subsystem_allocator_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_diagnostics_status_report", "subsystem_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT);
 
     INFO_MESSAGE("============================================================");
     INFO_MESSAGE(" GLCE Runtime Status");
@@ -80,7 +80,7 @@ cleanup:
 static application_result_t memory_status_report(const subsystem_allocator_t* subsystem_allocator_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "memory_status_report", "subsystem_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT);
 
     INFO_MESSAGE("");
     INFO_MESSAGE("[Memory]");
@@ -180,7 +180,7 @@ static application_result_t subsystem_allocator_report(const subsystem_allocator
     double total_allocated_kib = 0.0;
     double usage_percent = 0.0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "subsystem_allocator_report", "subsystem_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT);
 
     ret_subsystem_allocator = subsystem_allocator_status_get(subsystem_allocator_, &status);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {

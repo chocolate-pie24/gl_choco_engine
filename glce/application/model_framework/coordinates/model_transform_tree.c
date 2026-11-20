@@ -94,8 +94,8 @@ model_framework_result_t model_transform_tree_create(uint16_t coordinate_id_, mo
     model_transform_node_t* tmp_root_node = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_create", "out_transform_tree_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "model_transform_tree_create", "*out_transform_tree_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree_, ret, MODEL_FRAMEWORK_BAD_OPERATION);
 
     // Prepare.
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_tree_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_tree);
@@ -221,9 +221,9 @@ model_framework_result_t model_transform_tree_clone(model_transform_tree_t* src_
     model_transform_tree_t* tmp_tree = NULL;
     const model_transform_node_t* node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_clone", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_clone", "out_transform_tree")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "model_transform_tree_clone", "*out_transform_tree")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_transform_tree, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree, ret, MODEL_FRAMEWORK_BAD_OPERATION);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(src_)) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -330,7 +330,7 @@ model_framework_result_t model_transform_tree_add_child(model_transform_tree_t* 
     model_transform_node_t* next = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_add_child", "transform_tree_")
+    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -414,7 +414,7 @@ model_framework_result_t model_transform_tree_rotation_set(model_transform_tree_
 
     model_transform_node_t* node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_rotation_set", "transform_tree_")
+    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -461,7 +461,7 @@ model_framework_result_t model_transform_tree_translate_set(model_transform_tree
 
     model_transform_node_t* node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_translate_set", "transform_tree_")
+    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
@@ -518,8 +518,8 @@ model_framework_result_t model_transform_tree_world_matrix_get(const model_trans
     mat4x4f_t local = { 0 };
     mat4x4f_t tmp = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_world_matrix_get", "transform_tree_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_matrix_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "model_transform_tree_world_matrix_get", "out_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_matrix_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;

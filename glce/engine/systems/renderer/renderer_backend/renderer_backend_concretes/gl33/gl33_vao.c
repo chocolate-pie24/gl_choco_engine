@@ -127,8 +127,8 @@ static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** out_va
 
     renderer_backend_vao_t* tmp_vao = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "out_vao_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "*out_vao_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
 
     ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_vao_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vao);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -201,7 +201,7 @@ cleanup:
 static renderer_backend_result_t gl33_vao_bind(const renderer_backend_vao_t* vao_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_bind", "vao_")
+    IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(0 != vao_->vao_handle, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_vao_bind", "vao_->vao_handle")
 
     mock_glBindVertexArray(vao_->vao_handle);

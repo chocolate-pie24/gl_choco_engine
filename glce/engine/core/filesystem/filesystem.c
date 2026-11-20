@@ -200,9 +200,9 @@ filesystem_result_t filesystem_create(filesystem_t** out_filesystem_, const char
     const char* open_mode_str = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "out_filesystem_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_filesystem_, ret, FILESYSTEM_BAD_OPERATION, result_to_str(FILESYSTEM_BAD_OPERATION), "filesystem_create", "*out_filesystem_")
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_filesystem_, ret, FILESYSTEM_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT);
     if('\0' == fullpath_[0] || '/' != fullpath_[0]) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
         ERROR_MESSAGE("filesystem_create(%s) - Provided fullpath_ is not valid.", result_to_str(ret));
@@ -386,9 +386,9 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
     filesystem_read_state_t status = FILESYSTEM_READ_STATE_ERROR;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "filesystem_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "out_read_bytes_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "out_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FILESYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FILESYSTEM_INVALID_ARGUMENT);
     if(0 == read_bytes_) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
         ERROR_MESSAGE("filesystem_byte_read(%s) - provided read_bytes_ is not valid.", result_to_str(ret));

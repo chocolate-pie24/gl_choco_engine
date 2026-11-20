@@ -536,7 +536,7 @@ static void renderer_frontend_config_initialize(renderer_frontend_config_t* conf
 static application_result_t keybinds_initialize(application_state_t* state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "keybinds_initialize", "state_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, APPLICATION_INVALID_ARGUMENT);
 
     // Diagnostics.
     state_->diag_config.runtime_status_report = KEY_1;
@@ -572,10 +572,10 @@ static application_result_t directory_path_initialize(fs_path_t** out_executable
     fs_path_t* tmp_executable_directory_path = NULL;
     fs_path_t* tmp_asset_root_path = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_executable_directory_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "directory_path_initialize", "out_executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_asset_root_path_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "directory_path_initialize", "out_asset_root_path_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_executable_directory_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "directory_path_initialize", "*out_executable_directory_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_asset_root_path_, ret, APPLICATION_BAD_OPERATION, application_result_to_str(APPLICATION_BAD_OPERATION), "directory_path_initialize", "*out_asset_root_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_executable_directory_, ret, APPLICATION_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_asset_root_path_, ret, APPLICATION_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_executable_directory_, ret, APPLICATION_BAD_OPERATION);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_asset_root_path_, ret, APPLICATION_BAD_OPERATION);
 
     ret_fs_path = fs_path_create_from_executable_directory(&tmp_executable_directory_path);
     if(FS_PATH_SUCCESS != ret_fs_path) {

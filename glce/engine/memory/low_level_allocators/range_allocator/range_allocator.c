@@ -468,8 +468,8 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
     size_t max_node_count = 0;
     size_t node_pool_size = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "out_allocator_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "*out_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(0 != memory_pool_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "memory_pool_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != max_allocation_count_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "max_allocation_count_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "base_align_")
@@ -573,10 +573,10 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
     node_t* node = NULL;
     range_allocation_t tmp_descriptor = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_allocate", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_allocate", "required_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != required_align_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_allocate", "required_align_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_allocate", "out_allocation_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
 #if defined(DEBUG_BUILD)
     if(!range_allocator_is_valid_shallow(allocator_)) {
@@ -665,8 +665,8 @@ range_allocator_result_t range_allocator_free(range_allocator_t* allocator_, con
     bool should_merge_prev = false;
     bool should_merge_next = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_free", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_free", "allocation_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     if(!range_allocation_is_valid(allocation_)) {
         ret = RANGE_ALLOCATOR_BAD_OPERATION;
@@ -1124,7 +1124,7 @@ static range_allocator_result_t align_up(size_t base_align_, size_t required_siz
     size_t padding = 0;
     size_t allocation_size = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "align_up", "out_allocation_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "align_up", "base_align_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != required_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "align_up", "required_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(IS_POWER_OF_TWO(base_align_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, result_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "align_up", "base_align_")
@@ -1247,11 +1247,11 @@ static range_allocator_result_t find_first_fit_node(const range_allocator_t* all
     bool found = false;
     node_t* node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "find_first_fit_node", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "find_first_fit_node", "allocation_size_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "find_first_fit_node", "out_node_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "find_first_fit_node", "*out_node_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_->range_list_head, ret, RANGE_ALLOCATOR_DATA_CORRUPTED, result_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "find_first_fit_node", "allocator_->range_list_head")
+    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_->range_list_head, ret, RANGE_ALLOCATOR_DATA_CORRUPTED);
     IF_ARG_FALSE_GOTO_CLEANUP(0 == (allocation_size_ % allocator_->base_align), ret, RANGE_ALLOCATOR_BAD_OPERATION, result_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "find_first_fit_node", "allocation_size_")
 
     node = allocator_->range_list_head;
@@ -1430,8 +1430,8 @@ static range_allocator_result_t allocate_from_node(range_allocator_t* allocator_
 
     bool acquired = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocate_from_node", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocate_from_node", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_FREE == node_->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, result_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "allocate_from_node", "node_->node_state")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocate_from_node", "allocation_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(node_->block_size >= allocation_size_, ret, RANGE_ALLOCATOR_BAD_OPERATION, result_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "allocate_from_node", "allocation_size_")
@@ -1573,10 +1573,10 @@ static range_allocator_result_t allocation_resolve_node(const range_allocator_t*
 
     node_t* tmp_node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocation_resolve_node", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_info_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocation_resolve_node", "allocation_info_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocation_resolve_node", "out_node_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "allocation_resolve_node", "*out_node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_info_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     if(allocator_ != allocation_info_->owner) {
         ret = RANGE_ALLOCATOR_BAD_OPERATION;
@@ -1695,9 +1695,9 @@ static range_allocator_result_t free_merge_plan_get(const node_t* node_, bool* o
     bool tmp_should_merge_prev = false;
     bool tmp_should_merge_next = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_merge_plan_get", "node_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_prev_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_merge_plan_get", "out_should_merge_prev_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_next_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_merge_plan_get", "out_should_merge_next_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_prev_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_should_merge_next_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     // 前方ノード検証
     if(NULL != node_->prev && NODE_STATE_FREE == node_->prev->node_state) {
@@ -1824,8 +1824,8 @@ cleanup:
 static range_allocator_result_t free_from_node(range_allocator_t* allocator_, node_t* node_, bool should_merge_prev_, bool should_merge_next_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_from_node", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_from_node", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     if(!should_merge_prev_ && !should_merge_next_) {
         ret = free_node_without_merge(node_);
@@ -1902,7 +1902,7 @@ cleanup:
 static range_allocator_result_t free_node_without_merge(node_t* node_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_without_merge", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     node_->node_state = NODE_STATE_FREE;
 
@@ -2020,8 +2020,8 @@ static range_allocator_result_t free_node_merge_prev(range_allocator_t* allocato
     size_t new_block_size = 0;
     node_t* tmp_node = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_prev", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_prev", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     if(node_ != node_->prev->next) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
@@ -2179,8 +2179,8 @@ static range_allocator_result_t free_node_merge_next(range_allocator_t* allocato
     size_t new_block_size = 0;
     node_t* tmp_next = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_next", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_next", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     if(node_ != node_->next->prev) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
@@ -2344,8 +2344,8 @@ static range_allocator_result_t free_node_merge_prev_next(range_allocator_t* all
     node_t* tmp_node_prev = NULL;
     node_t* tmp_node_next = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_prev_next", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "free_node_merge_prev_next", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     if(node_ != node_->next->prev) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
@@ -2499,9 +2499,9 @@ static range_allocator_result_t node_acquire(range_allocator_t* allocator_, size
     node_t* tmp_node = NULL;
     size_t end_offset = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "out_node_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_acquire", "*out_node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(0 != block_size_, ret, RANGE_ALLOCATOR_BAD_OPERATION, result_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_acquire", "block_size_")
 
     if(!size_add_checked(block_size_, offset_, &end_offset)) {
@@ -2643,8 +2643,8 @@ cleanup:
 static range_allocator_result_t node_insert_between(range_allocator_t* allocator_, node_t* insert_node_, node_state_t next_state_, node_t* prev_, node_t* next_) {
     range_allocator_result_t ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_insert_between", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(insert_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_insert_between", "insert_node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(insert_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_TRANSITIONING == insert_node_->node_state, ret, RANGE_ALLOCATOR_BAD_OPERATION, result_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_insert_between", "insert_node_->node_state")
     IF_ARG_FALSE_GOTO_CLEANUP(NODE_STATE_ALLOCATED == next_state_ || NODE_STATE_FREE == next_state_, ret, RANGE_ALLOCATOR_BAD_OPERATION, result_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_insert_between", "next_state_")
     IF_ARG_FALSE_GOTO_CLEANUP(node_is_valid(insert_node_), ret, RANGE_ALLOCATOR_DATA_CORRUPTED, result_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "node_insert_between", "insert_node_")
@@ -2789,8 +2789,8 @@ static range_allocator_result_t node_remove(range_allocator_t* allocator_, node_
     bool found = false;
     size_t index = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_remove", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_remove", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     for(size_t i = 0; i != allocator_->max_node_count; ++i) {
         if(&allocator_->node_pool[i] == node_) {
@@ -2935,8 +2935,8 @@ static range_allocator_result_t node_release(range_allocator_t* allocator_, node
 
     bool found = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_release", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_release", "node_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(allocator_->unused_node_count < allocator_->max_node_count, ret, RANGE_ALLOCATOR_DATA_CORRUPTED, result_to_str(RANGE_ALLOCATOR_DATA_CORRUPTED), "node_release", "unused_node_count")
 
     for(size_t i = 0; i != allocator_->max_node_count; ++i) {
@@ -3034,9 +3034,9 @@ static range_allocator_result_t node_pool_find_index(const range_allocator_t* al
     bool found = false;
     size_t tmp_index = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_pool_find_index", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_pool_find_index", "node_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_index_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "node_pool_find_index", "out_index_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_index_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
 
     for(size_t i = 0; i != allocator_->max_node_count; ++i) {
         if(&allocator_->node_pool[i] == node_) {

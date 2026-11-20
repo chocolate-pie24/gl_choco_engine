@@ -105,12 +105,12 @@ renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_conf
     bool rollback_point_created = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_create", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_create", "executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_create", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_create", "out_renderer_frontend_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_frontend_, ret, RENDERER_FRONTEND_BAD_OPERATION, renderer_frontend_result_to_str(RENDERER_FRONTEND_BAD_OPERATION), "renderer_frontend_create", "*out_renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_renderer_frontend_, ret, RENDERER_FRONTEND_BAD_OPERATION);
 
     // Prepare.
     ret_subsystem_allocator = subsystem_allocator_rollback_point_get(allocator_, &rollback_point);
@@ -234,8 +234,8 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
 
     mat4x4f_t tmp_model_matrix = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_draw_packet", "render_packet_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_draw_packet", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!renderer_frontend_is_valid(renderer_frontend_)) {
         ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
@@ -375,9 +375,9 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_front
     const draw_range_t* draw_range = NULL;
     const untextured_mesh_material_t* material = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_draw", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_draw", "mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_draw", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     material = untextured_mesh_material_registry_material_get(renderer_frontend_->untextured_mesh_render_resource->material_registry, mesh_->material_id);
     if(NULL == material) {
@@ -447,11 +447,11 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(rende
     vec4f_t view_light_direction4 = { 0 };
     vec3f_t view_light_direction3 = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "view_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "projection_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(directional_light_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "directional_light_")
-    IF_ARG_NULL_GOTO_CLEANUP(ambient_light_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_render_update", "ambient_light_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(directional_light_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(ambient_light_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     ret_shader = untextured_mesh_shader_use(renderer_frontend_->renderer_backend_context, renderer_frontend_->untextured_mesh_render_resource->shader);
     if(SHADER_SUCCESS != ret_shader) {
@@ -517,10 +517,10 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_import(renderer_fro
     bool geometry_imported = false;
     bool material_imported = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "asset_root_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
     if('\0' == asset_root_path_[0]) {
         ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
         ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - Provided asset root path is not valid.", renderer_frontend_result_to_str(ret));
@@ -600,12 +600,12 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_import_from_vertice
     bool geometry_imported = false;
     bool material_imported = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "geometry_resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(material_resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "material_resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "material_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_import", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(material_resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     ret_resource_pipeline = untextured_mesh_geometry_pipeline_import_from_vertices(renderer_frontend_->untextured_mesh_render_resource->vbo_manager, renderer_frontend_->untextured_mesh_render_resource->geometry_registry, geometry_resource_name_, vertices_, vertex_count_, &tmp_geometry_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
@@ -656,8 +656,8 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_release(renderer_fr
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_release", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_release", "mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     ret_resource_pipeline = untextured_mesh_geometry_pipeline_release(renderer_frontend_->untextured_mesh_render_resource->vbo_manager, renderer_frontend_->untextured_mesh_render_resource->geometry_registry, mesh_->geometry_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
@@ -687,9 +687,9 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_local_aabb_get(cons
     const untextured_mesh_geometry_t* tmp_geometry = NULL;
     aabb_3d_t tmp_aabb = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_local_aabb_get", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_local_aabb_get", "mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_untextured_mesh_local_aabb_get", "out_aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     tmp_geometry = untextured_mesh_geometry_registry_geometry_get(renderer_frontend_->untextured_mesh_render_resource->geometry_registry, mesh_->geometry_id);
     if(NULL == tmp_geometry) {
@@ -720,9 +720,9 @@ renderer_frontend_result_t renderer_frontend_line_mesh_draw(renderer_frontend_t*
 
     const draw_range_t* draw_range = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_draw", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_draw", "mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_draw", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     draw_range = line_mesh_geometry_registry_draw_range_get(renderer_frontend_->line_mesh_render_resource->geometry_registry, mesh_->geometry_id);
     if(NULL == draw_range) {
@@ -774,9 +774,9 @@ renderer_frontend_result_t renderer_frontend_line_mesh_render_update(renderer_fr
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_render_update", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_render_update", "view_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_render_update", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     ret_shader = line_mesh_shader_use(renderer_frontend_->renderer_backend_context, renderer_frontend_->line_mesh_render_resource->shader);
     if(SHADER_SUCCESS != ret_shader) {
@@ -812,10 +812,10 @@ renderer_frontend_result_t renderer_frontend_line_mesh_import_from_vertices(rend
 
     uint16_t tmp_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_import_from_vertices", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_import_from_vertices", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_import_from_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_import_from_vertices", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_vertices(renderer_frontend_->line_mesh_render_resource->vbo_manager, renderer_frontend_->line_mesh_render_resource->geometry_registry, resource_name_, vertices_, vertex_count_, &tmp_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
@@ -839,10 +839,10 @@ renderer_frontend_result_t renderer_frontend_line_mesh_import_from_aabb(renderer
 
     uint16_t tmp_id = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_import_from_aabb", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_import_from_aabb", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_import_from_aabb", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_import_from_aabb", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     ret_resource_pipeline = line_mesh_geometry_pipeline_import_from_aabb(renderer_frontend_->line_mesh_render_resource->vbo_manager, renderer_frontend_->line_mesh_render_resource->geometry_registry, resource_name_, aabb_, color_, &tmp_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
@@ -863,8 +863,8 @@ renderer_frontend_result_t renderer_frontend_line_mesh_release(renderer_frontend
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_release", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "renderer_frontend_line_mesh_release", "mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
     ret_resource_pipeline = line_mesh_geometry_pipeline_release(renderer_frontend_->line_mesh_render_resource->vbo_manager, renderer_frontend_->line_mesh_render_resource->geometry_registry, mesh_->geometry_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
@@ -926,13 +926,13 @@ static renderer_frontend_result_t line_mesh_render_resource_create(subsystem_all
     vbo_manager_config_t vbo_manager_config = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "line_mesh_render_resource_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "line_mesh_render_resource_create", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "line_mesh_render_resource_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "line_mesh_render_resource_create", "executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "line_mesh_render_resource_create", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "line_mesh_render_resource_create", "out_render_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDERER_FRONTEND_BAD_OPERATION, renderer_frontend_result_to_str(RENDERER_FRONTEND_BAD_OPERATION), "line_mesh_render_resource_create", "*out_render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDERER_FRONTEND_BAD_OPERATION);
 
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(line_mesh_render_resource_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_render_resource);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
@@ -1061,13 +1061,13 @@ static renderer_frontend_result_t untextured_mesh_render_resource_create(subsyst
     vbo_manager_config_t vbo_manager_config = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "untextured_mesh_render_resource_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "untextured_mesh_render_resource_create", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "untextured_mesh_render_resource_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "untextured_mesh_render_resource_create", "executable_directory_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "untextured_mesh_render_resource_create", "shader_dir_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT, renderer_frontend_result_to_str(RENDERER_FRONTEND_INVALID_ARGUMENT), "untextured_mesh_render_resource_create", "out_render_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDERER_FRONTEND_BAD_OPERATION, renderer_frontend_result_to_str(RENDERER_FRONTEND_BAD_OPERATION), "untextured_mesh_render_resource_create", "*out_render_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(executable_directory_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_dir_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_render_resource_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_resource_, ret, RENDERER_FRONTEND_BAD_OPERATION);
 
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(untextured_mesh_render_resource_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_render_resource);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {

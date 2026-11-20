@@ -102,7 +102,7 @@ aabb_3d_result_t aabb_3d_initialize_from_min_max(vec3f_t min_, vec3f_t max_, aab
 
     aabb_3d_t tmp_aabb = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, AABB_3D_INVALID_ARGUMENT, result_to_str(AABB_3D_INVALID_ARGUMENT), "aabb_3d_initialize_from_min_max", "out_aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, AABB_3D_INVALID_ARGUMENT);
     if(min_.elem[0] > max_.elem[0] || min_.elem[1] > max_.elem[1] || min_.elem[2] > max_.elem[2]) {
         ret = AABB_3D_INVALID_ARGUMENT;
         ERROR_MESSAGE("aabb_3d_initialize_from_min_max(%s) - Provided min_ or max_ is not valid.", result_to_str(ret));
@@ -148,8 +148,8 @@ aabb_3d_result_t aabb_3d_initialize_from_point_vertices(const point_vertex_t* ve
     vec3f_t max = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, AABB_3D_INVALID_ARGUMENT, result_to_str(AABB_3D_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, AABB_3D_INVALID_ARGUMENT, result_to_str(AABB_3D_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_vertices", "out_aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, AABB_3D_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, AABB_3D_INVALID_ARGUMENT);
     if(0 == vertex_count_) {
         ret = AABB_3D_INVALID_ARGUMENT;
         ERROR_MESSAGE("aabb_3d_initialize_from_point_vertices(%s) - Provided vertex_count_ is not valid.", result_to_str(ret));
@@ -205,8 +205,8 @@ aabb_3d_result_t aabb_3d_initialize_from_line_vertices(const line_vertex_t* vert
     vec3f_t max = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, AABB_3D_INVALID_ARGUMENT, result_to_str(AABB_3D_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, AABB_3D_INVALID_ARGUMENT, result_to_str(AABB_3D_INVALID_ARGUMENT), "aabb_3d_initialize_from_line_vertices", "out_aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, AABB_3D_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, AABB_3D_INVALID_ARGUMENT);
     if(0 == vertex_count_) {
         ret = AABB_3D_INVALID_ARGUMENT;
         ERROR_MESSAGE("aabb_3d_initialize_from_line_vertices(%s) - Provided vertex_count_ is not valid.", result_to_str(ret));
@@ -262,8 +262,8 @@ aabb_3d_result_t aabb_3d_initialize_from_point_normal_vertices(const point_norma
     vec3f_t max = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, AABB_3D_INVALID_ARGUMENT, result_to_str(AABB_3D_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, AABB_3D_INVALID_ARGUMENT, result_to_str(AABB_3D_INVALID_ARGUMENT), "aabb_3d_initialize_from_point_normal_vertices", "out_aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, AABB_3D_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_aabb_, ret, AABB_3D_INVALID_ARGUMENT);
     if(0 == vertex_count_) {
         ret = AABB_3D_INVALID_ARGUMENT;
         ERROR_MESSAGE("aabb_3d_initialize_from_point_normal_vertices(%s) - Provided vertex_count_ is not valid.", result_to_str(ret));
@@ -335,8 +335,8 @@ aabb_3d_result_t aabb_3d_vertices_get(const aabb_3d_t* aabb_, vec3f_t out_vertic
     aabb_3d_result_t ret = AABB_3D_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, AABB_3D_INVALID_ARGUMENT, result_to_str(AABB_3D_INVALID_ARGUMENT), "aabb_3d_vertices_get", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, AABB_3D_INVALID_ARGUMENT, result_to_str(AABB_3D_INVALID_ARGUMENT), "aabb_3d_vertices_get", "out_vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, AABB_3D_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, AABB_3D_INVALID_ARGUMENT);
     if(!aabb_3d_is_valid(aabb_)) {
         ret = AABB_3D_INVALID_ARGUMENT;
         ERROR_MESSAGE("aabb_3d_vertices_get(%s) - Provided aabb_ is not valid.", result_to_str(ret));

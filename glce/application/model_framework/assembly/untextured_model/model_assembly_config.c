@@ -38,14 +38,14 @@ model_framework_result_t untextured_model_assembly_config_create(
     untextured_model_assembly_config_t input = { 0 };   // for Preconditions
 #endif
 
-    IF_ARG_NULL_GOTO_CLEANUP(coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "coordinate_configs_")
-    IF_ARG_NULL_GOTO_CLEANUP(*coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "*coordinate_configs_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "mesh_coordinate_ids_")
-    IF_ARG_NULL_GOTO_CLEANUP(*mesh_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "*mesh_coordinate_ids_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "mesh_configs_")
-    IF_ARG_NULL_GOTO_CLEANUP(*mesh_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "*mesh_configs_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "out_config_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "untextured_model_assembly_config_create", "*out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(*coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(*mesh_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(*mesh_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, MODEL_FRAMEWORK_BAD_OPERATION);
     if(0 == coordinate_count_) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - Provided coordinate_count_ is not valid.", model_framework_result_to_str(ret));

@@ -210,10 +210,10 @@ texture_result_t texture_cpu_resource_create(const texture_resource_info_t* reso
     texture_cpu_resource_t* tmp_cpu_resource = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_create", "out_texture_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_BAD_OPERATION, texture_result_to_str(TEXTURE_BAD_OPERATION), "texture_cpu_resource_create", "*out_texture_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_create", "pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(*pixels_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_create", "*pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(*pixels_, ret, TEXTURE_INVALID_ARGUMENT);
     if(!texture_resource_info_is_valid(resource_info_)) {
         ret = TEXTURE_INVALID_ARGUMENT;
         ERROR_MESSAGE("texture_cpu_resource_create(%s) - Provided resource_info is not valid.", texture_result_to_str(ret));
@@ -332,9 +332,9 @@ texture_result_t texture_cpu_resource_pixels_get(const texture_cpu_resource_t* t
     texture_result_t ret = TEXTURE_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_pixels_get", "texture_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_pixels_get", "out_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, TEXTURE_BAD_OPERATION, texture_result_to_str(TEXTURE_BAD_OPERATION), "texture_cpu_resource_pixels_get", "*out_pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, TEXTURE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, TEXTURE_BAD_OPERATION);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_cpu_resource_is_valid(texture_resource_)) {
         ret = TEXTURE_DATA_CORRUPTED;
@@ -383,8 +383,8 @@ texture_result_t texture_cpu_resource_resource_info_get(const texture_cpu_resour
     texture_result_t ret = TEXTURE_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_resource_info_get", "texture_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_cpu_resource_resource_info_get", "out_resource_info_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, TEXTURE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(texture_resource_)) {
         ret = TEXTURE_DATA_CORRUPTED;

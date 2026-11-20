@@ -68,12 +68,12 @@ shader_result_t point_mesh_shader_create(const char* vertex_shader_fullpath_, co
 
     uniform_location_t tmp_uniform_location = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_create", "vertex_shader_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_create", "fragment_shader_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_create", "vbo_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_create", "out_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION, shader_result_to_str(SHADER_BAD_OPERATION), "point_mesh_shader_create", "*out_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION);
     if('\0' == vertex_shader_fullpath_[0]) {
         ret = SHADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("point_mesh_shader_create(%s) - Provided vertex_shader_fullpath_ is not valid.", shader_result_to_str(ret));
@@ -178,8 +178,8 @@ shader_result_t point_mesh_shader_vao_bind(const renderer_backend_context_t* bac
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vao_bind", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_vao_bind", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!point_mesh_shader_is_valid(backend_context_, shader_)) {
         ret = SHADER_DATA_CORRUPTED;
@@ -206,8 +206,8 @@ shader_result_t point_mesh_shader_use(const renderer_backend_context_t* backend_
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_use", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_use", "shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!point_mesh_shader_is_valid(backend_context_, shader_)) {
         ret = SHADER_DATA_CORRUPTED;
@@ -234,9 +234,9 @@ shader_result_t point_mesh_shader_model_matrix_set(const renderer_backend_contex
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_model_matrix_set", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_model_matrix_set", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_model_matrix_set", "model_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, SHADER_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!point_mesh_shader_is_valid(backend_context_, shader_)) {
         ret = SHADER_DATA_CORRUPTED;
@@ -263,9 +263,9 @@ shader_result_t point_mesh_shader_view_matrix_set(const renderer_backend_context
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_view_matrix_set", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_view_matrix_set", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_view_matrix_set", "view_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(view_matrix_, ret, SHADER_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!point_mesh_shader_is_valid(backend_context_, shader_)) {
         ret = SHADER_DATA_CORRUPTED;
@@ -292,9 +292,9 @@ shader_result_t point_mesh_shader_projection_matrix_set(const renderer_backend_c
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_projection_matrix_set", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_projection_matrix_set", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "point_mesh_shader_projection_matrix_set", "projection_matrix_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(projection_matrix_, ret, SHADER_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!point_mesh_shader_is_valid(backend_context_, shader_)) {
         ret = SHADER_DATA_CORRUPTED;
@@ -361,9 +361,9 @@ static shader_result_t uniform_location_initialize(const renderer_backend_contex
     int32_t tmp_view_matrix_location = 0;
     int32_t tmp_projection_matrix_location = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "uniform_location_initialize", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "uniform_location_initialize", "backend_shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_uniform_location_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "uniform_location_initialize", "out_uniform_location_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(backend_shader_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_uniform_location_, ret, SHADER_INVALID_ARGUMENT);
 
     // uniform location
     ret_renderer_backend = renderer_backend_shader_uniform_location_get(backend_context_, backend_shader_, "g_model_matrix", &tmp_model_matrix_location);
@@ -406,9 +406,9 @@ static shader_result_t attribute_initialize(renderer_backend_context_t* backend_
     bool vao_bound = false;
     bool vbo_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "attribute_initialize", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "attribute_initialize", "vao_")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "attribute_initialize", "vbo_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, SHADER_INVALID_ARGUMENT);
 
     ret_renderer_backend = renderer_backend_vao_bind(backend_context_, vao_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {

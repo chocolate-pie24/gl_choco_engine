@@ -19,7 +19,7 @@ light_result_t ambient_light_initialize(vec3f_t color_, float intensity_, ambien
 
     ambient_light_t tmp_light = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_light_, ret, LIGHT_INVALID_ARGUMENT, light_result_to_str(LIGHT_INVALID_ARGUMENT), "ambient_light_initialize", "out_light_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_light_, ret, LIGHT_INVALID_ARGUMENT);
 
     tmp_light.color = color_;
     tmp_light.intensity = intensity_;

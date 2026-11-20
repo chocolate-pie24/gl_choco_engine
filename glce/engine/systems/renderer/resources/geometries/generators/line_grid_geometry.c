@@ -45,9 +45,9 @@ geometry_result_t line_grid_geometry_vertices_create(line_grid_plane_t plane_, v
 
     line_vertex_t* tmp_vertices = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_grid_geometry_vertices_create", "out_vertices_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "line_grid_geometry_vertices_create", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_grid_geometry_vertices_create", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT);
     if(!line_grid_plane_is_valid(plane_)) {
         ret = GEOMETRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("line_grid_geometry_vertices_create(%s) - Provided plane_ is not valid.", geometry_result_to_str(ret));

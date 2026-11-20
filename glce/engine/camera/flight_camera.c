@@ -50,9 +50,9 @@ camera_result_t flight_camera_create(const flight_camera_key_bind_t keybinds_[FL
     camera_t* tmp_camera = NULL;
     flight_camera_t* tmp_flight_camera = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(keybinds_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_create", "keybinds_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_create", "out_flight_camera_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_flight_camera_, ret, CAMERA_BAD_OPERATION, camera_result_to_str(CAMERA_BAD_OPERATION), "flight_camera_create", "*out_flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(keybinds_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_flight_camera_, ret, CAMERA_BAD_OPERATION);
     for(size_t i = 0; i != FLIGHT_CAMERA_COMMAND_MAX; ++i) {
         if(!flight_camera_key_bind_is_valid(keybinds_[i])) {
             ret = CAMERA_INVALID_ARGUMENT;
@@ -119,8 +119,8 @@ void flight_camera_destroy(flight_camera_t** flight_camera_) {
 camera_result_t flight_camera_command_update(flight_camera_t* flight_camera_, const keyboard_event_t* keyboard_event_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_command_update", "flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_command_update", "keyboard_event_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(keyboard_event_, ret, CAMERA_INVALID_ARGUMENT);
 
     for(size_t i = 0; i != FLIGHT_CAMERA_COMMAND_MAX; ++i) {
         if(flight_camera_->keybinds[i].key == keyboard_event_->key) {
@@ -144,8 +144,8 @@ camera_result_t flight_camera_command_execute(flight_camera_t* flight_camera_, f
 
     bool has_command_requested = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_command_execute", "flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_view_dirty_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_command_execute", "out_view_dirty_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_view_dirty_, ret, CAMERA_INVALID_ARGUMENT);
 
     for(size_t i = 0; i != FLIGHT_CAMERA_COMMAND_MAX; ++i) {
         if(flight_camera_->command_status[i]) {
@@ -209,7 +209,7 @@ cleanup:
 camera_result_t flight_camera_viewing_frustum_update(flight_camera_t* flight_camera_, float fovy_, float aspect_, float near_clip_, float far_clip_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_viewing_frustum_update", "flight_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_viewing_frustum_update(flight_camera_->camera, fovy_, aspect_, near_clip_, far_clip_);
 
@@ -220,8 +220,8 @@ cleanup:
 camera_result_t flight_camera_perspective_matrix_get(flight_camera_t* flight_camera_, mat4x4f_t* out_mat_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_perspective_matrix_get", "flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_perspective_matrix_get", "out_mat_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_perspective_matrix_get(flight_camera_->camera, out_mat_);
 
@@ -232,8 +232,8 @@ cleanup:
 camera_result_t flight_camera_view_matrix_get(flight_camera_t* flight_camera_, mat4x4f_t* out_mat_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_view_matrix_get", "flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "flight_camera_view_matrix_get", "out_mat_")
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_view_matrix_get(flight_camera_->camera, out_mat_);
 
@@ -264,7 +264,7 @@ static camera_result_t move_forward(camera_t* camera_, float speed_, float delta
 
     vec3f_t forward_vec = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "move_forward", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     // カメラ前方の正規化されたベクトルを取得
     ret = camera_forward_vector_get(camera_, &forward_vec);
@@ -294,7 +294,7 @@ static camera_result_t move_backward(camera_t* camera_, float speed_, float delt
 
     vec3f_t backward_vec = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "move_backward", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     // カメラ後方の正規化されたベクトルを取得
     ret = camera_backward_vector_get(camera_, &backward_vec);
@@ -324,7 +324,7 @@ static camera_result_t move_right(camera_t* camera_, float speed_, float delta_t
 
     vec3f_t right_vec = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "move_right", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     // カメラ右方向の正規化されたベクトルを取得
     ret = camera_right_vector_get(camera_, &right_vec);
@@ -354,7 +354,7 @@ static camera_result_t move_left(camera_t* camera_, float speed_, float delta_ti
 
     vec3f_t left_vec = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "move_left", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     // カメラ左方向の正規化されたベクトルを取得
     ret = camera_left_vector_get(camera_, &left_vec);
@@ -384,7 +384,7 @@ static camera_result_t move_up(camera_t* camera_, float speed_, float delta_time
 
     vec3f_t up_vec = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "move_up", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     // カメラ上方向の正規化されたベクトルを取得
     ret = camera_up_vector_get(camera_, &up_vec);
@@ -414,7 +414,7 @@ static camera_result_t move_down(camera_t* camera_, float speed_, float delta_ti
 
     vec3f_t down_vec = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "move_down", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     // カメラ下方向の正規化されたベクトルを取得
     ret = camera_down_vector_get(camera_, &down_vec);
@@ -444,7 +444,7 @@ static camera_result_t rot_pitch_plus(camera_t* camera_, float speed_, float del
 
     vec3f_t euler = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "rot_pitch_plus", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_euler_get(camera_, &euler);
     if(CAMERA_SUCCESS != ret) {
@@ -471,7 +471,7 @@ static camera_result_t rot_pitch_minus(camera_t* camera_, float speed_, float de
 
     vec3f_t euler = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "rot_pitch_minus", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_euler_get(camera_, &euler);
     if(CAMERA_SUCCESS != ret) {
@@ -498,7 +498,7 @@ static camera_result_t rot_yaw_plus(camera_t* camera_, float speed_, float delta
 
     vec3f_t euler = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "rot_yaw_plus", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_euler_get(camera_, &euler);
     if(CAMERA_SUCCESS != ret) {
@@ -525,7 +525,7 @@ static camera_result_t rot_yaw_minus(camera_t* camera_, float speed_, float delt
 
     vec3f_t euler = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "rot_yaw_minus", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_euler_get(camera_, &euler);
     if(CAMERA_SUCCESS != ret) {
@@ -553,7 +553,7 @@ static camera_result_t camera_position_movement_apply(camera_t* camera_, vec3f_t
     vec3f_t position = { 0 };
     vec3f_t new_pos = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "camera_position_movement_apply", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     // 現在のカメラ座標を取得
     ret = camera_position_get(camera_, &position);

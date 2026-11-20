@@ -69,8 +69,8 @@ frame_allocator_result_t frame_allocator_create(size_t memory_pool_size_, frame_
     void* tmp_memory_pool = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FRAME_ALLOCATOR_INVALID_ARGUMENT), "frame_allocator_create", "out_allocator_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, FRAME_ALLOCATOR_BAD_OPERATION, result_to_str(FRAME_ALLOCATOR_BAD_OPERATION), "frame_allocator_create", "*out_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, FRAME_ALLOCATOR_BAD_OPERATION);
     if(0 == memory_pool_size_) {
         ret = FRAME_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("frame_allocator_create(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
@@ -163,9 +163,9 @@ frame_allocator_result_t frame_allocator_allocate(frame_allocator_t* allocator_,
     void* tmp_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FRAME_ALLOCATOR_INVALID_ARGUMENT), "frame_allocator_allocate", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FRAME_ALLOCATOR_INVALID_ARGUMENT), "frame_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FRAME_ALLOCATOR_BAD_OPERATION, result_to_str(FRAME_ALLOCATOR_BAD_OPERATION), "frame_allocator_allocate", "*out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FRAME_ALLOCATOR_BAD_OPERATION);
     if(!memory_tag_is_valid(memory_tag_)) {
         ret = FRAME_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("frame_allocator_allocate(%s) - Provided memory_tag_ is not valid.", result_to_str(ret));
@@ -234,7 +234,7 @@ frame_allocator_result_t frame_allocator_reset(frame_allocator_t* allocator_) {
     linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FRAME_ALLOCATOR_INVALID_ARGUMENT), "frame_allocator_reset", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!frame_allocator_is_valid(allocator_)) {
         ret = FRAME_ALLOCATOR_DATA_CORRUPTED;

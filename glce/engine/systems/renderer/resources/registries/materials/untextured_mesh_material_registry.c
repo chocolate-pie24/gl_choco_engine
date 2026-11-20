@@ -162,9 +162,9 @@ resource_registry_result_t untextured_mesh_material_registry_create(size_t max_m
     subsystem_allocator_rollback_point_t rollback_point = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_create", "out_registry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_BAD_OPERATION, resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION), "untextured_mesh_material_registry_create", "*out_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_BAD_OPERATION);
     if(0 == max_material_count_ || UINT16_MAX < max_material_count_) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_mesh_material_registry_create(%s) - Provided max_material_count_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
@@ -300,9 +300,9 @@ resource_registry_result_t untextured_mesh_material_registry_exists(const untext
     bool exists = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_exists", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_exists", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_exists_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_exists", "out_exists_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_exists_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_mesh_material_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
@@ -399,9 +399,9 @@ resource_registry_result_t untextured_mesh_material_registry_acquire(untextured_
     size_t tmp_index = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_acquire", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_acquire", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_acquire", "out_material_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_mesh_material_registry_acquire(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
@@ -490,10 +490,10 @@ resource_registry_result_t untextured_mesh_material_registry_register(untextured
     choco_string_t* tmp_name = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_register", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_register", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_register", "material_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_register", "out_material_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_mesh_material_registry_register(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
@@ -601,7 +601,7 @@ cleanup:
 resource_registry_result_t untextured_mesh_material_registry_release(untextured_mesh_material_registry_t* registry_, uint16_t material_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT, resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT), "untextured_mesh_material_registry_release", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     // releaseはregistryの中身を変化させるため、念のため全体をvalidationする。
     // ただ、releaseは単一entryのみの変更であるため、パフォーマンスに問題が出る場合はvalidationの範囲を狭めてもよい
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)

@@ -38,10 +38,10 @@ geometry_result_t untextured_arrow_geometry_vertices_create(uint16_t segment_cou
     bool cylinder_generated = false;
     bool cone_generated = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_arrow_geometry_vertices_create", "cone_")
-    IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_arrow_geometry_vertices_create", "cylinder_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "untextured_arrow_geometry_vertices_create", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_arrow_geometry_vertices_create", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT);
     if(0 != *out_vertex_count_) {
         ret = GEOMETRY_BAD_OPERATION;
         ERROR_MESSAGE("untextured_arrow_geometry_vertices_create(%s) - Provided out_vertex_count_ is not valid.", geometry_result_to_str(ret));

@@ -175,9 +175,9 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullp
     filesystem_t* tmp_filesystem = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "out_stream_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_stream_, ret, FS_STREAM_BAD_OPERATION, result_to_str(FS_STREAM_BAD_OPERATION), "fs_stream_create", "*out_stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_stream_, ret, FS_STREAM_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FS_STREAM_INVALID_ARGUMENT);
     if('\0' == fullpath_[0] || '/' != fullpath_[0]) {
         ret = FS_STREAM_INVALID_ARGUMENT;
         ERROR_MESSAGE("fs_stream_create(%s) - Provided fullpath_ is not valid.", result_to_str(ret));
@@ -310,9 +310,9 @@ fs_stream_result_t fs_stream_byte_read(fs_stream_t* stream_, size_t read_bytes_,
     fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "out_read_bytes_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "out_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FS_STREAM_INVALID_ARGUMENT);
     if(0 == read_bytes_) {
         ret = FS_STREAM_INVALID_ARGUMENT;
         ERROR_MESSAGE("fs_stream_byte_read(%s) - Provided read_bytes_ is not valid.", result_to_str(ret));
@@ -368,8 +368,8 @@ fs_stream_result_t fs_stream_text_file_read(fs_stream_t* stream_, choco_string_t
     bool complete = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_read", "stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_read", "out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!fs_stream_is_valid(stream_)) {
         ret = FS_STREAM_DATA_CORRUPTED;
@@ -446,8 +446,8 @@ fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* stream_, choco_str
     char tmp_buffer[FS_STREAM_TEXT_FILE_LINE_BUFFER_SIZE] = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_line_read", "stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_line_read", "out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!fs_stream_is_valid(stream_)) {
         ret = FS_STREAM_DATA_CORRUPTED;
@@ -566,9 +566,9 @@ static fs_stream_result_t byte_read(fs_stream_t* stream_, size_t read_bytes_, si
     filesystem_result_t ret_filesystem = FILESYSTEM_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "byte_read", "stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "byte_read", "out_read_bytes_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "byte_read", "out_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FS_STREAM_INVALID_ARGUMENT);
 
     // Commmit.
     ret_filesystem = filesystem_byte_read(stream_->filesystem, read_bytes_, out_read_bytes_, out_buffer_);

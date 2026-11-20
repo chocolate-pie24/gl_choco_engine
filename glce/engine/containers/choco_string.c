@@ -138,8 +138,8 @@ choco_string_result_t choco_string_default_create(choco_string_t** out_string_) 
     choco_string_t* tmp_string = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "out_string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_BAD_OPERATION, result_to_str(CHOCO_STRING_BAD_OPERATION), "choco_string_default_create", "*out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_BAD_OPERATION);
 
     // Prepare.
     ret_general_allocator = general_allocator_allocate(sizeof(*tmp_string), GENERAL_ALLOCATOR_MEMORY_TAG_STRING, (void**)&tmp_string);
@@ -199,9 +199,9 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
     size_t capacity = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "out_string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_BAD_OPERATION, result_to_str(CHOCO_STRING_BAD_OPERATION), "choco_string_create_from_c_string", "*out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_BAD_OPERATION);
 
     // Prepare.
     ret = choco_string_default_create(&tmp_string);
@@ -317,8 +317,8 @@ choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(src_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
@@ -405,8 +405,8 @@ choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_st
     size_t buff_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
@@ -495,8 +495,8 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
     char* tmp_buffer = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "dst_")
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
     if(string_ == dst_) {
         ret = CHOCO_STRING_BAD_OPERATION;
         ERROR_MESSAGE("choco_string_concat(%s) - provided dst_ is not valid.", result_to_str(ret));
@@ -600,8 +600,8 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
     char* tmp_buffer = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "dst_")
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
@@ -840,7 +840,7 @@ static choco_string_result_t buffer_reserve(size_t size_, choco_string_t* string
 
     char* tmp_buffer = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_reserve", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
     if(0 == size_) {
         ret = CHOCO_STRING_INVALID_ARGUMENT;
         ERROR_MESSAGE("buffer_reserve(%s) - Provided size_ is not valid.", result_to_str(ret));
@@ -882,7 +882,7 @@ static choco_string_result_t buffer_resize(size_t size_, choco_string_t* string_
     char* tmp_buffer = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_resize", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
     if(0 == size_) {
         ret = CHOCO_STRING_INVALID_ARGUMENT;
         ERROR_MESSAGE("buffer_resize(%s) - Provided size_ is not valid.", result_to_str(ret));

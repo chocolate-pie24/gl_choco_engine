@@ -38,9 +38,9 @@ renderer_backend_result_t renderer_backend_create(subsystem_allocator_t* allocat
     renderer_backend_context_t* tmp_backend_context = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "out_backend_context_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "*out_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
 
     // Simulation.
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_backend_context);

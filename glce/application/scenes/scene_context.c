@@ -33,8 +33,8 @@ scene_result_t scene_context_create(scene_context_t** out_scene_) {
 
     scene_context_t* tmp_scene_context = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_scene_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_create", "out_scene_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "scene_context_create", "*out_scene_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_scene_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_, ret, SCENE_BAD_OPERATION);
 
     ret_general_allocator = general_allocator_allocate(sizeof(scene_context_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_scene_context);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -111,9 +111,9 @@ scene_result_t scene_context_change_scene(scene_context_t* scene_, renderer_fron
     const scene_vtable_t* next_vtable = NULL;
     void* tmp_scene = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_change_scene", "scene_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_change_scene", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_change_scene", "asset_root_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!scene_context_is_valid(scene_)) {
         ret = SCENE_INVALID_ARGUMENT;
@@ -192,8 +192,8 @@ cleanup:
 scene_result_t scene_context_update(scene_context_t* scene_, const platform_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_update", "scene_")
-    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_update", "event_view_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!scene_context_is_valid(scene_)) {
         ret = SCENE_INVALID_ARGUMENT;
@@ -224,8 +224,8 @@ cleanup:
 scene_result_t scene_context_draw(scene_context_t* scene_, renderer_frontend_t* renderer_frontend_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_draw", "scene_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_draw", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!scene_context_is_valid(scene_)) {
         ret = SCENE_INVALID_ARGUMENT;

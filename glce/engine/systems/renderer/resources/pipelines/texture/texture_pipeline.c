@@ -202,11 +202,11 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
     bool exists = false;
 
     // 入力値検証
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(texture_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "texture_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_bmp", "out_texture_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(texture_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_resource_registry = texture_registry_exists(registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -364,10 +364,10 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
     bool exists = false;
 
     // 入力値検証
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_import_from_solid_color", "out_texture_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_resource_registry = texture_registry_exists(registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -489,7 +489,7 @@ resource_pipeline_result_t texture_pipeline_release(texture_registry_t* registry
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "texture_pipeline_release", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_resource_registry = texture_registry_release(registry_, texture_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -553,10 +553,10 @@ static resource_pipeline_result_t bmp_load(const char* fullpath_, texture_resour
     uint8_t* tmp_pixels = NULL;
     texture_resource_info_t tmp_resource_info = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "bmp_load", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "bmp_load", "out_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_BAD_OPERATION, resource_pipeline_result_to_str(RESOURCE_PIPELINE_BAD_OPERATION), "bmp_load", "*out_pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "bmp_load", "out_resource_info_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_loader = bmp_loader_load(fullpath_, &tmp_resource_info, &tmp_pixels);
     if(LOADER_SUCCESS != ret_loader) {
@@ -635,9 +635,9 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
     uint8_t* tmp_pixels = NULL;
     size_t pixel_count = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "out_pixels_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "*out_pixels_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "solid_color_texture_generate", "out_resource_info_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_general_allocator = general_allocator_allocate(pixel_size, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {

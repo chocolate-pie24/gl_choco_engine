@@ -80,8 +80,8 @@ render_packet_result_t render_packet_create(size_t max_memory_pool_size_, render
     render_packet_t* tmp_render_packet = NULL;
     frame_allocator_t* tmp_frame_allocator = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_create", "out_render_packet_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_packet_, ret, RENDER_PACKET_BAD_OPERATION, render_packet_result_to_str(RENDER_PACKET_BAD_OPERATION), "render_packet_create", "*out_render_packet_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_render_packet_, ret, RENDER_PACKET_BAD_OPERATION);
     if(0 == max_memory_pool_size_) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;
         ERROR_MESSAGE("render_packet_create(%s) - Provided max_memory_pool_size_ is not valid.", render_packet_result_to_str(ret));
@@ -173,7 +173,7 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
 
     size_t allocation_size = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_initialize", "render_packet_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
     if(!render_packet_is_empty(render_packet_)) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;
         ERROR_MESSAGE("render_packet_initialize(%s) - Provided render_packet_ is not empty.", render_packet_result_to_str(ret));
@@ -422,8 +422,8 @@ render_packet_result_t render_packet_line_mesh_read_state_completed(const render
 
     bool tmp_completed = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_line_mesh_read_state_completed", "render_packet_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_line_mesh_read_state_completed", "out_completed_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;
@@ -448,8 +448,8 @@ render_packet_result_t render_packet_point_mesh_read_state_completed(const rende
 
     bool tmp_completed = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_point_mesh_read_state_completed", "render_packet_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_point_mesh_read_state_completed", "out_completed_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;
@@ -474,8 +474,8 @@ render_packet_result_t render_packet_ui_mesh_read_state_completed(const render_p
 
     bool tmp_completed = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_ui_mesh_read_state_completed", "render_packet_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_ui_mesh_read_state_completed", "out_completed_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;
@@ -500,8 +500,8 @@ render_packet_result_t render_packet_untextured_mesh_read_state_completed(const 
 
     bool tmp_completed = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_untextured_mesh_read_state_completed", "render_packet_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_untextured_mesh_read_state_completed", "out_completed_")
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;
@@ -524,9 +524,9 @@ cleanup:
 render_packet_result_t render_packet_line_mesh_push(const line_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
     render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_line_mesh_push", "mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_line_mesh_push", "model_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_line_mesh_push", "render_packet_")
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;
@@ -554,9 +554,9 @@ cleanup:
 render_packet_result_t render_packet_point_mesh_push(const point_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
     render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_point_mesh_push", "mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_point_mesh_push", "model_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_point_mesh_push", "render_packet_")
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;
@@ -584,9 +584,9 @@ cleanup:
 render_packet_result_t render_packet_ui_mesh_push(const ui_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
     render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_ui_mesh_push", "mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_ui_mesh_push", "model_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_ui_mesh_push", "render_packet_")
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;
@@ -614,9 +614,9 @@ cleanup:
 render_packet_result_t render_packet_untextured_mesh_push(const untextured_mesh_t* mesh_, const mat4x4f_t* model_matrix_, render_packet_t* render_packet_) {
     render_packet_result_t ret = RENDER_PACKET_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_untextured_mesh_push", "mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_untextured_mesh_push", "model_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT, render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT), "render_packet_untextured_mesh_push", "render_packet_")
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDER_PACKET_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
         ret = RENDER_PACKET_INVALID_ARGUMENT;

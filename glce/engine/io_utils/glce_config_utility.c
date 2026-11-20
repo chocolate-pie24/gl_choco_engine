@@ -182,8 +182,8 @@ glce_config_utility_result_t glce_config_utility_key_value_parse(const char* lin
     glce_config_utility_key_value_t key_value = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, GLCE_CONFIG_UTILITY_INVALID_ARGUMENT, result_to_str(GLCE_CONFIG_UTILITY_INVALID_ARGUMENT), "glce_config_utility_key_value_parse", "line_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_key_value_, ret, GLCE_CONFIG_UTILITY_INVALID_ARGUMENT, result_to_str(GLCE_CONFIG_UTILITY_INVALID_ARGUMENT), "glce_config_utility_key_value_parse", "out_key_value_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, GLCE_CONFIG_UTILITY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_key_value_, ret, GLCE_CONFIG_UTILITY_INVALID_ARGUMENT);
     if(!line_is_valid(line_, char_count_)) {
         ret = GLCE_CONFIG_UTILITY_INVALID_ARGUMENT;
         ERROR_MESSAGE("glce_config_utility_key_value_parse(%s) - Provided line_ is not valid.", result_to_str(ret));

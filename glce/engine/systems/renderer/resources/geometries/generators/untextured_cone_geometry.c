@@ -35,10 +35,10 @@ geometry_result_t untextured_cone_geometry_vertices_create(const cone_t* cone_, 
 
     point_normal_vertex_t* tmp_vertices = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cone_geometry_vertices_create", "cone_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cone_geometry_vertices_create", "out_vertices_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "untextured_cone_geometry_vertices_create", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cone_geometry_vertices_create", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT);
     if(!cone_is_valid(cone_)) {
         ret = GEOMETRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_cone_geometry_vertices_create(%s) - Provided cone_ is not valid.", geometry_result_to_str(ret));

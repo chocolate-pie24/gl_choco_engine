@@ -190,11 +190,11 @@ texture_result_t texture_gpu_resource_create(const renderer_backend_context_t* b
 
     bool texture_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_gpu_resource_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_info_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_gpu_resource_create", "resource_info_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_gpu_resource_create", "out_texture_resource_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_BAD_OPERATION, texture_result_to_str(TEXTURE_BAD_OPERATION), "texture_gpu_resource_create", "*out_texture_resource_")
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_gpu_resource_create", "pixels_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_info_, ret, TEXTURE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_INVALID_ARGUMENT);
     if(!texture_resource_info_is_valid(resource_info_)) {
         ret = TEXTURE_INVALID_ARGUMENT;
         ERROR_MESSAGE("texture_gpu_resource_create(%s) - Provided resource_info_ is not valid.", texture_result_to_str(ret));
@@ -375,7 +375,7 @@ texture_result_t texture_gpu_resource_bind(const texture_gpu_resource_t* texture
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_gpu_resource_bind", "texture_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_gpu_resource_is_valid(texture_resource_)) {
         ret = TEXTURE_DATA_CORRUPTED;
@@ -438,7 +438,7 @@ texture_result_t texture_gpu_resource_unbind(const texture_gpu_resource_t* textu
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT, texture_result_to_str(TEXTURE_INVALID_ARGUMENT), "texture_gpu_resource_unbind", "texture_resource_")
+    IF_ARG_NULL_GOTO_CLEANUP(texture_resource_, ret, TEXTURE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!texture_gpu_resource_is_valid(texture_resource_)) {
         ret = TEXTURE_DATA_CORRUPTED;

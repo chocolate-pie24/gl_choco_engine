@@ -165,10 +165,10 @@ resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_file(un
     uint16_t tmp_material_id = 0;
     bool exists = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_file", "material_registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_file", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_file", "resource_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_file", "out_material_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_resource_registry = untextured_mesh_material_registry_exists(material_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -225,10 +225,10 @@ resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_materia
     uint16_t tmp_material_id = 0;
     bool exists = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_material", "material_registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_material", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_material", "material_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_import_from_material", "out_material_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(material_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_resource_registry = untextured_mesh_material_registry_exists(material_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -305,7 +305,7 @@ resource_pipeline_result_t untextured_mesh_material_pipeline_release(untextured_
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_material_pipeline_release", "material_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_resource_registry = untextured_mesh_material_registry_release(material_registry_, material_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {

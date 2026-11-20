@@ -180,8 +180,8 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     size_t stride = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "out_queue_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_queue_, ret, RING_QUEUE_BAD_OPERATION, result_to_str(RING_QUEUE_BAD_OPERATION), "ring_queue_create", "*out_queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_queue_, ret, RING_QUEUE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_queue_, ret, RING_QUEUE_BAD_OPERATION);
     if(0 == max_element_count_ || 0 == element_size_) {
         ret = RING_QUEUE_INVALID_ARGUMENT;
         ERROR_MESSAGE("ring_queue_create(%s) - Provided max_element_count_ or element_size_ is not valid.", result_to_str(ret));
@@ -332,8 +332,8 @@ ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, siz
     char* target_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "queue_")
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
@@ -413,8 +413,8 @@ ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, 
     char* head_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "queue_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_data_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "out_data_")
+    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_data_, ret, RING_QUEUE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
