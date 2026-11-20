@@ -160,7 +160,7 @@ static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** 
     renderer_backend_shader_t* tmp_shader = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
     ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_shader);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {

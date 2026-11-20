@@ -43,7 +43,7 @@ renderer_backend_result_t renderer_backend_shader_create(renderer_backend_contex
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
     ret = backend_context_->shader_vtable->renderer_shader_create(out_shader_handle_);
     if(RENDERER_BACKEND_SUCCESS != ret) {

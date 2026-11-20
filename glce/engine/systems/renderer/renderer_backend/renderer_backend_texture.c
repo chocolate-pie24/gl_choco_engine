@@ -21,7 +21,7 @@ renderer_backend_result_t renderer_backend_texture_create(const renderer_backend
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->texture_vtable, ret, RENDERER_BACKEND_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_handle_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
     ret = backend_context_->texture_vtable->renderer_texture_create(texture_unit_index_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, out_texture_handle_);
     if(RENDERER_BACKEND_SUCCESS != ret) {

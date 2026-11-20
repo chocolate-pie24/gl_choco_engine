@@ -469,7 +469,7 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
     size_t node_pool_size = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, RANGE_ALLOCATOR_BAD_OPERATION);
     IF_ARG_FALSE_GOTO_CLEANUP(0 != memory_pool_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "memory_pool_size_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != max_allocation_count_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "max_allocation_count_")
     IF_ARG_FALSE_GOTO_CLEANUP(0 != base_align_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "range_allocator_create", "base_align_")
@@ -1250,7 +1250,7 @@ static range_allocator_result_t find_first_fit_node(const range_allocator_t* all
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_FALSE_GOTO_CLEANUP(0 != allocation_size_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT, result_to_str(RANGE_ALLOCATOR_INVALID_ARGUMENT), "find_first_fit_node", "allocation_size_")
     IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(allocator_->range_list_head, ret, RANGE_ALLOCATOR_DATA_CORRUPTED);
     IF_ARG_FALSE_GOTO_CLEANUP(0 == (allocation_size_ % allocator_->base_align), ret, RANGE_ALLOCATOR_BAD_OPERATION, result_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "find_first_fit_node", "allocation_size_")
 
@@ -1576,7 +1576,7 @@ static range_allocator_result_t allocation_resolve_node(const range_allocator_t*
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(allocation_info_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_BAD_OPERATION);
 
     if(allocator_ != allocation_info_->owner) {
         ret = RANGE_ALLOCATOR_BAD_OPERATION;
@@ -2501,7 +2501,7 @@ static range_allocator_result_t node_acquire(range_allocator_t* allocator_, size
 
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_BAD_OPERATION);
     IF_ARG_FALSE_GOTO_CLEANUP(0 != block_size_, ret, RANGE_ALLOCATOR_BAD_OPERATION, result_to_str(RANGE_ALLOCATOR_BAD_OPERATION), "node_acquire", "block_size_")
 
     if(!size_add_checked(block_size_, offset_, &end_offset)) {

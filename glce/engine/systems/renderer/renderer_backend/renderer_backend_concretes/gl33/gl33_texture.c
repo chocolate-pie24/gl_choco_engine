@@ -157,7 +157,7 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
     GLint current_unit = GL_TEXTURE0;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_handle_, ret, RENDERER_BACKEND_BAD_OPERATION);
     IF_ARG_FALSE_GOTO_CLEANUP(resolve_min_filter_config(min_filter_config_, &min_filter), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "min_filter_config_")
     IF_ARG_FALSE_GOTO_CLEANUP(resolve_mag_filter_config(mag_filter_config_, &mag_filter), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "mag_filter_config_")
     IF_ARG_FALSE_GOTO_CLEANUP(resolve_wrap_config(wrap_config_s_axis_, &wrap_config_s_axis), ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_texture_create", "wrap_config_s_axis_")

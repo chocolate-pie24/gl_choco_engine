@@ -128,7 +128,7 @@ static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** out_va
     renderer_backend_vao_t* tmp_vao = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
     ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_vao_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vao);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {

@@ -21,7 +21,7 @@ renderer_backend_result_t renderer_backend_vbo_create(renderer_backend_context_t
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BACKEND_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
     ret = backend_context_->vbo_vtable->vbo_create(out_vbo_);
     if(RENDERER_BACKEND_SUCCESS != ret) {

@@ -636,7 +636,7 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
     size_t pixel_count = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_general_allocator = general_allocator_allocate(pixel_size, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);

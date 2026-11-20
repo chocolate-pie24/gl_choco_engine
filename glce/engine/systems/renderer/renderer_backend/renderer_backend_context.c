@@ -40,7 +40,7 @@ renderer_backend_result_t renderer_backend_create(subsystem_allocator_t* allocat
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_context_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
     // Simulation.
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_backend_context);

@@ -37,7 +37,7 @@ shader_result_t shader_program_builder_create_from_files(renderer_backend_contex
     IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION);
     if('\0' == vertex_shader_fullpath_[0]) {
         ret = SHADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Provided vertex_shader_fullpath_ is not valid.", shader_result_to_str(ret));
@@ -102,7 +102,7 @@ static shader_result_t shader_source_load(const char* shader_fullpath_, choco_st
 
     IF_ARG_NULL_GOTO_CLEANUP(shader_fullpath_, ret, SHADER_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_shader_source_, ret, SHADER_INVALID_ARGUMENT);
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_source_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_source_, ret, SHADER_BAD_OPERATION);
 
     // シェーダーソース格納用choco_string生成
     ret_choco_string = choco_string_default_create(&shader_source);
