@@ -350,6 +350,7 @@ scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_
         untextured_mesh_configs[i].material_extension = "untextured_mat";
     }
 
+    // NOTE: coordinates, coordinate_ids, untextured_mesh_configsはtmp_assembly_configに所有権がmoveされるためNULLになる
     ret_model_framework = untextured_model_assembly_config_create(
         coordinate_count,
         &coordinates,

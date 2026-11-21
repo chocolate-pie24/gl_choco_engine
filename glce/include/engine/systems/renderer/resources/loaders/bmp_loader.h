@@ -59,6 +59,8 @@ extern "C" {
 
 loader_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_);
 
+void bmp_loader_pixels_destroy(uint8_t** pixels_);
+
 #ifdef __cplusplus
 }
 #endif

@@ -435,6 +435,13 @@ cleanup:
     return ret;
 }
 
+void bmp_loader_pixels_destroy(uint8_t** pixels_) {
+    if(NULL == pixels_ || NULL == *pixels_) {
+        return;
+    }
+    general_allocator_free((void**)pixels_, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
+}
+
 // ============================================================
 // Loading helpers
 // ============================================================
