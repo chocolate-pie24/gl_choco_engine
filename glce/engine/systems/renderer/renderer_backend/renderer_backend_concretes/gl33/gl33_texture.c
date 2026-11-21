@@ -271,7 +271,7 @@ static renderer_backend_result_t gl33_texture_bind(const renderer_backend_textur
         goto cleanup;
     }
 
-    mock_glActiveTexture(GL_TEXTURE0 + texture_handle_->unit_number);
+    mock_glActiveTexture(GL_TEXTURE0 + (GLenum)texture_handle_->unit_number);
     mock_glBindTexture(GL_TEXTURE_2D, texture_handle_->handle);
 
     ret = RENDERER_BACKEND_SUCCESS;
@@ -306,7 +306,7 @@ static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_text
         goto cleanup;
     }
 
-    mock_glActiveTexture(GL_TEXTURE0 + texture_handle_->unit_number);
+    mock_glActiveTexture(GL_TEXTURE0 + (GLenum)texture_handle_->unit_number);
     mock_glBindTexture(GL_TEXTURE_2D, 0);
 
     ret = RENDERER_BACKEND_SUCCESS;

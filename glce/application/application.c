@@ -350,7 +350,7 @@ application_result_t application_run(void) {
                 goto cleanup;
             }
         } else if(s_application_state->frame_state.validation_report_requested) {
-            WARN_MESSAGE("application_run(%s) - not impremented yet...");
+            WARN_MESSAGE("application_run - not impremented yet...");
         }
 
         // Scene Update.

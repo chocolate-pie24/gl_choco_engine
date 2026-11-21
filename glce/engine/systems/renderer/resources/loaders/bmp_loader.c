@@ -969,7 +969,7 @@ static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_) {
 
 static bmp_invalid_reason_t header_is_valid(const file_header_t* file_header_, const info_header_t* info_header_) {
     if(NULL == file_header_ || NULL == info_header_) {
-        DEBUG_MESSAGE("BMP header validation failed: file_header or info_header is NULL. file_header=%p, info_header=%p", file_header_, info_header_);
+        DEBUG_MESSAGE("BMP header validation failed: file_header or info_header is NULL. file_header=%p, info_header=%p", (const void*)file_header_, (const void*)info_header_);
         return BMP_FILE_UNDEFINED;
     }
 

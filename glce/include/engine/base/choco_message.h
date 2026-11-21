@@ -72,11 +72,35 @@ typedef enum {
 /**
  * @brief メッセージ出力関数(メッセージの重要度に応じて出力フォーマットを変える)
  *
+ * Compiler Format Checking:
+ *
+ * message_output()はprintf形式の可変長引数を受け取り、
+ * 内部でvfprintf()へ転送する。
+ *
+ * 通常の関数宣言では、コンパイラはformat_と可変長引数の
+ * 対応関係を認識できないため、呼び出し元での書式と引数の
+ * 型不一致を十分に検出できない。
+ * また、vfprintf()のformat_が文字列リテラルではないため、
+ * -Wformat-nonliteralのWarningが発生する。
+ *
+ * format属性により、第2引数をprintf形式のFormat String、
+ * 第3引数以降を対応する可変長引数としてコンパイラに通知する。
+ * これにより呼び出し元の型検査が可能になり、
+ * vfprintf()での上記Warningも抑制される。
+ *
+ * __attribute__はGCC/Clangの拡張機能であるため、
+ * 対応コンパイラでのみ有効化する。
+ * 非対応コンパイラでは通常の関数宣言として扱う。
+ *
  * @param[in] severity_ メッセージの重要度
  * @param[in] format_ メッセージ内容(printfの"message %s %f"と同様のフォーマット)
  * @param[in] ... メッセージ内容に付加する各種値(printfの%sや%fに対する値に相当)
  */
-void message_output(message_severity_t severity_, const char* format_,  ...);
+void message_output(message_severity_t severity_, const char* format_, ...)
+#if defined(__clang__) || defined(__GNUC__)
+    __attribute__((format(printf, 2, 3)))
+#endif
+;
 
 #if ENABLE_MESSAGE_SEVERITY_ERROR
     /**

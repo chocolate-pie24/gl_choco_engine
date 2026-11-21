@@ -534,7 +534,7 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
     if(!range_allocator_is_valid(tmp_allocator)) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("range_allocator_create - Result validation failed for 'tmp_allocator'.", result_to_str(ret));
+        ERROR_MESSAGE("range_allocator_create(%s) - Result validation failed for 'tmp_allocator'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -635,7 +635,7 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
     if(!range_allocation_is_valid(&tmp_descriptor)) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("range_allocator_allocate - Postcondition validation failed for 'tmp_descriptor'.", result_to_str(ret));
+        ERROR_MESSAGE("range_allocator_allocate(%s) - Postcondition validation failed for 'tmp_descriptor'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -652,7 +652,7 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
     if(!range_allocator_is_valid(allocator_)) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("range_allocator_allocate - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("range_allocator_allocate(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -723,7 +723,7 @@ range_allocator_result_t range_allocator_free(range_allocator_t* allocator_, con
 #if defined(TEST_BUILD) || defined(DEBUG_BUILD)
     if(!range_allocator_is_valid(allocator_)) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
-        ERROR_MESSAGE("range_allocator_free - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
+        ERROR_MESSAGE("range_allocator_free(%s) - Postcondition validation failed for 'allocator_'.", result_to_str(ret));
         goto cleanup;
     }
 #endif
