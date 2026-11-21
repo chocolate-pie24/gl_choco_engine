@@ -136,27 +136,31 @@
  * - range list接続node数とunused node countの合計はmax node countと一致する
  *
  * @par Validation
- * Range Allocatorは、基本管理値を検証するShallow Validatorと、
- * range listおよびnode pool全体を検証するFull Validatorを持つ。
+ * Range Allocatorは、内部整合性を検証する
+ * range_allocator_is_valid()を持つ。
  *
- * Shallow ValidatorはO(1)の局所的な整合性を検証する。
- * Full ValidatorはShallow Validationに加え、
- * range listおよびnode pool全体の整合性を検証する。
+ * 本Validatorは、ENABLE_VALID_DEEPの設定に従って
+ * 実行するValidationの範囲を決定する。
  *
- * Full Validationは、range list上の各nodeについて
- * node poolへの所属確認を行うため、時間計算量はO(n^2)である。
+ * - ENABLE_VALID_DEEP = 0: O(1)の基本管理値の検証
+ * - ENABLE_VALID_DEEP = 1: 基本管理値に加え、
+ *   range listおよびnode pool全体の検証
+ *
+ * ENABLE_VALID_DEEP = 1の場合、range list上の各nodeについて
+ * node poolへの所属確認を行うため、
+ * 時間計算量は最悪O(n^2)である。
  *
  * 現在のallocate／freeの入口では、次の方式を採用している。
  *
- * - DEBUG_BUILD: Shallow Validation
- * - TEST_BUILD: Full Validation
+ * - DEBUG_BUILD／TEST_BUILD: range_allocator_is_valid()を実行する
  * - RELEASE_BUILD: automatic Object Validationを実行しない
  *
  * create／allocate／freeのPostconditionsでは、
- * DEBUG_BUILD／TEST_BUILDでFull Validationを実行する。
+ * DEBUG_BUILD／TEST_BUILDでrange_allocator_is_valid()を実行する。
  *
  * 公開されたrange_allocator_is_valid()は、
- * 現在の実装ではBUILD_MODEに関係なくFull Validationを行う。
+ * BUILD_MODEに関係なく同一のValidation Semanticsを持ち、
+ * ENABLE_VALID_DEEPに従って検証範囲を決定する。
  *
  * private関数ではRange Allocator全体のvalidationを繰り返さない。
  * 呼び出し元で成立した内部contractを信頼し、
@@ -587,7 +591,7 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
         ERROR_MESSAGE("range_allocator_allocate(%s) - Provided required_size_ or required_align_ is not valid.", result_to_str(ret));
         goto cleanup;
     }
-#if defined(TEST_BUILD)
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!range_allocator_is_valid(allocator_)) {
         ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
         ERROR_MESSAGE("range_allocator_allocate(%s) - Precondition validation failed for 'allocator_'.", result_to_str(ret));
@@ -861,15 +865,21 @@ bool range_allocation_is_valid(const range_allocation_t* allocation_) {
  * @brief Range Allocator全体の内部整合性を検証する
  *
  * @details
- * range_allocator_is_valid_shallow()によって基本管理値を検証した後、
+ * Range Allocatorの基本管理値を検証する。
+ *
+ * ENABLE_VALID_DEEP = 1の場合は、基本管理値の検証に加えて
  * range listとnode poolを走査し、両者の内容と管理値が
  * 一致することを検証する。
  *
- * 本関数は現在、BUILD_MODEに関係なくFull Validationを実行する。
+ * 基本管理値の検証はBUILD_MODEによらず実行する。
+ * range listおよびnode pool全体の検証は
+ * ENABLE_VALID_DEEP = 1の場合に実行する。
  *
  * 検証対象はRange Allocator自身が所有する内部状態であり、
  * Descriptorを保持する外部Moduleのownership relationや、
  * 管理対象となる実メモリ／GPU Bufferの状態は検証しない。
+ *
+ * ENABLE_VALID_DEEP = 1の場合、以下の条件を追加で検証する。
  *
  * range listについて、次の条件を検証する。
  *
@@ -910,13 +920,13 @@ bool range_allocation_is_valid(const range_allocation_t* allocation_) {
  * 検証するRange Allocator。NULLの場合は不正と判定する。
  *
  * @retval true
- * 基本管理値、node pool、range list、range情報、および各管理値が
- * 相互に整合している。
+ * 実行対象となった検査条件をすべて満たしている。
+ *
+ * ENABLE_VALID_DEEP = 0の場合は、基本管理値の整合性のみを
+ * 確認した結果であり、Full Validationの成功を意味しない。
  *
  * @retval false
- * allocator_がNULL、または内部フィールド、node pool、
- * node state、range list接続、range、alignment、node数、
- * allocation数、もしくはtotal allocated sizeに不整合がある。
+ * 実行対象となった検査条件のいずれかを満たしていない。
  *
  * @note
  * 本関数は不整合の種類を結果コードとして区別しない。
@@ -926,8 +936,13 @@ bool range_allocation_is_valid(const range_allocation_t* allocation_) {
  * 各管理値を変更しない。
  *
  * @par 計算量
+ * ENABLE_VALID_DEEP = 0の場合、時間計算量はO(1)である。
+ *
+ * ENABLE_VALID_DEEP = 1の場合は、
  * range list上の各nodeについてnode poolへの所属を線形探索するため、
- * node pool内のnode数をnとしたとき、最悪時間計算量はO(n^2)である。
+ * node pool内のnode数をnとしたとき、
+ * 最悪時間計算量はO(n^2)である。
+ *
  * 本関数は動的メモリ確保を行わない。
  *
  * @par AI支援
@@ -1112,14 +1127,8 @@ bool range_allocator_is_valid(const range_allocator_t* allocator_) {
  * 次のいずれか。
  *
  * - out_allocation_size_がNULL
- * - base_align_が0
+ * - base_align_が0、または2の冪乗ではない
  * - required_size_が0
- *
- * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
- * base_align_が2の冪乗ではない。
- *
- * 本関数は検証済みRange Allocatorのbase alignmentを受け取るprivate関数であるため、
- * この結果は呼び出し元の内部状態または事前検証に不整合があることを示す。
  *
  * @retval RANGE_ALLOCATOR_OVERFLOW
  * required_size_へalignment paddingを加えると
@@ -2967,7 +2976,6 @@ cleanup:
  * @retval RANGE_ALLOCATOR_DATA_CORRUPTED
  * 次のいずれか。
  *
- * - unused node countがmax node count以上である
  * - node_がallocator_のnode poolに所属していない
  * - node_の局所状態が不正である
  * - node_のstateがTRANSITIONINGではない

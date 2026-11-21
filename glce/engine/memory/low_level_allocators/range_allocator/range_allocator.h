@@ -154,7 +154,7 @@ typedef struct range_allocator range_allocator_t;
  */
 typedef enum {
     RANGE_ALLOCATOR_SUCCESS = 0,        /**< 処理に成功した */
-    RANGE_ALLOCATOR_INVALID_ARGUMENT,   /**< NULL pointer、0を許可しないsizeやcount、または出力先の初期状態など、引数の基本的な事前条件を満たしていない */
+    RANGE_ALLOCATOR_INVALID_ARGUMENT,   /**< NULL pointer、0を許可しないsizeやcountなど、引数の基本的な事前条件を満たしていない */
     RANGE_ALLOCATOR_LIMIT_EXCEEDED,     /**< max allocation count、node pool、または下位メモリ管理機構の管理上限に到達した */
     RANGE_ALLOCATOR_NO_MEMORY,          /**< Range Allocator生成に必要な動的メモリを確保できなかった、または要求サイズを収容できる連続したFREE rangeが存在しない
                                          *
@@ -419,19 +419,22 @@ void range_allocator_destroy(range_allocator_t** allocator_);
  * 異なる可能性がある。
  *
  * @par 計算量
- * DEBUG_BUILDのPreconditionではO(1)のShallow Validationを実行する。
- * TEST_BUILDのPreconditionではO(n^2)のFull Validationを実行する。
+ * DEBUG_BUILD／TEST_BUILDのPreconditionおよび
+ * Postconditionではrange_allocator_is_valid()を実行する。
  * RELEASE_BUILDではautomatic Object Validationを実行しない。
  *
- * DEBUG_BUILD／TEST_BUILDのPostconditionでは、
- * O(n^2)のFull Validationを実行する。
+ * range_allocator_is_valid()の時間計算量は、
+ * ENABLE_VALID_DEEP = 0ではO(1)、
+ * ENABLE_VALID_DEEP = 1では最悪O(n^2)である。
  *
  * これらのValidationを除いたallocation処理は、
  * first-fit探索、node index検索、および必要に応じた
  * NOT_USED node検索によって、最悪O(n)である。
  *
  * したがって、現在の実装における最悪時間計算量は、
- * DEBUG_BUILD／TEST_BUILDではO(n^2)、
+ * DEBUG_BUILD／TEST_BUILDでは
+ * ENABLE_VALID_DEEP = 0の場合O(n)、
+ * ENABLE_VALID_DEEP = 1の場合O(n^2)である。
  * RELEASE_BUILDではO(n)である。
  *
  * ここでnはmax node countである。
@@ -557,12 +560,13 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
  * RANGE_ALLOCATOR_DATA_CORRUPTEDを返す。
  *
  * @par 計算量
- * DEBUG_BUILDのPreconditionではO(1)のShallow Validationを実行する。
- * TEST_BUILDのPreconditionではO(n^2)のFull Validationを実行する。
+ * DEBUG_BUILD／TEST_BUILDのPreconditionおよび
+ * Postconditionではrange_allocator_is_valid()を実行する。
  * RELEASE_BUILDではautomatic Object Validationを実行しない。
  *
- * DEBUG_BUILD／TEST_BUILDのPostconditionでは、
- * O(n^2)のFull Validationを実行する。
+ * range_allocator_is_valid()の時間計算量は、
+ * ENABLE_VALID_DEEP = 0ではO(1)、
+ * ENABLE_VALID_DEEP = 1では最悪O(n^2)である。
  *
  * これらのValidationを除いた場合、
  * mergeを行わないfreeはO(1)である。
@@ -570,7 +574,9 @@ range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_,
  * 最悪O(n)である。
  *
  * したがって、現在の実装における最悪時間計算量は、
- * DEBUG_BUILD／TEST_BUILDではO(n^2)、
+ * DEBUG_BUILD／TEST_BUILDでは
+ * ENABLE_VALID_DEEP = 0の場合O(n)、
+ * ENABLE_VALID_DEEP = 1の場合O(n^2)である。
  * RELEASE_BUILDではO(n)である。
  *
  * ここでnはmax node countである。
@@ -756,12 +762,14 @@ void range_allocator_status_print(const range_allocator_status_t* status_);
  * @brief Range Allocatorの内部状態を標準出力へdebug表示する
  *
  * @details
- * Range Allocatorの状態snapshot、deep validation結果、および
- * range list上の各nodeをstdoutへ表示する。
+ * Range Allocatorの状態snapshot、range_allocator_is_valid()の
+ * 検証結果、およびrange list上の各nodeをstdoutへ表示する。
  *
  * はじめにrange_allocator_status_get()と同じ状態情報を表示し、
- * 続いてrange_allocator_is_valid()によるdeep validation結果を
+ * 続いてrange_allocator_is_valid()による検証結果を
  * trueまたはfalseで表示する。
+ *
+ * 検証範囲はENABLE_VALID_DEEPの設定に従う。
  *
  * range listについて、先頭nodeからaddress orderで走査し、
  * 各nodeの次の情報を表示する。
@@ -804,8 +812,9 @@ void range_allocator_status_print(const range_allocator_status_t* status_);
  * 本関数はRange Allocator、node pool、およびrange listを変更しない。
  *
  * @post
- * allocator_がNULLでない場合、状態snapshot、deep validation結果、
- * range list上の各node、およびmax free block sizeがstdoutへ表示される。
+ * allocator_がNULLでない場合、状態snapshot、
+ * range_allocator_is_valid()の検証結果、range list上の各node、
+ * およびmax free block sizeがstdoutへ表示される。
  *
  * @post
  * Range Allocator、node pool、およびrange listの状態は変更されない。
@@ -836,9 +845,16 @@ void range_allocator_status_print(const range_allocator_status_t* status_);
  * 出力には見出しとANSI color sequenceが含まれる。
  *
  * @par 計算量
- * 現在の実装では、最初にO(n^2)のdeep validationを実行する。
+ * 現在の実装では、最初にrange_allocator_is_valid()を実行する。
+ *
+ * ENABLE_VALID_DEEP = 0ではValidationはO(1)、
+ * ENABLE_VALID_DEEP = 1では最悪O(n^2)である。
+ *
  * その後のrange list走査は最大O(n)であるため、
- * 本関数全体の最悪時間計算量はO(n^2)である。
+ * 本関数全体の最悪時間計算量は、
+ * ENABLE_VALID_DEEP = 0ではO(n)、
+ * ENABLE_VALID_DEEP = 1ではO(n^2)である。
+ *
  * ここでnはmax node countである。
  *
  * 本関数は動的メモリ確保を行わない。
@@ -885,27 +901,36 @@ bool range_allocation_is_valid(const range_allocation_t* allocation_);
  * Range Allocatorの基本管理値、node pool、
  * range list、および各管理値の相互整合性を検証する。
  *
- * 検証対象には次を含む。
+ * ENABLE_VALID_DEEP = 0の場合は、次の基本管理値を検証する。
  *
  * - memory pool size、alignmentおよび管理count
+ * - max allocation countとmax node countの関係
+ * - total allocated sizeとmemory pool sizeの関係
+ * - node poolおよびrange list headの非NULL
+ *
+ * ENABLE_VALID_DEEP = 1の場合は、上記に加えて次を検証する。
+ *
  * - node poolの局所的不変条件
  * - range listの接続関係、順序および連続性
  * - FREE／ALLOCATED／NOT_USED nodeのstate
  * - allocation countとtotal allocated sizeの整合性
  * - range listとnode poolのownership relation
  *
- * 現在の実装ではBUILD_MODEに関係なく
- * range listおよびnode pool全体を検証する。
+ * 検証範囲はBUILD_MODEではなくENABLE_VALID_DEEPによって決定される。
+ * ENABLE_VALID_DEEP = 0でtrueを返した場合、
+ * node poolおよびrange list全体の整合性は保証されない。
  *
  * @param[in] allocator_ 検証対象のRange Allocator
  *
- * @retval true 検査対象の内部整合性が成立している
- * @retval false 内部整合性が成立していない
+ * @retval true 実行対象となった検査条件をすべて満たしている
+ * @retval false 実行対象となった検査条件のいずれかを満たしていない
  *
  * @note 本関数はRange Allocatorの状態を変更しない。
  *
  * @par 計算量
- * node poolのnode数をnとしたとき、最悪O(n^2)である。
+ * node poolのnode数をnとしたとき、
+ * ENABLE_VALID_DEEP = 0ではO(1)、
+ * ENABLE_VALID_DEEP = 1では最悪O(n^2)である。
  */
 bool range_allocator_is_valid(const range_allocator_t* allocator_);
 
