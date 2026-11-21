@@ -12,6 +12,8 @@
  */
 #include "application/core/application_err_utils.h"
 
+#include "engine/base/choco_macros.h"
+
 #include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
@@ -30,47 +32,34 @@
 
 #include "application/scenes/core/scene_types.h"
 
-static const char* const s_result_str_success = "SUCCESS";                    /**< アプリケーション実行結果コード(処理成功)に対応する文字列 */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< アプリケーション実行結果コード(メモリ不足)に対応する文字列 */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";        /**< アプリケーション実行結果コード(ランタイムエラー)に対応する文字列 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< アプリケーション実行結果コード(無効な引数)に対応する文字列 */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";      /**< アプリケーション実行結果コード(メモリ破損,未初期化)に対応する文字列 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";        /**< アプリケーション実行結果コード(API誤用)に対応する文字列 */
-static const char* const s_result_str_overflow = "OVERFLOW";                  /**< アプリケーション実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< アプリケーション実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
-static const char* const s_result_str_unsupported_file = "UNSUPPORTED_FILE";  /**< アプリケーション実行結果コード(未対応のファイル形式)に対応する文字列 */
-static const char* const s_result_str_file_open_error = "FILE_OPEN_ERROR";    /**< アプリケーション実行結果コード(ファイルオープンエラー)に対応する文字列 */
-static const char* const s_result_str_file_read_error = "FILE_READ_ERROR";    /**< アプリケーション実行結果コード(ファイル読み込みエラー)に対応する文字列 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< アプリケーション実行結果コード(未定義エラー)に対応する文字列 */
-
 const char* application_result_to_str(application_result_t result_) {
     switch(result_) {
     case APPLICATION_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(APPLICATION_SUCCESS);
     case APPLICATION_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(APPLICATION_NO_MEMORY);
     case APPLICATION_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(APPLICATION_RUNTIME_ERROR);
     case APPLICATION_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(APPLICATION_INVALID_ARGUMENT);
     case APPLICATION_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(APPLICATION_DATA_CORRUPTED);
     case APPLICATION_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(APPLICATION_BAD_OPERATION);
     case APPLICATION_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(APPLICATION_OVERFLOW);
     case APPLICATION_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(APPLICATION_LIMIT_EXCEEDED);
     case APPLICATION_UNSUPPORTED_FILE:
-        return s_result_str_unsupported_file;
+        return STRINGIFY(APPLICATION_UNSUPPORTED_FILE);
     case APPLICATION_FILE_OPEN_ERROR:
-        return s_result_str_file_open_error;
+        return STRINGIFY(APPLICATION_FILE_OPEN_ERROR);
     case APPLICATION_FILE_READ_ERROR:
-        return s_result_str_file_read_error;
+        return STRINGIFY(APPLICATION_FILE_READ_ERROR);
     case APPLICATION_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(APPLICATION_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(APPLICATION_UNDEFINED_ERROR);
     }
 }
 

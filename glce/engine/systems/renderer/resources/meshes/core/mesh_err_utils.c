@@ -3,40 +3,32 @@
 
 #include "engine/systems/renderer/resources/meshes/core/mesh_err_utils.h"
 
-#include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
+#include "engine/base/choco_macros.h"
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
+#include "engine/systems/renderer/resources/meshes/core/mesh_types.h"
 
 const char* mesh_result_to_str(mesh_result_t result_) {
     switch(result_) {
     case MESH_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(MESH_SUCCESS);
     case MESH_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(MESH_NO_MEMORY);
     case MESH_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(MESH_RUNTIME_ERROR);
     case MESH_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(MESH_INVALID_ARGUMENT);
     case MESH_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(MESH_DATA_CORRUPTED);
     case MESH_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(MESH_BAD_OPERATION);
     case MESH_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(MESH_OVERFLOW);
     case MESH_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(MESH_LIMIT_EXCEEDED);
     case MESH_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(MESH_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(MESH_UNDEFINED_ERROR);
     }
 }
 

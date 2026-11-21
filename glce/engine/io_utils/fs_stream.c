@@ -110,18 +110,6 @@ struct fs_stream {
 #define FS_STREAM_READ_UNIT_SIZE 512  /**< ファイル読み込みの際に一度に読み込むバイト数(メモリの動的確保回数を減らすため,固定値にした) */
 #define FS_STREAM_TEXT_FILE_LINE_BUFFER_SIZE 1024    /**< 改行コードを除く1行本文の最大長は1023bytes(改行コードがCRLFの場合は1022bytesとなる) */
 
-static const char* const s_result_str_success = "SUCCESS";                      /**< 実行結果コード文字列: 正常終了 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";    /**< 実行結果コード文字列: 無効な引数 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";          /**< 実行結果コード文字列: API誤用 */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";        /**< 実行結果コード文字列: 内部データ破損or未初期化 */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                  /**< 実行結果コード文字列: メモリ不足 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";        /**< 実行結果コード文字列: システム使用可能範囲超過 */
-static const char* const s_result_str_overflow = "OVERFLOW";                    /**< 実行結果コード文字列: 計算オーバーフロー */
-static const char* const s_result_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実行結果コード文字列: ファイルオープンエラー */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";          /**< 実行結果コード文字列: 実行時エラー */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 想定していないエラーが発生 */
-static const char* const s_result_str_eof = "EOF";                              /**< 実行結果コード文字列: EOF */
-
 // ============================================================
 // Private Function Declarations
 // ============================================================
@@ -598,29 +586,29 @@ cleanup:
 static const char* result_to_str(fs_stream_result_t result_) {
     switch(result_) {
     case FS_STREAM_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(FS_STREAM_SUCCESS);
     case FS_STREAM_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(FS_STREAM_INVALID_ARGUMENT);
     case FS_STREAM_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(FS_STREAM_BAD_OPERATION);
     case FS_STREAM_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(FS_STREAM_DATA_CORRUPTED);
     case FS_STREAM_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(FS_STREAM_NO_MEMORY);
     case FS_STREAM_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(FS_STREAM_LIMIT_EXCEEDED);
     case FS_STREAM_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(FS_STREAM_OVERFLOW);
     case FS_STREAM_FILE_OPEN_ERROR:
-        return s_result_str_file_open_error;
+        return STRINGIFY(FS_STREAM_FILE_OPEN_ERROR);
     case FS_STREAM_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(FS_STREAM_RUNTIME_ERROR);
     case FS_STREAM_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FS_STREAM_UNDEFINED_ERROR);
     case FS_STREAM_EOF:
-        return s_result_str_eof;
+        return STRINGIFY(FS_STREAM_EOF);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FS_STREAM_UNDEFINED_ERROR);
     }
 }
 

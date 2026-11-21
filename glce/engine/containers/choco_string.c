@@ -82,19 +82,6 @@ struct choco_string {
 };
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";                    /**< 実行結果コード(成功)文字列 */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コード(内部データ整合異常)文字列 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";        /**< 実行結果コード(API誤用)文字列 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コード(無効な引数)文字列 */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";        /**< 実行結果コード(実行時エラー)文字列 */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< 実行結果コード(メモリ不足)文字列 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コード(未定義エラー)文字列 */
-static const char* const s_result_str_overflow = "OVERFLOW";                  /**< 実行結果コード(計算過程でオーバーフロー発生)文字列 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コード(システム使用範囲上限超過) */
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Mock functions
@@ -923,25 +910,25 @@ cleanup:
 static const char* result_to_str(choco_string_result_t result_) {
     switch(result_) {
     case CHOCO_STRING_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(CHOCO_STRING_SUCCESS);
     case CHOCO_STRING_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(CHOCO_STRING_DATA_CORRUPTED);
     case CHOCO_STRING_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(CHOCO_STRING_BAD_OPERATION);
     case CHOCO_STRING_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(CHOCO_STRING_NO_MEMORY);
     case CHOCO_STRING_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(CHOCO_STRING_INVALID_ARGUMENT);
     case CHOCO_STRING_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(CHOCO_STRING_RUNTIME_ERROR);
     case CHOCO_STRING_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(CHOCO_STRING_UNDEFINED_ERROR);
     case CHOCO_STRING_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(CHOCO_STRING_OVERFLOW);
     case CHOCO_STRING_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(CHOCO_STRING_LIMIT_EXCEEDED);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(CHOCO_STRING_UNDEFINED_ERROR);
     }
 }
 

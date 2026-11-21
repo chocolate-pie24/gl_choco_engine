@@ -113,6 +113,10 @@ extern "C" {
         } \
     } while(0); \
 
+// token_を文字列に変換する
+// 例: STRINGIFY(APPLICATION_INVALID_ARGUMENT) -> "APPLICATION_INVALID_ARGUMENT"
+#define STRINGIFY(token_) #token_
+
 #ifdef __cplusplus
 }
 #endif

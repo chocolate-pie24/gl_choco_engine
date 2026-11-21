@@ -108,17 +108,6 @@ typedef struct free_list_block_header {
 } free_list_block_header_t;
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Allocation helpers
@@ -1072,21 +1061,21 @@ static bool ptr_is_allocated(const free_list_allocator_t* allocator_, const void
 static const char* result_to_str(free_list_allocator_result_t result_) {
     switch(result_) {
     case FREE_LIST_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_SUCCESS);
     case FREE_LIST_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_DATA_CORRUPTED);
     case FREE_LIST_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_BAD_OPERATION);
     case FREE_LIST_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
     case FREE_LIST_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_NO_MEMORY);
     case FREE_LIST_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_OVERFLOW);
     case FREE_LIST_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

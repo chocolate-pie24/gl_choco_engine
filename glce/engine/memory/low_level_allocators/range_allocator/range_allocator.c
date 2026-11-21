@@ -402,33 +402,6 @@ struct range_allocator {
     node_t* range_list_head;        /**< FREE／ALLOCATED range listの先頭node。node_pool内の要素を指す */
 };
 
-/**
- * @name Range Allocator実行結果コード文字列
- *
- * @details
- * range_allocator_result_tをログ出力用文字列へ変換するための静的文字列定数。
- *
- * すべて静的記憶域期間を持ち、呼び出し側へ所有権を移動しない。
- * 文字列および文字列pointerは変更できない。
- *
- * result_to_str()は対応する結果コードの文字列を返す。
- * 定義されていない結果コードにはs_result_str_undefined_errorを使用する。
- *
- * @{
- */
-static const char* const s_result_str_success = "SUCCESS";                    /** @brief RANGE_ALLOCATOR_SUCCESSに対応する文字列 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";  /** @brief RANGE_ALLOCATOR_INVALID_ARGUMENTに対応する文字列 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /** @brief RANGE_ALLOCATOR_LIMIT_EXCEEDEDに対応する文字列 */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                /** @brief RANGE_ALLOCATOR_NO_MEMORYに対応する文字列 */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";      /** @brief RANGE_ALLOCATOR_DATA_CORRUPTEDに対応する文字列 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";        /** @brief RANGE_ALLOCATOR_BAD_OPERATIONに対応する文字列 */
-static const char* const s_result_str_overflow = "OVERFLOW";                  /** @brief RANGE_ALLOCATOR_OVERFLOWに対応する文字列 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";    /**
-                                                                               * @brief RANGE_ALLOCATOR_UNDEFINED_ERRORおよび
-                                                                               *        定義されていない結果コードに対応する文字列
-                                                                               */
-/** @} */
-
 // Allocate
 static range_allocator_result_t align_up(size_t base_align_, size_t required_size_, size_t* out_allocation_size_);
 static range_allocator_result_t find_first_fit_node(const range_allocator_t* allocator_, size_t allocation_size_, node_t** out_node_);
@@ -3568,23 +3541,23 @@ static void status_print(const range_allocator_status_t* status_) {
 static const char* result_to_str(range_allocator_result_t result_) {
     switch(result_) {
     case RANGE_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(RANGE_ALLOCATOR_SUCCESS);
     case RANGE_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(RANGE_ALLOCATOR_INVALID_ARGUMENT);
     case RANGE_ALLOCATOR_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(RANGE_ALLOCATOR_LIMIT_EXCEEDED);
     case RANGE_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(RANGE_ALLOCATOR_NO_MEMORY);
     case RANGE_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(RANGE_ALLOCATOR_DATA_CORRUPTED);
     case RANGE_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(RANGE_ALLOCATOR_BAD_OPERATION);
     case RANGE_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(RANGE_ALLOCATOR_OVERFLOW);
     case RANGE_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RANGE_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RANGE_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

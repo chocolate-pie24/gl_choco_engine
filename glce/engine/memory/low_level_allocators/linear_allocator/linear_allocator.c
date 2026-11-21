@@ -110,17 +110,6 @@
  */
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";                     /**< 実行結果種別文字列(処理成功) */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                 /**< 実行結果種別文字列(メモリ確保失敗) */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果種別文字列(無効な引数) */
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";     /**< 実行結果種別文字列(不明なエラー) */
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Allocation helpers
@@ -539,21 +528,21 @@ cleanup:
 static const char* result_to_str(linear_allocator_result_t result_) {
     switch(result_) {
     case LINEAR_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(LINEAR_ALLOCATOR_SUCCESS);
     case LINEAR_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(LINEAR_ALLOCATOR_NO_MEMORY);
     case LINEAR_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(LINEAR_ALLOCATOR_DATA_CORRUPTED);
     case LINEAR_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(LINEAR_ALLOCATOR_BAD_OPERATION);
     case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(LINEAR_ALLOCATOR_INVALID_ARGUMENT);
     case LINEAR_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(LINEAR_ALLOCATOR_OVERFLOW);
     case LINEAR_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(LINEAR_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(LINEAR_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

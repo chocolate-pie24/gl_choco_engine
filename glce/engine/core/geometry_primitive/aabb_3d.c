@@ -58,13 +58,6 @@
  */
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";                        /**< 実行結果コード文字列: 正常終了 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";      /**< 実行結果コード文字列: 引数異常 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";        /**< 実行結果コード文字列: 不明なエラー */
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Utilities
@@ -397,12 +390,12 @@ bool aabb_3d_is_valid(const aabb_3d_t* aabb_) {
 static const char* result_to_str(aabb_3d_result_t result_) {
     switch(result_) {
     case AABB_3D_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(AABB_3D_SUCCESS);
     case AABB_3D_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(AABB_3D_INVALID_ARGUMENT);
     case AABB_3D_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(AABB_3D_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(AABB_3D_UNDEFINED_ERROR);
     }
 }

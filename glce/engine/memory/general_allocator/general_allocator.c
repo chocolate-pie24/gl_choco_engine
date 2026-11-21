@@ -118,15 +118,6 @@ typedef struct general_allocator {
 // ============================================================
 static general_allocator_t s_general_allocator;
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
 static const char* const s_memory_tag_system = "SYSTEM";
 static const char* const s_memory_tag_string = "STRING";
 static const char* const s_memory_tag_ring_queue = "RING_QUEUE";
@@ -673,23 +664,23 @@ static bool general_allocator_is_initialized(void) {
 static const char* result_to_str(general_allocator_result_t result_) {
     switch(result_) {
     case GENERAL_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(GENERAL_ALLOCATOR_SUCCESS);
     case GENERAL_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(GENERAL_ALLOCATOR_DATA_CORRUPTED);
     case GENERAL_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(GENERAL_ALLOCATOR_BAD_OPERATION);
     case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(GENERAL_ALLOCATOR_INVALID_ARGUMENT);
     case GENERAL_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(GENERAL_ALLOCATOR_NO_MEMORY);
     case GENERAL_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(GENERAL_ALLOCATOR_OVERFLOW);
     case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(GENERAL_ALLOCATOR_LIMIT_EXCEEDED);
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(GENERAL_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(GENERAL_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

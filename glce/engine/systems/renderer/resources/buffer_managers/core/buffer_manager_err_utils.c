@@ -6,16 +6,15 @@
  * @brief Buffer Managerの実行結果コードutility APIの実装
  *
  * @details
- * buffer_manager_result_tに対応する静的な診断用文字列と、
+ * buffer_manager_result_tに対応する文字列と、
  * 下位モジュールの実行結果コードをBuffer Manager層の
  * 結果コードへ変換する処理を実装する。
  *
  * @par 結果コード文字列
- * 各buffer_manager_result_tに対応する文字列を、
- * file scopeの静的な文字列として保持する。
+ * 各buffer_manager_result_tに対応するEnum定数名を
+ * STRINGIFY()によって文字列化して返す。
  *
- * buffer_manager_result_to_str()は入力された結果コードに対応する
- * 文字列へのpointerを返す。
+ * 返される文字列は静的記憶域期間を持つ。
  * 入力値がbuffer_manager_result_tに定義されていない場合は、
  * UNDEFINED_ERRORに対応する文字列を返す。
  *
@@ -47,6 +46,8 @@
  */
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_err_utils.h"
 
+#include "engine/base/choco_macros.h"
+
 #include "engine/memory/low_level_allocators/range_allocator/range_allocator.h"
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -54,53 +55,28 @@
 
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 
-/**
- * @name Buffer Manager実行結果コード文字列
- *
- * @details
- * buffer_manager_result_tをログ出力用文字列へ変換するための静的文字列定数。
- *
- * すべて静的記憶域期間を持ち、呼び出し側へ所有権を移動しない。
- * 文字列および文字列pointerは変更できない。
- *
- * buffer_manager_result_to_str()は対応する結果コードの文字列を返す。
- * 定義されていない結果コードにはs_result_str_undefined_errorを使用する。
- *
- * @{
- */
-static const char* const s_result_str_success = "SUCCESS";                        /** @brief BUFFER_MANAGER_SUCCESSに対応する文字列 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";      /** @brief BUFFER_MANAGER_INVALID_ARGUMENTに対応する文字列 */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";            /** @brief BUFFER_MANAGER_RUNTIME_ERRORに対応する文字列 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";          /** @brief BUFFER_MANAGER_LIMIT_EXCEEDEDに対応する文字列 */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                    /** @brief BUFFER_MANAGER_NO_MEMORYに対応する文字列 */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";          /** @brief BUFFER_MANAGER_DATA_CORRUPTEDに対応する文字列 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";            /** @brief BUFFER_MANAGER_BAD_OPERATIONに対応する文字列 */
-static const char* const s_result_str_overflow = "OVERFLOW";                      /** @brief BUFFER_MANAGER_OVERFLOWに対応する文字列 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";        /** @brief BUFFER_MANAGER_UNDEFINED_ERRORおよび定義されていない結果コードに対応する文字列 */
-/** @} */
-
 const char* buffer_manager_result_to_str(buffer_manager_result_t result_) {
     switch(result_) {
     case BUFFER_MANAGER_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(BUFFER_MANAGER_SUCCESS);
     case BUFFER_MANAGER_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(BUFFER_MANAGER_INVALID_ARGUMENT);
     case BUFFER_MANAGER_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(BUFFER_MANAGER_RUNTIME_ERROR);
     case BUFFER_MANAGER_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(BUFFER_MANAGER_LIMIT_EXCEEDED);
     case BUFFER_MANAGER_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(BUFFER_MANAGER_NO_MEMORY);
     case BUFFER_MANAGER_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(BUFFER_MANAGER_DATA_CORRUPTED);
     case BUFFER_MANAGER_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(BUFFER_MANAGER_BAD_OPERATION);
     case BUFFER_MANAGER_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(BUFFER_MANAGER_OVERFLOW);
     case BUFFER_MANAGER_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(BUFFER_MANAGER_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(BUFFER_MANAGER_UNDEFINED_ERROR);
     }
 }
 

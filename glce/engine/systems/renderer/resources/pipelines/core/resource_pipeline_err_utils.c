@@ -3,6 +3,8 @@
 
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_err_utils.h"
 
+#include "engine/base/choco_macros.h"
+
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
@@ -12,47 +14,34 @@
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
-static const char* const s_result_str_success = "SUCCESS";                    /**< 実行結果コード(処理成功)文字列 */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< 実行結果コード(メモリ不足)文字列 */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";        /**< 実行結果コード(実行時エラー)文字列 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コード(引数異常)文字列 */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コード(メモリ破壊, 未初期化)文字列 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";        /**< 実行結果コード(API誤用)文字列 */
-static const char* const s_result_str_overflow = "OVERFLOW";                  /**< 実行結果コード(計算過程でオーバーフロー発生)文字列 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コード(システム使用可能範囲上限超過)文字列 */
-static const char* const s_result_str_file_open_error = "FILE_OPEN_ERROR";    /**< 実行結果コード(ファイルオープン失敗)文字列 */
-static const char* const s_result_str_file_read_error = "FILE_READ_ERROR";    /**< 実行結果コード(ファイル読み込み失敗)文字列 */
-static const char* const s_result_str_unsupported_file = "UNSUPPORTED_FILE";  /**< 実行結果コード(未対応ファイル形式)文字列 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コード(未定義エラー)文字列 */
-
 const char* resource_pipeline_result_to_str(resource_pipeline_result_t result_) {
     switch(result_) {
     case RESOURCE_PIPELINE_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(RESOURCE_PIPELINE_SUCCESS);
     case RESOURCE_PIPELINE_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(RESOURCE_PIPELINE_NO_MEMORY);
     case RESOURCE_PIPELINE_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(RESOURCE_PIPELINE_RUNTIME_ERROR);
     case RESOURCE_PIPELINE_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(RESOURCE_PIPELINE_INVALID_ARGUMENT);
     case RESOURCE_PIPELINE_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(RESOURCE_PIPELINE_DATA_CORRUPTED);
     case RESOURCE_PIPELINE_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(RESOURCE_PIPELINE_BAD_OPERATION);
     case RESOURCE_PIPELINE_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(RESOURCE_PIPELINE_OVERFLOW);
     case RESOURCE_PIPELINE_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(RESOURCE_PIPELINE_LIMIT_EXCEEDED);
     case RESOURCE_PIPELINE_FILE_OPEN_ERROR:
-        return s_result_str_file_open_error;
+        return STRINGIFY(RESOURCE_PIPELINE_FILE_OPEN_ERROR);
     case RESOURCE_PIPELINE_FILE_READ_ERROR:
-        return s_result_str_file_read_error;
+        return STRINGIFY(RESOURCE_PIPELINE_FILE_READ_ERROR);
     case RESOURCE_PIPELINE_UNSUPPORTED_FILE:
-        return s_result_str_unsupported_file;
+        return STRINGIFY(RESOURCE_PIPELINE_UNSUPPORTED_FILE);
     case RESOURCE_PIPELINE_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RESOURCE_PIPELINE_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RESOURCE_PIPELINE_UNDEFINED_ERROR);
     }
 }
 

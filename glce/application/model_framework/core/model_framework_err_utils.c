@@ -3,6 +3,8 @@
 
 #include "application/model_framework/core/model_framework_err_utils.h"
 
+#include "engine/base/choco_macros.h"
+
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/containers/choco_string.h"
@@ -12,38 +14,28 @@
 
 #include "application/model_framework/core/model_framework_types.h"
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
 const char* model_framework_result_to_str(model_framework_result_t result_) {
     switch(result_) {
     case MODEL_FRAMEWORK_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(MODEL_FRAMEWORK_SUCCESS);
     case MODEL_FRAMEWORK_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(MODEL_FRAMEWORK_INVALID_ARGUMENT);
     case MODEL_FRAMEWORK_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(MODEL_FRAMEWORK_RUNTIME_ERROR);
     case MODEL_FRAMEWORK_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(MODEL_FRAMEWORK_NO_MEMORY);
     case MODEL_FRAMEWORK_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(MODEL_FRAMEWORK_LIMIT_EXCEEDED);
     case MODEL_FRAMEWORK_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(MODEL_FRAMEWORK_BAD_OPERATION);
     case MODEL_FRAMEWORK_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(MODEL_FRAMEWORK_DATA_CORRUPTED);
     case MODEL_FRAMEWORK_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(MODEL_FRAMEWORK_OVERFLOW);
     case MODEL_FRAMEWORK_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(MODEL_FRAMEWORK_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(MODEL_FRAMEWORK_UNDEFINED_ERROR);
     }
 }
 

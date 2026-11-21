@@ -3,39 +3,32 @@
 
 #include "engine/camera/core/camera_err_utils.h"
 
+#include "engine/base/choco_macros.h"
+
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/camera/core/camera_types.h"
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
 const char* camera_result_to_str(camera_result_t result_) {
     switch(result_) {
     case CAMERA_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(CAMERA_SUCCESS);
     case CAMERA_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(CAMERA_INVALID_ARGUMENT);
     case CAMERA_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(CAMERA_RUNTIME_ERROR);
     case CAMERA_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(CAMERA_NO_MEMORY);
     case CAMERA_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(CAMERA_LIMIT_EXCEEDED);
     case CAMERA_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(CAMERA_BAD_OPERATION);
     case CAMERA_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(CAMERA_DATA_CORRUPTED);
     case CAMERA_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(CAMERA_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(CAMERA_UNDEFINED_ERROR);
     }
 }
 

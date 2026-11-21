@@ -126,15 +126,6 @@ struct subsystem_allocator {
 // ============================================================
 // Private Constants
 // ============================================================
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
 static const char* const s_memory_tag_platform = "PLATFORM_SYSTEM";
 static const char* const s_memory_tag_renderer = "RENDERER_SYSTEM";
 static const char* const s_memory_tag_camera = "CAMERA_SYSTEM";
@@ -791,23 +782,23 @@ static void accounting_reset(subsystem_allocator_t* allocator_) {
 static const char* result_to_str(subsystem_allocator_result_t result_) {
     switch(result_) {
     case SUBSYSTEM_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_SUCCESS);
     case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_BAD_OPERATION);
     case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED);
     case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_NO_MEMORY);
     case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
     case SUBSYSTEM_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_OVERFLOW);
     case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED);
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

@@ -121,20 +121,6 @@ typedef enum {
 } filesystem_read_state_t;
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";                        /**< 実行結果コード文字列: 成功 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";      /**< 実行結果コード文字列: 無効な引数 */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";            /**< 実行結果コード文字列: 実行時エラー */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                    /**< 実行結果コード文字列: メモリ不足 */
-static const char* const s_result_str_file_open_error = "FILE_OPEN_ERROR";        /**< 実行結果コード文字列: ファイルオープン失敗 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";          /**< 実行結果コード文字列: システムリソースが使用可能範囲を超過 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";            /**< 実行結果コード文字列: API誤用 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";        /**< 実行結果コード文字列: 未定義エラー */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";          /**< 実行結果コード文字列: 内部データ破損 */
-static const char* const s_result_str_eof = "EOF";                                /**< 実行結果コード文字列: ファイル読み込みEOF */
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Mock functions
@@ -541,27 +527,27 @@ static filesystem_read_state_t read_state_get(FILE* file_handle_, size_t request
 static const char* result_to_str(filesystem_result_t result_) {
     switch(result_) {
     case FILESYSTEM_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(FILESYSTEM_SUCCESS);
     case FILESYSTEM_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(FILESYSTEM_INVALID_ARGUMENT);
     case FILESYSTEM_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(FILESYSTEM_RUNTIME_ERROR);
     case FILESYSTEM_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(FILESYSTEM_NO_MEMORY);
     case FILESYSTEM_FILE_OPEN_ERROR:
-        return s_result_str_file_open_error;
+        return STRINGIFY(FILESYSTEM_FILE_OPEN_ERROR);
     case FILESYSTEM_EOF:
-        return s_result_str_eof;
+        return STRINGIFY(FILESYSTEM_EOF);
     case FILESYSTEM_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(FILESYSTEM_LIMIT_EXCEEDED);
     case FILESYSTEM_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(FILESYSTEM_BAD_OPERATION);
     case FILESYSTEM_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(FILESYSTEM_DATA_CORRUPTED);
     case FILESYSTEM_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FILESYSTEM_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FILESYSTEM_UNDEFINED_ERROR);
     }
 }
 

@@ -3,47 +3,38 @@
 
 #include "engine/systems/renderer/resources/loaders/core/loader_err_utils.h"
 
-#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
+#include "engine/base/choco_macros.h"
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_file_open_error = "FILE_OPEN_ERROR";
-static const char* const s_result_str_file_read_error = "FILE_READ_ERROR";
-static const char* const s_result_str_unsupported_file = "UNSUPPORTED_FILE";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
+#include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 
 const char* loader_result_to_str(loader_result_t result_) {
     switch(result_) {
     case LOADER_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(LOADER_SUCCESS);
     case LOADER_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(LOADER_NO_MEMORY);
     case LOADER_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(LOADER_RUNTIME_ERROR);
     case LOADER_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(LOADER_INVALID_ARGUMENT);
     case LOADER_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(LOADER_DATA_CORRUPTED);
     case LOADER_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(LOADER_BAD_OPERATION);
     case LOADER_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(LOADER_OVERFLOW);
     case LOADER_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(LOADER_LIMIT_EXCEEDED);
     case LOADER_FILE_OPEN_ERROR:
-        return s_result_str_file_open_error;
+        return STRINGIFY(LOADER_FILE_OPEN_ERROR);
     case LOADER_FILE_READ_ERROR:
-        return s_result_str_file_read_error;
+        return STRINGIFY(LOADER_FILE_READ_ERROR);
     case LOADER_UNSUPPORTED_FILE:
-        return s_result_str_unsupported_file;
+        return STRINGIFY(LOADER_UNSUPPORTED_FILE);
     case LOADER_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(LOADER_UNDEFINED_ERROR);
+    default:
+        return STRINGIFY(LOADER_UNDEFINED_ERROR);
     }
 }
 

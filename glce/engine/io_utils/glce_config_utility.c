@@ -20,15 +20,6 @@ typedef struct token_range {
 } token_range_t;
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-static const char* const s_result_str_unsupported_format = "UNSUPPORTED_FORMAT";
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Parsing helpers
@@ -387,17 +378,17 @@ static void token_copy(const char* line_, const token_range_t* range_, char out_
 static const char* result_to_str(glce_config_utility_result_t result_) {
     switch(result_) {
     case GLCE_CONFIG_UTILITY_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_SUCCESS);
     case GLCE_CONFIG_UTILITY_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_INVALID_ARGUMENT);
     case GLCE_CONFIG_UTILITY_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_BAD_OPERATION);
     case GLCE_CONFIG_UTILITY_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_UNDEFINED_ERROR);
     case GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT:
-        return s_result_str_unsupported_format;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_UNDEFINED_ERROR);
     }
 }
 

@@ -3,6 +3,8 @@
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_err_utils.h"
 
+#include "engine/base/choco_macros.h"
+
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
@@ -12,38 +14,28 @@
 
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
 const char* renderer_frontend_result_to_str(renderer_frontend_result_t result_) {
     switch(result_) {
     case RENDERER_FRONTEND_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(RENDERER_FRONTEND_SUCCESS);
     case RENDERER_FRONTEND_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(RENDERER_FRONTEND_INVALID_ARGUMENT);
     case RENDERER_FRONTEND_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(RENDERER_FRONTEND_RUNTIME_ERROR);
     case RENDERER_FRONTEND_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(RENDERER_FRONTEND_OVERFLOW);
     case RENDERER_FRONTEND_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(RENDERER_FRONTEND_BAD_OPERATION);
     case RENDERER_FRONTEND_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(RENDERER_FRONTEND_DATA_CORRUPTED);
     case RENDERER_FRONTEND_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(RENDERER_FRONTEND_NO_MEMORY);
     case RENDERER_FRONTEND_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(RENDERER_FRONTEND_LIMIT_EXCEEDED);
     case RENDERER_FRONTEND_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RENDERER_FRONTEND_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RENDERER_FRONTEND_UNDEFINED_ERROR);
     }
 }
 

@@ -3,6 +3,8 @@
 
 #include "engine/systems/renderer/resources/shaders/core/shader_err_utils.h"
 
+#include "engine/base/choco_macros.h"
+
 #include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
@@ -15,44 +17,32 @@
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_shader_compile_error = "SHADER_COMPILE_ERROR";
-static const char* const s_result_str_shader_link_error = "SHADER_LINK_ERROR";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
 const char* shader_result_to_str(shader_result_t result_) {
     switch(result_) {
     case SHADER_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(SHADER_SUCCESS);
     case SHADER_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(SHADER_INVALID_ARGUMENT);
     case SHADER_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(SHADER_RUNTIME_ERROR);
     case SHADER_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(SHADER_NO_MEMORY);
     case SHADER_COMPILE_ERROR:
-        return s_result_str_shader_compile_error;
+        return STRINGIFY(SHADER_COMPILE_ERROR);
     case SHADER_LINK_ERROR:
-        return s_result_str_shader_link_error;
+        return STRINGIFY(SHADER_LINK_ERROR);
     case SHADER_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(SHADER_LIMIT_EXCEEDED);
     case SHADER_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(SHADER_BAD_OPERATION);
     case SHADER_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(SHADER_DATA_CORRUPTED);
     case SHADER_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(SHADER_OVERFLOW);
     case SHADER_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(SHADER_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(SHADER_UNDEFINED_ERROR);
     }
 }
 
