@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-19
+最終更新: 2026-11-21
 
 ## 1. 文書の位置づけ
 
@@ -322,6 +322,10 @@ Application、Frontendその他のEngine外側のcallerがEngine APIへ渡すcon
 
 そのinputがAPIのchecked validityを満たさない場合、原則として`INVALID_ARGUMENT`、`BAD_OPERATION`その他のrecoverable resultへ分類する。callerがそのvalueをどこから取得したか、またはEngine内部producerが過去に生成した可能性があるかをcallee側で推測し、provenanceだけを理由として`DATA_CORRUPTED`へ再分類しない。
 
+**外部ModuleがAPIを経由して操作した結果、発生し得る入力・操作契約違反は、原則としてrecoverable failureとする。** これはEngine外側のApplication／Frontendだけでなく、Engine内部のModule間APIにも適用する。APIを通じて設定・変更できる値または状態について、Calleeが確認できる違反が入力のValidity違反であれば`INVALID_ARGUMENT`、現在の操作条件違反であれば`BAD_OPERATION`を基本とする。
+
+ここでいう「発生し得る」とは、CallerによるAPI入力・操作条件の選択によって、そのfailureがAPI contract上起こり得ることを指す。単に外部Moduleが当該Objectを操作した履歴があることや、内部破損を引き起こすbugの可能性が理論上あることを意味しない。成功したAPIによって維持されるはずの内部Invariantが、Module自身の独立したValidationで破綻していると確認された場合は、Section 3.7.4および7.2に従う。また、**成功が契約上保証された対になるResource OperationまたはRollbackが、その保証条件の下で失敗した場合**も、Section 7.2に従って`DATA_CORRUPTED`とする。これは、通常のcaller-controlled inputのinvalidityとは区別する。
+
 ```text
 Application / Frontend controlled value
     ↓ Engine API Trust Boundary
@@ -349,10 +353,12 @@ INVALID_ARGUMENT
 Module Aは、Bから返された`INVALID_ARGUMENT`だけを根拠として、内部破損が発生したと推測しない。「Aの正しい実装ではBのPreconditionが成立するはず」という期待や、入力がEngine内部由来であるというprovenanceだけでは`DATA_CORRUPTED`への再分類を行わない。
 
 - CallerはCalleeのresultを原則としてそのまま伝播する。異なるresult enum間の変換では、対応する意味を保持する。
-- 汎用result converterへ`INVALID_ARGUMENT`から`DATA_CORRUPTED`への一律変換を追加しない。
-- Caller自身による独立したValidation等で、成立済みinternal stateのintegrity failureが明確に確認された場合は、その確認結果に基づく`DATA_CORRUPTED`への分類・変換を認める。また、正規に成功したResource Operationに対する「対になるOperation」の失敗は、Section 7.2の基本契約に従う。これら以外に、Calleeの失敗理由を推測するだけの変換は認めない。
+- 汎用result converterおよび通常のcall siteで、Calleeが返した`INVALID_ARGUMENT`や`BAD_OPERATION`を、Caller側の期待だけを根拠に`DATA_CORRUPTED`へ強制変換しない。
+- **例外として、成功が契約上保証されている対になるResource Operation／Rollbackが、その保証条件を満たしているにもかかわらず失敗した場合、CallerはCalleeのResult Codeにかかわらず`DATA_CORRUPTED`へ強制変換する。** 保証の成立条件と適用範囲はSection 7.2に従う。
+- 単にCreate／Import等が成功した履歴や、Destroy／Release／Rollbackという名称だけで成功保証を推定しない。外部要因やCaller側の操作条件によって正規に失敗し得るOperationは、この例外に含めない。
+- Caller自身の独立したValidation等で、成立済みinternal stateのintegrity failureを直接確認した場合は、その独立した診断結果について`DATA_CORRUPTED`と分類してよい。これはCalleeの返したrecoverable resultを推測によって再分類することとは区別する。
 - 一時的temporary valueの誤生成、単なるprogramming error、外部入力に由来するPrecondition違反を、確認済みのestablished internal state corruptionと同一視しない。
-- 内部破損の可能性が残る`INVALID_ARGUMENT`であっても、`DATA_CORRUPTED`が確認されていない限り通常のFailure Handlingに従う。
+- 成功保証付きの対になるOperation／Rollbackにも独立したInvariant Diagnosticにも該当しない場合、内部破損の可能性が残る`INVALID_ARGUMENT`や`BAD_OPERATION`であっても通常のFailure Handlingに従う。
 
 Aのimplementation bugや内部破損がその場で`DATA_CORRUPTED`として検出されない可能性は許容する。必要な検出能力は、A自身のcanonical validator、Result validation、Postcondition validation、明示的diagnostic validation等によって補強する。
 
@@ -603,7 +609,7 @@ public APIがchecked precondition violationまたはその他のrecoverable fail
 - semantic Commit開始前に失敗した場合、原則としてoperationのsemantic effectを成立させず、既存のpublic state、ownershipおよびlifecycle relationを変更しない。
 - Commit開始後にrecoverable failureが発生し得るoperationでは、可能な範囲でrollbackし、仕様化されたstable stateおよびownership / lifecycle relationへ戻す。
 - constructor中のprivate partial stateはrecoverable failure時にrollbackしてよい。
-- rollback不能であることだけを理由として内部破損と推測しない。ただし、正規に取得したRollback Pointに対応するRollbackが失敗した場合は、Section 7.2の「対になるOperation」の規則に従う。
+- Rollbackが失敗した場合は、そのRollbackが契約上成功を保証されていたかで分類する。成立済みのRollback Pointに対し、保証条件を満たした正しいRollbackが失敗した場合は`DATA_CORRUPTED`へ強制変換する。外部要因等によって通常の失敗が許容されるRollbackや、保証条件を満たしていないOperationではCalleeのResult Codeを原則として維持する（Section 7.2）。
 
 trusted／hard precondition違反はrecoverable failure contractの対象外である。
 
@@ -808,7 +814,9 @@ validator failureのresult classificationは、`is_valid() == false`という事
 - 正規APIによって成立済みのinternal stateを対象とする独立したCanonical／Invariant Diagnosticで、その破損が明確に確認された場合も`DATA_CORRUPTED`へ分類してよい。検査がAPIのPreconditions付近に置かれていても、Caller InputのPrecondition Validationと混同しない。
 - trusted / hard preconditionをDEBUG / TESTで診断してfailureした場合の扱いは、そのAPIのdiagnostic policyに従う。recoverable contractとして定義されていないconditionを、機械的に通常errorへ変換しない。
 
-CallerはCalleeのError Codeを原則そのまま伝播し、result enum間の変換が必要な場合も分類の意味を保持する。内部破損が明確に確認された場合、およびSection 7.2で定める「対になるOperation」が失敗した場合を除き、Calleeの`INVALID_ARGUMENT`の原因やCallerの実装上の期待から`DATA_CORRUPTED`へ推測的に変換しない。汎用result converterでは一律変換しない（Section 3.7.3）。
+外部ModuleがAPIを通じて入力・状態を操作した結果、API contract上発生し得るValidity違反は原則`INVALID_ARGUMENT`とし、操作条件違反は`BAD_OPERATION`等のrecoverable resultとする。内部Module間の受け渡しであっても、この扱いを変えない（Section 3.7.2、3.7.3）。
+
+CallerはCalleeのError Codeを原則そのまま伝播し、result enum間の変換が必要な場合も分類の意味を保持する。Calleeの`INVALID_ARGUMENT`、`BAD_OPERATION`、その他の非SUCCESS resultを、Callerの実装上の期待や「本来成功するはず」という推測から`DATA_CORRUPTED`へ強制変換しない。ただし、**正しく対応するResource OperationまたはRollbackについて、API contract上の成功保証とその成立条件を確認できる場合**は例外とする。その保証されたOperationが失敗したときは、CalleeのResult Codeにかかわらず`DATA_CORRUPTED`へ強制変換する。成立済みinternal stateの破損をCaller自身が独立して確認した場合も`DATA_CORRUPTED`として扱う（Section 3.7.3、7.2）。
 
 ### 7.2 `DATA_CORRUPTED`
 
@@ -824,12 +832,24 @@ CallerはCalleeのError Codeを原則そのまま伝播し、result enum間の�
 - validated / trusted inputからmodule自身が構築したresult candidateに対するdiagnostic Result validation failureで、module implementationまたはinternal invariant破損を示す場合
 - established internal stateに対するPostcondition validation failure
 - recoverable cleanup / rollback中に、成立済みinternal invariantの破損が明確に確認された場合
+- 契約上成功が保証されている対になるResource Operation／Rollbackが、保証条件を満たしているにもかかわらず失敗した場合
 
-**対になるOperationの失敗:**
+**対になるOperationとRollbackの成功保証:**
 
-GLCEでは、成功したResourceのCreate／Initialize／Allocate／Bind等に対して、正しく対応するResourceへのDestroy／Deinitialize／Free／Unbind等は成功することを基本契約とする。対になるOperationが失敗した場合は、内部Contractの破綻として`DATA_CORRUPTED`に分類する。
+GLCEでは、成功したResourceのCreate／Initialize／Allocate／Import／Bind等に対して、同じResourceへのDestroy／Deinitialize／Free／Release／Unbind等が正しく対応して実行され、**その成功がAPI contract上保証されている場合**、対になるOperationの成功を内部契約とする。正常に確保したRollback Pointに対するRollbackについても、同様の成功保証がある場合はこの規則を適用する。
 
-正常に取得したRollback Pointに対するRollbackの失敗も同様に扱う。ただし、外部Systemに起因する通常のRecoverable Failureは、この規則の対象外とする。
+この**成功保証付きの対になるOperationが、保証条件を満たしているにもかかわらず失敗した場合は、Callerが`DATA_CORRUPTED`へ強制変換する。** Calleeが`INVALID_ARGUMENT`、`BAD_OPERATION`等を返していても、保証されているResource／Lifecycle relationの破綻として分類する。これはCalleeの内部実装を推測してfailure causeを再解釈することではなく、Callerが保持するResource取得履歴・Ownership・Lifecycleと、対になるOperationの公開契約によって判断するものである。追加のCanonical Validationによる破損確認は要求しない。
+
+この規則を適用する条件は、少なくとも次が成立することである。
+
+- 対になるResource OperationまたはRollbackについて、正常な使用時の成功がAPI contractとして保証されている。
+- 先行するCreate／Allocate／Import等またはRollback Point取得が成功し、その対象Resource／Pointの同一性とOwnershipが維持されている。
+- 対応するDestroy／Free／Release等またはRollbackを、定められた順序・引数・状態で呼び出しており、成功保証のPreconditionが成立している。
+- 外部Systemの状態変化、I/O failure、明示された操作条件等によって通常のrecoverable failureが許容されるケースではない。
+
+単にOperation名が対になっていることや、Callerが成功を期待していることだけでは、成功保証が成立したとは扱わない。成功保証が明確でない場合、またはそのPreconditionをCallerが満たしていない場合は、原則としてCalleeのResult Codeを保持する。正規のAPI利用でもrecoverable failureが発生し得るOperationについて、強制変換を一般化しない。
+
+例えば、正規にImportが成功した`line_mesh`をCallerが適切に保持し、対応する`renderer_frontend_line_mesh_release()`の成功が契約上保証されているなら、そのReleaseが失敗した場合は、`sample_robot_create()`のRollback中でも`sample_robot_destroy()`の通常終了処理中でも`SCENE_DATA_CORRUPTED`として扱い、残りのCleanupを停止する（Section 7.3）。
 
 次は、それ自体を理由として`DATA_CORRUPTED`へ分類しない。
 
@@ -839,14 +859,15 @@ GLCEでは、成功したResourceのCreate／Initialize／Allocate／Bind等に�
 - trust promotion前candidateがinternal representationとして受理できない
 - Engine内部producer由来のvalueをconsumerがinputとして受け取り、そのinput validity checkに失敗しただけの場合
 - Cleanup / Rollbackの安全性を完全には証明できない、または未検出の内部破損が存在する可能性があるというだけの場合
+- 対になるResource Operation／Rollbackではあるが、API contract上の成功保証がない場合、または保証条件が成立していない場合に、非SUCCESSが返されたというだけの場合
 
-caller-controlled inputのinvalidityを`DATA_CORRUPTED`へ過剰分類すると、Application側のbugやrecoverable input failureをFATAL方向へ誤って伝播させることになる。`DATA_CORRUPTED`がfail-stopを伴う重いsignalであることを踏まえ、分類には「成立済みinternal stateのintegrityが失われている」という追加根拠を要求する。
+caller-controlled inputのinvalidityを`DATA_CORRUPTED`へ過剰分類すると、Application側のbugやrecoverable input failureをFATAL方向へ誤って伝播させることになる。`DATA_CORRUPTED`がfail-stopを伴う重いsignalであることを踏まえ、分類には「成立済みinternal stateのintegrityが失われている」という追加根拠を要求する。成功保証付きの対になるOperationのfailureは、その成功保証の違反自体をこの根拠として扱う。
 
-GLCEは、すべての内部破損を検出することよりも、`DATA_CORRUPTED`の誤検出を抑制し、Error ClassificationとError Propagationの規則およびコードの見通しを明確かつ単純に保つことを優先する。内部破損を漏れなく検出しようとすると、Callerによる下位APIの失敗原因の推測、重複Validation、複雑なError変換が増え、本来recoverableなfailureまでpanic-classへ誤分類する危険が生じる。誤分類によってSection 7.3のFail-stopが発動し、実行可能だったCleanup / Rollbackを止めてしまうことは避ける。
+GLCEは、すべての内部破損を検出することよりも、`DATA_CORRUPTED`の誤検出を抑制し、Error ClassificationとError Propagationの規則およびコードの見通しを明確かつ単純に保つことを優先する。内部破損を漏れなく検出しようとすると、Callerによる下位APIの失敗原因の推測、重複Validation、複雑なError変換が増え、本来recoverableなfailureまでpanic-classへ誤分類する危険が生じる。一方、**成功保証付きの対になるOperationの失敗は、原因推測ではなく契約違反の確認であるため、明示的な例外として強制変換する。** この例外以外では、誤分類によってSection 7.3のFail-stopが発動し、実行可能だったCleanup / Rollbackを止めてしまうことは避ける。
 
-このトレードオフとして、内部Producerのbugや未検出CorruptionがCallee側では`INVALID_ARGUMENT`等として観測され、`DATA_CORRUPTED`として即時分類されない場合を許容する。その場合は、内部破損の可能性が残っていても通常のFailure HandlingとCleanup / Rollbackを試みる。これはCleanupの完全な安全性を保証する判断ではなく、未確認の可能性だけを理由として回復処理を止めないという意図的な選択である。
+このトレードオフとして、成功保証付きの対になるOperation／Rollback以外では、内部Producerのbugや未検出CorruptionがCallee側で`INVALID_ARGUMENT`等として観測され、`DATA_CORRUPTED`として即時分類されない場合を許容する。その場合は、内部破損の可能性が残っていても通常のFailure HandlingとCleanup / Rollbackを試みる。これはCleanupの完全な安全性を保証する判断ではなく、未確認の可能性だけを理由として回復処理を止めないという意図的な選択である。
 
-追加の検出能力が必要になった場合は、推測的なError変換を増やすのではなく、対象ModuleのCanonical Validator、Validation Report、Sanitizer、Failure Injection、unit test、fuzzing、独立したMemory Diagnostics等の手段を検討する。内部破損が明確に確認された時点で`DATA_CORRUPTED`として分類し、その後は従来どおりSection 7.3の厳格なFail-stopを適用する。
+追加の検出能力が必要になった場合は、推測的なError変換を増やすのではなく、対象ModuleのCanonical Validator、Validation Report、Sanitizer、Failure Injection、unit test、fuzzing、独立したMemory Diagnostics等の手段を検討する。内部破損が明確に確認された場合、または成功保証付きの対になるOperationのfailureが発生した場合は`DATA_CORRUPTED`として分類し、その後はSection 7.3の厳格なFail-stopを適用する。
 
 DEBUG / TESTのstable-boundary canonical validatorによって、完成したはずのestablished internal objectが有効化されたinvariantを満たさないことが判明した場合は、stable-boundary failureとして`DATA_CORRUPTED`へ分類してよい。`ENABLE_VALID_DEEP = 0`で検査されなかった条件については、validator成功を根拠にintegrityを証明しない。
 
@@ -889,6 +910,8 @@ recoverable failureからcleanupへ入った後、cleanup operationの失敗に�
 recoverable failure時のrollback／cleanup方法、private unchecked cleanup helperの有無と構成はmoduleごとに決定してよい。
 
 `INVALID_ARGUMENT`等のrecoverable resultについて、未検出の内部破損が存在する可能性だけを理由として通常Cleanup / Rollbackを省略しない。Cleanup / Rollbackの直前にCorruptionの完全検出を目的とするCanonical Validatorを機械的に追加することも要求しない。Cleanup / Rollback自身は、それぞれのAPIが定義するPreconditionとValidation Policyに従う。必要な検査を追加するかどうかは、そのoperationの具体的なSafety Requirementから個別に判断する。
+
+Cleanup / Rollback APIが失敗した場合も、CallerはCalleeから返された分類を原則として維持する。ただし、対になるResource OperationまたはRollbackに**契約上の成功保証があり、その保証条件が満たされている場合**は、失敗を`DATA_CORRUPTED`へ強制変換して直ちに残りのCleanupを停止する（Section 7.2、7.3）。成功保証のないCleanup / Rollbackでは、元のfailureとcleanup failureのどちらを最終Result Codeとして返すかを当該operationのError Handling Contractに従って決定し、Calleeの非SUCCESSを推測によって`DATA_CORRUPTED`へ昇格させない。
 
 通常Cleanupによって未検出のCorruptionが表面化する可能性は許容する。ただし、Cleanup中に`DATA_CORRUPTED`が明確に検出された場合は、Section 7.3に従って残りのCleanupを停止する。
 

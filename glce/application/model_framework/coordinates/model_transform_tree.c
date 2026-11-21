@@ -101,9 +101,6 @@ model_framework_result_t model_transform_tree_create(uint16_t coordinate_id_, mo
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_tree_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_tree);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("model_transform_tree_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -111,9 +108,7 @@ model_framework_result_t model_transform_tree_create(uint16_t coordinate_id_, mo
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_root_node);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        }
+
         ERROR_MESSAGE("model_transform_tree_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -226,7 +221,7 @@ model_framework_result_t model_transform_tree_clone(model_transform_tree_t* src_
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree, ret, MODEL_FRAMEWORK_BAD_OPERATION);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(src_)) {
-        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
         ERROR_MESSAGE("model_transform_tree_clone(%s) - Precondition validation failed for 'src_'.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -333,7 +328,7 @@ model_framework_result_t model_transform_tree_add_child(model_transform_tree_t* 
     IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
         ERROR_MESSAGE("model_transform_tree_add_child(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -355,9 +350,6 @@ model_framework_result_t model_transform_tree_add_child(model_transform_tree_t* 
     ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&child);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("model_transform_tree_add_child(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -417,7 +409,7 @@ model_framework_result_t model_transform_tree_rotation_set(model_transform_tree_
     IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
         ERROR_MESSAGE("model_transform_tree_rotation_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -464,7 +456,7 @@ model_framework_result_t model_transform_tree_translate_set(model_transform_tree
     IF_ARG_NULL_GOTO_CLEANUP(transform_tree_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
         ERROR_MESSAGE("model_transform_tree_translate_set(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -522,7 +514,7 @@ model_framework_result_t model_transform_tree_world_matrix_get(const model_trans
     IF_ARG_NULL_GOTO_CLEANUP(out_matrix_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!model_transform_tree_is_valid(transform_tree_)) {
-        ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
+        ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
         ERROR_MESSAGE("model_transform_tree_world_matrix_get(%s) - Preconditions validation failed for 'transform_tree_'.", model_framework_result_to_str(ret));
         goto cleanup;
     }

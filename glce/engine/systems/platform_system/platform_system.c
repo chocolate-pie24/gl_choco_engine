@@ -132,12 +132,15 @@ platform_system_result_t platform_system_update(platform_system_t* platform_syst
 
     // 毎フレーム呼ばれるAPIであるため、*out_event_view_ != NULLは許容する
     IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->vtable, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->backend, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_event_view_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    if(NULL == platform_system_->vtable) {
+        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("platform_system_update(%s) - Provided platform_system_ is corrupted.", platform_system_result_to_str(ret));
+        goto cleanup;
+    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!platform_system_is_valid(platform_system_)) {
-        ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
+        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
         ERROR_MESSAGE("platform_system_update(%s) - Provided platform_system_ is not valid.", platform_system_result_to_str(ret));
         goto cleanup;
     }
@@ -159,14 +162,19 @@ platform_system_result_t platform_system_swap_buffers(platform_system_t* platfor
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->vtable, ret, PLATFORM_SYSTEM_BAD_OPERATION);
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->backend, ret, PLATFORM_SYSTEM_BAD_OPERATION);
+    if(NULL == platform_system_->vtable) {
+        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("platform_system_swap_buffers(%s) - Provided platform_system_ is corrupted.", platform_system_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = platform_system_->vtable->platform_backend_swap_buffers(platform_system_->backend);
     if(PLATFORM_SYSTEM_SUCCESS != ret) {
         ERROR_MESSAGE("platform_system_swap_buffers(%s) - Failed to swap buffers.", platform_system_result_to_str(ret));
         goto cleanup;
     }
+
+    ret = PLATFORM_SYSTEM_SUCCESS;
 
 cleanup:
     return ret;

@@ -160,18 +160,12 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     ret_general_allocator = general_allocator_allocate(sizeof(stl_viewer_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_stl_viewer);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
         goto cleanup;
     }
     ret_render_packet = render_packet_create(16 * MIB, &tmp_render_packet);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - render_packet_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -179,9 +173,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     // Model Resource.
     ret = model_mesh_import(renderer_frontend_, asset_root_path_, &tmp_model_mesh, &model_aabb);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - model_mesh_import failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -190,9 +181,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     // Camera.
     ret = viewer_camera_create(&model_aabb, framebuffer_width_, framebuffer_height_, &tmp_stl_viewer->view_matrix, &tmp_stl_viewer->projection_matrix, &tmp_stl_viewer->near_clip, &tmp_stl_viewer->far_clip, &tmp_orbit_camera);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - viewer_camera_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -200,9 +188,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     // Floor Grid.
     ret = floor_grid_mesh_initialize(renderer_frontend_, &model_aabb, &tmp_floor_grid_mesh);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - floor_grid_mesh_initialize failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -212,9 +197,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     // Debug Geometry.
     ret = debug_aabb_mesh_initialize(renderer_frontend_, s_model_mesh_config.geometry_resource_name, &model_aabb, &tmp_debug_aabb_mesh);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - debug_aabb_mesh_initialize failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -222,9 +204,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
 
     ret = debug_axis_mesh_initialize(renderer_frontend_, s_model_mesh_config.geometry_resource_name, &model_aabb, tmp_debug_axis_mesh);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - debug_axis_mesh_initialize failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -494,9 +473,6 @@ static scene_result_t stl_viewer_draw(void* scene_concrete_, renderer_frontend_t
 
     ret = render_packet_build(stl_viewer);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_draw(%s) - render_packet_build failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -518,11 +494,6 @@ static scene_result_t stl_viewer_draw(void* scene_concrete_, renderer_frontend_t
     ret_renderer_frontend = renderer_frontend_draw_packet(stl_viewer->render_packet, renderer_frontend_);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-            ERROR_MESSAGE("stl_viewer_draw(%s) - renderer_frontend_draw_packet failed.", scene_result_to_str(ret));
-            goto cleanup;
-        }
         ERROR_MESSAGE("stl_viewer_draw(%s) - renderer_frontend_draw_packet failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -614,9 +585,6 @@ static scene_result_t model_mesh_import(renderer_frontend_t* renderer_frontend_,
     ret_renderer_frontend = renderer_frontend_untextured_mesh_import(renderer_frontend_, &s_model_mesh_config, asset_root_path_, &tmp_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("model_mesh_import(%s) - renderer_frontend_untextured_mesh_import failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -625,9 +593,6 @@ static scene_result_t model_mesh_import(renderer_frontend_t* renderer_frontend_,
     ret_renderer_frontend = renderer_frontend_untextured_mesh_local_aabb_get(renderer_frontend_, &tmp_mesh, &tmp_aabb);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("model_mesh_import(%s) - renderer_frontend_untextured_mesh_local_aabb_get failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -732,9 +697,6 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
         ret_geometry = untextured_arrow_geometry_vertices_create(16, &cone, &cylinder, &tmp_vertices, &tmp_vertex_count);
         if(GEOMETRY_SUCCESS != ret_geometry) {
             ret = scene_result_convert_geometry(ret_geometry);
-            if(GEOMETRY_INVALID_ARGUMENT == ret_geometry) {
-                ret = SCENE_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - untextured_arrow_geometry_vertices_create failed.", scene_result_to_str(ret));
             goto cleanup;
         }
@@ -749,9 +711,6 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
         ret_renderer_frontend = renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_, choco_string_c_str(tmp_geometry_resource_name), choco_string_c_str(tmp_material_resource_name), tmp_vertices, tmp_vertex_count, &axis_materials[i], &tmp_mesh[imported_mesh_count]);
         if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
             ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-            if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-                ret = SCENE_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - renderer_frontend_untextured_mesh_import_from_vertices failed.", scene_result_to_str(ret));
             goto cleanup;
         }
@@ -904,9 +863,6 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     ret_geometry = line_grid_geometry_vertices_create(LINE_GRID_PLANE_XY, vec4u8_initialize(128, 128, 128, 255), grid_min, grid_max, max_aabb_extent / 10.0f, &tmp_vertices, &tmp_vertex_count);
     if(GEOMETRY_SUCCESS != ret_geometry) {
         ret = scene_result_convert_geometry(ret_geometry);
-        if(GEOMETRY_INVALID_ARGUMENT == ret_geometry) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("floor_grid_mesh_initialize(%s) - line_grid_geometry_vertices_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -914,9 +870,6 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     ret_renderer_frontend = renderer_frontend_line_mesh_import_from_vertices(renderer_frontend_, "floor_grid_line", tmp_vertices, tmp_vertex_count, &tmp_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("floor_grid_mesh_initialize(%s) - renderer_frontend_line_mesh_import_from_vertices failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -967,9 +920,6 @@ static scene_result_t debug_aabb_mesh_initialize(renderer_frontend_t* renderer_f
     ret_renderer_frontend = renderer_frontend_line_mesh_import_from_aabb(renderer_frontend_, choco_string_c_str(tmp_resource_name), model_aabb_, vec4u8_initialize(255, 0, 0, 0), &tmp_debug_aabb_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("debug_aabb_mesh_initialize(%s) - renderer_frontend_line_mesh_import_from_aabb failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -1134,9 +1084,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
     ret_render_packet = render_packet_initialize(2, 0, 0, 4, stl_viewer_->render_packet);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("render_packet_build(%s) - render_packet_initialize failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -1144,9 +1091,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
     ret_render_packet = render_packet_untextured_mesh_push(&stl_viewer_->model_mesh, &stl_viewer_->model_matrix, stl_viewer_->render_packet);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -1154,9 +1098,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
     ret_render_packet = render_packet_line_mesh_push(&stl_viewer_->floor_grid_mesh, &stl_viewer_->floor_grid_model_matrix, stl_viewer_->render_packet);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("render_packet_build(%s) - render_packet_line_mesh_push failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -1166,9 +1107,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
             ret_render_packet = render_packet_untextured_mesh_push(&stl_viewer_->debug_axis_meshes[i], &stl_viewer_->model_matrix, stl_viewer_->render_packet);
             if(RENDER_PACKET_SUCCESS != ret_render_packet) {
                 ret = scene_result_convert_render_packet(ret_render_packet);
-                if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                    ret = SCENE_DATA_CORRUPTED;
-                }
                 ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
                 goto cleanup;
             }
@@ -1177,9 +1115,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
         ret_render_packet = render_packet_line_mesh_push(&stl_viewer_->debug_aabb_mesh, &stl_viewer_->model_matrix, stl_viewer_->render_packet);
         if(RENDER_PACKET_SUCCESS != ret_render_packet) {
             ret = scene_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = SCENE_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_build(%s) - render_packet_line_mesh_push failed.", scene_result_to_str(ret));
             goto cleanup;
         }

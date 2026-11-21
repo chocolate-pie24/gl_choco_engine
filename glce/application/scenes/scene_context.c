@@ -39,9 +39,6 @@ scene_result_t scene_context_create(scene_context_t** out_scene_) {
     ret_general_allocator = general_allocator_allocate(sizeof(scene_context_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_scene_context);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("scene_context_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -116,7 +113,7 @@ scene_result_t scene_context_change_scene(scene_context_t* scene_, renderer_fron
     IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!scene_context_is_valid(scene_)) {
-        ret = SCENE_INVALID_ARGUMENT;
+        ret = SCENE_DATA_CORRUPTED;
         ERROR_MESSAGE("scene_context_change_scene(%s) - Precondition validation failed for 'scene_'.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -196,7 +193,7 @@ scene_result_t scene_context_update(scene_context_t* scene_, const platform_even
     IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!scene_context_is_valid(scene_)) {
-        ret = SCENE_INVALID_ARGUMENT;
+        ret = SCENE_DATA_CORRUPTED;
         ERROR_MESSAGE("scene_context_update(%s) - Precondition validation failed for 'scene_'.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -208,9 +205,6 @@ scene_result_t scene_context_update(scene_context_t* scene_, const platform_even
     }
     ret = scene_->vtable->scene_update(scene_->scene, event_view_, delta_time_, window_resized_, framebuffer_width_, framebuffer_height_);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("scene_context_update(%s) - scene_update failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -228,7 +222,7 @@ scene_result_t scene_context_draw(scene_context_t* scene_, renderer_frontend_t* 
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!scene_context_is_valid(scene_)) {
-        ret = SCENE_INVALID_ARGUMENT;
+        ret = SCENE_DATA_CORRUPTED;
         ERROR_MESSAGE("scene_context_draw(%s) - Precondition validation failed for 'scene_'.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -240,9 +234,6 @@ scene_result_t scene_context_draw(scene_context_t* scene_, renderer_frontend_t* 
     }
     ret = scene_->vtable->scene_draw(scene_->scene, renderer_frontend_);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("scene_context_draw(%s) - scene_draw failed.", scene_result_to_str(ret));
         goto cleanup;
     }

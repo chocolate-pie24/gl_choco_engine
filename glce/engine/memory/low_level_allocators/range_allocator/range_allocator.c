@@ -1264,7 +1264,12 @@ static range_allocator_result_t find_first_fit_node(const range_allocator_t* all
     IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_node_, ret, RANGE_ALLOCATOR_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_node_, ret, RANGE_ALLOCATOR_BAD_OPERATION);
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_->range_list_head, ret, RANGE_ALLOCATOR_DATA_CORRUPTED);
+    if(NULL == allocator_->range_list_head) {
+        ret = RANGE_ALLOCATOR_DATA_CORRUPTED;
+        ERROR_MESSAGE("find_first_fit_node(%s) - Provided allocator_ is corrupted.", result_to_str(ret));
+        goto cleanup;
+    }
+
     if(0 == allocation_size_ || 0 != (allocation_size_ % allocator_->base_align)) {
         ret = RANGE_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("find_first_fit_node(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));

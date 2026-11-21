@@ -72,9 +72,6 @@ frame_allocator_result_t frame_allocator_create(size_t memory_pool_size_, frame_
     ret_general_allocator = general_allocator_allocate(sizeof(frame_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_allocator);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -82,9 +79,6 @@ frame_allocator_result_t frame_allocator_create(size_t memory_pool_size_, frame_
     ret_general_allocator = general_allocator_allocate(memory_pool_size_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, &tmp_memory_pool);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -92,9 +86,6 @@ frame_allocator_result_t frame_allocator_create(size_t memory_pool_size_, frame_
     ret_linear_allocator = linear_allocator_initialize(&tmp_allocator->linear_allocator, memory_pool_size_, tmp_memory_pool);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
-        if(LINEAR_ALLOCATOR_INVALID_ARGUMENT == ret_linear_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_create(%s) - linear_allocator_initialize failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -189,9 +180,6 @@ frame_allocator_result_t frame_allocator_allocate(frame_allocator_t* allocator_,
     ret_linear_allocator = linear_allocator_allocate(&allocator_->linear_allocator, allocation_size_, (void**)&tmp_ptr);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
-        if(LINEAR_ALLOCATOR_INVALID_ARGUMENT == ret_linear_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_allocate(%s) - linear_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -238,9 +226,6 @@ frame_allocator_result_t frame_allocator_reset(frame_allocator_t* allocator_) {
     ret_linear_allocator = linear_allocator_reset(&allocator_->linear_allocator);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
-        if(LINEAR_ALLOCATOR_INVALID_ARGUMENT == ret_linear_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_reset(%s) - linear_allocator_reset failed.", result_to_str(ret));
         goto cleanup;
     }

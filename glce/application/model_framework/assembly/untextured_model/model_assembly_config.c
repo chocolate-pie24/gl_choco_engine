@@ -72,9 +72,6 @@ model_framework_result_t untextured_model_assembly_config_create(
     ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_assembly_config_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_config);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }

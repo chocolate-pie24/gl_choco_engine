@@ -220,9 +220,6 @@ model_framework_result_t untextured_model_resource_map_create(
     ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_resource_map_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_resource_map);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -230,9 +227,6 @@ model_framework_result_t untextured_model_resource_map_create(
     ret_choco_string = choco_string_create_from_c_string(resource_map_name_, &tmp_resource_map_name);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
         ret = model_framework_result_convert_choco_string(ret_choco_string);
-        if(CHOCO_STRING_INVALID_ARGUMENT == ret_choco_string) {
-            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - choco_string_create_from_c_string failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -1097,9 +1091,6 @@ static model_framework_result_t debug_axis_meshes_create(
         ret_geometry = untextured_arrow_geometry_vertices_create(debug_axis_segment_count_, debug_axis_cone_, debug_axis_cylinder_, &tmp_vertices, &tmp_vertex_count);
         if(GEOMETRY_SUCCESS != ret_geometry) {
             ret = model_framework_result_convert_geometry(ret_geometry);
-            if(GEOMETRY_INVALID_ARGUMENT == ret_geometry) {
-                ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("debug_axis_meshes_create(%s) - untextured_arrow_geometry_vertices_create failed.", model_framework_result_to_str(ret));
             goto cleanup;
         }

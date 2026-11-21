@@ -332,11 +332,15 @@ static platform_system_result_t platform_glfw_update(platform_backend_t* backend
 
     // 毎ループcallされるAPIであるため、*out_event_view_ != NULLは許容する
     IF_ARG_NULL_GOTO_CLEANUP(backend_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(backend_->window, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_event_view_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    if(NULL == backend_->window) {
+        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("platform_glfw_update(%s) - Provided backend_ is corrupted.", platform_system_result_to_str(ret));
+        goto cleanup;
+    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!platform_glfw_is_valid(backend_)) {
-        ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
+        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
         ERROR_MESSAGE("platform_glfw_update(%s) - Provided backend_ is not valid.", platform_system_result_to_str(ret));
         goto cleanup;
     }
@@ -396,7 +400,11 @@ static platform_system_result_t platform_glfw_swap_buffers(platform_backend_t* b
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(backend_->window, ret, PLATFORM_SYSTEM_BAD_OPERATION);
+    if(NULL == backend_->window) {
+        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("platform_glfw_swap_buffers(%s) - Provided backend_ is corrupted.", platform_system_result_to_str(ret));
+        goto cleanup;
+    }
 
     glfwSwapBuffers(backend_->window);
 
@@ -574,7 +582,11 @@ static platform_system_result_t snapshot_collect(platform_backend_t* backend_) {
     int right_button_state = 0;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(backend_->window, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    if(NULL == backend_->window) {
+        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("snapshot_collect(%s) - Provided backend_ is corrupted.", platform_system_result_to_str(ret));
+        goto cleanup;
+    }
 
     // window events.
     backend_->current.window_should_close = (0 != glfwWindowShouldClose(backend_->window)) ? true : false;

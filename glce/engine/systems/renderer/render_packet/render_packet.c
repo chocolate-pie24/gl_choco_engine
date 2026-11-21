@@ -91,9 +91,6 @@ render_packet_result_t render_packet_create(size_t max_memory_pool_size_, render
     ret_general_allocator = general_allocator_allocate(sizeof(render_packet_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_render_packet);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = render_packet_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = RENDER_PACKET_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("render_packet_create(%s) - general_allocator_allocate failed.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -101,9 +98,6 @@ render_packet_result_t render_packet_create(size_t max_memory_pool_size_, render
     ret_frame_allocator = frame_allocator_create(max_memory_pool_size_, &tmp_frame_allocator);
     if(FRAME_ALLOCATOR_SUCCESS != ret_frame_allocator) {
         ret = render_packet_result_convert_frame_allocator(ret_frame_allocator);
-        if(FRAME_ALLOCATOR_INVALID_ARGUMENT == ret_frame_allocator) {
-            ret = RENDER_PACKET_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("render_packet_create(%s) - frame_allocator_create failed.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -186,7 +180,7 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ret = RENDER_PACKET_DATA_CORRUPTED;
         ERROR_MESSAGE("render_packet_initialize(%s) - Precondition validation failed for 'render_packet_'.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -202,9 +196,6 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
         ret_frame_allocator = frame_allocator_allocate(render_packet_->allocator, allocation_size, FRAME_ALLOCATOR_MEMORY_TAG_RENDER_PACKET, (void**)&tmp_line_meshes);
         if(FRAME_ALLOCATOR_SUCCESS != ret_frame_allocator) {
             ret = render_packet_result_convert_frame_allocator(ret_frame_allocator);
-            if(FRAME_ALLOCATOR_INVALID_ARGUMENT == ret_frame_allocator) {
-                ret = RENDER_PACKET_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_initialize(%s) - frame_allocator_allocate failed.", render_packet_result_to_str(ret));
             goto cleanup;
         }
@@ -217,9 +208,6 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
         ret_frame_allocator = frame_allocator_allocate(render_packet_->allocator, allocation_size, FRAME_ALLOCATOR_MEMORY_TAG_RENDER_PACKET, (void**)&tmp_line_mesh_model_matrices);
         if(FRAME_ALLOCATOR_SUCCESS != ret_frame_allocator) {
             ret = render_packet_result_convert_frame_allocator(ret_frame_allocator);
-            if(FRAME_ALLOCATOR_INVALID_ARGUMENT == ret_frame_allocator) {
-                ret = RENDER_PACKET_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_initialize(%s) - frame_allocator_allocate failed.", render_packet_result_to_str(ret));
             goto cleanup;
         }
@@ -235,9 +223,6 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
         ret_frame_allocator = frame_allocator_allocate(render_packet_->allocator, allocation_size, FRAME_ALLOCATOR_MEMORY_TAG_RENDER_PACKET, (void**)&tmp_point_meshes);
         if(FRAME_ALLOCATOR_SUCCESS != ret_frame_allocator) {
             ret = render_packet_result_convert_frame_allocator(ret_frame_allocator);
-            if(FRAME_ALLOCATOR_INVALID_ARGUMENT == ret_frame_allocator) {
-                ret = RENDER_PACKET_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_initialize(%s) - frame_allocator_allocate failed.", render_packet_result_to_str(ret));
             goto cleanup;
         }
@@ -250,9 +235,6 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
         ret_frame_allocator = frame_allocator_allocate(render_packet_->allocator, allocation_size, FRAME_ALLOCATOR_MEMORY_TAG_RENDER_PACKET, (void**)&tmp_point_mesh_model_matrices);
         if(FRAME_ALLOCATOR_SUCCESS != ret_frame_allocator) {
             ret = render_packet_result_convert_frame_allocator(ret_frame_allocator);
-            if(FRAME_ALLOCATOR_INVALID_ARGUMENT == ret_frame_allocator) {
-                ret = RENDER_PACKET_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_initialize(%s) - frame_allocator_allocate failed.", render_packet_result_to_str(ret));
             goto cleanup;
         }
@@ -268,9 +250,6 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
         ret_frame_allocator = frame_allocator_allocate(render_packet_->allocator, allocation_size, FRAME_ALLOCATOR_MEMORY_TAG_RENDER_PACKET, (void**)&tmp_ui_meshes);
         if(FRAME_ALLOCATOR_SUCCESS != ret_frame_allocator) {
             ret = render_packet_result_convert_frame_allocator(ret_frame_allocator);
-            if(FRAME_ALLOCATOR_INVALID_ARGUMENT == ret_frame_allocator) {
-                ret = RENDER_PACKET_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_initialize(%s) - frame_allocator_allocate failed.", render_packet_result_to_str(ret));
             goto cleanup;
         }
@@ -283,9 +262,6 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
         ret_frame_allocator = frame_allocator_allocate(render_packet_->allocator, allocation_size, FRAME_ALLOCATOR_MEMORY_TAG_RENDER_PACKET, (void**)&tmp_ui_mesh_model_matrices);
         if(FRAME_ALLOCATOR_SUCCESS != ret_frame_allocator) {
             ret = render_packet_result_convert_frame_allocator(ret_frame_allocator);
-            if(FRAME_ALLOCATOR_INVALID_ARGUMENT == ret_frame_allocator) {
-                ret = RENDER_PACKET_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_initialize(%s) - frame_allocator_allocate failed.", render_packet_result_to_str(ret));
             goto cleanup;
         }
@@ -301,9 +277,6 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
         ret_frame_allocator = frame_allocator_allocate(render_packet_->allocator, allocation_size, FRAME_ALLOCATOR_MEMORY_TAG_RENDER_PACKET, (void**)&tmp_untextured_meshes);
         if(FRAME_ALLOCATOR_SUCCESS != ret_frame_allocator) {
             ret = render_packet_result_convert_frame_allocator(ret_frame_allocator);
-            if(FRAME_ALLOCATOR_INVALID_ARGUMENT == ret_frame_allocator) {
-                ret = RENDER_PACKET_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_initialize(%s) - frame_allocator_allocate failed.", render_packet_result_to_str(ret));
             goto cleanup;
         }
@@ -316,9 +289,6 @@ render_packet_result_t render_packet_initialize(size_t max_line_mesh_count_, siz
         ret_frame_allocator = frame_allocator_allocate(render_packet_->allocator, allocation_size, FRAME_ALLOCATOR_MEMORY_TAG_RENDER_PACKET, (void**)&tmp_untextured_mesh_model_matrices);
         if(FRAME_ALLOCATOR_SUCCESS != ret_frame_allocator) {
             ret = render_packet_result_convert_frame_allocator(ret_frame_allocator);
-            if(FRAME_ALLOCATOR_INVALID_ARGUMENT == ret_frame_allocator) {
-                ret = RENDER_PACKET_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_initialize(%s) - frame_allocator_allocate failed.", render_packet_result_to_str(ret));
             goto cleanup;
         }
@@ -426,7 +396,7 @@ render_packet_result_t render_packet_line_mesh_read_state_completed(const render
     IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ret = RENDER_PACKET_DATA_CORRUPTED;
         ERROR_MESSAGE("render_packet_line_mesh_read_state_completed(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -452,7 +422,7 @@ render_packet_result_t render_packet_point_mesh_read_state_completed(const rende
     IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ret = RENDER_PACKET_DATA_CORRUPTED;
         ERROR_MESSAGE("render_packet_point_mesh_read_state_completed(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -478,7 +448,7 @@ render_packet_result_t render_packet_ui_mesh_read_state_completed(const render_p
     IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ret = RENDER_PACKET_DATA_CORRUPTED;
         ERROR_MESSAGE("render_packet_ui_mesh_read_state_completed(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -504,7 +474,7 @@ render_packet_result_t render_packet_untextured_mesh_read_state_completed(const 
     IF_ARG_NULL_GOTO_CLEANUP(out_completed_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ret = RENDER_PACKET_DATA_CORRUPTED;
         ERROR_MESSAGE("render_packet_untextured_mesh_read_state_completed(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -529,7 +499,7 @@ render_packet_result_t render_packet_line_mesh_push(const line_mesh_t* mesh_, co
     IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ret = RENDER_PACKET_DATA_CORRUPTED;
         ERROR_MESSAGE("render_packet_line_mesh_push(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -559,7 +529,7 @@ render_packet_result_t render_packet_point_mesh_push(const point_mesh_t* mesh_, 
     IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ret = RENDER_PACKET_DATA_CORRUPTED;
         ERROR_MESSAGE("render_packet_point_mesh_push(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -589,7 +559,7 @@ render_packet_result_t render_packet_ui_mesh_push(const ui_mesh_t* mesh_, const 
     IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ret = RENDER_PACKET_DATA_CORRUPTED;
         ERROR_MESSAGE("render_packet_ui_mesh_push(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -619,7 +589,7 @@ render_packet_result_t render_packet_untextured_mesh_push(const untextured_mesh_
     IF_ARG_NULL_GOTO_CLEANUP(render_packet_, ret, RENDER_PACKET_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ret = RENDER_PACKET_INVALID_ARGUMENT;
+        ret = RENDER_PACKET_DATA_CORRUPTED;
         ERROR_MESSAGE("render_packet_untextured_mesh_push(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(ret));
         goto cleanup;
     }
@@ -647,7 +617,7 @@ bool render_packet_line_mesh_read_next(render_packet_t* render_packet_, line_mes
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ERROR_MESSAGE("render_packet_line_mesh_read_next(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT));
+        ERROR_MESSAGE("render_packet_line_mesh_read_next(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(RENDER_PACKET_DATA_CORRUPTED));
         return false;
     }
 #endif
@@ -666,7 +636,7 @@ bool render_packet_point_mesh_read_next(render_packet_t* render_packet_, point_m
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ERROR_MESSAGE("render_packet_point_mesh_read_next(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT));
+        ERROR_MESSAGE("render_packet_point_mesh_read_next(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(RENDER_PACKET_DATA_CORRUPTED));
         return false;
     }
 #endif
@@ -685,7 +655,7 @@ bool render_packet_ui_mesh_read_next(render_packet_t* render_packet_, ui_mesh_t*
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ERROR_MESSAGE("render_packet_ui_mesh_read_next(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT));
+        ERROR_MESSAGE("render_packet_ui_mesh_read_next(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(RENDER_PACKET_DATA_CORRUPTED));
         return false;
     }
 #endif
@@ -704,7 +674,7 @@ bool render_packet_untextured_mesh_read_next(render_packet_t* render_packet_, un
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!render_packet_is_valid(render_packet_)) {
-        ERROR_MESSAGE("render_packet_untextured_mesh_read_next(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(RENDER_PACKET_INVALID_ARGUMENT));
+        ERROR_MESSAGE("render_packet_untextured_mesh_read_next(%s) - Provided render_packet_ is not valid.", render_packet_result_to_str(RENDER_PACKET_DATA_CORRUPTED));
         return false;
     }
 #endif

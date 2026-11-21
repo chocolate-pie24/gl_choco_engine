@@ -238,7 +238,7 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!renderer_frontend_is_valid(renderer_frontend_)) {
-        ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
+        ret = RENDERER_FRONTEND_DATA_CORRUPTED;
         ERROR_MESSAGE("renderer_frontend_draw_packet(%s) - Precondition validation failed for 'renderer_frontend_'.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
@@ -249,9 +249,6 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
         ret_render_packet = render_packet_line_mesh_read_state_completed(render_packet_, &line_mesh_read_completed);
         if(RENDER_PACKET_SUCCESS != ret_render_packet) {
             ret = renderer_frontend_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("renderer_frontend_draw_packet(%s) - render_packet_line_mesh_read_state_completed failed.", renderer_frontend_result_to_str(ret));
             goto cleanup;
         }
@@ -264,9 +261,6 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
 
             ret = renderer_frontend_line_mesh_draw(renderer_frontend_, &tmp_line_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret) {
-                if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret) {
-                    ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-                }
                 ERROR_MESSAGE("renderer_frontend_draw_packet(%s) - renderer_frontend_line_mesh_draw failed.", renderer_frontend_result_to_str(ret));
                 goto cleanup;
             }
@@ -278,9 +272,6 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
     //     ret_render_packet = render_packet_point_mesh_read_state_completed(render_packet_, &point_mesh_read_completed);
     //     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
     //         ret = renderer_frontend_result_convert_render_packet(ret_render_packet);
-    //         if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-    //             ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-    //         }
     //         ERROR_MESSAGE("renderer_frontend_draw_packet(%s) - render_packet_point_mesh_read_state_completed failed.", renderer_frontend_result_to_str(ret));
     //         goto cleanup;
     //     }
@@ -293,9 +284,6 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
 
     //         ret = renderer_frontend_point_mesh_draw(renderer_frontend_, &tmp_point_mesh, &tmp_model_matrix);
     //         if(RENDERER_FRONTEND_SUCCESS != ret) {
-    //             if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret) {
-    //                 ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-    //             }
     //             ERROR_MESSAGE("renderer_frontend_draw_packet(%s) - renderer_frontend_point_mesh_draw failed.", renderer_frontend_result_to_str(ret));
     //             goto cleanup;
     //         }
@@ -307,9 +295,6 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
     //     ret_render_packet = render_packet_ui_mesh_read_state_completed(render_packet_, &ui_mesh_read_completed);
     //     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
     //         ret = renderer_frontend_result_convert_render_packet(ret_render_packet);
-    //         if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-    //             ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-    //         }
     //         ERROR_MESSAGE("renderer_frontend_draw_packet(%s) - render_packet_ui_mesh_read_state_completed failed.", renderer_frontend_result_to_str(ret));
     //         goto cleanup;
     //     }
@@ -322,9 +307,6 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
 
     //         ret = renderer_frontend_ui_mesh_draw(renderer_frontend_, &tmp_ui_mesh, &tmp_model_matrix);
     //         if(RENDERER_FRONTEND_SUCCESS != ret) {
-    //             if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret) {
-    //                 ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-    //             }
     //             ERROR_MESSAGE("renderer_frontend_draw_packet(%s) - renderer_frontend_ui_mesh_draw failed.", renderer_frontend_result_to_str(ret));
     //             goto cleanup;
     //         }
@@ -336,9 +318,6 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
         ret_render_packet = render_packet_untextured_mesh_read_state_completed(render_packet_, &untextured_mesh_read_completed);
         if(RENDER_PACKET_SUCCESS != ret_render_packet) {
             ret = renderer_frontend_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("renderer_frontend_draw_packet(%s) - render_packet_untextured_mesh_read_state_completed failed.", renderer_frontend_result_to_str(ret));
             goto cleanup;
         }
@@ -352,9 +331,6 @@ renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render
 
             ret = renderer_frontend_untextured_mesh_draw(renderer_frontend_, &tmp_untextured_mesh, &tmp_model_matrix);
             if(RENDERER_FRONTEND_SUCCESS != ret) {
-                if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret) {
-                    ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-                }
                 ERROR_MESSAGE("renderer_frontend_draw_packet(%s) - renderer_frontend_untextured_mesh_draw failed.", renderer_frontend_result_to_str(ret));
                 goto cleanup;
             }

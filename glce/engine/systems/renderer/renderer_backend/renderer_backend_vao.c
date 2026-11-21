@@ -20,9 +20,13 @@ renderer_backend_result_t renderer_backend_vao_create(renderer_backend_context_t
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BACKEND_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_BAD_OPERATION);
+    if(NULL == backend_context_->vao_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_vao_create(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vao_vtable->vao_create(out_vao_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -46,8 +50,12 @@ renderer_backend_result_t renderer_backend_vao_bind(const renderer_backend_conte
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BACKEND_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->vao_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_vao_bind(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vao_vtable->vao_bind(vao_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -63,7 +71,11 @@ renderer_backend_result_t renderer_backend_vao_unbind(const renderer_backend_con
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BACKEND_BAD_OPERATION);
+    if(NULL == backend_context_->vao_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_vao_unbind(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vao_vtable->vao_unbind();
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -79,7 +91,11 @@ renderer_backend_result_t renderer_backend_vao_attribute_set(const renderer_back
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vao_vtable, ret, RENDERER_BACKEND_BAD_OPERATION);
+    if(NULL == backend_context_->vao_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_vao_attribute_set(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vao_vtable->vao_attribute_set(layout_, size_, type_, normalized_, stride_, offset_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
