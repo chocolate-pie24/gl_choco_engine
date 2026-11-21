@@ -393,6 +393,13 @@ cleanup:
     return ret;
 }
 
+void stl_ascii_loader_vertices_destroy(point_normal_vertex_t** vertices_) {
+    if(NULL == vertices_ || NULL == *vertices_) {
+        return;
+    }
+    general_allocator_free((void**)vertices_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
+}
+
 // ============================================================
 // Loading helpers
 // ============================================================

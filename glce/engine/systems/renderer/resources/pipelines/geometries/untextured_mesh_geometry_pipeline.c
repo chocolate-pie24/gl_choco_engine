@@ -272,7 +272,8 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vb
         }
         tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(point_normal_vertex_t);
         tmp_buffer_range.draw_range.vertex_count = vertex_count;
-        general_allocator_free((void**)&vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
+
+        stl_ascii_loader_vertices_destroy(&vertices);
 
         ret_resource_registry = untextured_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
         if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -300,7 +301,7 @@ cleanup:
     }
     untextured_mesh_geometry_destroy(&geometry);
     if(NULL != vertices) {
-        general_allocator_free((void**)&vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
+        stl_ascii_loader_vertices_destroy(&vertices);
     }
 
     return ret;

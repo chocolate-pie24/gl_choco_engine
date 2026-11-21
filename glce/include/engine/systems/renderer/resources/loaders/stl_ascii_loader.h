@@ -58,6 +58,8 @@ extern "C" {
 
 loader_result_t stl_ascii_loader_load(const char* fullpath_, size_t* out_vertex_count_, point_normal_vertex_t** out_vertices_);
 
+void stl_ascii_loader_vertices_destroy(point_normal_vertex_t** vertices_);
+
 #ifdef __cplusplus
 }
 #endif
