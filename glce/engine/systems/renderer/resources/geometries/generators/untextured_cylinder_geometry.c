@@ -166,3 +166,10 @@ cleanup:
     }
     return ret;
 }
+
+void untextured_cylinder_geometry_vertices_destroy(point_normal_vertex_t** vertices_) {
+    if(NULL == vertices_ || NULL == *vertices_) {
+        return;
+    }
+    general_allocator_free((void**)vertices_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+}

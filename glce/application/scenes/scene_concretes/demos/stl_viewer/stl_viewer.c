@@ -716,7 +716,7 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
         }
         imported_mesh_count++;
 
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        untextured_arrow_geometry_vertices_destroy(&tmp_vertices);
         choco_string_destroy(&tmp_geometry_resource_name);
         choco_string_destroy(&tmp_material_resource_name);
     }
@@ -728,25 +728,26 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
     ret = SCENE_SUCCESS;
 
 cleanup:
-    if(SCENE_DATA_CORRUPTED == ret || SCENE_SUCCESS == ret) {
+    if(SCENE_DATA_CORRUPTED == ret) {
         return ret;
     }
-    for(size_t i = 0; i != imported_mesh_count; ++i) {
-        if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_untextured_mesh_release(renderer_frontend_, &tmp_mesh[i])) {
-            ret = SCENE_DATA_CORRUPTED;
-            ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - renderer_frontend_untextured_mesh_release failed.", scene_result_to_str(ret));
-            return ret;
+    if(SCENE_SUCCESS != ret) {
+        for(size_t i = 0; i != imported_mesh_count; ++i) {
+            if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_untextured_mesh_release(renderer_frontend_, &tmp_mesh[i])) {
+                ret = SCENE_DATA_CORRUPTED;
+                ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - renderer_frontend_untextured_mesh_release failed.", scene_result_to_str(ret));
+                return ret;
+            }
         }
     }
     if(NULL != tmp_geometry_resource_name) {
         choco_string_destroy(&tmp_geometry_resource_name);
     }
-
     if(NULL != tmp_material_resource_name) {
         choco_string_destroy(&tmp_material_resource_name);
     }
     if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        untextured_arrow_geometry_vertices_destroy(&tmp_vertices);
     }
     return ret;
 }
@@ -875,7 +876,7 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     }
 
     *out_mesh_ = tmp_mesh;
-    general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    line_grid_geometry_vertices_destroy(&tmp_vertices);
 
     ret = SCENE_SUCCESS;
 
@@ -884,7 +885,7 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        line_grid_geometry_vertices_destroy(&tmp_vertices);
     }
     return ret;
 }

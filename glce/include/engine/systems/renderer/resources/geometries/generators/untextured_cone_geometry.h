@@ -18,6 +18,8 @@ extern "C" {
 
 geometry_result_t untextured_cone_geometry_vertices_create(const cone_t* cone_, uint16_t segment_count_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_);
 
+void untextured_cone_geometry_vertices_destroy(point_normal_vertex_t** vertices_);
+
 #ifdef __cplusplus
 }
 #endif

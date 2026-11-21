@@ -773,7 +773,7 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     }
 
     *out_mesh_ = tmp_mesh;
-    general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    line_grid_geometry_vertices_destroy(&tmp_vertices);
 
     ret = SCENE_SUCCESS;
 
@@ -782,7 +782,7 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        line_grid_geometry_vertices_destroy(&tmp_vertices);
     }
     return ret;
 }

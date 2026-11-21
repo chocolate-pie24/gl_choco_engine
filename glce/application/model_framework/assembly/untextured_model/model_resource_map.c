@@ -1113,7 +1113,7 @@ static model_framework_result_t debug_axis_meshes_create(
             imported_mesh_count++;
         }
 
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        untextured_arrow_geometry_vertices_destroy(&tmp_vertices);
         choco_string_destroy(&tmp_geometry_resource_name);
         choco_string_destroy(&tmp_material_resource_name);
     }
@@ -1129,10 +1129,10 @@ static model_framework_result_t debug_axis_meshes_create(
     ret = MODEL_FRAMEWORK_SUCCESS;
 
 cleanup:
-    if(MODEL_FRAMEWORK_DATA_CORRUPTED == ret || MODEL_FRAMEWORK_SUCCESS == ret) {
+    if(MODEL_FRAMEWORK_DATA_CORRUPTED == ret) {
         return ret;
     }
-    if(NULL != tmp_meshes) {
+    if(NULL != tmp_meshes && MODEL_FRAMEWORK_SUCCESS != ret) {
         for(size_t i = 0; i != imported_mesh_count; ++i) {
             if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_untextured_mesh_release(renderer_frontend_, &tmp_meshes[i])) {
                 ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
@@ -1141,12 +1141,15 @@ cleanup:
             }
         }
     }
-    if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    if(NULL != tmp_geometry_resource_name) {
+        choco_string_destroy(&tmp_geometry_resource_name);
     }
-
-    choco_string_destroy(&tmp_geometry_resource_name);
-    choco_string_destroy(&tmp_material_resource_name);
+    if(NULL != tmp_material_resource_name) {
+        choco_string_destroy(&tmp_material_resource_name);
+    }
+    if(NULL != tmp_vertices) {
+        untextured_arrow_geometry_vertices_destroy(&tmp_vertices);
+    }
     if(NULL != tmp_meshes) {
         general_allocator_free((void**)&tmp_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
     }

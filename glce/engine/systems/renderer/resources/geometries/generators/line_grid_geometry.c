@@ -207,6 +207,13 @@ cleanup:
     return ret;
 }
 
+void line_grid_geometry_vertices_destroy(line_vertex_t** vertices_) {
+    if(NULL == vertices_ || NULL == *vertices_) {
+        return;
+    }
+    general_allocator_free((void**)vertices_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+}
+
 bool line_grid_plane_is_valid(line_grid_plane_t plane_) {
     switch(plane_) {
     case LINE_GRID_PLANE_XY:
