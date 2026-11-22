@@ -19,8 +19,6 @@
 
 #include <time.h>   // for nanosleep TODO: remove this!!
 
-#include <GL/glew.h>    // TODO: remove this!! glfwSwapBuffersをrendererに移したら削除
-
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
@@ -302,6 +300,7 @@ application_result_t application_run(void) {
     application_result_t ret = APPLICATION_SUCCESS;
 
     scene_result_t ret_scene = SCENE_INVALID_ARGUMENT;
+    renderer_frontend_result_t ret_renderer_frontend = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     struct timespec  req = {0, 1000000};
     const float demo_delta_time = 1.0f / 60.0f; // 暫定固定値
@@ -311,8 +310,6 @@ application_result_t application_run(void) {
         ERROR_MESSAGE("application_run(%s) - Application is not initialized.", application_result_to_str(ret));
         goto cleanup;
     }
-
-    glEnable(GL_PROGRAM_POINT_SIZE);    // 将来的にはrenderer_backend内にrenderer_state.hを追加してそこにOpenGL設定を行う場所を作る
 
     // Scene選択ガイド
     INFO_MESSAGE("Scene selection: Press 3 for Sample Robot, 4 for STL Viewer.");
@@ -366,11 +363,14 @@ application_result_t application_run(void) {
         //   Render Packet build
         //   Render Packet execution
         //   Buffer swap
-        // TODO: Renderer Backendへ移管する。
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
-        glViewport(0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
-
+        renderer_frontend_framebuffer_clear(s_application_state->renderer_frontend, RENDERER_CLEAR_COLOR_BIT | RENDERER_CLEAR_DEPTH_BIT);
+        renderer_frontend_depth_test_set(s_application_state->renderer_frontend, true);
+        ret_renderer_frontend = renderer_frontend_viewport_set(s_application_state->renderer_frontend, 0, 0, s_application_state->frame_state.framebuffer_width, s_application_state->frame_state.framebuffer_height);
+        if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+            ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
+            ERROR_MESSAGE("application_run(%s) - renderer_frontend_viewport_set failed.", application_result_to_str(ret));
+            goto cleanup;
+        }
 
         ret_scene = scene_context_draw(s_application_state->scene_context, s_application_state->renderer_frontend);
         if(SCENE_SUCCESS != ret_scene) {

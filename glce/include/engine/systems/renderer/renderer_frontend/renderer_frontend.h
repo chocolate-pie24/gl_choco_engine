@@ -64,6 +64,17 @@ void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_);
 renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render_packet_, renderer_frontend_t* renderer_frontend_);
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Frame Operations.
+//////////////////////////////////////////////////////////////////////////////////////////
+void renderer_frontend_depth_test_set(renderer_frontend_t* renderer_frontend_, bool enable_);
+
+renderer_frontend_result_t renderer_frontend_viewport_set(renderer_frontend_t* renderer_frontend_, int32_t x_, int32_t y_, int32_t framebuffer_width_, int32_t framebuffer_height_);
+
+void renderer_frontend_framebuffer_clear(renderer_frontend_t* renderer_frontend_, uint32_t mask_);
+
+renderer_frontend_result_t renderer_frontend_draw_arrays(renderer_frontend_t* renderer_frontend_, rendering_primitive_t primitive_, const draw_range_t* draw_range_);
+
+//////////////////////////////////////////////////////////////////////////////////////////
 // for Untexture Mesh
 //////////////////////////////////////////////////////////////////////////////////////////
 /**

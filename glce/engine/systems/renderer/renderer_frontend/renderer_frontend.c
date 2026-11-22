@@ -6,8 +6,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <GL/glew.h>    // TODO: remove this.
-
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
@@ -24,7 +22,9 @@
 #include "engine/light/directional_light.h"
 #include "engine/light/ambient_light.h"
 
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_context.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_frame_operations.h"
 
 #include "engine/systems/renderer/resources/geometries/conversion/geometry_conversion.h"
 
@@ -343,10 +343,75 @@ cleanup:
     return ret;
 }
 
+void renderer_frontend_depth_test_set(renderer_frontend_t* renderer_frontend_, bool enable_) {
+    if(NULL == renderer_frontend_ || NULL == renderer_frontend_->renderer_backend_context) {
+        return;
+    }
+    renderer_backend_depth_test_set(renderer_frontend_->renderer_backend_context, enable_);
+}
+
+renderer_frontend_result_t renderer_frontend_viewport_set(renderer_frontend_t* renderer_frontend_, int32_t x_, int32_t y_, int32_t framebuffer_width_, int32_t framebuffer_height_) {
+    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    if(NULL == renderer_frontend_->renderer_backend_context) {
+        ret = RENDERER_FRONTEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_frontend_viewport_set(%s) - Provided renderer_frontend_ is corrupted.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_viewport_set(renderer_frontend_->renderer_backend_context, x_, y_, framebuffer_width_, framebuffer_height_);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = renderer_frontend_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("renderer_frontend_viewport_set(%s) - renderer_backend_viewport_set failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = RENDERER_FRONTEND_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
+void renderer_frontend_framebuffer_clear(renderer_frontend_t* renderer_frontend_, uint32_t mask_) {
+    if(NULL == renderer_frontend_ || NULL == renderer_frontend_->renderer_backend_context) {
+        return;
+    }
+    renderer_backend_framebuffer_clear(renderer_frontend_->renderer_backend_context, mask_);
+}
+
+renderer_frontend_result_t renderer_frontend_draw_arrays(renderer_frontend_t* renderer_frontend_, rendering_primitive_t primitive_, const draw_range_t* draw_range_) {
+    renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
+
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
+    if(NULL == renderer_frontend_->renderer_backend_context) {
+        ret = RENDERER_FRONTEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_frontend_draw_arrays(%s) - Provided renderer_frontend_ is corrupted.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_renderer_backend = renderer_backend_draw_arrays(renderer_frontend_->renderer_backend_context, primitive_, draw_range_);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = renderer_frontend_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("renderer_frontend_draw_arrays(%s) - renderer_backend_draw_arrays failed.", renderer_frontend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = RENDERER_FRONTEND_SUCCESS;
+
+cleanup:
+    return ret;
+}
+
 renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_, const mat4x4f_t* model_matrix_) {
     renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     const draw_range_t* draw_range = NULL;
     const untextured_mesh_material_t* material = NULL;
@@ -397,16 +462,12 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_front
         goto cleanup;
     }
 
-    // TODO: renderer_backendにgl系APIを追加しOpenGL依存を消す
-    if(draw_range->first_vertex_count > (size_t)INT32_MAX || draw_range->vertex_count > (size_t)INT32_MAX) {
-        ret = RENDERER_FRONTEND_LIMIT_EXCEEDED;
+    ret_renderer_backend = renderer_backend_draw_arrays(renderer_frontend_->renderer_backend_context, RENDERING_PRIMITIVE_TRIANGLES, draw_range);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = renderer_frontend_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_draw(%s) - renderer_backend_draw_arrays failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
-    if(draw_range->first_vertex_count > (SIZE_MAX - draw_range->vertex_count)) {
-        ret = RENDERER_FRONTEND_OVERFLOW;
-        goto cleanup;
-    }
-    glDrawArrays(GL_TRIANGLES, (GLint)draw_range->first_vertex_count, (GLsizei)draw_range->vertex_count);
 
     ret = RENDERER_FRONTEND_SUCCESS;
 
@@ -693,6 +754,7 @@ renderer_frontend_result_t renderer_frontend_line_mesh_draw(renderer_frontend_t*
     renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     shader_result_t ret_shader = SHADER_INVALID_ARGUMENT;
+    renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     const draw_range_t* draw_range = NULL;
 
@@ -728,16 +790,12 @@ renderer_frontend_result_t renderer_frontend_line_mesh_draw(renderer_frontend_t*
         goto cleanup;
     }
 
-    // TODO: renderer_backendにgl系APIを追加しOpenGL依存を消す
-    if(draw_range->first_vertex_count > (size_t)INT32_MAX || draw_range->vertex_count > (size_t)INT32_MAX) {
-        ret = RENDERER_FRONTEND_LIMIT_EXCEEDED;
+    ret_renderer_backend = renderer_backend_draw_arrays(renderer_frontend_->renderer_backend_context, RENDERING_PRIMITIVE_LINES, draw_range);
+    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+        ret = renderer_frontend_result_convert_renderer_backend(ret_renderer_backend);
+        ERROR_MESSAGE("renderer_frontend_line_mesh_draw(%s) - renderer_backend_draw_arrays failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
-    if(draw_range->first_vertex_count > (SIZE_MAX - draw_range->vertex_count)) {
-        ret = RENDERER_FRONTEND_OVERFLOW;
-        goto cleanup;
-    }
-    glDrawArrays(GL_LINES, (GLint)draw_range->first_vertex_count, (GLsizei)draw_range->vertex_count);
 
     ret = RENDERER_FRONTEND_SUCCESS;
 

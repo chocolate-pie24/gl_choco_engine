@@ -68,6 +68,18 @@ typedef enum {
     TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER,    /**< GL_CLAMP_TO_BORDER相当: 範囲外をborder colorで読む方式 */
 } texture_wrap_config_t;
 
+typedef enum {
+    RENDERING_PRIMITIVE_LINES,
+    RENDERING_PRIMITIVE_TRIANGLES,
+    RENDERING_PRIMITIVE_POINTS,
+} rendering_primitive_t;
+
+typedef enum {
+  RENDERER_CLEAR_COLOR_BIT   = 1 << 0, // 0x01
+  RENDERER_CLEAR_DEPTH_BIT   = 1 << 1, // 0x02
+  RENDERER_CLEAR_STENCIL_BIT = 1 << 2, // 0x04
+} renderer_clear_mask_t;
+
 bool buffer_usage_is_valid(buffer_usage_t usage_);
 
 bool draw_range_is_valid(const draw_range_t* draw_range_);
