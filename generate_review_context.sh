@@ -24,12 +24,13 @@ cd "$SCRIPT_DIR"
     echo
     echo "- リポジトリのディレクトリツリー"
     echo "- glce/ 以下にある *.h および *.c ファイルの内容"
+    echo "- assets/shaders/ 以下にあるShaderソースファイルの内容"
     echo
     echo "各ソースファイルの内容は、以下の形式のヘッダに続けて、"
     echo "元ファイルの内容を変更せずに出力しています。"
     echo
     echo "================================================================"
-    echo "SOURCE: glce/<path>"
+    echo "SOURCE: <repository-relative-path>"
     echo "================================================================"
     echo
     echo "このファイル自体は正本ではありません。"
@@ -50,7 +51,16 @@ cd "$SCRIPT_DIR"
     echo
     echo "===== SOURCE FILES ====="
 
-    find glce -type f \( -name '*.h' -o -name '*.c' \) | sort |
+    {
+        find glce -type f \( -name '*.h' -o -name '*.c' \)
+        if [ -d assets/shaders ]; then
+            find assets/shaders -type f \( \
+                -name '*.vert' -o -name '*.frag' -o \
+                -name '*.geom' -o -name '*.tesc' -o -name '*.tese' -o \
+                -name '*.comp' -o -name '*.glsl' \
+            \)
+        fi
+    } | sort |
     while IFS= read -r file; do
         echo
         echo "================================================================"
