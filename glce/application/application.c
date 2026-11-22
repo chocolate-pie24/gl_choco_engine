@@ -182,7 +182,7 @@ application_result_t application_create(void) {
     // Renderer System.
     INFO_MESSAGE("Creating renderer frontend...");
     renderer_frontend_config_initialize(&tmp_state->renderer_frontend_config);
-    ret_renderer_frontend = renderer_frontend_create(&tmp_state->renderer_frontend_config, tmp_subsystem_allocator, fs_path_fullpath_get(tmp_executable_directory), "../../assets/shaders/test_shader/", &tmp_renderer_frontend);
+    ret_renderer_frontend = renderer_frontend_create(&tmp_state->renderer_frontend_config, tmp_subsystem_allocator, fs_path_fullpath_get(tmp_executable_directory), "../../assets/shaders/", &tmp_renderer_frontend);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = application_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("application_create(%s) - renderer_frontend_create failed.", application_result_to_str(ret));
