@@ -130,7 +130,7 @@ static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** out_va
     IF_ARG_NULL_GOTO_CLEANUP(out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
-    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_vao_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vao);
+    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_vao_t), GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE, (void**)&tmp_vao);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("gl33_vao_create(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
@@ -179,7 +179,7 @@ static void gl33_vao_destroy(renderer_backend_vao_t** vao_) {
         WARN_MESSAGE("gl33_vao_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
     }
     mock_glDeleteVertexArrays(1, &(*vao_)->vao_handle);
-    general_allocator_free((void**)vao_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)vao_, GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE);
 
     *vao_ = NULL;
 

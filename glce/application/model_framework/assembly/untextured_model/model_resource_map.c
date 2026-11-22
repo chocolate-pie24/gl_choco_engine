@@ -217,7 +217,7 @@ model_framework_result_t untextured_model_resource_map_create(
     }
 
     // Prepare.
-    ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_resource_map_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_resource_map);
+    ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_resource_map_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_resource_map);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("untextured_model_resource_map_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
@@ -330,7 +330,7 @@ cleanup:
         choco_string_destroy(&tmp_resource_map_name);
     }
     if(NULL != tmp_resource_map) {
-        general_allocator_free((void**)&tmp_resource_map, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_resource_map, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -386,7 +386,7 @@ model_framework_result_t untextured_model_resource_map_destroy(renderer_frontend
     }
 
     choco_string_destroy(&(*resource_map_)->resource_map_name);
-    general_allocator_free((void**)resource_map_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)resource_map_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 
     ret = MODEL_FRAMEWORK_SUCCESS;
 
@@ -701,7 +701,7 @@ static model_framework_result_t untextured_meshes_create(renderer_frontend_t* re
         ERROR_MESSAGE("untextured_meshes_create(%s) - allocation overflow.", model_framework_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_meshes);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_meshes);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("untextured_meshes_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
@@ -714,7 +714,7 @@ static model_framework_result_t untextured_meshes_create(renderer_frontend_t* re
         ERROR_MESSAGE("untextured_meshes_create(%s) - allocation overflow.", model_framework_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_coordinate_ids);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_coordinate_ids);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("untextured_meshes_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
@@ -761,10 +761,10 @@ cleanup:
         }
     }
     if(NULL != tmp_coordinate_ids) {
-        general_allocator_free((void**)&tmp_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     if(NULL != tmp_meshes) {
-        general_allocator_free((void**)&tmp_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -789,8 +789,8 @@ static model_framework_result_t untextured_meshes_destroy(renderer_frontend_t* r
             goto cleanup;
         }
     }
-    general_allocator_free((void**)coordinate_ids_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    general_allocator_free((void**)meshes_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)coordinate_ids_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
+    general_allocator_free((void**)meshes_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 
     ret = MODEL_FRAMEWORK_SUCCESS;
 
@@ -834,7 +834,7 @@ static model_framework_result_t debug_aabb_meshes_create(renderer_frontend_t* re
         ERROR_MESSAGE("debug_aabb_meshes_create(%s) - allocation overflow.", model_framework_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_meshes);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_meshes);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("debug_aabb_meshes_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
@@ -846,7 +846,7 @@ static model_framework_result_t debug_aabb_meshes_create(renderer_frontend_t* re
         ERROR_MESSAGE("debug_aabb_meshes_create(%s) - allocation overflow.", model_framework_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_coordinate_ids);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_coordinate_ids);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("debug_aabb_meshes_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
@@ -912,10 +912,10 @@ cleanup:
         }
     }
     if(NULL != tmp_meshes) {
-        general_allocator_free((void**)&tmp_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     if(NULL != tmp_coordinate_ids) {
-        general_allocator_free((void**)&tmp_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -939,8 +939,8 @@ static model_framework_result_t debug_aabb_meshes_destroy(renderer_frontend_t* r
             goto cleanup;
         }
     }
-    general_allocator_free((void**)coordinate_ids_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    general_allocator_free((void**)meshes_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)coordinate_ids_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
+    general_allocator_free((void**)meshes_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 
     ret = MODEL_FRAMEWORK_SUCCESS;
 
@@ -1053,7 +1053,7 @@ static model_framework_result_t debug_axis_meshes_create(
         ERROR_MESSAGE("debug_axis_meshes_create(%s) - allocation overflow.", model_framework_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_meshes);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_meshes);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("debug_axis_meshes_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
@@ -1065,7 +1065,7 @@ static model_framework_result_t debug_axis_meshes_create(
         ERROR_MESSAGE("debug_axis_meshes_create(%s) - allocation overflow.", model_framework_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_coordinate_ids);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_coordinate_ids);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("debug_axis_meshes_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
@@ -1151,10 +1151,10 @@ cleanup:
         untextured_arrow_geometry_vertices_destroy(&tmp_vertices);
     }
     if(NULL != tmp_meshes) {
-        general_allocator_free((void**)&tmp_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_meshes, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     if(NULL != tmp_coordinate_ids) {
-        general_allocator_free((void**)&tmp_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -1178,8 +1178,8 @@ static model_framework_result_t debug_axis_meshes_destroy(renderer_frontend_t* r
             goto cleanup;
         }
     }
-    general_allocator_free((void**)coordinate_ids_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    general_allocator_free((void**)meshes_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)coordinate_ids_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
+    general_allocator_free((void**)meshes_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 
     ret = MODEL_FRAMEWORK_SUCCESS;
 

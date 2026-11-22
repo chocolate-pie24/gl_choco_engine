@@ -98,14 +98,14 @@ model_framework_result_t model_transform_tree_create(uint16_t coordinate_id_, mo
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_transform_tree_, ret, MODEL_FRAMEWORK_BAD_OPERATION);
 
     // Prepare.
-    ret_general_allocator = general_allocator_allocate(sizeof(model_transform_tree_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_tree);
+    ret_general_allocator = general_allocator_allocate(sizeof(model_transform_tree_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_tree);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("model_transform_tree_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_root_node);
+    ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_root_node);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
 
@@ -140,10 +140,10 @@ model_framework_result_t model_transform_tree_create(uint16_t coordinate_id_, mo
 cleanup:
     if(MODEL_FRAMEWORK_DATA_CORRUPTED != ret) {
         if(NULL != tmp_root_node) {
-            general_allocator_free((void**)&tmp_root_node, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+            general_allocator_free((void**)&tmp_root_node, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
         }
         if(NULL != tmp_tree) {
-            general_allocator_free((void**)&tmp_tree, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+            general_allocator_free((void**)&tmp_tree, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
         }
     }
     return ret;
@@ -195,7 +195,7 @@ void model_transform_tree_destroy(model_transform_tree_t** transform_tree_) {
         parent = node->parent;
         next = node->next;
 
-        general_allocator_free((void**)&node, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&node, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
         if(NULL == parent) {
             (*transform_tree_)->root = NULL;
             break;
@@ -207,7 +207,7 @@ void model_transform_tree_destroy(model_transform_tree_t** transform_tree_) {
             node = parent;
         }
     }
-    general_allocator_free((void**)transform_tree_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)transform_tree_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 model_framework_result_t model_transform_tree_clone(model_transform_tree_t* src_, model_transform_tree_t** out_transform_tree) {
@@ -347,7 +347,7 @@ model_framework_result_t model_transform_tree_add_child(model_transform_tree_t* 
         ERROR_MESSAGE("model_transform_tree_add_child(%s) - Provided parent_coordinate_id_ not found.", model_framework_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&child);
+    ret_general_allocator = general_allocator_allocate(sizeof(model_transform_node_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&child);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("model_transform_tree_add_child(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
@@ -377,7 +377,7 @@ model_framework_result_t model_transform_tree_add_child(model_transform_tree_t* 
 cleanup:
     if(MODEL_FRAMEWORK_DATA_CORRUPTED != ret) {
         if(NULL != child) {
-            general_allocator_free((void**)&child, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+            general_allocator_free((void**)&child, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
         }
     }
     return ret;

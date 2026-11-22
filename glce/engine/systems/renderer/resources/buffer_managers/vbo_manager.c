@@ -157,7 +157,7 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(vbo_manager_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
+    ret_general_allocator = general_allocator_allocate(sizeof(vbo_manager_t), GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE, (void**)&tmp_vbo_manager);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = buffer_manager_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("vbo_manager_create(%s) - general_allocator_allocate failed.", buffer_manager_result_to_str(ret));
@@ -240,7 +240,7 @@ cleanup:
         range_allocator_destroy(&tmp_allocator);
     }
     if(NULL != tmp_vbo_manager) {
-        general_allocator_free((void**)&tmp_vbo_manager, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_vbo_manager, GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE);
     }
     return ret;
 }
@@ -261,7 +261,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_) {
     renderer_backend_vbo_destroy((*vbo_manager_)->backend_context, &(*vbo_manager_)->vbo);
     range_allocator_destroy(&(*vbo_manager_)->range_allocator);
 
-    general_allocator_free((void**)vbo_manager_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)vbo_manager_, GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE);
 }
 
 buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t size_, const void* write_data_, range_allocation_t* out_allocation_handle_) {

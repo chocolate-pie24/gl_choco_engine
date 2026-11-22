@@ -59,7 +59,7 @@ scene_result_t sample_robot_model_create(const untextured_model_resource_map_t* 
     IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, SCENE_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, SCENE_BAD_OPERATION);
 
-    ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_model_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_robot);
+    ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_model_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_robot);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("sample_robot_model_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
@@ -100,7 +100,7 @@ cleanup:
         model_transform_tree_destroy(&tmp_transform_tree);
     }
     if(NULL != tmp_robot) {
-        general_allocator_free((void**)&tmp_robot, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_robot, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -116,7 +116,7 @@ void sample_robot_model_destroy(sample_robot_model_t** robot_) {
     }
 #endif
     model_transform_tree_destroy(&(*robot_)->transform_tree);
-    general_allocator_free((void**)robot_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)robot_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 scene_result_t sample_robot_model_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_model_t* robot_) {
@@ -305,21 +305,21 @@ scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, SCENE_BAD_OPERATION);
 
     // Prepare.
-    ret_general_allocator = general_allocator_allocate(sizeof(*coordinates) * coordinate_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&coordinates);
+    ret_general_allocator = general_allocator_allocate(sizeof(*coordinates) * coordinate_count, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&coordinates);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("sample_robot_model_dummy_config_loader(%s) - Failed to allocate coordinates.", scene_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(*untextured_mesh_configs) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&untextured_mesh_configs);
+    ret_general_allocator = general_allocator_allocate(sizeof(*untextured_mesh_configs) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&untextured_mesh_configs);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("sample_robot_model_dummy_config_loader(%s) - Failed to allocate mesh configs.", scene_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(*coordinate_ids) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&coordinate_ids);
+    ret_general_allocator = general_allocator_allocate(sizeof(*coordinate_ids) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&coordinate_ids);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("sample_robot_model_dummy_config_loader(%s) - Failed to allocate mesh coordinate IDs.", scene_result_to_str(ret));
@@ -377,13 +377,13 @@ cleanup:
         untextured_model_assembly_config_destroy(&tmp_assembly_config);
     }
     if(NULL != coordinates) {
-        general_allocator_free((void**)&coordinates, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&coordinates, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     if(NULL != untextured_mesh_configs) {
-        general_allocator_free((void**)&untextured_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&untextured_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     if(NULL != coordinate_ids) {
-        general_allocator_free((void**)&coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }

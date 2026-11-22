@@ -36,7 +36,7 @@ scene_result_t scene_context_create(scene_context_t** out_scene_) {
     IF_ARG_NULL_GOTO_CLEANUP(out_scene_, ret, SCENE_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_, ret, SCENE_BAD_OPERATION);
 
-    ret_general_allocator = general_allocator_allocate(sizeof(scene_context_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_scene_context);
+    ret_general_allocator = general_allocator_allocate(sizeof(scene_context_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_scene_context);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("scene_context_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
@@ -66,7 +66,7 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_scene_context) {
-        general_allocator_free((void**)&tmp_scene_context, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_scene_context, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -83,7 +83,7 @@ void scene_context_destroy(renderer_frontend_t* renderer_frontend_, scene_contex
 #endif
 
     if(NULL == (*scene_)->vtable) {
-        general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
         return;
     }
     (*scene_)->vtable->scene_destroy(renderer_frontend_, &(*scene_)->scene);
@@ -91,7 +91,7 @@ void scene_context_destroy(renderer_frontend_t* renderer_frontend_, scene_contex
         ERROR_MESSAGE("scene_context_destroy(%s) - scene_destroy failed.", scene_result_to_str(SCENE_DATA_CORRUPTED));
         return;
     }
-    general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 scene_list_t scene_context_current_scene_get(const scene_context_t* scene_) {

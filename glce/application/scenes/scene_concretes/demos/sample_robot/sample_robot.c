@@ -149,7 +149,7 @@ static scene_result_t sample_robot_create(renderer_frontend_t* renderer_frontend
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_sample_robot);
+    ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_sample_robot);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("sample_robot_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
@@ -295,7 +295,7 @@ cleanup:
         }
     }
     if(NULL != tmp_sample_robot) {
-        general_allocator_free((void**)&tmp_sample_robot, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_sample_robot, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -335,7 +335,7 @@ static void sample_robot_destroy(renderer_frontend_t* renderer_frontend_, void**
         return;
     }
 
-    general_allocator_free((void**)scene_concrete_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)scene_concrete_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 static scene_result_t sample_robot_update(

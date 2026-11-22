@@ -88,7 +88,7 @@ render_packet_result_t render_packet_create(size_t max_memory_pool_size_, render
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(render_packet_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_render_packet);
+    ret_general_allocator = general_allocator_allocate(sizeof(render_packet_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDER_PACKET, (void**)&tmp_render_packet);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = render_packet_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("render_packet_create(%s) - general_allocator_allocate failed.", render_packet_result_to_str(ret));
@@ -128,7 +128,7 @@ cleanup:
         frame_allocator_destroy(&tmp_frame_allocator);
     }
     if(NULL != tmp_render_packet) {
-        general_allocator_free((void**)&tmp_render_packet, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_render_packet, GENERAL_ALLOCATOR_MEMORY_TAG_RENDER_PACKET);
     }
     return ret;
 }
@@ -145,7 +145,7 @@ void render_packet_destroy(render_packet_t** render_packet_) {
 #endif
 
     frame_allocator_destroy(&(*render_packet_)->allocator);
-    general_allocator_free((void**)render_packet_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)render_packet_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDER_PACKET);
 }
 
 // 失敗したら全部破棄する前提なので当面はrollbackは行わない

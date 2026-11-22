@@ -147,7 +147,7 @@ application_result_t application_create(void) {
     //   Subsystem Allocator
     //   Directory Paths
     INFO_MESSAGE("Creating application infrastructure...");
-    ret_general_allocator = general_allocator_allocate(sizeof(*tmp_state), GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_state);
+    ret_general_allocator = general_allocator_allocate(sizeof(*tmp_state), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_state);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = application_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("application_create(%s) - Failed to allocate memory for application state.", application_result_to_str(ret));
@@ -258,7 +258,7 @@ cleanup:
         subsystem_allocator_destroy(&tmp_subsystem_allocator);
     }
     if(NULL != tmp_state) {
-        general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+        general_allocator_free((void**)&tmp_state, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
 
     return ret;
@@ -290,7 +290,7 @@ void application_destroy(void) {
     application_diagnostics_status_report(s_application_state->subsystem_allocator);
 
     subsystem_allocator_destroy(&s_application_state->subsystem_allocator);
-    general_allocator_free((void**)&s_application_state, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+    general_allocator_free((void**)&s_application_state, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     INFO_MESSAGE("Freed all memory.");
 
     INFO_MESSAGE("Application destroyed successfully.");

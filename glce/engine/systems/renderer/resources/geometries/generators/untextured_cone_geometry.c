@@ -65,7 +65,7 @@ geometry_result_t untextured_cone_geometry_vertices_create(const cone_t* cone_, 
         ERROR_MESSAGE("untextured_cone_geometry_vertices_create(%s) - Vertex array size overflow.", geometry_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vertices);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = geometry_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("untextured_cone_geometry_vertices_create(%s) - general_allocator_allocate failed.", geometry_result_to_str(ret));
@@ -126,7 +126,7 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
     }
     return ret;
 }
@@ -135,5 +135,5 @@ void untextured_cone_geometry_vertices_destroy(point_normal_vertex_t** vertices_
     if(NULL == vertices_ || NULL == *vertices_) {
         return;
     }
-    general_allocator_free((void**)vertices_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)vertices_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
 }

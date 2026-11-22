@@ -162,7 +162,7 @@ static renderer_backend_result_t gl33_shader_create(renderer_backend_shader_t** 
     IF_ARG_NULL_GOTO_CLEANUP(out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
-    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_shader);
+    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_SHADER, (void**)&tmp_shader);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("gl33_shader_create(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
@@ -208,7 +208,7 @@ static void gl33_shader_destroy(renderer_backend_shader_t** shader_handle_) {
         mock_glDeleteProgram((*shader_handle_)->program_id);
     }
 
-    general_allocator_free((void**)shader_handle_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)shader_handle_, GENERAL_ALLOCATOR_MEMORY_TAG_SHADER);
 }
 
 /**
@@ -315,7 +315,7 @@ static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage
     mock_glGetShaderiv(tmp_handle, GL_COMPILE_STATUS, &result);   // コンパイル結果正常でresult = GL_TRUE
     mock_glGetShaderiv(tmp_handle, GL_INFO_LOG_LENGTH, &info_log_length); // コンパイル結果正常でinfo_log_length = 0
     if(0 < info_log_length) {
-        ret_general_allocator = general_allocator_allocate((size_t)info_log_length, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&err_mes);
+        ret_general_allocator = general_allocator_allocate((size_t)info_log_length, GENERAL_ALLOCATOR_MEMORY_TAG_SHADER, (void**)&err_mes);
         if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
             ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
             ERROR_MESSAGE("gl33_shader_compile(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
@@ -326,11 +326,11 @@ static renderer_backend_result_t gl33_shader_compile(shader_stage_t shader_stage
         if(GL_TRUE != result) {
             ret = RENDERER_BACKEND_SHADER_COMPILE_ERROR;
             ERROR_MESSAGE("gl33_shader_compile(%s) - Failed to compile shader source: '%s'", renderer_backend_result_to_str(ret), err_mes);
-            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_SHADER);
             goto cleanup;
         } else {
             WARN_MESSAGE("gl33_shader_compile - info log: %s", err_mes);
-            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_SHADER);
         }
     } else if(GL_TRUE != result) {
         ret = RENDERER_BACKEND_SHADER_COMPILE_ERROR;
@@ -448,7 +448,7 @@ static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* sha
     mock_glGetProgramiv(tmp_program_id, GL_LINK_STATUS, &result);
     mock_glGetProgramiv(tmp_program_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if(0 < info_log_length) {
-        ret_general_allocator = general_allocator_allocate((size_t)info_log_length, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&err_mes);
+        ret_general_allocator = general_allocator_allocate((size_t)info_log_length, GENERAL_ALLOCATOR_MEMORY_TAG_SHADER, (void**)&err_mes);
         if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
             ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
             ERROR_MESSAGE("gl33_shader_link(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
@@ -459,11 +459,11 @@ static renderer_backend_result_t gl33_shader_link(renderer_backend_shader_t* sha
         if(GL_TRUE != result) {
             ret = RENDERER_BACKEND_SHADER_LINK_ERROR;
             ERROR_MESSAGE("gl33_shader_link(%s) - Failed to link shader program: '%s'", renderer_backend_result_to_str(ret), err_mes);
-            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_SHADER);
             goto cleanup;
         } else {
             WARN_MESSAGE("gl33_shader_link - info log: %s", err_mes);
-            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+            general_allocator_free((void**)&err_mes, GENERAL_ALLOCATOR_MEMORY_TAG_SHADER);
         }
     } else if(GL_TRUE != result) {
         ret = RENDERER_BACKEND_SHADER_LINK_ERROR;

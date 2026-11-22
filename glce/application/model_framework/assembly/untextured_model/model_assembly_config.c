@@ -69,7 +69,7 @@ model_framework_result_t untextured_model_assembly_config_create(
     }
 #endif
 
-    ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_assembly_config_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_config);
+    ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_assembly_config_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_config);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
@@ -111,17 +111,17 @@ void untextured_model_assembly_config_destroy(untextured_model_assembly_config_t
     }
 
     if(NULL != (*config_)->coordinate_configs) {
-        general_allocator_free((void**)&(*config_)->coordinate_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&(*config_)->coordinate_configs, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
 
     if(NULL != (*config_)->mesh_configs) {
-        general_allocator_free((void**)&(*config_)->mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&(*config_)->mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     if(NULL != (*config_)->mesh_coordinate_ids) {
-        general_allocator_free((void**)&(*config_)->mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&(*config_)->mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
 
-    general_allocator_free((void**)config_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)config_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 bool untextured_model_assembly_config_is_valid(const untextured_model_assembly_config_t* config_) {

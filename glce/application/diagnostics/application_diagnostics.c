@@ -156,8 +156,16 @@ static application_result_t general_allocator_report(void) {
 
     for(size_t i = 0; i != GENERAL_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
         const general_allocator_memory_tag_t memory_tag = (general_allocator_memory_tag_t)i;
-        const double allocated_mib = (double)status.memory_tag_allocated[i] / (1024.0 * 1024.0);
-        INFO_MESSAGE("      %-23s : %10.2f MiB", general_allocator_memory_tag_to_str(memory_tag), allocated_mib);
+        const size_t allocated_bytes = status.memory_tag_allocated[i];
+        const char* tag_name = general_allocator_memory_tag_to_str(memory_tag);
+
+        if(allocated_bytes >= MIB) {
+            INFO_MESSAGE("      %-16s : %12.2f MiB", tag_name, (double)allocated_bytes / MIB);
+        } else if(allocated_bytes >= KIB) {
+            INFO_MESSAGE("      %-16s : %12.2f KiB", tag_name, (double)allocated_bytes / KIB);
+        } else {
+            INFO_MESSAGE("      %-16s : %12zu B", tag_name, allocated_bytes);
+        }
     }
 
     INFO_MESSAGE("");

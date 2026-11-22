@@ -174,7 +174,7 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_texture_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_texture);
+    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_texture_t), GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_texture);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("gl33_texture_create(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
@@ -240,7 +240,7 @@ static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_) {
     }
     mock_glDeleteTextures(1, &(*texture_handle_)->handle);
 
-    general_allocator_free((void**)texture_handle_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)texture_handle_, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE);
 
     *texture_handle_ = NULL;
 }

@@ -157,7 +157,7 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     }
 
     // Viewer / Render Packet.
-    ret_general_allocator = general_allocator_allocate(sizeof(stl_viewer_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_stl_viewer);
+    ret_general_allocator = general_allocator_allocate(sizeof(stl_viewer_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_stl_viewer);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("stl_viewer_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
@@ -298,7 +298,7 @@ cleanup:
         orbit_camera_destroy(&tmp_orbit_camera);
     }
     if(NULL != tmp_stl_viewer) {
-        general_allocator_free((void**)&tmp_stl_viewer, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_stl_viewer, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -361,7 +361,7 @@ static void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, void** s
     render_packet_destroy(&tmp_stl_viewer->render_packet);
     orbit_camera_destroy(&tmp_stl_viewer->orbit_camera);
 
-    general_allocator_free((void**)scene_concrete_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)scene_concrete_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 static scene_result_t stl_viewer_update(

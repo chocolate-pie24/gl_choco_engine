@@ -92,7 +92,7 @@ shader_result_t untextured_mesh_shader_create(const char* vertex_shader_fullpath
     }
 
     // Resource Allocation.
-    ret_general_allocator = general_allocator_allocate(sizeof(untextured_mesh_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_untextured_mesh_shader);
+    ret_general_allocator = general_allocator_allocate(sizeof(untextured_mesh_shader_t), GENERAL_ALLOCATOR_MEMORY_TAG_SHADER, (void**)&tmp_untextured_mesh_shader);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = shader_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("untextured_mesh_shader_create(%s) - general_allocator_allocate failed.", shader_result_to_str(ret));
@@ -154,7 +154,7 @@ cleanup:
         renderer_backend_vao_destroy(backend_context_, &tmp_backend_vao);
     }
     if(NULL != tmp_untextured_mesh_shader) {
-        general_allocator_free((void**)&tmp_untextured_mesh_shader, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_untextured_mesh_shader, GENERAL_ALLOCATOR_MEMORY_TAG_SHADER);
     }
     return ret;
 }
@@ -176,7 +176,7 @@ void untextured_mesh_shader_destroy(renderer_backend_context_t* backend_context_
 
     renderer_backend_vao_destroy(backend_context_, &(*shader_)->vao);
     renderer_backend_shader_destroy(backend_context_, &(*shader_)->shader);
-    general_allocator_free((void**)shader_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)shader_, GENERAL_ALLOCATOR_MEMORY_TAG_SHADER);
 }
 
 shader_result_t untextured_mesh_shader_vao_bind(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_) {

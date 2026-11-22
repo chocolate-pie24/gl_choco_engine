@@ -472,14 +472,14 @@ range_allocator_result_t range_allocator_create(size_t memory_pool_size_, size_t
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(range_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_allocator);
+    ret_general_allocator = general_allocator_allocate(sizeof(range_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR, (void**)&tmp_allocator);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("range_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(node_pool_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_node_pool);
+    ret_general_allocator = general_allocator_allocate(node_pool_size, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR, (void**)&tmp_node_pool);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("range_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
@@ -523,10 +523,10 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_node_pool) {
-        general_allocator_free((void**)&tmp_node_pool, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_node_pool, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
     }
     if(NULL != tmp_allocator) {
-        general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
     }
     return ret;
 }
@@ -540,13 +540,13 @@ void range_allocator_destroy(range_allocator_t** allocator_) {
     }
 
     if(NULL != (*allocator_)->node_pool) {
-        general_allocator_free((void**)&(*allocator_)->node_pool, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&(*allocator_)->node_pool, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
     }
 
     (*allocator_)->max_node_count = 0;
     (*allocator_)->memory_pool_size = 0;
 
-    general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
 }
 
 range_allocator_result_t range_allocator_allocate(range_allocator_t* allocator_, size_t required_size_, size_t required_align_, range_allocation_t* out_allocation_) {

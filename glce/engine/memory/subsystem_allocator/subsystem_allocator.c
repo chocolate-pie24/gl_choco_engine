@@ -189,14 +189,14 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     }
 
     // Prepare.
-    ret_general_allocator = general_allocator_allocate(sizeof(subsystem_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_allocator);
+    ret_general_allocator = general_allocator_allocate(sizeof(subsystem_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR, (void**)&tmp_allocator);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("subsystem_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(memory_pool_size_, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, &tmp_memory_pool);
+    ret_general_allocator = general_allocator_allocate(memory_pool_size_, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR, &tmp_memory_pool);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("subsystem_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
@@ -232,10 +232,10 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
 cleanup:
     if(SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED != ret) {
         if(NULL != tmp_memory_pool) {
-            general_allocator_free((void**)&tmp_memory_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+            general_allocator_free((void**)&tmp_memory_pool, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
         }
         if(NULL != tmp_allocator) {
-            general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+            general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
         }
     }
 
@@ -272,8 +272,8 @@ void subsystem_allocator_destroy(subsystem_allocator_t** allocator_) {
 #endif
 
     accounting_reset(*allocator_);
-    general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-    general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+    general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
+    general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
 }
 
 // subsystem_allocator_allocate Validation Policy
