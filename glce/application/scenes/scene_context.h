@@ -21,6 +21,7 @@ typedef enum {
     SCENE_NONE,
     SCENE_SAMPLE_ROBOT,
     SCENE_STL_VIEWER,
+    SCENE_TEST,
 } scene_list_t;
 
 scene_result_t scene_context_create(scene_context_t** out_scene_);

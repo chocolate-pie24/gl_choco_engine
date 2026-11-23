@@ -10,7 +10,6 @@ extern "C" {
 
 #include "engine/camera/flight_camera.h"
 
-#include "application/scenes/core/scene_types.h"
 #include "application/scenes/vtables/scene_vtables.h"
 
 typedef struct sample_robot_scene_config {

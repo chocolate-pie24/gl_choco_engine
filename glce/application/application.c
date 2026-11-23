@@ -53,6 +53,7 @@
 
 // Demos
 #include "application/scenes/scene_concretes/demos/sample_robot/sample_robot.h"
+#include "application/scenes/scene_concretes/demos/test_scene/test_scene.h"
 #include "application/scenes/core/scene_types.h"
 #include "application/scenes/scene_context.h"
 
@@ -68,10 +69,12 @@ typedef struct application_state {
     // Application Input Configurations.
     application_diagnostics_config_t diag_config;
     sample_robot_scene_config_t sample_robot_scene_config;
+    test_scene_config_t test_scene_config;
 
     // Scene Selection Keybinds.
     keycode_t sample_robot_scene_keybind;
     keycode_t stl_viewer_scene_keybind;
+    keycode_t test_scene_keybind;
 
     // application status
     bool window_should_close;   /**< ウィンドウクローズ指示フラグ */
@@ -503,6 +506,26 @@ static application_result_t scene_selection_update(void) {
                 INFO_MESSAGE("Switched to STL Viewer scene.");
             }
             break;
+        } else if(s_application_state->platform_event_view->keyboard_events[i].key == s_application_state->test_scene_keybind) {
+            if(SCENE_TEST != scene_context_current_scene_get(s_application_state->scene_context)) {
+                INFO_MESSAGE("Switching to Test scene...");
+                ret_scene = scene_context_change_scene(
+                    s_application_state->scene_context,
+                    s_application_state->renderer_frontend,
+                    (const void*)&s_application_state->test_scene_config,
+                    fs_path_fullpath_get(s_application_state->asset_root_path),
+                    s_application_state->frame_state.framebuffer_width,
+                    s_application_state->frame_state.framebuffer_height,
+                    SCENE_TEST);
+
+                if(SCENE_SUCCESS != ret_scene) {
+                    ret = application_result_convert_scene(ret_scene);
+                    ERROR_MESSAGE("scene_selection_update(%s) - scene_context_change_scene failed.", application_result_to_str(ret));
+                    goto cleanup;
+                }
+                INFO_MESSAGE("Switched to Test scene.");
+            }
+            break;
         }
     }
 
@@ -525,6 +548,12 @@ static void renderer_frontend_config_initialize(renderer_frontend_config_t* conf
     config_->line_mesh_resource_config.vbo_config.max_allocation_count = 512;
     config_->line_mesh_resource_config.vbo_config.vbo_size = 1 * MIB;
 
+    config_->point_mesh_resource_config.max_geometry_count = 1024;
+    config_->point_mesh_resource_config.vbo_config.base_align = alignof(float);
+    config_->point_mesh_resource_config.vbo_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
+    config_->point_mesh_resource_config.vbo_config.max_allocation_count = 512;
+    config_->point_mesh_resource_config.vbo_config.vbo_size = 1 * MIB;
+
     config_->untextured_mesh_resource_config.max_geometry_count = 128;
     config_->untextured_mesh_resource_config.max_material_count = 128;
     config_->untextured_mesh_resource_config.vbo_config.base_align = alignof(max_align_t);
@@ -545,6 +574,7 @@ static application_result_t keybinds_initialize(application_state_t* state_) {
     // Scene Select.
     state_->sample_robot_scene_keybind = KEY_3;
     state_->stl_viewer_scene_keybind = KEY_4;
+    state_->test_scene_keybind = KEY_5;
 
     // Sample Robot Scene.
     state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_FORWARD].key = KEY_W;         // カメラ前進コマンド(キーバインド: KEY_W)
@@ -557,6 +587,18 @@ static application_result_t keybinds_initialize(application_state_t* state_) {
     state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_MINUS].key = KEY_DOWN;   // カメラピッチ方向(-)回転コマンド(キーバインド: KEY_DOWN)
     state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_PLUS].key = KEY_LEFT;      // カメラヨー方向(+)回転コマンド(キーバインド: KEY_LEFT)
     state_->sample_robot_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_MINUS].key = KEY_RIGHT;    // カメラヨー方向(-)回転コマンド(キーバインド: KEY_RIGHT)
+
+    // Test Scene.
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_FORWARD].key = KEY_W;         // カメラ前進コマンド(キーバインド: KEY_W)
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_BACKWARD].key = KEY_S;        // カメラ後進コマンド(キーバインド: KEY_S)
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_RIGHT].key = KEY_D;           // カメラ右移動コマンド(キーバインド: KEY_D)
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_LEFT].key = KEY_A;            // カメラ左移動コマンド(キーバインド: KEY_A)
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_UP].key = KEY_E;              // カメラ上方向移動コマンド(キーバインド: KEY_E)
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_MOVE_DOWN].key = KEY_Q;            // カメラ下方向移動コマンド(キーバインド: KEY_Q)
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_PLUS].key = KEY_UP;      // カメラピッチ方向(+)回転コマンド(キーバインド: KEY_UP)
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_PITCH_MINUS].key = KEY_DOWN;   // カメラピッチ方向(-)回転コマンド(キーバインド: KEY_DOWN)
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_PLUS].key = KEY_LEFT;      // カメラヨー方向(+)回転コマンド(キーバインド: KEY_LEFT)
+    state_->test_scene_config.flight_camera_keybinds[FLIGHT_CAMERA_COMMAND_ROT_YAW_MINUS].key = KEY_RIGHT;    // カメラヨー方向(-)回転コマンド(キーバインド: KEY_RIGHT)
 
     ret = APPLICATION_SUCCESS;
 

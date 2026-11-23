@@ -15,8 +15,10 @@
 #include "application/scenes/core/scene_types.h"
 #include "application/scenes/core/scene_err_utils.h"
 #include "application/scenes/vtables/scene_vtables.h"
+
 #include "application/scenes/scene_concretes/demos/sample_robot/sample_robot.h"
 #include "application/scenes/scene_concretes/demos/stl_viewer/stl_viewer.h"
+#include "application/scenes/scene_concretes/demos/test_scene/test_scene.h"
 
 struct scene_context {
     void* scene;
@@ -250,6 +252,7 @@ bool scene_context_is_valid(const scene_context_t* scene_) {
     }
     if(SCENE_SAMPLE_ROBOT != scene_->current_scene &&
        SCENE_STL_VIEWER != scene_->current_scene &&
+       SCENE_TEST != scene_->current_scene &&
        SCENE_NONE != scene_->current_scene) {
         return false;
     }
@@ -260,6 +263,9 @@ bool scene_context_is_valid(const scene_context_t* scene_) {
         return false;
     }
     if(SCENE_STL_VIEWER == scene_->current_scene && (scene_->vtable != stl_viewer_vtable_get() || NULL == scene_->scene)) {
+        return false;
+    }
+    if(SCENE_TEST == scene_->current_scene && (scene_->vtable != test_scene_vtable_get() || NULL == scene_->scene)) {
         return false;
     }
     if(!scene_->vtable->scene_is_valid(scene_->scene)) {
@@ -276,6 +282,8 @@ static const scene_vtable_t* scene_vtable_get(scene_list_t scene_) {
         return stl_viewer_vtable_get();
     case SCENE_SAMPLE_ROBOT:
         return sample_robot_vtable_get();
+    case SCENE_TEST:
+        return test_scene_vtable_get();
     default:
         return NULL;
     }
