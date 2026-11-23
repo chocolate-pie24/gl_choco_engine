@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "engine/systems/renderer/resources/pipelines/materials/untextured_mesh_material_pipeline.h"
+#include "engine/systems/renderer/resources/pipelines/materials/phong_material_pipeline.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -10,10 +10,10 @@
 #include "engine/base/choco_message.h"
 
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
-#include "engine/systems/renderer/resources/loaders/untextured_mesh_material_config_loader.h"
+#include "engine/systems/renderer/resources/loaders/phong_material_config_loader.h"
 #include "engine/systems/renderer/resources/materials/material_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
-#include "engine/systems/renderer/resources/registries/materials/untextured_mesh_material_registry.h"
+#include "engine/systems/renderer/resources/registries/materials/phong_material_registry.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_err_utils.h"
 
@@ -28,7 +28,7 @@
  *
  * Configuration / Trust Boundary:
  * - 外部Configuration Fileの読み込みと解析は
- *   Untextured Mesh Material Config Loaderへ委譲する。
+ *   Phong Material Config Loaderへ委譲する。
  * - File Syntax、Required Field、Optional Field、
  *   Numeric RepresentationおよびConfigurationの
  *   Semantic ValidityはLoaderが検証する。
@@ -37,12 +37,11 @@
  *   ConfigurationのCanonical Validationを重複しない。
  *
  * Material Construction:
- * - untextured_mesh_material_config_tから
- *   untextured_mesh_material_tを構築する。
+ * - phong_material_config_tからphong_material_tを構築する。
  * - ambient、diffuse、specular、shininessを
  *   対応するFieldへ値としてコピーする。
  * - 構築したMaterialはlocal valueとして保持する。
- * - Registry登録前にuntextured_mesh_material_is_valid()で
+ * - Registry登録前にphong_material_is_valid()で
  *   MaterialのCanonical Validityを検証する。
  * - この検証は全Build Modeで実行する。
  * - 検証失敗は外部ファイル由来の無効なMaterialとして
@@ -103,13 +102,13 @@
  * - material_registry_、resource_name_、resource_fullpath_、
  *   out_material_id_のNULLを全Build Modeで検査する。
  * - File Pathの空文字列条件と外部Configurationの検証は
- *   Untextured Mesh Material Config Loaderへ委譲する。
+ *   Phong Material Config Loaderへ委譲する。
  * - Resource Nameの空文字列条件と重複登録の判定は
  *   Material Registryのregister()へ委譲する。
  * - Registryの内部整合性検証はRegistry側のContractへ委譲する。
  *
  * Configuration Loading:
- * - untextured_mesh_material_config_loader_load()を呼び出し、
+ * - phong_material_config_loader_load()を呼び出し、
  *   Configurationをlocal valueとして取得する。
  * - Loader成功後はConfigurationのSemantic Validityを信頼する。
  * - 本APIではFile SyntaxやFieldの解析を繰り返さない。
@@ -121,7 +120,7 @@
  * - Materialはlocal valueとして構築する。
  *
  * Result Validation:
- * - untextured_mesh_material_is_valid()によって
+ * - phong_material_is_valid()によって
  *   構築済みMaterialのCanonical Validityを確認する。
  * - このValidationは全Build Modeで実行する。
  * - Validation失敗時はRESOURCE_PIPELINE_UNSUPPORTED_FILEを返す。
@@ -129,7 +128,7 @@
  *
  * Commit:
  * - 検証済みMaterialを
- *   untextured_mesh_material_registry_register()へ渡す。
+ *   phong_material_registry_register()へ渡す。
  * - RegistryはMaterialをEntryへ値としてコピーする。
  * - Resource Nameの複製、Entry Stateの変更、
  *   Reference Countの初期化はRegistryが担当する。
@@ -153,14 +152,14 @@
  * - PipelineではRegistryのPostconditions Validationを
  *   重複して実行しない。
  */
-resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_file(untextured_mesh_material_registry_t* material_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_) {
+resource_pipeline_result_t phong_material_pipeline_import_from_file(phong_material_registry_t* material_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
     loader_result_t ret_loader = LOADER_INVALID_ARGUMENT;
 
-    untextured_mesh_material_config_t material_config = { 0 };
-    untextured_mesh_material_t material = { 0 };
+    phong_material_config_t material_config = { 0 };
+    phong_material_t material = { 0 };
 
     uint16_t tmp_material_id = 0;
     bool exists = false;
@@ -170,24 +169,24 @@ resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_file(un
     IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
-    ret_resource_registry = untextured_mesh_material_registry_exists(material_registry_, resource_name_, &exists);
+    ret_resource_registry = phong_material_registry_exists(material_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_registry_exists failed.", resource_pipeline_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_pipeline_import_from_file(%s) - phong_material_registry_exists failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
     if(exists) {
-        ret_resource_registry = untextured_mesh_material_registry_acquire(material_registry_, resource_name_, &tmp_material_id);
+        ret_resource_registry = phong_material_registry_acquire(material_registry_, resource_name_, &tmp_material_id);
         if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
             ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_registry_acquire failed.", resource_pipeline_result_to_str(ret));
+            ERROR_MESSAGE("phong_material_pipeline_import_from_file(%s) - phong_material_registry_acquire failed.", resource_pipeline_result_to_str(ret));
             goto cleanup;
         }
     } else {
-        ret_loader = untextured_mesh_material_config_loader_load(resource_fullpath_, &material_config);
+        ret_loader = phong_material_config_loader_load(resource_fullpath_, &material_config);
         if(LOADER_SUCCESS != ret_loader) {
             ret = resource_pipeline_result_convert_loader(ret_loader);
-            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_config_loader_load failed.", resource_pipeline_result_to_str(ret));
+            ERROR_MESSAGE("phong_material_pipeline_import_from_file(%s) - phong_material_config_loader_load failed.", resource_pipeline_result_to_str(ret));
             goto cleanup;
         }
 
@@ -195,16 +194,16 @@ resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_file(un
         material.diffuse = material_config.diffuse;
         material.shininess = material_config.shininess;
         material.specular = material_config.specular;
-        if(!untextured_mesh_material_is_valid(&material)) {
+        if(!phong_material_is_valid(&material)) {
             ret = RESOURCE_PIPELINE_UNSUPPORTED_FILE;
-            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - Invalid material.", resource_pipeline_result_to_str(ret));
+            ERROR_MESSAGE("phong_material_pipeline_import_from_file(%s) - Invalid material.", resource_pipeline_result_to_str(ret));
             goto cleanup;
         }
 
-        ret_resource_registry = untextured_mesh_material_registry_register(material_registry_, resource_name_, &material, &tmp_material_id);
+        ret_resource_registry = phong_material_registry_register(material_registry_, resource_name_, &material, &tmp_material_id);
         if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
             ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_file(%s) - untextured_mesh_material_registry_register failed.", resource_pipeline_result_to_str(ret));
+            ERROR_MESSAGE("phong_material_pipeline_import_from_file(%s) - phong_material_registry_register failed.", resource_pipeline_result_to_str(ret));
             goto cleanup;
         }
     }
@@ -217,7 +216,7 @@ cleanup:
     return ret;
 }
 
-resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_material(untextured_mesh_material_registry_t* material_registry_, const char* resource_name_, const untextured_mesh_material_t* material_, uint16_t* out_material_id_) {
+resource_pipeline_result_t phong_material_pipeline_import_from_material(phong_material_registry_t* material_registry_, const char* resource_name_, const phong_material_t* material_, uint16_t* out_material_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
@@ -230,24 +229,24 @@ resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_materia
     IF_ARG_NULL_GOTO_CLEANUP(material_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
-    ret_resource_registry = untextured_mesh_material_registry_exists(material_registry_, resource_name_, &exists);
+    ret_resource_registry = phong_material_registry_exists(material_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_material(%s) - untextured_mesh_material_registry_exists failed.", resource_pipeline_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_pipeline_import_from_material(%s) - phong_material_registry_exists failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
     if(exists) {
-        ret_resource_registry = untextured_mesh_material_registry_acquire(material_registry_, resource_name_, &tmp_material_id);
+        ret_resource_registry = phong_material_registry_acquire(material_registry_, resource_name_, &tmp_material_id);
         if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
             ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_material(%s) - untextured_mesh_material_registry_acquire failed.", resource_pipeline_result_to_str(ret));
+            ERROR_MESSAGE("phong_material_pipeline_import_from_material(%s) - phong_material_registry_acquire failed.", resource_pipeline_result_to_str(ret));
             goto cleanup;
         }
     } else {
-        ret_resource_registry = untextured_mesh_material_registry_register(material_registry_, resource_name_, material_, &tmp_material_id);
+        ret_resource_registry = phong_material_registry_register(material_registry_, resource_name_, material_, &tmp_material_id);
         if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
             ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-            ERROR_MESSAGE("untextured_mesh_material_pipeline_import_from_material(%s) - untextured_mesh_material_registry_register failed.", resource_pipeline_result_to_str(ret));
+            ERROR_MESSAGE("phong_material_pipeline_import_from_material(%s) - phong_material_registry_register failed.", resource_pipeline_result_to_str(ret));
             goto cleanup;
         }
     }
@@ -267,7 +266,7 @@ cleanup:
  * - material_registry_のNULLを全Build Modeで検査する。
  * - Material IDの範囲、EntryのRegistered State、
  *   Reference CountおよびRegistryの内部整合性検証は
- *   untextured_mesh_material_registry_release()へ委譲する。
+ *   phong_material_registry_release()へ委譲する。
  * - 本ModuleではRegistryのCanonical Validationを重複しない。
  *
  * Commit:
@@ -300,17 +299,17 @@ cleanup:
  * - 本ModuleではCommit後のCanonical Validationを
  *   重複して実行しない。
  */
-resource_pipeline_result_t untextured_mesh_material_pipeline_release(untextured_mesh_material_registry_t* material_registry_, uint16_t material_id_) {
+resource_pipeline_result_t phong_material_pipeline_release(phong_material_registry_t* material_registry_, uint16_t material_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(material_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
-    ret_resource_registry = untextured_mesh_material_registry_release(material_registry_, material_id_);
+    ret_resource_registry = phong_material_registry_release(material_registry_, material_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = resource_pipeline_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("untextured_mesh_material_pipeline_release(%s) - untextured_mesh_material_registry_release failed.", resource_pipeline_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_pipeline_release(%s) - phong_material_registry_release failed.", resource_pipeline_result_to_str(ret));
         goto cleanup;
     }
 

@@ -30,7 +30,7 @@ typedef struct untextured_mesh untextured_mesh_t;
 typedef struct line_vertex line_vertex_t;
 typedef struct line_mesh line_mesh_t;
 typedef struct aabb_3d aabb_3d_t;
-typedef struct untextured_mesh_material untextured_mesh_material_t;
+typedef struct phong_material phong_material_t;
 typedef struct point_normal_vertex point_normal_vertex_t;
 typedef struct render_packet render_packet_t;
 
@@ -125,7 +125,7 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(rende
 
 renderer_frontend_result_t renderer_frontend_untextured_mesh_import(renderer_frontend_t* renderer_frontend_, const untextured_mesh_config_t* config_, const char* asset_root_path_, untextured_mesh_t* out_mesh_);
 
-renderer_frontend_result_t renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* geometry_resource_name_, const char* material_resource_name_, const point_normal_vertex_t* vertices_, size_t vertex_count_, const untextured_mesh_material_t* material_, untextured_mesh_t* out_mesh_);
+renderer_frontend_result_t renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* geometry_resource_name_, const char* material_resource_name_, const point_normal_vertex_t* vertices_, size_t vertex_count_, const phong_material_t* material_, untextured_mesh_t* out_mesh_);
 
 renderer_frontend_result_t renderer_frontend_untextured_mesh_release(renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_);
 

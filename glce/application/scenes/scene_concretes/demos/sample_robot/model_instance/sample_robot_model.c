@@ -347,7 +347,7 @@ scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_
         untextured_mesh_configs[i].geometry_extension = "stl";
         untextured_mesh_configs[i].material_subdirectory = "materials/robot_sample";
         untextured_mesh_configs[i].material_resource_name = untextured_mesh_definitions[i].material_name;
-        untextured_mesh_configs[i].material_extension = "untextured_mat";
+        untextured_mesh_configs[i].material_extension = "phong_mat";
     }
 
     // NOTE: coordinates, coordinate_ids, untextured_mesh_configsはtmp_assembly_configに所有権がmoveされるためNULLになる

@@ -1022,7 +1022,7 @@ static model_framework_result_t debug_axis_meshes_create(
 
     const char* axis_names[3] = { "x", "y", "z" };
     const vec3f_t axis_rotations[3] = { vec3f_initialize(0.0f, 90.0f, 0.0f), vec3f_initialize(-90.0f, 0.0f, 0.0f), vec3f_initialize(0.0f, 0.0f, 0.0f) };
-    const untextured_mesh_material_t axis_materials[3] = {
+    const phong_material_t axis_materials[3] = {
         {
             .diffuse = vec3f_initialize(1.0f, 0.0f, 0.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f)
         },

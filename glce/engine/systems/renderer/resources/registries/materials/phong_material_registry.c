@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "engine/systems/renderer/resources/registries/materials/untextured_mesh_material_registry.h"
+#include "engine/systems/renderer/resources/registries/materials/phong_material_registry.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -65,7 +65,7 @@
 // Private Type Definitions
 // ============================================================
 /*
- * Untextured Mesh Materialの登録情報を保持するEntry。
+ * Phong Materialの登録情報を保持するEntry。
  *
  * - resource_nameはRegistryが所有するResource Nameを指す。
  * - materialはRegistry内部に値として保持するMaterialである。
@@ -80,12 +80,12 @@
  */
 typedef struct registry_entry {
     choco_string_t* resource_name;
-    untextured_mesh_material_t material;
+    phong_material_t material;
     uint16_t reference_count;
 } registry_entry_t;
 
 /*
- * Untextured Mesh Materialの登録状態を管理するRegistry本体。
+ * Phong Materialの登録状態を管理するRegistry本体。
  *
  * - max_material_countはEntry配列の容量を表す。
  * - entriesはMaterial IDによって直接参照するEntry配列である。
@@ -97,7 +97,7 @@ typedef struct registry_entry {
  * - 終了後のRegistryは通常のAPI操作やcanonical validationの
  *   対象としない。
  */
-struct untextured_mesh_material_registry {
+struct phong_material_registry {
     size_t max_material_count;
     registry_entry_t* entries;
 };
@@ -109,7 +109,7 @@ struct untextured_mesh_material_registry {
 static void registry_entry_deinitialize(registry_entry_t* entry_);
 
 // State Queries
-static bool untextured_mesh_material_id_is_in_range(const untextured_mesh_material_registry_t* registry_, uint16_t material_id_);
+static bool phong_material_id_is_in_range(const phong_material_registry_t* registry_, uint16_t material_id_);
 static bool registry_entry_is_empty(const registry_entry_t* entry_);
 static bool registry_entry_is_registered(const registry_entry_t* entry_);
 
@@ -117,7 +117,7 @@ static bool registry_entry_is_registered(const registry_entry_t* entry_);
 static bool registry_entry_is_valid(const registry_entry_t* entry_);
 
 // Lookup
-static bool find_by_name(const untextured_mesh_material_registry_t* registry_, const char* name_, size_t* out_index_);
+static bool find_by_name(const phong_material_registry_t* registry_, const char* name_, size_t* out_index_);
 
 // ============================================================
 // Public API
@@ -150,12 +150,12 @@ static bool find_by_name(const untextured_mesh_material_registry_t* registry_, c
  *   Output後にRegistryのsemantic stateを変更しないため、
  *   同じcanonical validationを繰り返さない。
  */
-resource_registry_result_t untextured_mesh_material_registry_create(size_t max_material_count_, subsystem_allocator_t* allocator_, untextured_mesh_material_registry_t** out_registry_) {
+resource_registry_result_t phong_material_registry_create(size_t max_material_count_, subsystem_allocator_t* allocator_, phong_material_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     subsystem_allocator_result_t ret_subsystem_allocator = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
 
-    untextured_mesh_material_registry_t* tmp_registry = NULL;
+    phong_material_registry_t* tmp_registry = NULL;
     registry_entry_t* tmp_entries = NULL;
 
     size_t array_size = 0;
@@ -167,12 +167,12 @@ resource_registry_result_t untextured_mesh_material_registry_create(size_t max_m
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, RESOURCE_REGISTRY_BAD_OPERATION);
     if(0 == max_material_count_ || UINT16_MAX < max_material_count_) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_mesh_material_registry_create(%s) - Provided max_material_count_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("phong_material_registry_create(%s) - Provided max_material_count_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         goto cleanup;
     }
     if(!size_mul_checked(max_material_count_, sizeof(registry_entry_t), &array_size)) {
         ret = RESOURCE_REGISTRY_OVERFLOW;
-        ERROR_MESSAGE("untextured_mesh_material_registry_create(%s) - array size overflow.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_create(%s) - array size overflow.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -180,21 +180,21 @@ resource_registry_result_t untextured_mesh_material_registry_create(size_t max_m
     ret_subsystem_allocator = subsystem_allocator_rollback_point_get(allocator_, &rollback_point);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("untextured_mesh_material_registry_create(%s) - subsystem_allocator_rollback_point_get failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_create(%s) - subsystem_allocator_rollback_point_get failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(untextured_mesh_material_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_registry);
+    ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(phong_material_registry_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_registry);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("untextured_mesh_material_registry_create(%s) - Failed to allocate registry instance. target=untextured_mesh_material_registry_create, bytes=%zu, max_material_count=%zu", resource_registry_result_to_str(ret), sizeof(untextured_mesh_material_registry_t), max_material_count_);
+        ERROR_MESSAGE("phong_material_registry_create(%s) - Failed to allocate registry instance. target=phong_material_registry_create, bytes=%zu, max_material_count=%zu", resource_registry_result_to_str(ret), sizeof(phong_material_registry_t), max_material_count_);
         goto cleanup;
     }
 
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, array_size, SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_entries);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = resource_registry_result_convert_subsystem_allocator(ret_subsystem_allocator);
-        ERROR_MESSAGE("untextured_mesh_material_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_create(%s) - allocation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -203,9 +203,9 @@ resource_registry_result_t untextured_mesh_material_registry_create(size_t max_m
 
     // Result validation.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!untextured_mesh_material_registry_is_valid(tmp_registry)) {
+    if(!phong_material_registry_is_valid(tmp_registry)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_material_registry_create(%s) - Result validation failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_create(%s) - Result validation failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -221,7 +221,7 @@ cleanup:
         ret_subsystem_allocator = subsystem_allocator_rollback(allocator_, &rollback_point);
         if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
             ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-            ERROR_MESSAGE("untextured_mesh_material_registry_create(%s) - subsystem_allocator rollback failed.", resource_registry_result_to_str(ret));
+            ERROR_MESSAGE("phong_material_registry_create(%s) - subsystem_allocator rollback failed.", resource_registry_result_to_str(ret));
             goto cleanup;
         }
     }
@@ -253,14 +253,14 @@ cleanup:
  *   通常のRegistry canonical validationは行わない。
  * - 終了処理はvoid APIであり、失敗をResultとして返さない。
  */
-void untextured_mesh_material_registry_deinitialize(untextured_mesh_material_registry_t* registry_) {
+void phong_material_registry_deinitialize(phong_material_registry_t* registry_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("untextured_mesh_material_registry_deinitialize(%s) - provided registry_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("phong_material_registry_deinitialize(%s) - provided registry_ is NULL.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!untextured_mesh_material_registry_is_valid(registry_)) {
-        ERROR_MESSAGE("untextured_mesh_material_registry_deinitialize(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
+    if(!phong_material_registry_is_valid(registry_)) {
+        ERROR_MESSAGE("phong_material_registry_deinitialize(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(RESOURCE_REGISTRY_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -293,7 +293,7 @@ void untextured_mesh_material_registry_deinitialize(untextured_mesh_material_reg
  * - Registryのstate mutationを伴わないため、
  *   Postconditions validationは行わない。
  */
-resource_registry_result_t untextured_mesh_material_registry_exists(const untextured_mesh_material_registry_t* registry_, const char* resource_name_, bool* out_exists_) {
+resource_registry_result_t phong_material_registry_exists(const phong_material_registry_t* registry_, const char* resource_name_, bool* out_exists_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t tmp_id = 0;
@@ -305,13 +305,13 @@ resource_registry_result_t untextured_mesh_material_registry_exists(const untext
     IF_ARG_NULL_GOTO_CLEANUP(out_exists_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_mesh_material_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_exists(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!untextured_mesh_material_registry_is_valid(registry_)) {
+    if(!phong_material_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_material_registry_exists(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_exists(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -343,17 +343,17 @@ cleanup:
  * - 新しいstateを構築・変更しないため、
  *   Result validationとPostconditions validationは行わない。
  */
-const untextured_mesh_material_t* untextured_mesh_material_registry_material_get(const untextured_mesh_material_registry_t* registry_, uint16_t material_id_) {
+const phong_material_t* phong_material_registry_material_get(const phong_material_registry_t* registry_, uint16_t material_id_) {
     if(NULL == registry_) {
-        ERROR_MESSAGE("untextured_mesh_material_registry_material_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+        ERROR_MESSAGE("phong_material_registry_material_get(%s) - provided registry_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
-    if(!untextured_mesh_material_id_is_in_range(registry_, material_id_)) {
-        ERROR_MESSAGE("untextured_mesh_material_registry_material_get(%s) - provided material_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
+    if(!phong_material_id_is_in_range(registry_, material_id_)) {
+        ERROR_MESSAGE("phong_material_registry_material_get(%s) - provided material_id_ is not valid.", resource_registry_result_to_str(RESOURCE_REGISTRY_INVALID_ARGUMENT));
         return NULL;
     }
     if(!registry_entry_is_registered(&registry_->entries[material_id_])) {
-        ERROR_MESSAGE("untextured_mesh_material_registry_material_get(%s) - provided material_id_ is not registered.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
+        ERROR_MESSAGE("phong_material_registry_material_get(%s) - provided material_id_ is not registered.", resource_registry_result_to_str(RESOURCE_REGISTRY_BAD_OPERATION));
         return NULL;
     }
 
@@ -393,7 +393,7 @@ const untextured_mesh_material_t* untextured_mesh_material_registry_material_get
  * - Commit前の失敗ではRegistryと出力先を変更しない。
  * - DATA_CORRUPTEDではRegistryの内部整合性を保証しない。
  */
-resource_registry_result_t untextured_mesh_material_registry_acquire(untextured_mesh_material_registry_t* registry_, const char* resource_name_, uint16_t* out_material_id_) {
+resource_registry_result_t phong_material_registry_acquire(phong_material_registry_t* registry_, const char* resource_name_, uint16_t* out_material_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t tmp_index = 0;
@@ -404,30 +404,30 @@ resource_registry_result_t untextured_mesh_material_registry_acquire(untextured_
     IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_mesh_material_registry_acquire(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_acquire(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!untextured_mesh_material_registry_is_valid(registry_)) {
+    if(!phong_material_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_material_registry_acquire(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_acquire(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
     if(!find_by_name(registry_, resource_name_, &tmp_index)) {   // リソースの登録状態確認
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("untextured_mesh_material_registry_acquire(%s) - Provided resource name is not registered.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_acquire(%s) - Provided resource name is not registered.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(UINT16_MAX < tmp_index) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_material_registry_acquire(%s) - Resource registry is corrupted.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_acquire(%s) - Resource registry is corrupted.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
     if(registry_->entries[tmp_index].reference_count == UINT16_MAX) {
         ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("untextured_mesh_material_registry_acquire(%s) - Reference count overflow.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_acquire(%s) - Reference count overflow.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     registry_->entries[tmp_index].reference_count++;
@@ -480,7 +480,7 @@ cleanup:
  * - Commit後のPostconditions validationで失敗した場合も
  *   DATA_CORRUPTEDとなり、Registryの状態復元を保証しない。
  */
-resource_registry_result_t untextured_mesh_material_registry_register(untextured_mesh_material_registry_t* registry_, const char* resource_name_, const untextured_mesh_material_t* material_, uint16_t* out_material_id_) {
+resource_registry_result_t phong_material_registry_register(phong_material_registry_t* registry_, const char* resource_name_, const phong_material_t* material_, uint16_t* out_material_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
@@ -496,24 +496,24 @@ resource_registry_result_t untextured_mesh_material_registry_register(untextured
     IF_ARG_NULL_GOTO_CLEANUP(out_material_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     if('\0' == resource_name_[0]) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_mesh_material_registry_register(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_register(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!untextured_mesh_material_registry_is_valid(registry_)) {
+    if(!phong_material_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_material_registry_register(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_register(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
-    if(!untextured_mesh_material_is_valid(material_)) {
+    if(!phong_material_is_valid(material_)) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_mesh_material_registry_register(%s) - provided material_ is corrupted.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_register(%s) - provided material_ is corrupted.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(find_by_name(registry_, resource_name_, &tmp_index)) {   // リソースの重複チェック
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("untextured_mesh_material_registry_register(%s) - provided resource name is already registered.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_register(%s) - provided resource name is already registered.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -527,7 +527,7 @@ resource_registry_result_t untextured_mesh_material_registry_register(untextured
     }
     if(!found_free_slot) {
         ret = RESOURCE_REGISTRY_LIMIT_EXCEEDED;
-        ERROR_MESSAGE("untextured_mesh_material_registry_register(%s) - free slot not found.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_register(%s) - free slot not found.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -535,7 +535,7 @@ resource_registry_result_t untextured_mesh_material_registry_register(untextured
     ret_choco_string = choco_string_create_from_c_string(resource_name_, &tmp_name);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
         ret = resource_registry_result_convert_choco_string(ret_choco_string);
-        ERROR_MESSAGE("untextured_mesh_material_registry_register(%s) - choco_string_create_from_c_string failed.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_register(%s) - choco_string_create_from_c_string failed.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -546,9 +546,9 @@ resource_registry_result_t untextured_mesh_material_registry_register(untextured
 
     // Postconditions.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!untextured_mesh_material_registry_is_valid(registry_)) {
+    if(!phong_material_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_material_registry_register(%s) - Postcondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_register(%s) - Postcondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -598,27 +598,27 @@ cleanup:
  * - Commit前の失敗ではRegistryを変更しない。
  * - DATA_CORRUPTEDではRegistryの内部整合性を保証しない。
  */
-resource_registry_result_t untextured_mesh_material_registry_release(untextured_mesh_material_registry_t* registry_, uint16_t material_id_) {
+resource_registry_result_t phong_material_registry_release(phong_material_registry_t* registry_, uint16_t material_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     // releaseはregistryの中身を変化させるため、念のため全体をvalidationする。
     // ただ、releaseは単一entryのみの変更であるため、パフォーマンスに問題が出る場合はvalidationの範囲を狭めてもよい
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!untextured_mesh_material_registry_is_valid(registry_)) {
+    if(!phong_material_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
-        ERROR_MESSAGE("untextured_mesh_material_registry_release(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_release(%s) - Precondition validation failed for 'registry_'.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 #endif
-    if(!untextured_mesh_material_id_is_in_range(registry_, material_id_)) {
+    if(!phong_material_id_is_in_range(registry_, material_id_)) {
         ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("untextured_mesh_material_registry_release(%s) - Provided material_id_ is not valid.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_release(%s) - Provided material_id_ is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(!registry_entry_is_registered(&registry_->entries[material_id_])) {
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("untextured_mesh_material_registry_release(%s) - provided material id entry is empty.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("phong_material_registry_release(%s) - provided material id entry is empty.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -658,7 +658,7 @@ cleanup:
  * - Validator自体はRegistryを変更しない。
  * - Result validationやPostconditions validationは行わない。
  */
-bool untextured_mesh_material_registry_is_valid(const untextured_mesh_material_registry_t* registry_) {
+bool phong_material_registry_is_valid(const phong_material_registry_t* registry_) {
     if(NULL == registry_) {
         return false;
     }
@@ -720,7 +720,7 @@ static void registry_entry_deinitialize(registry_entry_t* entry_) {
  * - 対象Entryの登録状態やcanonical validityは検査しない。
  * - Material ID = 0も有効なindexとして扱う。
  */
-static bool untextured_mesh_material_id_is_in_range(const untextured_mesh_material_registry_t* registry_, uint16_t material_id_) {
+static bool phong_material_id_is_in_range(const phong_material_registry_t* registry_, uint16_t material_id_) {
     if(NULL == registry_) {
         return false;
     }
@@ -836,7 +836,7 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
         return false;
     }
 
-    if(!untextured_mesh_material_is_valid(&entry_->material)) {
+    if(!phong_material_is_valid(&entry_->material)) {
         return false;
     }
 
@@ -865,7 +865,7 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
  *
  * - RegistryおよびReference Countを変更しない。
  */
-static bool find_by_name(const untextured_mesh_material_registry_t* registry_, const char* name_, size_t* out_index_) {
+static bool find_by_name(const phong_material_registry_t* registry_, const char* name_, size_t* out_index_) {
     size_t tmp_slot = 0;
     bool found = false;
 

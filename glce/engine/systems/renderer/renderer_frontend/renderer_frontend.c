@@ -38,9 +38,9 @@
 #include "engine/systems/renderer/resources/pipelines/geometries/line_mesh_geometry_pipeline.h"
 
 #include "engine/systems/renderer/resources/registries/geometries/untextured_mesh_geometry_registry.h"
-#include "engine/systems/renderer/resources/registries/materials/untextured_mesh_material_registry.h"
+#include "engine/systems/renderer/resources/registries/materials/phong_material_registry.h"
 #include "engine/systems/renderer/resources/pipelines/geometries/untextured_mesh_geometry_pipeline.h"
-#include "engine/systems/renderer/resources/pipelines/materials/untextured_mesh_material_pipeline.h"
+#include "engine/systems/renderer/resources/pipelines/materials/phong_material_pipeline.h"
 
 #include "engine/systems/renderer/render_packet/core/render_packet_types.h"
 #include "engine/systems/renderer/render_packet/render_packet.h"
@@ -67,7 +67,7 @@ typedef struct {
 typedef struct {
     untextured_mesh_shader_t* shader;
     untextured_mesh_geometry_registry_t* geometry_registry;
-    untextured_mesh_material_registry_t* material_registry;
+    phong_material_registry_t* material_registry;
     vbo_manager_t* vbo_manager;
 } untextured_mesh_render_resource_t;
 
@@ -414,16 +414,16 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_draw(renderer_front
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     const draw_range_t* draw_range = NULL;
-    const untextured_mesh_material_t* material = NULL;
+    const phong_material_t* material = NULL;
 
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(mesh_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(model_matrix_, ret, RENDERER_FRONTEND_INVALID_ARGUMENT);
 
-    material = untextured_mesh_material_registry_material_get(renderer_frontend_->untextured_mesh_render_resource->material_registry, mesh_->material_id);
+    material = phong_material_registry_material_get(renderer_frontend_->untextured_mesh_render_resource->material_registry, mesh_->material_id);
     if(NULL == material) {
         ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("renderer_frontend_untextured_mesh_draw(%s) - untextured_mesh_material_registry_material_get failed.", renderer_frontend_result_to_str(ret));
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_draw(%s) - phong_material_registry_material_get failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
 
@@ -586,10 +586,10 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_import(renderer_fro
         ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - fs_path_create failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
-    ret_resource_pipeline = untextured_mesh_material_pipeline_import_from_file(renderer_frontend_->untextured_mesh_render_resource->material_registry, config_->material_resource_name, fs_path_fullpath_get(fs_path), &tmp_material_id);
+    ret_resource_pipeline = phong_material_pipeline_import_from_file(renderer_frontend_->untextured_mesh_render_resource->material_registry, config_->material_resource_name, fs_path_fullpath_get(fs_path), &tmp_material_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = renderer_frontend_result_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_material_pipeline_import_from_file failed.", renderer_frontend_result_to_str(ret));
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - phong_material_pipeline_import_from_file failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
     fs_path_destroy(&fs_path);
@@ -616,17 +616,17 @@ cleanup:
         }
     }
     if(material_imported) {
-        ret_resource_pipeline = untextured_mesh_material_pipeline_release(renderer_frontend_->untextured_mesh_render_resource->material_registry, tmp_material_id);
+        ret_resource_pipeline = phong_material_pipeline_release(renderer_frontend_->untextured_mesh_render_resource->material_registry, tmp_material_id);
         if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
             ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-            ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_material_pipeline_release failed.", renderer_frontend_result_to_str(ret));
+            ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - phong_material_pipeline_release failed.", renderer_frontend_result_to_str(ret));
             return ret;
         }
     }
     return ret;
 }
 
-renderer_frontend_result_t renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* geometry_resource_name_, const char* material_resource_name_, const point_normal_vertex_t* vertices_, size_t vertex_count_, const untextured_mesh_material_t* material_, untextured_mesh_t* out_mesh_) {
+renderer_frontend_result_t renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* geometry_resource_name_, const char* material_resource_name_, const point_normal_vertex_t* vertices_, size_t vertex_count_, const phong_material_t* material_, untextured_mesh_t* out_mesh_) {
     renderer_frontend_result_t ret = RENDERER_FRONTEND_INVALID_ARGUMENT;
 
     resource_pipeline_result_t ret_resource_pipeline = RESOURCE_PIPELINE_INVALID_ARGUMENT;
@@ -652,10 +652,10 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_import_from_vertice
     }
     geometry_imported = true;
 
-    ret_resource_pipeline = untextured_mesh_material_pipeline_import_from_material(renderer_frontend_->untextured_mesh_render_resource->material_registry, material_resource_name_, material_, &tmp_material_id);
+    ret_resource_pipeline = phong_material_pipeline_import_from_material(renderer_frontend_->untextured_mesh_render_resource->material_registry, material_resource_name_, material_, &tmp_material_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = renderer_frontend_result_convert_resource_pipeline(ret_resource_pipeline);
-        ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_material_pipeline_import_from_material failed.", renderer_frontend_result_to_str(ret));
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - phong_material_pipeline_import_from_material failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
     material_imported = true;
@@ -678,10 +678,10 @@ cleanup:
         }
     }
     if(material_imported) {
-        ret_resource_pipeline = untextured_mesh_material_pipeline_release(renderer_frontend_->untextured_mesh_render_resource->material_registry, tmp_material_id);
+        ret_resource_pipeline = phong_material_pipeline_release(renderer_frontend_->untextured_mesh_render_resource->material_registry, tmp_material_id);
         if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
             ret = RENDERER_FRONTEND_DATA_CORRUPTED;
-            ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - untextured_mesh_material_pipeline_release failed.", renderer_frontend_result_to_str(ret));
+            ERROR_MESSAGE("renderer_frontend_untextured_mesh_import(%s) - phong_material_pipeline_release failed.", renderer_frontend_result_to_str(ret));
             return ret;
         }
     }
@@ -703,10 +703,10 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_release(renderer_fr
         goto cleanup;
     }
 
-    ret_resource_pipeline = untextured_mesh_material_pipeline_release(renderer_frontend_->untextured_mesh_render_resource->material_registry, mesh_->material_id);
+    ret_resource_pipeline = phong_material_pipeline_release(renderer_frontend_->untextured_mesh_render_resource->material_registry, mesh_->material_id);
     if(RESOURCE_PIPELINE_SUCCESS != ret_resource_pipeline) {
         ret = RENDERER_FRONTEND_DATA_CORRUPTED; // GeometryのReleaseに成功したのにMaterialのReleaseに失敗するのはDATA_CORRUPTED
-        ERROR_MESSAGE("renderer_frontend_untextured_mesh_release(%s) - untextured_mesh_material_pipeline_release failed.", renderer_frontend_result_to_str(ret));
+        ERROR_MESSAGE("renderer_frontend_untextured_mesh_release(%s) - phong_material_pipeline_release failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
 
@@ -1088,7 +1088,7 @@ static renderer_frontend_result_t untextured_mesh_render_resource_create(subsyst
     vbo_manager_t* tmp_vbo_manager = NULL;
     untextured_mesh_shader_t* tmp_shader = NULL;
     untextured_mesh_geometry_registry_t* tmp_geometry_registry = NULL;
-    untextured_mesh_material_registry_t* tmp_material_registry = NULL;
+    phong_material_registry_t* tmp_material_registry = NULL;
     fs_path_t* vertex_shader_path = NULL;
     fs_path_t* fragment_shader_path = NULL;
 
@@ -1155,10 +1155,10 @@ static renderer_frontend_result_t untextured_mesh_render_resource_create(subsyst
     }
 
     // Material Registry.
-    ret_resource_registry = untextured_mesh_material_registry_create(config_->max_material_count, allocator_, &tmp_material_registry);
+    ret_resource_registry = phong_material_registry_create(config_->max_material_count, allocator_, &tmp_material_registry);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
         ret = renderer_frontend_result_convert_resource_registry(ret_resource_registry);
-        ERROR_MESSAGE("untextured_mesh_render_resource_create(%s) - untextured_mesh_material_registry_create failed.", renderer_frontend_result_to_str(ret));
+        ERROR_MESSAGE("untextured_mesh_render_resource_create(%s) - phong_material_registry_create failed.", renderer_frontend_result_to_str(ret));
         goto cleanup;
     }
 
@@ -1185,7 +1185,7 @@ cleanup:
         untextured_mesh_geometry_registry_deinitialize(tmp_geometry_registry, tmp_vbo_manager);
     }
     if(NULL != tmp_material_registry) {
-        untextured_mesh_material_registry_deinitialize(tmp_material_registry);
+        phong_material_registry_deinitialize(tmp_material_registry);
     }
 
     // Shader Rollback.
@@ -1214,7 +1214,7 @@ static void untextured_mesh_render_resource_deinitialize(renderer_backend_contex
         untextured_mesh_geometry_registry_deinitialize(render_resource_->geometry_registry, render_resource_->vbo_manager);
     }
     if(NULL != render_resource_->material_registry) {
-        untextured_mesh_material_registry_deinitialize(render_resource_->material_registry);
+        phong_material_registry_deinitialize(render_resource_->material_registry);
     }
 
     if(NULL != render_resource_->shader) {
@@ -1289,7 +1289,7 @@ static bool untextured_mesh_render_resource_is_valid(const renderer_backend_cont
     if(!untextured_mesh_geometry_registry_is_valid(render_resource_->geometry_registry)) {
         return false;
     }
-    if(!untextured_mesh_material_registry_is_valid(render_resource_->material_registry)) {
+    if(!phong_material_registry_is_valid(render_resource_->material_registry)) {
         return false;
     }
 

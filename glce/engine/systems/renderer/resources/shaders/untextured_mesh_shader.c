@@ -420,7 +420,7 @@ cleanup:
     return ret;
 }
 
-shader_result_t untextured_mesh_shader_material_set(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_, const untextured_mesh_material_t* material_) {
+shader_result_t untextured_mesh_shader_material_set(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_, const phong_material_t* material_) {
     shader_result_t ret = SHADER_INVALID_ARGUMENT;
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -434,7 +434,7 @@ shader_result_t untextured_mesh_shader_material_set(const renderer_backend_conte
         ERROR_MESSAGE("untextured_mesh_shader_material_set(%s) - Precondition validation failed for 'shader_'.", shader_result_to_str(ret));
         goto cleanup;
     }
-    if(!untextured_mesh_material_is_valid(material_)) {
+    if(!phong_material_is_valid(material_)) {
         ret = SHADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_mesh_shader_material_set(%s) - Provided material_ is not valid.", shader_result_to_str(ret));
         goto cleanup;

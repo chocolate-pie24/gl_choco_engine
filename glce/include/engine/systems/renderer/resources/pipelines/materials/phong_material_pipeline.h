@@ -3,24 +3,23 @@
 
 /** @ingroup renderer
  *
- * @file untextured_mesh_material_pipeline.h
+ * @file phong_material_pipeline.h
  * @author chocolate-pie24
- * @brief Untextured Mesh MaterialのConfiguration Fileからの生成、
+ * @brief Phong MaterialのConfiguration Fileからの生成、
  *        Registry登録および利用権返却を提供する。
  *
  * @details
- * Untextured Mesh Material Configuration Fileを読み込み、
+ * Phong Material Configuration Fileを読み込み、
  * Material Valueを構築してGeometryとは独立した
  * Material Registryへ登録するPipeline APIを提供する。
  *
  * 本PipelineはResourceの生成・登録手順を調整するものであり、
  * 登録済みMaterialの状態やReference Countを直接管理しない。
  *
- * @section untextured_mesh_material_pipeline_boundary_contract Module Boundary Contract
+ * @section phong_material_pipeline_boundary_contract Module Boundary Contract
  *
  * @par Resource Ownership
- * - Configuration Fileの読み込みと解析は
- *   Untextured Mesh Material Config Loaderへ委譲する。
+ * - Configuration Fileの読み込みと解析はPhong Material Config Loaderへ委譲する。
  * - Materialのsemantic validityは
  *   Material Domainのcanonical validatorによって確認する。
  * - Resource Nameの複製、Materialの登録状態、
@@ -35,7 +34,7 @@
  * @par Configuration / Trust Boundary
  * - 外部Configuration Fileのsyntax、supported key、
  *   required fieldおよびnumeric representationの検証は
- *   Untextured Mesh Material Config Loaderが担当する。
+ *   Phong Material Config Loaderが担当する。
  * - Loaderは省略可能なFieldのDefault Valueを補完する。
  * - Loader成功時、ambient、diffuse、specular、
  *   shininessのすべてのFieldが確定する。
@@ -46,10 +45,10 @@
  *
  * @par Material Construction / Validation
  * - Loaderが返したConfigurationから
- *   untextured_mesh_material_tを構築する。
+ *   phong_material_tを構築する。
  * - ambient、diffuse、specular、shininessを
  *   対応するFieldへ値としてコピーする。
- * - Registry登録前にuntextured_mesh_material_is_valid()で
+ * - Registry登録前にphong_material_is_valid()で
  *   Materialのcanonical validityを確認する。
  * - 反射係数はfiniteかつ0.0f以上1.0f以下、
  *   shininessはfiniteかつ0.0f以上とする。
@@ -97,8 +96,8 @@
  *   プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_PIPELINES_MATERIALS_UNTEXTURED_MESH_MATERIAL_PIPELINE_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_PIPELINES_MATERIALS_UNTEXTURED_MESH_MATERIAL_PIPELINE_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_PIPELINES_MATERIALS_PHONG_MATERIAL_PIPELINE_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_PIPELINES_MATERIALS_PHONG_MATERIAL_PIPELINE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,23 +107,22 @@ extern "C" {
 
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 
-typedef struct untextured_mesh_material_registry untextured_mesh_material_registry_t;
-typedef struct untextured_mesh_material untextured_mesh_material_t;
+typedef struct phong_material_registry phong_material_registry_t;
+typedef struct phong_material phong_material_t;
 
 /**
- * @brief Configuration FileからUntextured Mesh Materialを生成し、
+ * @brief Configuration FileからPhong Materialを生成し、
  *        Material Registryへ登録する。
  *
  * @par Public API Contract
- * - 指定されたConfiguration Fileを読み込み、
- *   Untextured Mesh Materialの設定値を取得する。
+ * - 指定されたConfiguration Fileを読み込み、Phong Materialの設定値を取得する。
  * - Fileの読み込み、解析、semantic validationは
- *   untextured_mesh_material_config_loader_load()へ委譲する。
+ *   phong_material_config_loader_load()へ委譲する。
  * - Loaderが返したConfigurationからMaterialを構築する。
  * - ambient、diffuse、specular、shininessを
  *   ConfigurationからMaterialへ値としてコピーする。
  * - 構築したMaterialのcanonical validityを
- *   untextured_mesh_material_is_valid()で確認する。
+ *   phong_material_is_valid()で確認する。
  * - Materialがinvalidな場合はUNSUPPORTED_FILEとして扱う。
  * - 検証済みMaterialを指定Resource NameでRegistryへ新規登録する。
  * - Resource Nameの妥当性と重複登録はRegistryが判定する。
@@ -165,7 +163,7 @@ typedef struct untextured_mesh_material untextured_mesh_material_t;
  * - 失敗時にはout_material_id_の値を変更しない。
  *
  * @param[in,out] material_registry_
- *                登録先のUntextured Mesh Material Registry。
+ *                登録先のPhong Material Registry。
  * @param[in] resource_name_
  *            登録するResource Name。
  * @param[in] resource_fullpath_
@@ -214,12 +212,12 @@ typedef struct untextured_mesh_material untextured_mesh_material_t;
  *       out_material_id_に登録IDが格納される。
  * @post 入力文字列のownershipは移転しない。
  */
-resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_file(untextured_mesh_material_registry_t* material_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
+resource_pipeline_result_t phong_material_pipeline_import_from_file(phong_material_registry_t* material_registry_, const char* resource_name_, const char* resource_fullpath_, uint16_t* out_material_id_);
 
-resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_material(untextured_mesh_material_registry_t* material_registry_, const char* resource_name_, const untextured_mesh_material_t* material_, uint16_t* out_material_id_);
+resource_pipeline_result_t phong_material_pipeline_import_from_material(phong_material_registry_t* material_registry_, const char* resource_name_, const phong_material_t* material_, uint16_t* out_material_id_);
 
 /**
- * @brief Untextured Mesh Materialの利用権を1つ返却する。
+ * @brief Phong Materialの利用権を1つ返却する。
  *
  * @par Public API Contract
  * - 指定Material IDの利用権をMaterial Registryへ返却する。
@@ -267,7 +265,7 @@ resource_pipeline_result_t untextured_mesh_material_pipeline_import_from_materia
  * @post 返却前のReference Countが1の場合、
  *       対象EntryはEmpty Stateとなり、Resource Nameは解放済みとなる。
  */
-resource_pipeline_result_t untextured_mesh_material_pipeline_release(untextured_mesh_material_registry_t* material_registry_, uint16_t material_id_);
+resource_pipeline_result_t phong_material_pipeline_release(phong_material_registry_t* material_registry_, uint16_t material_id_);
 
 #ifdef __cplusplus
 }

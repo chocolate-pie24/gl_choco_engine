@@ -81,7 +81,7 @@ static const untextured_mesh_config_t s_model_mesh_config = {
     .geometry_extension = "stl",
     .material_subdirectory = "materials/demo_stl_viewer",
     .material_resource_name = "utah_teapot",
-    .material_extension = "untextured_mat",
+    .material_extension = "phong_mat",
 };
 
 // Scene Configuration(View)
@@ -630,7 +630,7 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
     untextured_mesh_t tmp_mesh[3];
     const char* axis_names[3] = { "x", "y", "z" };
     const vec3f_t axis_rotations_degrees[3] = { vec3f_initialize(0.0f, 90.0f, 0.0f), vec3f_initialize(-90.0f, 0.0f, 0.0f), vec3f_initialize(0.0f, 0.0f, 0.0f) };
-    const untextured_mesh_material_t axis_materials[3] = {
+    const phong_material_t axis_materials[3] = {
         {
             .diffuse = vec3f_initialize(1.0f, 0.0f, 0.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f)
         },
