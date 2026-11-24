@@ -16,6 +16,7 @@
     - [FreeBSD](#freebsd)
   - [Build](#build)
   - [Run](#run)
+  - [Third-Party Components](#third-party-components)
   - [License](#license)
   - [Author](#author)
 
@@ -288,13 +289,25 @@ After building GLCE, run:
 ./bin/gl_choco_engine
 ```
 
+## Third-Party Components
+
+GLCE uses the following third-party libraries and assets:
+
+| Component | Purpose | License |
+|---|---|---|
+| [GLFW](https://www.glfw.org/) | Window and input handling | zlib/libpng |
+| [GLEW](https://glew.sourceforge.net/) | OpenGL extension loading | Modified BSD / MIT |
+| [Spleen](https://github.com/fcambus/spleen) | Bitmap font assets (all six sizes) | BSD-2-Clause |
+
+GLFW and GLEW are installed separately as described in [Setup](#setup). Spleen font files are stored in `assets/fonts/spleen/`.
+
 ## License
 
 GLCE source code and project documentation are released under the MIT License.
 
 See [LICENSE](LICENSE) for details.
 
-Third-party assets may be distributed under separate licenses. See the README files accompanying individual assets for their respective license information.
+Third-party components retain their respective licenses. The Spleen license notice is included at [`assets/fonts/spleen/LICENSE`](assets/fonts/spleen/LICENSE).
 
 ## Author
 
