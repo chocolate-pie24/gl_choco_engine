@@ -315,7 +315,7 @@ application_result_t application_run(void) {
     }
 
     // Scene選択ガイド
-    INFO_MESSAGE("Scene selection: Press 3 for Sample Robot, 4 for STL Viewer.");
+    INFO_MESSAGE("Scene selection: Press 3 for Sample Robot, 4 for STL Viewer, 5 for Test Scene.");
 
     // TODO: window NULLチェック
     while(!s_application_state->window_should_close) {
@@ -542,18 +542,29 @@ static void platform_system_config_initialize(platform_system_config_t* config_)
 }
 
 static void renderer_frontend_config_initialize(renderer_frontend_config_t* config_) {
+    // Line Mesh
     config_->line_mesh_resource_config.max_geometry_count = 128;
     config_->line_mesh_resource_config.vbo_config.base_align = alignof(float);
     config_->line_mesh_resource_config.vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
     config_->line_mesh_resource_config.vbo_config.max_allocation_count = 512;
     config_->line_mesh_resource_config.vbo_config.vbo_size = 1 * MIB;
 
+    // Point Mesh
     config_->point_mesh_resource_config.max_geometry_count = 1024;
     config_->point_mesh_resource_config.vbo_config.base_align = alignof(float);
     config_->point_mesh_resource_config.vbo_config.buffer_usage = BUFFER_USAGE_DYNAMIC;
     config_->point_mesh_resource_config.vbo_config.max_allocation_count = 512;
     config_->point_mesh_resource_config.vbo_config.vbo_size = 1 * MIB;
 
+    // UI Mesh
+    config_->ui_mesh_resource_config.max_geometry_count = 16;
+    config_->ui_mesh_resource_config.max_texture_count = 16;
+    config_->ui_mesh_resource_config.vbo_config.base_align = alignof(float);
+    config_->ui_mesh_resource_config.vbo_config.buffer_usage = BUFFER_USAGE_STATIC;
+    config_->ui_mesh_resource_config.vbo_config.max_allocation_count = 32;
+    config_->ui_mesh_resource_config.vbo_config.vbo_size = 1 * MIB;
+
+    // Untextured Mesh
     config_->untextured_mesh_resource_config.max_geometry_count = 128;
     config_->untextured_mesh_resource_config.max_material_count = 128;
     config_->untextured_mesh_resource_config.vbo_config.base_align = alignof(max_align_t);

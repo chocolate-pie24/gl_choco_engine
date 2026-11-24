@@ -24,9 +24,9 @@ typedef struct ui_mesh_config {
     const char* geometry_resource_name;
     const char* geometry_extension;
 
-    const char* material_subdirectory;  // assetsからの相対パス
+    const char* texture_subdirectory;  // assetsからの相対パス, Solid ColorでImportする場合はNULLを指定する
     const char* texture_resource_name;
-    const char* texture_extension;
+    const char* texture_extension;     // Solid ColorでImportする場合はNULLを指定する
 } ui_mesh_config_t;
 
 typedef struct ui_mesh {

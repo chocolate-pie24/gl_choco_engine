@@ -298,3 +298,28 @@ renderer_frontend_result_t renderer_frontend_result_convert_render_packet(render
         return RENDERER_FRONTEND_UNDEFINED_ERROR;
     }
 }
+
+renderer_frontend_result_t renderer_frontend_result_convert_texture(texture_result_t result_) {
+    switch(result_) {
+    case TEXTURE_SUCCESS:
+        return RENDERER_FRONTEND_SUCCESS;
+    case TEXTURE_INVALID_ARGUMENT:
+        return RENDERER_FRONTEND_INVALID_ARGUMENT;
+    case TEXTURE_RUNTIME_ERROR:
+        return RENDERER_FRONTEND_RUNTIME_ERROR;
+    case TEXTURE_NO_MEMORY:
+        return RENDERER_FRONTEND_NO_MEMORY;
+    case TEXTURE_LIMIT_EXCEEDED:
+        return RENDERER_FRONTEND_LIMIT_EXCEEDED;
+    case TEXTURE_BAD_OPERATION:
+        return RENDERER_FRONTEND_BAD_OPERATION;
+    case TEXTURE_DATA_CORRUPTED:
+        return RENDERER_FRONTEND_DATA_CORRUPTED;
+    case TEXTURE_OVERFLOW:
+        return RENDERER_FRONTEND_OVERFLOW;
+    case TEXTURE_UNDEFINED_ERROR:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    default:
+        return RENDERER_FRONTEND_UNDEFINED_ERROR;
+    }
+}

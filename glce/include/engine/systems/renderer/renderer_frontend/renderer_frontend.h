@@ -26,6 +26,7 @@ typedef struct subsystem_allocator subsystem_allocator_t;
 typedef struct directional_light directional_light_t;
 typedef struct ambient_light ambient_light_t;
 
+typedef struct ui_mesh_config ui_mesh_config_t;
 typedef struct untextured_mesh_config untextured_mesh_config_t;
 
 typedef struct line_vertex line_vertex_t;
@@ -178,6 +179,20 @@ renderer_frontend_result_t renderer_frontend_point_mesh_render_update(renderer_f
 renderer_frontend_result_t renderer_frontend_point_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, point_mesh_t* out_mesh_);
 
 renderer_frontend_result_t renderer_frontend_point_mesh_release(renderer_frontend_t* renderer_frontend_, const point_mesh_t* mesh_);
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// for UI Mesh
+//////////////////////////////////////////////////////////////////////////////////////////
+// TODO: private helper化
+renderer_frontend_result_t renderer_frontend_ui_mesh_draw(renderer_frontend_t* renderer_frontend_, const ui_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
+
+renderer_frontend_result_t renderer_frontend_ui_mesh_render_update(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
+
+renderer_frontend_result_t renderer_frontend_ui_mesh_import_from_file(renderer_frontend_t* renderer_frontend_, const ui_mesh_config_t* config_, const char* asset_root_path_, int32_t texture_unit_index_, ui_mesh_t* out_mesh_);
+
+renderer_frontend_result_t renderer_frontend_ui_mesh_import_from_solid_color(renderer_frontend_t* renderer_frontend_, const ui_mesh_config_t* config_, const char* asset_root_path_, uint8_t red_, uint8_t green_, uint8_t blue_, int32_t texture_unit_index_, ui_mesh_t* out_mesh_);
+
+renderer_frontend_result_t renderer_frontend_ui_mesh_release(renderer_frontend_t* renderer_frontend_, const ui_mesh_t* mesh_);
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Validator

@@ -33,13 +33,15 @@
 #include "application/scenes/core/scene_err_utils.h"
 
 typedef struct {
-    // Large Icon Mesh.
     ui_mesh_t large_icon_ui_mesh;
-    mat4x4f_t large_icon_model_matrix;
-
-    // Small Icon Mesh.
     ui_mesh_t small_icon_ui_mesh;
-    mat4x4f_t small_icon_model_matrix;
+    ui_mesh_t solid_color_ui_mesh_large;
+    ui_mesh_t solid_color_ui_mesh_small;
+
+    mat4x4f_t large_icon_ui_mesh_model_matrix;
+    mat4x4f_t small_icon_ui_mesh_model_matrix;
+    mat4x4f_t solid_color_ui_mesh_large_model_matrix;
+    mat4x4f_t solid_color_ui_mesh_small_model_matrix;
 
     // Point Mesh.
     point_mesh_t point_mesh;
@@ -58,6 +60,46 @@ typedef struct {
 static const float s_default_fovy_degrees = 45.0f;
 static const float s_default_near_clip = 0.1f;
 static const float s_default_far_clip = 3000.0f;
+
+// ChatGPT Generated
+static const ui_mesh_config_t s_ui_mesh_configs[4] = {
+    // Large Icon: Frog
+    {
+        .geometry_subdirectory = "geometries",
+        .geometry_resource_name = "large_icon",
+        .geometry_extension = "ui_geom",
+        .texture_subdirectory = "textures",
+        .texture_resource_name = "frog_512",
+        .texture_extension = "bmp",
+    },
+    // Small Icon: Rabbit
+    {
+        .geometry_subdirectory = "geometries",
+        .geometry_resource_name = "small_icon",
+        .geometry_extension = "ui_geom",
+        .texture_subdirectory = "textures",
+        .texture_resource_name = "rabbit_512",
+        .texture_extension = "bmp",
+    },
+    // Solid Color: Large (Amber)
+    {
+        .geometry_subdirectory = "geometries",
+        .geometry_resource_name = "large_icon",
+        .geometry_extension = "ui_geom",
+        .texture_subdirectory = NULL,
+        .texture_resource_name = "test_solid_amber",
+        .texture_extension = NULL,
+    },
+    // Solid Color: Small (Turquoise)
+    {
+        .geometry_subdirectory = "geometries",
+        .geometry_resource_name = "small_icon",
+        .geometry_extension = "ui_geom",
+        .texture_subdirectory = NULL,
+        .texture_resource_name = "test_solid_turquoise",
+        .texture_extension = NULL,
+    },
+};
 
 // Vtable Functions.
 static scene_result_t test_scene_create(renderer_frontend_t* renderer_frontend_, const void* scene_config_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_);
@@ -100,11 +142,13 @@ static scene_result_t test_scene_create(renderer_frontend_t* renderer_frontend_,
     flight_camera_t* tmp_flight_camera = NULL;
     render_packet_t* tmp_render_packet = NULL;
 
-    mat4x4f_t tmp_point_model_matrix = { 0 };
-    mat4x4f_t tmp_view_matrix = { 0 };
-    mat4x4f_t tmp_projection_matrix = { 0 };
     size_t tmp_vertex_count = 0;
-    point_mesh_t tmp_point_mesh = { 0 };
+
+    bool point_mesh_imported = false;
+    bool large_icon_ui_mesh_imported = false;
+    bool small_icon_ui_mesh_imported = false;
+    bool solid_color_ui_mesh_large_imported = false;
+    bool solid_color_ui_mesh_small_imported = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(scene_config_, ret, SCENE_INVALID_ARGUMENT);
@@ -133,7 +177,7 @@ static scene_result_t test_scene_create(renderer_frontend_t* renderer_frontend_,
 
     // Camera.
     scene_config = (const test_scene_config_t*)scene_config_;
-    ret = test_scene_camera_create(scene_config->flight_camera_keybinds, framebuffer_width_, framebuffer_height_, &tmp_view_matrix, &tmp_projection_matrix, &tmp_flight_camera);
+    ret = test_scene_camera_create(scene_config->flight_camera_keybinds, framebuffer_width_, framebuffer_height_, &tmp_test_scene->view_matrix, &tmp_test_scene->projection_matrix, &tmp_flight_camera);
     if(SCENE_SUCCESS != ret) {
         ERROR_MESSAGE("test_scene_create(%s) - test_scene_camera_create failed.", scene_result_to_str(ret));
         goto cleanup;
@@ -145,24 +189,60 @@ static scene_result_t test_scene_create(renderer_frontend_t* renderer_frontend_,
         ERROR_MESSAGE("test_scene_create(%s) - point_vertices_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
-    mat4f_identity(&tmp_point_model_matrix);
-
-    ret_renderer_frontend = renderer_frontend_point_mesh_import_from_vertices(renderer_frontend_, "test_points", tmp_test_vertices, tmp_vertex_count, &tmp_point_mesh);
+    mat4f_identity(&tmp_test_scene->point_mesh_model_matrix);
+    ret_renderer_frontend = renderer_frontend_point_mesh_import_from_vertices(renderer_frontend_, "test_points", tmp_test_vertices, tmp_vertex_count, &tmp_test_scene->point_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
         ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_point_mesh_import_from_vertices failed.", scene_result_to_str(ret));
         goto cleanup;
     }
     point_vertices_destroy(&tmp_test_vertices);
+    point_mesh_imported = true;
+
+    // Textures.
+    ret_renderer_frontend = renderer_frontend_ui_mesh_import_from_file(renderer_frontend_, &s_ui_mesh_configs[0], asset_root_path_, 0, &tmp_test_scene->large_icon_ui_mesh);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_ui_mesh_import_from_file failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    mat4f_identity(&tmp_test_scene->large_icon_ui_mesh_model_matrix);
+    mat4f_translation(vec3f_initialize(0.0f, 0.0f, 0.0f), &tmp_test_scene->large_icon_ui_mesh_model_matrix);
+    large_icon_ui_mesh_imported = true;
+
+    ret_renderer_frontend = renderer_frontend_ui_mesh_import_from_file(renderer_frontend_, &s_ui_mesh_configs[1], asset_root_path_, 0, &tmp_test_scene->small_icon_ui_mesh);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_ui_mesh_import_from_file failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    mat4f_identity(&tmp_test_scene->small_icon_ui_mesh_model_matrix);
+    mat4f_translation(vec3f_initialize(3.0f, 0.0f, 0.0f), &tmp_test_scene->small_icon_ui_mesh_model_matrix);
+    small_icon_ui_mesh_imported = true;
+
+    ret_renderer_frontend = renderer_frontend_ui_mesh_import_from_solid_color(renderer_frontend_, &s_ui_mesh_configs[2], asset_root_path_, 232, 155, 69, 0, &tmp_test_scene->solid_color_ui_mesh_large);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_ui_mesh_import_from_solid_color failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    mat4f_identity(&tmp_test_scene->solid_color_ui_mesh_large_model_matrix);
+    mat4f_translation(vec3f_initialize(0.0f, 3.0f, 0.0f), &tmp_test_scene->solid_color_ui_mesh_large_model_matrix);
+    solid_color_ui_mesh_large_imported = true;
+
+    ret_renderer_frontend = renderer_frontend_ui_mesh_import_from_solid_color(renderer_frontend_, &s_ui_mesh_configs[3], asset_root_path_, 69, 184, 176, 0, &tmp_test_scene->solid_color_ui_mesh_small);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_ui_mesh_import_from_solid_color failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+    mat4f_identity(&tmp_test_scene->solid_color_ui_mesh_small_model_matrix);
+    mat4f_translation(vec3f_initialize(3.0f, 3.0f, 0.0f), &tmp_test_scene->solid_color_ui_mesh_small_model_matrix);
+    solid_color_ui_mesh_small_imported = true;
 
     tmp_test_scene->flight_camera = tmp_flight_camera;
     tmp_test_scene->camera_speed = 10.0f;
-    tmp_test_scene->point_mesh = tmp_point_mesh;
-    tmp_test_scene->point_mesh_model_matrix = tmp_point_model_matrix;
-    tmp_test_scene->projection_matrix = tmp_projection_matrix;
     tmp_test_scene->render_packet = tmp_render_packet;
-    tmp_test_scene->view_matrix = tmp_view_matrix;
-
 
     // Result validation.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
@@ -187,6 +267,42 @@ cleanup:
     if(SCENE_DATA_CORRUPTED == ret || SCENE_SUCCESS == ret) {
         return ret;
     }
+    if(large_icon_ui_mesh_imported) {
+        if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_ui_mesh_release(renderer_frontend_, &tmp_test_scene->large_icon_ui_mesh)) {
+            ret = SCENE_DATA_CORRUPTED;
+            ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_ui_mesh_release failed.", scene_result_to_str(ret));
+            return ret;
+        }
+    }
+    if(small_icon_ui_mesh_imported) {
+        if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_ui_mesh_release(renderer_frontend_, &tmp_test_scene->small_icon_ui_mesh)) {
+            ret = SCENE_DATA_CORRUPTED;
+            ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_ui_mesh_release failed.", scene_result_to_str(ret));
+            return ret;
+        }
+    }
+    if(solid_color_ui_mesh_large_imported) {
+        if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_ui_mesh_release(renderer_frontend_, &tmp_test_scene->solid_color_ui_mesh_large)) {
+            ret = SCENE_DATA_CORRUPTED;
+            ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_ui_mesh_release failed.", scene_result_to_str(ret));
+            return ret;
+        }
+    }
+    if(solid_color_ui_mesh_small_imported) {
+        if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_ui_mesh_release(renderer_frontend_, &tmp_test_scene->solid_color_ui_mesh_small)) {
+            ret = SCENE_DATA_CORRUPTED;
+            ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_ui_mesh_release failed.", scene_result_to_str(ret));
+            return ret;
+        }
+    }
+    if(point_mesh_imported) {
+        if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_point_mesh_release(renderer_frontend_, &tmp_test_scene->point_mesh)) {
+            ret = SCENE_DATA_CORRUPTED;
+            ERROR_MESSAGE("test_scene_create(%s) - renderer_frontend_point_mesh_release failed.", scene_result_to_str(ret));
+            return ret;
+        }
+    }
+
     if(NULL != tmp_test_vertices) {
         point_vertices_destroy(&tmp_test_vertices);
     }
@@ -222,6 +338,31 @@ static void test_scene_destroy(renderer_frontend_t* renderer_frontend_, void** s
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = SCENE_DATA_CORRUPTED;
         ERROR_MESSAGE("test_scene_destroy(%s) - renderer_frontend_point_mesh_release failed.", scene_result_to_str(ret));
+        return;
+    }
+
+    ret_renderer_frontend = renderer_frontend_ui_mesh_release(renderer_frontend_, &test_scene->large_icon_ui_mesh);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = SCENE_DATA_CORRUPTED;
+        ERROR_MESSAGE("test_scene_destroy(%s) - renderer_frontend_ui_mesh_release failed.", scene_result_to_str(ret));
+        return;
+    }
+    ret_renderer_frontend = renderer_frontend_ui_mesh_release(renderer_frontend_, &test_scene->small_icon_ui_mesh);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = SCENE_DATA_CORRUPTED;
+        ERROR_MESSAGE("test_scene_destroy(%s) - renderer_frontend_ui_mesh_release failed.", scene_result_to_str(ret));
+        return;
+    }
+    ret_renderer_frontend = renderer_frontend_ui_mesh_release(renderer_frontend_, &test_scene->solid_color_ui_mesh_large);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = SCENE_DATA_CORRUPTED;
+        ERROR_MESSAGE("test_scene_destroy(%s) - renderer_frontend_ui_mesh_release failed.", scene_result_to_str(ret));
+        return;
+    }
+    ret_renderer_frontend = renderer_frontend_ui_mesh_release(renderer_frontend_, &test_scene->solid_color_ui_mesh_small);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = SCENE_DATA_CORRUPTED;
+        ERROR_MESSAGE("test_scene_destroy(%s) - renderer_frontend_ui_mesh_release failed.", scene_result_to_str(ret));
         return;
     }
 
@@ -337,6 +478,13 @@ static scene_result_t test_scene_draw(void* scene_concrete_, renderer_frontend_t
         goto cleanup;
     }
 
+    ret_renderer_frontend = renderer_frontend_ui_mesh_render_update(renderer_frontend_, &test_scene->view_matrix, &test_scene->projection_matrix);
+    if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
+        ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
+        ERROR_MESSAGE("test_scene_draw(%s) - renderer_frontend_ui_mesh_render_update failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
     ret_renderer_frontend = renderer_frontend_draw_packet(test_scene->render_packet, renderer_frontend_);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
@@ -427,7 +575,7 @@ static scene_result_t render_packet_build(const test_scene_t* test_scene_, rende
     IF_ARG_NULL_GOTO_CLEANUP(packet_, ret, SCENE_INVALID_ARGUMENT);
 
     render_packet_deinitialize(packet_);
-    ret_render_packet = render_packet_initialize(0, point_mesh_count, 0, 0, packet_);
+    ret_render_packet = render_packet_initialize(0, point_mesh_count, 4, 0, packet_);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
         ERROR_MESSAGE("render_packet_build(%s) - render_packet_initialize failed.", scene_result_to_str(ret));
@@ -438,6 +586,34 @@ static scene_result_t render_packet_build(const test_scene_t* test_scene_, rende
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
         ERROR_MESSAGE("render_packet_build(%s) - render_packet_point_mesh_push failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_packet = render_packet_ui_mesh_push(&test_scene_->large_icon_ui_mesh, &test_scene_->large_icon_ui_mesh_model_matrix, packet_);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = scene_result_convert_render_packet(ret_render_packet);
+        ERROR_MESSAGE("render_packet_build(%s) - render_packet_ui_mesh_push failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_packet = render_packet_ui_mesh_push(&test_scene_->small_icon_ui_mesh, &test_scene_->small_icon_ui_mesh_model_matrix, packet_);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = scene_result_convert_render_packet(ret_render_packet);
+        ERROR_MESSAGE("render_packet_build(%s) - render_packet_ui_mesh_push failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_packet = render_packet_ui_mesh_push(&test_scene_->solid_color_ui_mesh_large, &test_scene_->solid_color_ui_mesh_large_model_matrix, packet_);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = scene_result_convert_render_packet(ret_render_packet);
+        ERROR_MESSAGE("render_packet_build(%s) - render_packet_ui_mesh_push failed.", scene_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret_render_packet = render_packet_ui_mesh_push(&test_scene_->solid_color_ui_mesh_small, &test_scene_->solid_color_ui_mesh_small_model_matrix, packet_);
+    if(RENDER_PACKET_SUCCESS != ret_render_packet) {
+        ret = scene_result_convert_render_packet(ret_render_packet);
+        ERROR_MESSAGE("render_packet_build(%s) - render_packet_ui_mesh_push failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
