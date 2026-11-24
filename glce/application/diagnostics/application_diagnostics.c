@@ -9,7 +9,7 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
-#include "engine/systems/event_system/core/engine_event_view.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "application/core/application_types.h"
 #include "application/core/application_err_utils.h"
@@ -21,15 +21,15 @@ static application_result_t subsystem_allocator_report(const subsystem_allocator
 
 static bool config_is_valid(const application_diagnostics_config_t* config_);
 
-application_result_t application_diagnostics_update(const application_diagnostics_config_t* config_, const engine_event_view_t* event_view_, application_frame_state_t* frame_state_) {
+application_result_t application_diagnostics_update(const application_diagnostics_config_t* config_, const platform_event_view_t* event_view_, application_frame_state_t* frame_state_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
     bool runtime_status_report_requested = false;
     bool validation_report_requested = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_diagnostics_update", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_diagnostics_update", "event_view_")
-    IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_diagnostics_update", "frame_state_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, APPLICATION_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, APPLICATION_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(frame_state_, ret, APPLICATION_INVALID_ARGUMENT);
     if(!config_is_valid(config_)) {
         ret = APPLICATION_INVALID_ARGUMENT;
         ERROR_MESSAGE("application_diagnostics_update(%s) - Provided config_ is not valid.", application_result_to_str(ret));
@@ -57,7 +57,7 @@ cleanup:
 application_result_t application_diagnostics_status_report(const subsystem_allocator_t* subsystem_allocator_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "application_diagnostics_status_report", "subsystem_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT);
 
     INFO_MESSAGE("============================================================");
     INFO_MESSAGE(" GLCE Runtime Status");
@@ -80,7 +80,7 @@ cleanup:
 static application_result_t memory_status_report(const subsystem_allocator_t* subsystem_allocator_) {
     application_result_t ret = APPLICATION_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "memory_status_report", "subsystem_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT);
 
     INFO_MESSAGE("");
     INFO_MESSAGE("[Memory]");
@@ -156,8 +156,16 @@ static application_result_t general_allocator_report(void) {
 
     for(size_t i = 0; i != GENERAL_ALLOCATOR_MEMORY_TAG_MAX; ++i) {
         const general_allocator_memory_tag_t memory_tag = (general_allocator_memory_tag_t)i;
-        const double allocated_mib = (double)status.memory_tag_allocated[i] / (1024.0 * 1024.0);
-        INFO_MESSAGE("      %-23s : %10.2f MiB", general_allocator_memory_tag_to_str(memory_tag), allocated_mib);
+        const size_t allocated_bytes = status.memory_tag_allocated[i];
+        const char* tag_name = general_allocator_memory_tag_to_str(memory_tag);
+
+        if(allocated_bytes >= MIB) {
+            INFO_MESSAGE("      %-16s : %12.2f MiB", tag_name, (double)allocated_bytes / MIB);
+        } else if(allocated_bytes >= KIB) {
+            INFO_MESSAGE("      %-16s : %12.2f KiB", tag_name, (double)allocated_bytes / KIB);
+        } else {
+            INFO_MESSAGE("      %-16s : %12zu B", tag_name, allocated_bytes);
+        }
     }
 
     INFO_MESSAGE("");
@@ -180,7 +188,7 @@ static application_result_t subsystem_allocator_report(const subsystem_allocator
     double total_allocated_kib = 0.0;
     double usage_percent = 0.0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT, application_result_to_str(APPLICATION_INVALID_ARGUMENT), "subsystem_allocator_report", "subsystem_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(subsystem_allocator_, ret, APPLICATION_INVALID_ARGUMENT);
 
     ret_subsystem_allocator = subsystem_allocator_status_get(subsystem_allocator_, &status);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {

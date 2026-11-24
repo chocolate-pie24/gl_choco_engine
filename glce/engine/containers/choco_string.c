@@ -82,19 +82,6 @@ struct choco_string {
 };
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";                    /**< 実行結果コード(成功)文字列 */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";      /**< 実行結果コード(内部データ整合異常)文字列 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";        /**< 実行結果コード(API誤用)文字列 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< 実行結果コード(無効な引数)文字列 */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";        /**< 実行結果コード(実行時エラー)文字列 */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< 実行結果コード(メモリ不足)文字列 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< 実行結果コード(未定義エラー)文字列 */
-static const char* const s_result_str_overflow = "OVERFLOW";                  /**< 実行結果コード(計算過程でオーバーフロー発生)文字列 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< 実行結果コード(システム使用範囲上限超過) */
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Mock functions
@@ -138,8 +125,8 @@ choco_string_result_t choco_string_default_create(choco_string_t** out_string_) 
     choco_string_t* tmp_string = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_default_create", "out_string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_BAD_OPERATION, result_to_str(CHOCO_STRING_BAD_OPERATION), "choco_string_default_create", "*out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_BAD_OPERATION);
 
     // Prepare.
     ret_general_allocator = general_allocator_allocate(sizeof(*tmp_string), GENERAL_ALLOCATOR_MEMORY_TAG_STRING, (void**)&tmp_string);
@@ -199,9 +186,9 @@ choco_string_result_t choco_string_create_from_c_string(const char* src_, choco_
     size_t capacity = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_create_from_c_string", "out_string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_BAD_OPERATION, result_to_str(CHOCO_STRING_BAD_OPERATION), "choco_string_create_from_c_string", "*out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, CHOCO_STRING_BAD_OPERATION);
 
     // Prepare.
     ret = choco_string_default_create(&tmp_string);
@@ -317,8 +304,8 @@ choco_string_result_t choco_string_copy(const choco_string_t* src_, choco_string
     choco_string_result_t ret = CHOCO_STRING_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(src_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
@@ -405,8 +392,8 @@ choco_string_result_t choco_string_copy_from_c_string(const char* src_, choco_st
     size_t buff_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "src_")
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_copy_from_c_string", "dst_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
@@ -495,8 +482,8 @@ choco_string_result_t choco_string_concat(const choco_string_t* string_, choco_s
     char* tmp_buffer = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "dst_")
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
     if(string_ == dst_) {
         ret = CHOCO_STRING_BAD_OPERATION;
         ERROR_MESSAGE("choco_string_concat(%s) - provided dst_ is not valid.", result_to_str(ret));
@@ -600,8 +587,8 @@ choco_string_result_t choco_string_concat_from_c_string(const char* string_, cho
     char* tmp_buffer = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "dst_")
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "choco_string_concat_from_c_string", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, CHOCO_STRING_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!choco_string_is_valid(dst_)) {
         ret = CHOCO_STRING_DATA_CORRUPTED;
@@ -840,7 +827,7 @@ static choco_string_result_t buffer_reserve(size_t size_, choco_string_t* string
 
     char* tmp_buffer = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_reserve", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
     if(0 == size_) {
         ret = CHOCO_STRING_INVALID_ARGUMENT;
         ERROR_MESSAGE("buffer_reserve(%s) - Provided size_ is not valid.", result_to_str(ret));
@@ -882,7 +869,7 @@ static choco_string_result_t buffer_resize(size_t size_, choco_string_t* string_
     char* tmp_buffer = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT, result_to_str(CHOCO_STRING_INVALID_ARGUMENT), "buffer_resize", "string_")
+    IF_ARG_NULL_GOTO_CLEANUP(string_, ret, CHOCO_STRING_INVALID_ARGUMENT);
     if(0 == size_) {
         ret = CHOCO_STRING_INVALID_ARGUMENT;
         ERROR_MESSAGE("buffer_resize(%s) - Provided size_ is not valid.", result_to_str(ret));
@@ -923,25 +910,25 @@ cleanup:
 static const char* result_to_str(choco_string_result_t result_) {
     switch(result_) {
     case CHOCO_STRING_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(CHOCO_STRING_SUCCESS);
     case CHOCO_STRING_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(CHOCO_STRING_DATA_CORRUPTED);
     case CHOCO_STRING_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(CHOCO_STRING_BAD_OPERATION);
     case CHOCO_STRING_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(CHOCO_STRING_NO_MEMORY);
     case CHOCO_STRING_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(CHOCO_STRING_INVALID_ARGUMENT);
     case CHOCO_STRING_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(CHOCO_STRING_RUNTIME_ERROR);
     case CHOCO_STRING_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(CHOCO_STRING_UNDEFINED_ERROR);
     case CHOCO_STRING_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(CHOCO_STRING_OVERFLOW);
     case CHOCO_STRING_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(CHOCO_STRING_LIMIT_EXCEEDED);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(CHOCO_STRING_UNDEFINED_ERROR);
     }
 }
 

@@ -18,10 +18,14 @@
 renderer_backend_result_t renderer_backend_vbo_create(renderer_backend_context_t* backend_context_, renderer_backend_vbo_t** out_vbo_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_vbo_create", "backend_context_->vbo_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_create", "out_vbo_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_create", "*out_vbo_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_, ret, RENDERER_BACKEND_BAD_OPERATION);
+    if(NULL == backend_context_->vbo_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_vbo_create(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vbo_vtable->vbo_create(out_vbo_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -44,9 +48,13 @@ void renderer_backend_vbo_destroy(renderer_backend_context_t* backend_context_, 
 renderer_backend_result_t renderer_backend_vbo_bind(const renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vbo_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_bind", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_vbo_bind", "backend_context_->vbo_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_bind", "vbo_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->vbo_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_vbo_bind(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vbo_vtable->vbo_bind(vbo_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -61,8 +69,12 @@ cleanup:
 renderer_backend_result_t renderer_backend_vbo_unbind(const renderer_backend_context_t* backend_context_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_unbind", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_vbo_unbind", "backend_context_->vbo_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->vbo_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_vbo_unbind(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vbo_vtable->vbo_unbind();
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -77,8 +89,12 @@ cleanup:
 renderer_backend_result_t renderer_backend_vbo_vertex_load(const renderer_backend_context_t* backend_context_, size_t load_size_, const void* load_data_, buffer_usage_t usage_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_vertex_load", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_vbo_vertex_load", "backend_context_->vbo_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->vbo_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_vbo_vertex_load(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vbo_vtable->vbo_vertex_load(load_size_, load_data_, usage_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -93,10 +109,18 @@ cleanup:
 renderer_backend_result_t renderer_backend_vbo_vertex_subload(const renderer_backend_context_t* backend_context_, size_t offset_, size_t size_, const void* load_data_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_vertex_subload", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->vbo_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_vbo_vertex_subload", "backend_context_->vbo_vtable")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != size_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_vertex_subload", "size_")
-    IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_vbo_vertex_subload", "load_data_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(load_data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(0 == size_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("renderer_backend_vbo_vertex_subload(%s) - Provided size_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(NULL == backend_context_->vbo_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_vbo_vertex_subload(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->vbo_vtable->vbo_vertex_subload(offset_, size_, load_data_);
     if(RENDERER_BACKEND_SUCCESS != ret) {

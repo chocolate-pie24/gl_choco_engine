@@ -126,18 +126,8 @@ struct subsystem_allocator {
 // ============================================================
 // Private Constants
 // ============================================================
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
 static const char* const s_memory_tag_platform = "PLATFORM_SYSTEM";
 static const char* const s_memory_tag_renderer = "RENDERER_SYSTEM";
-static const char* const s_memory_tag_event = "EVENT_SYSTEM";
 static const char* const s_memory_tag_camera = "CAMERA_SYSTEM";
 static const char* const s_memory_tag_undefined = "UNDEFINED";
 
@@ -190,8 +180,8 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     void* tmp_memory_pool = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_create", "out_allocator_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, SUBSYSTEM_ALLOCATOR_BAD_OPERATION, result_to_str(SUBSYSTEM_ALLOCATOR_BAD_OPERATION), "subsystem_allocator_create", "*out_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, SUBSYSTEM_ALLOCATOR_BAD_OPERATION);
     if(0 == memory_pool_size_) {
         ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("subsystem_allocator_create(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
@@ -199,14 +189,14 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
     }
 
     // Prepare.
-    ret_general_allocator = general_allocator_allocate(sizeof(subsystem_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, (void**)&tmp_allocator);
+    ret_general_allocator = general_allocator_allocate(sizeof(subsystem_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR, (void**)&tmp_allocator);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("subsystem_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(memory_pool_size_, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM, &tmp_memory_pool);
+    ret_general_allocator = general_allocator_allocate(memory_pool_size_, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR, &tmp_memory_pool);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("subsystem_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
@@ -242,10 +232,10 @@ subsystem_allocator_result_t subsystem_allocator_create(size_t memory_pool_size_
 cleanup:
     if(SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED != ret) {
         if(NULL != tmp_memory_pool) {
-            general_allocator_free((void**)&tmp_memory_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+            general_allocator_free((void**)&tmp_memory_pool, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
         }
         if(NULL != tmp_allocator) {
-            general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+            general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
         }
     }
 
@@ -282,8 +272,8 @@ void subsystem_allocator_destroy(subsystem_allocator_t** allocator_) {
 #endif
 
     accounting_reset(*allocator_);
-    general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
-    general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM);
+    general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
+    general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
 }
 
 // subsystem_allocator_allocate Validation Policy
@@ -318,9 +308,9 @@ subsystem_allocator_result_t subsystem_allocator_allocate(subsystem_allocator_t*
     void* tmp_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, SUBSYSTEM_ALLOCATOR_BAD_OPERATION, result_to_str(SUBSYSTEM_ALLOCATOR_BAD_OPERATION), "subsystem_allocator_allocate", "*out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, SUBSYSTEM_ALLOCATOR_BAD_OPERATION);
     if(!memory_tag_is_valid(memory_tag_)) {
         ret = SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("subsystem_allocator_allocate(%s) - Provided memory_tag_ is not valid.", result_to_str(ret));
@@ -411,7 +401,7 @@ subsystem_allocator_result_t subsystem_allocator_reset(subsystem_allocator_t* al
     linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_reset", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
@@ -475,8 +465,8 @@ subsystem_allocator_result_t subsystem_allocator_rollback_point_get(const subsys
     linear_allocator_rollback_point_t rollback_point = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback_point_get", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback_point_get", "out_rollback_point_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
@@ -552,8 +542,8 @@ subsystem_allocator_result_t subsystem_allocator_rollback(subsystem_allocator_t*
     size_t expected_total_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_rollback", "rollback_point_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(rollback_point_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
@@ -643,8 +633,8 @@ subsystem_allocator_result_t subsystem_allocator_status_get(const subsystem_allo
     size_t free_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_status_get", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT, result_to_str(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT), "subsystem_allocator_status_get", "out_status_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!is_valid_shallow(allocator_)) {
         ret = SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED;
@@ -725,8 +715,6 @@ const char* subsystem_allocator_memory_tag_to_str(subsystem_allocator_memory_tag
         return s_memory_tag_platform;
     case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER:
         return s_memory_tag_renderer;
-    case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_EVENT:
-        return s_memory_tag_event;
     case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_CAMERA:
         return s_memory_tag_camera;
     case SUBSYSTEM_ALLOCATOR_MEMORY_TAG_MAX:
@@ -794,23 +782,23 @@ static void accounting_reset(subsystem_allocator_t* allocator_) {
 static const char* result_to_str(subsystem_allocator_result_t result_) {
     switch(result_) {
     case SUBSYSTEM_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_SUCCESS);
     case SUBSYSTEM_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_BAD_OPERATION);
     case SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_DATA_CORRUPTED);
     case SUBSYSTEM_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_NO_MEMORY);
     case SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_INVALID_ARGUMENT);
     case SUBSYSTEM_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_OVERFLOW);
     case SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_LIMIT_EXCEEDED);
     case SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(SUBSYSTEM_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

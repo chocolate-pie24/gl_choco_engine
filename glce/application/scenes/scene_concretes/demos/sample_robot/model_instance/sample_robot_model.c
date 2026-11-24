@@ -55,11 +55,11 @@ scene_result_t sample_robot_model_create(const untextured_model_resource_map_t* 
 
     sample_robot_posture_t default_posture = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_create", "resource_map_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_create", "out_robot_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "sample_robot_model_create", "*out_robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(resource_map_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_robot_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_robot_, ret, SCENE_BAD_OPERATION);
 
-    ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_model_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_robot);
+    ret_general_allocator = general_allocator_allocate(sizeof(sample_robot_model_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_robot);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("sample_robot_model_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
@@ -69,9 +69,6 @@ scene_result_t sample_robot_model_create(const untextured_model_resource_map_t* 
     ret_model_framework = untextured_model_resource_map_transform_tree_clone(resource_map_, &tmp_transform_tree);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("sample_robot_model_create(%s) - model_resource_map_transform_tree_clone failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -103,7 +100,7 @@ cleanup:
         model_transform_tree_destroy(&tmp_transform_tree);
     }
     if(NULL != tmp_robot) {
-        general_allocator_free((void**)&tmp_robot, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_robot, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -119,7 +116,7 @@ void sample_robot_model_destroy(sample_robot_model_t** robot_) {
     }
 #endif
     model_transform_tree_destroy(&(*robot_)->transform_tree);
-    general_allocator_free((void**)robot_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)robot_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 scene_result_t sample_robot_model_placement_set(vec3f_t translate_, vec3f_t rotation_, sample_robot_model_t* robot_) {
@@ -127,14 +124,11 @@ scene_result_t sample_robot_model_placement_set(vec3f_t translate_, vec3f_t rota
 
     model_framework_result_t ret_model_framework = MODEL_FRAMEWORK_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_placement_set", "robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT);
 
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_ROOT, rotation_);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("sample_robot_model_placement_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -142,9 +136,6 @@ scene_result_t sample_robot_model_placement_set(vec3f_t translate_, vec3f_t rota
     ret_model_framework = model_transform_tree_translate_set(robot_->transform_tree, ROBOT_COORDINATE_ROOT, translate_);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("sample_robot_model_placement_set(%s) - model_transform_tree_translate_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -166,17 +157,14 @@ scene_result_t sample_robot_model_posture_set(const sample_robot_posture_t* post
 
     vec3f_t tmp_rotation = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_posture_set", "posture_")
-    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_posture_set", "robot_")
+    IF_ARG_NULL_GOTO_CLEANUP(posture_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(robot_, ret, SCENE_INVALID_ARGUMENT);
 
     // Base Motor (Yaw, Z-axis)
     tmp_rotation = vec3f_initialize(0.0f, 0.0f, posture_->base_motor_angle);
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_BASE_YAW, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -186,9 +174,6 @@ scene_result_t sample_robot_model_posture_set(const sample_robot_posture_t* post
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_SHOULDER_PITCH, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -198,9 +183,6 @@ scene_result_t sample_robot_model_posture_set(const sample_robot_posture_t* post
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_ELBOW_PITCH, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -210,9 +192,6 @@ scene_result_t sample_robot_model_posture_set(const sample_robot_posture_t* post
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_WRIST_ROLL, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -222,9 +201,6 @@ scene_result_t sample_robot_model_posture_set(const sample_robot_posture_t* post
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_LEFT_FINGER, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -234,9 +210,6 @@ scene_result_t sample_robot_model_posture_set(const sample_robot_posture_t* post
     ret_model_framework = model_transform_tree_rotation_set(robot_->transform_tree, ROBOT_COORDINATE_RIGHT_FINGER, tmp_rotation);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
         ret = scene_result_convert_model_framework(ret_model_framework);
-        if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("sample_robot_model_posture_set(%s) - model_transform_tree_rotation_set failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -328,25 +301,25 @@ scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_
     uint16_t* coordinate_ids = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "sample_robot_model_dummy_config_loader", "out_config_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "sample_robot_model_dummy_config_loader", "*out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, SCENE_BAD_OPERATION);
 
     // Prepare.
-    ret_general_allocator = general_allocator_allocate(sizeof(*coordinates) * coordinate_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&coordinates);
+    ret_general_allocator = general_allocator_allocate(sizeof(*coordinates) * coordinate_count, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&coordinates);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("sample_robot_model_dummy_config_loader(%s) - Failed to allocate coordinates.", scene_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(*untextured_mesh_configs) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&untextured_mesh_configs);
+    ret_general_allocator = general_allocator_allocate(sizeof(*untextured_mesh_configs) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&untextured_mesh_configs);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("sample_robot_model_dummy_config_loader(%s) - Failed to allocate mesh configs.", scene_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(*coordinate_ids) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&coordinate_ids);
+    ret_general_allocator = general_allocator_allocate(sizeof(*coordinate_ids) * untextured_mesh_count, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&coordinate_ids);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("sample_robot_model_dummy_config_loader(%s) - Failed to allocate mesh coordinate IDs.", scene_result_to_str(ret));
@@ -362,9 +335,6 @@ scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_
             &coordinates[i]);
         if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
             ret = scene_result_convert_model_framework(ret_model_framework);
-            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = SCENE_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("sample_robot_model_dummy_config_loader(%s) - model_coordinate_config_initialize failed (index = %zu).", scene_result_to_str(ret), i);
             goto cleanup;
         }
@@ -377,19 +347,17 @@ scene_result_t sample_robot_model_dummy_config_loader(untextured_model_assembly_
         untextured_mesh_configs[i].geometry_extension = "stl";
         untextured_mesh_configs[i].material_subdirectory = "materials/robot_sample";
         untextured_mesh_configs[i].material_resource_name = untextured_mesh_definitions[i].material_name;
-        untextured_mesh_configs[i].material_extension = "untextured_mat";
+        untextured_mesh_configs[i].material_extension = "phong_mat";
     }
 
+    // NOTE: coordinates, coordinate_ids, untextured_mesh_configsはtmp_assembly_configに所有権がmoveされるためNULLになる
     ret_model_framework = untextured_model_assembly_config_create(
         coordinate_count,
         &coordinates,
         untextured_mesh_count, &coordinate_ids, &untextured_mesh_configs,
         &tmp_assembly_config);
     if(MODEL_FRAMEWORK_SUCCESS != ret_model_framework) {
-            ret = scene_result_convert_model_framework(ret_model_framework);
-            if(MODEL_FRAMEWORK_INVALID_ARGUMENT == ret_model_framework) {
-                ret = SCENE_DATA_CORRUPTED;
-            }
+        ret = scene_result_convert_model_framework(ret_model_framework);
         ERROR_MESSAGE("sample_robot_model_dummy_config_loader(%s) - model_assembly_config_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -409,13 +377,13 @@ cleanup:
         untextured_model_assembly_config_destroy(&tmp_assembly_config);
     }
     if(NULL != coordinates) {
-        general_allocator_free((void**)&coordinates, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&coordinates, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     if(NULL != untextured_mesh_configs) {
-        general_allocator_free((void**)&untextured_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&untextured_mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     if(NULL != coordinate_ids) {
-        general_allocator_free((void**)&coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }

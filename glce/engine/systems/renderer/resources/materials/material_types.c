@@ -10,7 +10,7 @@
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 
-bool untextured_mesh_material_is_valid(const untextured_mesh_material_t* material_) {
+bool phong_material_is_valid(const phong_material_t* material_) {
     if(NULL == material_) {
         return false;
     }

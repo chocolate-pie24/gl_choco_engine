@@ -25,7 +25,7 @@
 #include "engine/light/directional_light.h"
 #include "engine/light/ambient_light.h"
 
-#include "engine/systems/event_system/core/engine_event_view.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
@@ -81,7 +81,7 @@ static const untextured_mesh_config_t s_model_mesh_config = {
     .geometry_extension = "stl",
     .material_subdirectory = "materials/demo_stl_viewer",
     .material_resource_name = "utah_teapot",
-    .material_extension = "untextured_mat",
+    .material_extension = "phong_mat",
 };
 
 // Scene Configuration(View)
@@ -90,7 +90,7 @@ static const float s_default_fovy_degrees = 45.0f;
 // Vtable Functions.
 static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_, const void* scene_config_, const char* asset_root_path_, int framebuffer_width_, int framebuffer_height_, void** out_scene_concrete_);
 static void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, void** scene_concrete_);
-static scene_result_t stl_viewer_update(void* scene_concrete_, const engine_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_);
+static scene_result_t stl_viewer_update(void* scene_concrete_, const platform_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_);
 static scene_result_t stl_viewer_draw(void* scene_concrete_, renderer_frontend_t* renderer_frontend_);
 static bool stl_viewer_is_valid(const void* scene_concrete_);
 
@@ -146,10 +146,10 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     bool debug_aabb_mesh_imported = false;
     bool debug_axis_mesh_imported = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_create", "asset_root_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_create", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_create", "out_scene_concrete_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_concrete_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "stl_viewer_create", "*out_scene_concrete_")
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_scene_concrete_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_concrete_, ret, SCENE_BAD_OPERATION);
     if(0 >= framebuffer_width_ || 0 >= framebuffer_height_) {
         ret = SCENE_INVALID_ARGUMENT;
         ERROR_MESSAGE("stl_viewer_create(%s) - Provided framebuffer_width_ or framebuffer_height_ is not valid.", scene_result_to_str(ret));
@@ -157,21 +157,15 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     }
 
     // Viewer / Render Packet.
-    ret_general_allocator = general_allocator_allocate(sizeof(stl_viewer_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_stl_viewer);
+    ret_general_allocator = general_allocator_allocate(sizeof(stl_viewer_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_stl_viewer);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
         goto cleanup;
     }
     ret_render_packet = render_packet_create(16 * MIB, &tmp_render_packet);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - render_packet_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -179,9 +173,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     // Model Resource.
     ret = model_mesh_import(renderer_frontend_, asset_root_path_, &tmp_model_mesh, &model_aabb);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - model_mesh_import failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -190,9 +181,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     // Camera.
     ret = viewer_camera_create(&model_aabb, framebuffer_width_, framebuffer_height_, &tmp_stl_viewer->view_matrix, &tmp_stl_viewer->projection_matrix, &tmp_stl_viewer->near_clip, &tmp_stl_viewer->far_clip, &tmp_orbit_camera);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - viewer_camera_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -200,9 +188,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     // Floor Grid.
     ret = floor_grid_mesh_initialize(renderer_frontend_, &model_aabb, &tmp_floor_grid_mesh);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - floor_grid_mesh_initialize failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -212,9 +197,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
     // Debug Geometry.
     ret = debug_aabb_mesh_initialize(renderer_frontend_, s_model_mesh_config.geometry_resource_name, &model_aabb, &tmp_debug_aabb_mesh);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - debug_aabb_mesh_initialize failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -222,9 +204,6 @@ static scene_result_t stl_viewer_create(renderer_frontend_t* renderer_frontend_,
 
     ret = debug_axis_mesh_initialize(renderer_frontend_, s_model_mesh_config.geometry_resource_name, &model_aabb, tmp_debug_axis_mesh);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_create(%s) - debug_axis_mesh_initialize failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -319,7 +298,7 @@ cleanup:
         orbit_camera_destroy(&tmp_orbit_camera);
     }
     if(NULL != tmp_stl_viewer) {
-        general_allocator_free((void**)&tmp_stl_viewer, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_stl_viewer, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -382,12 +361,12 @@ static void stl_viewer_destroy(renderer_frontend_t* renderer_frontend_, void** s
     render_packet_destroy(&tmp_stl_viewer->render_packet);
     orbit_camera_destroy(&tmp_stl_viewer->orbit_camera);
 
-    general_allocator_free((void**)scene_concrete_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)scene_concrete_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 static scene_result_t stl_viewer_update(
     void* scene_concrete_,
-    const engine_event_view_t* event_view_,
+    const platform_event_view_t* event_view_,
     float delta_time_,
     bool window_resized_,
     int framebuffer_width_,
@@ -404,8 +383,8 @@ static scene_result_t stl_viewer_update(
     bool projection_changed = false;
     bool view_changed = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_update", "scene_concrete_")
-    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_update", "event_view_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!stl_viewer_is_valid(scene_concrete_)) {
         ret = SCENE_DATA_CORRUPTED;
@@ -480,8 +459,8 @@ static scene_result_t stl_viewer_draw(void* scene_concrete_, renderer_frontend_t
 
     stl_viewer_t* stl_viewer = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_draw", "scene_concrete_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "stl_viewer_draw", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_concrete_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!stl_viewer_is_valid(scene_concrete_)) {
         ret = SCENE_DATA_CORRUPTED;
@@ -494,9 +473,6 @@ static scene_result_t stl_viewer_draw(void* scene_concrete_, renderer_frontend_t
 
     ret = render_packet_build(stl_viewer);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("stl_viewer_draw(%s) - render_packet_build failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -518,11 +494,6 @@ static scene_result_t stl_viewer_draw(void* scene_concrete_, renderer_frontend_t
     ret_renderer_frontend = renderer_frontend_draw_packet(stl_viewer->render_packet, renderer_frontend_);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-            ERROR_MESSAGE("stl_viewer_draw(%s) - renderer_frontend_draw_packet failed.", scene_result_to_str(ret));
-            goto cleanup;
-        }
         ERROR_MESSAGE("stl_viewer_draw(%s) - renderer_frontend_draw_packet failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -606,17 +577,14 @@ static scene_result_t model_mesh_import(renderer_frontend_t* renderer_frontend_,
 
     bool mesh_imported = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "model_mesh_import", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "model_mesh_import", "asset_root_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "model_mesh_import", "out_mesh_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_model_aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "model_mesh_import", "out_model_aabb_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_model_aabb_, ret, SCENE_INVALID_ARGUMENT);
 
     ret_renderer_frontend = renderer_frontend_untextured_mesh_import(renderer_frontend_, &s_model_mesh_config, asset_root_path_, &tmp_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("model_mesh_import(%s) - renderer_frontend_untextured_mesh_import failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -625,9 +593,6 @@ static scene_result_t model_mesh_import(renderer_frontend_t* renderer_frontend_,
     ret_renderer_frontend = renderer_frontend_untextured_mesh_local_aabb_get(renderer_frontend_, &tmp_mesh, &tmp_aabb);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("model_mesh_import(%s) - renderer_frontend_untextured_mesh_local_aabb_get failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -665,7 +630,7 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
     untextured_mesh_t tmp_mesh[3];
     const char* axis_names[3] = { "x", "y", "z" };
     const vec3f_t axis_rotations_degrees[3] = { vec3f_initialize(0.0f, 90.0f, 0.0f), vec3f_initialize(-90.0f, 0.0f, 0.0f), vec3f_initialize(0.0f, 0.0f, 0.0f) };
-    const untextured_mesh_material_t axis_materials[3] = {
+    const phong_material_t axis_materials[3] = {
         {
             .diffuse = vec3f_initialize(1.0f, 0.0f, 0.0f), .ambient = vec3f_initialize(0.0f, 0.0f, 0.0f), .shininess = 0.0f, .specular = vec3f_initialize(0.0f, 0.0f, 0.0f)
         },
@@ -687,10 +652,10 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
     cone_t cone = { 0 };
     mat4x4f_t axis_rotation_matrix = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "src_resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_mesh_initialize", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT);
     if('\0' == src_resource_name_[0]) {
         ret = SCENE_INVALID_ARGUMENT;
         ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - Provided src_resource_name_ is not valid.", scene_result_to_str(ret));
@@ -732,9 +697,6 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
         ret_geometry = untextured_arrow_geometry_vertices_create(16, &cone, &cylinder, &tmp_vertices, &tmp_vertex_count);
         if(GEOMETRY_SUCCESS != ret_geometry) {
             ret = scene_result_convert_geometry(ret_geometry);
-            if(GEOMETRY_INVALID_ARGUMENT == ret_geometry) {
-                ret = SCENE_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - untextured_arrow_geometry_vertices_create failed.", scene_result_to_str(ret));
             goto cleanup;
         }
@@ -749,15 +711,12 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
         ret_renderer_frontend = renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_, choco_string_c_str(tmp_geometry_resource_name), choco_string_c_str(tmp_material_resource_name), tmp_vertices, tmp_vertex_count, &axis_materials[i], &tmp_mesh[imported_mesh_count]);
         if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
             ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-            if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-                ret = SCENE_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - renderer_frontend_untextured_mesh_import_from_vertices failed.", scene_result_to_str(ret));
             goto cleanup;
         }
         imported_mesh_count++;
 
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        untextured_arrow_geometry_vertices_destroy(&tmp_vertices);
         choco_string_destroy(&tmp_geometry_resource_name);
         choco_string_destroy(&tmp_material_resource_name);
     }
@@ -769,25 +728,26 @@ static scene_result_t debug_axis_mesh_initialize(renderer_frontend_t* renderer_f
     ret = SCENE_SUCCESS;
 
 cleanup:
-    if(SCENE_DATA_CORRUPTED == ret || SCENE_SUCCESS == ret) {
+    if(SCENE_DATA_CORRUPTED == ret) {
         return ret;
     }
-    for(size_t i = 0; i != imported_mesh_count; ++i) {
-        if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_untextured_mesh_release(renderer_frontend_, &tmp_mesh[i])) {
-            ret = SCENE_DATA_CORRUPTED;
-            ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - renderer_frontend_untextured_mesh_release failed.", scene_result_to_str(ret));
-            return ret;
+    if(SCENE_SUCCESS != ret) {
+        for(size_t i = 0; i != imported_mesh_count; ++i) {
+            if(RENDERER_FRONTEND_SUCCESS != renderer_frontend_untextured_mesh_release(renderer_frontend_, &tmp_mesh[i])) {
+                ret = SCENE_DATA_CORRUPTED;
+                ERROR_MESSAGE("debug_axis_mesh_initialize(%s) - renderer_frontend_untextured_mesh_release failed.", scene_result_to_str(ret));
+                return ret;
+            }
         }
     }
     if(NULL != tmp_geometry_resource_name) {
         choco_string_destroy(&tmp_geometry_resource_name);
     }
-
     if(NULL != tmp_material_resource_name) {
         choco_string_destroy(&tmp_material_resource_name);
     }
     if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        untextured_arrow_geometry_vertices_destroy(&tmp_vertices);
     }
     return ret;
 }
@@ -803,11 +763,11 @@ static scene_result_t debug_axis_resource_name_create(const char* source_resourc
 
     choco_string_t* tmp_string = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(source_resource_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_resource_name_create", "source_resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_category_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_resource_name_create", "resource_category_")
-    IF_ARG_NULL_GOTO_CLEANUP(axis_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_resource_name_create", "axis_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_axis_resource_name_create", "out_string_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "debug_axis_resource_name_create", "*out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(source_resource_name_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_category_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(axis_name_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_string_, ret, SCENE_BAD_OPERATION);
 
     ret_choco_string = choco_string_create_from_c_string(source_resource_name_, &tmp_string);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
@@ -875,9 +835,9 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     vec3f_t grid_min = { 0 };
     vec3f_t grid_max = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "floor_grid_mesh_initialize", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT);
 
     for(size_t i = 0; i != 2; ++i) {    // XY平面へのGrid生成なので、zは除外
         aabb_length.elem[i] = aabb_->max.elem[i] - aabb_->min.elem[i];
@@ -904,9 +864,6 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     ret_geometry = line_grid_geometry_vertices_create(LINE_GRID_PLANE_XY, vec4u8_initialize(128, 128, 128, 255), grid_min, grid_max, max_aabb_extent / 10.0f, &tmp_vertices, &tmp_vertex_count);
     if(GEOMETRY_SUCCESS != ret_geometry) {
         ret = scene_result_convert_geometry(ret_geometry);
-        if(GEOMETRY_INVALID_ARGUMENT == ret_geometry) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("floor_grid_mesh_initialize(%s) - line_grid_geometry_vertices_create failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -914,15 +871,12 @@ static scene_result_t floor_grid_mesh_initialize(renderer_frontend_t* renderer_f
     ret_renderer_frontend = renderer_frontend_line_mesh_import_from_vertices(renderer_frontend_, "floor_grid_line", tmp_vertices, tmp_vertex_count, &tmp_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("floor_grid_mesh_initialize(%s) - renderer_frontend_line_mesh_import_from_vertices failed.", scene_result_to_str(ret));
         goto cleanup;
     }
 
     *out_mesh_ = tmp_mesh;
-    general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    line_grid_geometry_vertices_destroy(&tmp_vertices);
 
     ret = SCENE_SUCCESS;
 
@@ -931,7 +885,7 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        line_grid_geometry_vertices_destroy(&tmp_vertices);
     }
     return ret;
 }
@@ -945,10 +899,10 @@ static scene_result_t debug_aabb_mesh_initialize(renderer_frontend_t* renderer_f
     choco_string_t* tmp_resource_name = NULL;
     line_mesh_t tmp_debug_aabb_mesh = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_aabb_mesh_initialize", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_aabb_mesh_initialize", "src_resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(model_aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_aabb_mesh_initialize", "model_aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "debug_aabb_mesh_initialize", "out_mesh_")
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(src_resource_name_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(model_aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mesh_, ret, SCENE_INVALID_ARGUMENT);
 
     ret_choco_string = choco_string_create_from_c_string(src_resource_name_, &tmp_resource_name);
     if(CHOCO_STRING_SUCCESS != ret_choco_string) {
@@ -967,9 +921,6 @@ static scene_result_t debug_aabb_mesh_initialize(renderer_frontend_t* renderer_f
     ret_renderer_frontend = renderer_frontend_line_mesh_import_from_aabb(renderer_frontend_, choco_string_c_str(tmp_resource_name), model_aabb_, vec4u8_initialize(255, 0, 0, 0), &tmp_debug_aabb_mesh);
     if(RENDERER_FRONTEND_SUCCESS != ret_renderer_frontend) {
         ret = scene_result_convert_renderer_frontend(ret_renderer_frontend);
-        if(RENDERER_FRONTEND_INVALID_ARGUMENT == ret_renderer_frontend) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("debug_aabb_mesh_initialize(%s) - renderer_frontend_line_mesh_import_from_aabb failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -1006,13 +957,13 @@ static scene_result_t viewer_camera_create(const aabb_3d_t* model_aabb_, int fra
 
     float aspect = 0.0f;
 
-    IF_ARG_NULL_GOTO_CLEANUP(model_aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "model_aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_view_matrix_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_view_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_projection_matrix_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_projection_matrix_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_near_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_near_clip_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_far_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_far_clip_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_orbit_camera_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "viewer_camera_create", "out_orbit_camera_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_orbit_camera_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "viewer_camera_create", "*out_orbit_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(model_aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_view_matrix_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_projection_matrix_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_near_clip_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_far_clip_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_orbit_camera_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_orbit_camera_, ret, SCENE_BAD_OPERATION);
     if(framebuffer_width_ <= 0 || framebuffer_height_ <= 0) {
         ret = SCENE_INVALID_ARGUMENT;
         ERROR_MESSAGE("viewer_camera_create(%s) - Provided framebuffer_width_ or framebuffer_height_ is not valid.", scene_result_to_str(ret));
@@ -1081,11 +1032,11 @@ static scene_result_t initial_camera_parameters_calculate(const aabb_3d_t* aabb_
     float tmp_near_clip = 0.0f;
     float tmp_far_clip = 0.0f;
 
-    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "aabb_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_target_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "out_target_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_distance_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "out_distance_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_near_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "out_near_clip_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_far_clip_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "initial_camera_parameters_calculate", "out_far_clip_")
+    IF_ARG_NULL_GOTO_CLEANUP(aabb_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_target_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_distance_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_near_clip_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_far_clip_, ret, SCENE_INVALID_ARGUMENT);
 
     // AABBを包含するbounding sphereの半径を求める
     for(size_t i = 0; i != 3; ++i) {
@@ -1120,7 +1071,7 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
 
     render_packet_result_t ret_render_packet = RENDER_PACKET_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(stl_viewer_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "render_packet_build", "stl_viewer_")
+    IF_ARG_NULL_GOTO_CLEANUP(stl_viewer_, ret, SCENE_INVALID_ARGUMENT);
     if(NULL == stl_viewer_->render_packet) {
         ret = SCENE_BAD_OPERATION;
         ERROR_MESSAGE("render_packet_build(%s) - Provided stl_viewer_ is not initialized.", scene_result_to_str(ret));
@@ -1134,9 +1085,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
     ret_render_packet = render_packet_initialize(2, 0, 0, 4, stl_viewer_->render_packet);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("render_packet_build(%s) - render_packet_initialize failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -1144,9 +1092,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
     ret_render_packet = render_packet_untextured_mesh_push(&stl_viewer_->model_mesh, &stl_viewer_->model_matrix, stl_viewer_->render_packet);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -1154,9 +1099,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
     ret_render_packet = render_packet_line_mesh_push(&stl_viewer_->floor_grid_mesh, &stl_viewer_->floor_grid_model_matrix, stl_viewer_->render_packet);
     if(RENDER_PACKET_SUCCESS != ret_render_packet) {
         ret = scene_result_convert_render_packet(ret_render_packet);
-        if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("render_packet_build(%s) - render_packet_line_mesh_push failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -1166,9 +1108,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
             ret_render_packet = render_packet_untextured_mesh_push(&stl_viewer_->debug_axis_meshes[i], &stl_viewer_->model_matrix, stl_viewer_->render_packet);
             if(RENDER_PACKET_SUCCESS != ret_render_packet) {
                 ret = scene_result_convert_render_packet(ret_render_packet);
-                if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                    ret = SCENE_DATA_CORRUPTED;
-                }
                 ERROR_MESSAGE("render_packet_build(%s) - render_packet_untextured_mesh_push failed.", scene_result_to_str(ret));
                 goto cleanup;
             }
@@ -1177,9 +1116,6 @@ static scene_result_t render_packet_build(stl_viewer_t* stl_viewer_) {
         ret_render_packet = render_packet_line_mesh_push(&stl_viewer_->debug_aabb_mesh, &stl_viewer_->model_matrix, stl_viewer_->render_packet);
         if(RENDER_PACKET_SUCCESS != ret_render_packet) {
             ret = scene_result_convert_render_packet(ret_render_packet);
-            if(RENDER_PACKET_INVALID_ARGUMENT == ret_render_packet) {
-                ret = SCENE_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("render_packet_build(%s) - render_packet_line_mesh_push failed.", scene_result_to_str(ret));
             goto cleanup;
         }

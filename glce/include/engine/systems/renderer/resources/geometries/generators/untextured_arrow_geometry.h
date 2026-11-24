@@ -19,6 +19,8 @@ extern "C" {
 
 geometry_result_t untextured_arrow_geometry_vertices_create(uint16_t segment_count_, const cone_t* cone_, const cylinder_t* cylinder_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_);
 
+void untextured_arrow_geometry_vertices_destroy(point_normal_vertex_t** vertices_);
+
 #ifdef __cplusplus
 }
 #endif

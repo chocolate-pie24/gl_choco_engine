@@ -10,10 +10,6 @@
 
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
-#include "engine/core/event/keyboard_event.h"
-#include "engine/core/event/mouse_event.h"
-#include "engine/core/event/window_event.h"
-
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/platform_system/core/platform_system_err_utils.h"
 #include "engine/systems/platform_system/config/platform_system_config.h"
@@ -29,8 +25,6 @@ struct platform_system {
 
 static const platform_backend_vtable_t* backend_vtable_get(void);
 
-static bool is_valid_shallow(const platform_system_t* platform_system_);
-
 platform_system_result_t platform_system_create(const platform_system_config_t* config_, subsystem_allocator_t* allocator_, int* out_framebuffer_width_, int* out_framebuffer_height_, platform_system_t** out_platform_system_) {
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
@@ -41,19 +35,24 @@ platform_system_result_t platform_system_create(const platform_system_config_t* 
     int tmp_framebuffer_width = 0;
     int tmp_framebuffer_height = 0;
 
+    subsystem_allocator_rollback_point_t rollback_point = { 0 };
+
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_width_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "out_framebuffer_width_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_height_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "out_framebuffer_height_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_create", "out_platform_system_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_system_, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_result_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_system_create", "*out_platform_system_")    if(!platform_system_config_is_valid(config_)) {
-        ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
-        ERROR_MESSAGE("platform_system_create(%s) - Provided config_ is not valid.", platform_system_result_to_str(ret));
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_width_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_framebuffer_height_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_platform_system_, ret, PLATFORM_SYSTEM_BAD_OPERATION);
+
+    // Prepare.
+    ret_subsystem_allocator = subsystem_allocator_rollback_point_get(allocator_, &rollback_point);
+    if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+        ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
+        ERROR_MESSAGE("platform_system_create(%s) - subsystem_allocator_rollback_point_get failed.", platform_system_result_to_str(ret));
         goto cleanup;
     }
 
-    // Simulation.
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(platform_system_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_PLATFORM, (void**)&tmp_system);
     if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
         ret = platform_system_result_convert_subsystem_allocator(ret_subsystem_allocator);
@@ -76,10 +75,11 @@ platform_system_result_t platform_system_create(const platform_system_config_t* 
 
     tmp_system->backend = tmp_backend;
 
+    // Result Validation.
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!platform_system_is_valid(tmp_system)) {
         ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
-        ERROR_MESSAGE("platform_system_create(%s) - Postcondition validation failed for 'tmp_system'.", platform_system_result_to_str(ret));
+        ERROR_MESSAGE("platform_system_create(%s) - Result validation failed for 'tmp_system'.", platform_system_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -94,7 +94,17 @@ platform_system_result_t platform_system_create(const platform_system_config_t* 
     ret = PLATFORM_SYSTEM_SUCCESS;
 
 cleanup:
-    // リニアアロケータで確保したメモリは個別解放不可であるためクリーンナップ処理はなし
+    if(PLATFORM_SYSTEM_DATA_CORRUPTED == ret || PLATFORM_SYSTEM_SUCCESS == ret) {
+        return ret;
+    }
+    if(NULL != tmp_system || NULL != tmp_backend) {
+        ret_subsystem_allocator = subsystem_allocator_rollback(allocator_, &rollback_point);
+        if(SUBSYSTEM_ALLOCATOR_SUCCESS != ret_subsystem_allocator) {
+            ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
+            ERROR_MESSAGE("platform_system_create(%s) - subsystem_allocator rollback failed.", platform_system_result_to_str(ret));
+            goto cleanup;
+        }
+    }
     return ret;
 }
 
@@ -104,7 +114,7 @@ void platform_system_deinitialize(platform_system_t* platform_system_) {
     }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!platform_system_is_valid(platform_system_)) {
-        ERROR_MESSAGE("platform_system_deinitialize(%s) - Precondition validation failed for 'platform_system_'.", platform_system_result_to_str(PLATFORM_SYSTEM_DATA_CORRUPTED));
+        ERROR_MESSAGE("platform_system_deinitialize(%s) - Provided platform_system_ is not valid.", platform_system_result_to_str(PLATFORM_SYSTEM_DATA_CORRUPTED));
         return;
     }
 #endif
@@ -121,14 +131,17 @@ platform_system_result_t platform_system_update(platform_system_t* platform_syst
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
     // 毎フレーム呼ばれるAPIであるため、*out_event_view_ != NULLは許容する
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_update", "platform_system_")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->vtable, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_update", "platform_system_->vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->backend, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_update", "platform_system_->backend")
-    IF_ARG_NULL_GOTO_CLEANUP(out_event_view_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_update", "out_event_view_")
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!is_valid_shallow(platform_system_)) {
+    IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_event_view_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    if(NULL == platform_system_->vtable) {
         ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
-        ERROR_MESSAGE("platform_system_update(%s) - Precondition validation failed for 'platform_system_'.", platform_system_result_to_str(ret));
+        ERROR_MESSAGE("platform_system_update(%s) - Provided platform_system_ is corrupted.", platform_system_result_to_str(ret));
+        goto cleanup;
+    }
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!platform_system_is_valid(platform_system_)) {
+        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("platform_system_update(%s) - Provided platform_system_ is not valid.", platform_system_result_to_str(ret));
         goto cleanup;
     }
 #endif
@@ -139,14 +152,6 @@ platform_system_result_t platform_system_update(platform_system_t* platform_syst
         goto cleanup;
     }
 
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!platform_system_is_valid(platform_system_)) {
-        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
-        ERROR_MESSAGE("platform_system_update(%s) - Postcondition validation failed for 'platform_system_'.", platform_system_result_to_str(ret));
-        goto cleanup;
-    }
-#endif
-
     ret = PLATFORM_SYSTEM_SUCCESS;
 
 cleanup:
@@ -156,15 +161,20 @@ cleanup:
 platform_system_result_t platform_system_swap_buffers(platform_system_t* platform_system_) {
     platform_system_result_t ret = PLATFORM_SYSTEM_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT, platform_system_result_to_str(PLATFORM_SYSTEM_INVALID_ARGUMENT), "platform_system_swap_buffers", "platform_system_")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->vtable, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_result_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_system_swap_buffers", "platform_system_->vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(platform_system_->backend, ret, PLATFORM_SYSTEM_BAD_OPERATION, platform_system_result_to_str(PLATFORM_SYSTEM_BAD_OPERATION), "platform_system_swap_buffers", "platform_system_->backend")
+    IF_ARG_NULL_GOTO_CLEANUP(platform_system_, ret, PLATFORM_SYSTEM_INVALID_ARGUMENT);
+    if(NULL == platform_system_->vtable) {
+        ret = PLATFORM_SYSTEM_DATA_CORRUPTED;
+        ERROR_MESSAGE("platform_system_swap_buffers(%s) - Provided platform_system_ is corrupted.", platform_system_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = platform_system_->vtable->platform_backend_swap_buffers(platform_system_->backend);
     if(PLATFORM_SYSTEM_SUCCESS != ret) {
         ERROR_MESSAGE("platform_system_swap_buffers(%s) - Failed to swap buffers.", platform_system_result_to_str(ret));
         goto cleanup;
     }
+
+    ret = PLATFORM_SYSTEM_SUCCESS;
 
 cleanup:
     return ret;
@@ -174,7 +184,14 @@ bool platform_system_is_valid(const platform_system_t* platform_system_) {
     if(NULL == platform_system_) {
         return false;
     }
-    if(!is_valid_shallow(platform_system_)) {
+    if(NULL == platform_system_->backend) {
+        return false;
+    }
+    if(NULL == platform_system_->vtable) {
+        return false;
+    }
+    const platform_backend_vtable_t* tmp_vtable = backend_vtable_get();
+    if(platform_system_->vtable != tmp_vtable) {
         return false;
     }
     if(!platform_system_->vtable->platform_backend_is_valid(platform_system_->backend)) {
@@ -189,21 +206,4 @@ static const platform_backend_vtable_t* backend_vtable_get(void) {
 #else
     return NULL;
 #endif
-}
-
-static bool is_valid_shallow(const platform_system_t* platform_system_) {
-    if(NULL == platform_system_) {
-        return false;
-    }
-    if(NULL == platform_system_->backend) {
-        return false;
-    }
-    if(NULL == platform_system_->vtable) {
-        return false;
-    }
-    const platform_backend_vtable_t* tmp_vtable = backend_vtable_get();
-    if(platform_system_->vtable != tmp_vtable) {
-        return false;
-    }
-    return true;
 }

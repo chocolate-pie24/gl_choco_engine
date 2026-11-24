@@ -116,9 +116,9 @@ camera_registry_result_t flight_camera_registry_create(size_t max_flight_camera_
     subsystem_allocator_rollback_point_t rollback_point = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_create", "out_registry_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_result_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_create", "*out_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_registry_, ret, CAMERA_REGISTRY_BAD_OPERATION);
     if(0 == max_flight_camera_count_ || UINT16_MAX < max_flight_camera_count_) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("flight_camera_registry_create(%s) - Provided max_flight_camera_count_ is not valid.", camera_registry_result_to_str(ret));
@@ -303,9 +303,9 @@ camera_registry_result_t flight_camera_registry_id_get(const flight_camera_regis
     size_t tmp_id = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_id_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_id_get", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_id_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_id_get", "out_flight_camera_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_id_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
     if('\0' == name_[0]) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("flight_camera_registry_id_get(%s) - provided resource name is not valid.", camera_registry_result_to_str(ret));
@@ -375,11 +375,11 @@ camera_registry_result_t flight_camera_registry_register(flight_camera_registry_
     choco_string_t* tmp_name = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "flight_camera_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(*flight_camera_, ret, CAMERA_REGISTRY_BAD_OPERATION, camera_registry_result_to_str(CAMERA_REGISTRY_BAD_OPERATION), "flight_camera_registry_register", "*flight_camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_id_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_register", "out_flight_camera_id_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_name_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(flight_camera_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(*flight_camera_, ret, CAMERA_REGISTRY_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_flight_camera_id_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
     if('\0' == flight_camera_name_[0]) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("flight_camera_registry_register(%s) - provided resource name is not valid.", camera_registry_result_to_str(ret));
@@ -475,7 +475,7 @@ camera_registry_result_t flight_camera_registry_unregister(flight_camera_registr
     camera_registry_result_t ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT, camera_registry_result_to_str(CAMERA_REGISTRY_INVALID_ARGUMENT), "flight_camera_registry_unregister", "registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, CAMERA_REGISTRY_INVALID_ARGUMENT);
     if(!flight_camera_id_is_in_range(registry_, flight_camera_id_)) {
         ret = CAMERA_REGISTRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("flight_camera_registry_unregister(%s) - provided flight_camera_id_ is not valid.", camera_registry_result_to_str(ret));

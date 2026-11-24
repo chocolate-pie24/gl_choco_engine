@@ -109,16 +109,6 @@ static const char s_path_separator = '\\';
 static const char s_path_separator = '/';
 #endif
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
 // ============================================================
 // Private Function Declarations
 // ============================================================
@@ -193,11 +183,11 @@ fs_path_result_t fs_path_create(fs_path_t** out_path_, const char* base_path_, c
     ERROR_MESSAGE("fs_path_create(%s) - Platform windows is not supported yet.", result_to_str(ret));
     goto cleanup;
 #endif
-    IF_ARG_NULL_GOTO_CLEANUP(out_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "out_path_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_path_, ret, FS_PATH_BAD_OPERATION, result_to_str(FS_PATH_BAD_OPERATION), "fs_path_create", "*out_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(base_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "base_path_")
-    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "path_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create", "name_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_path_, ret, FS_PATH_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_path_, ret, FS_PATH_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(base_path_, ret, FS_PATH_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(path_, ret, FS_PATH_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, FS_PATH_INVALID_ARGUMENT);
     if('\0' == base_path_[0]) {
         ret = FS_PATH_INVALID_ARGUMENT;
         ERROR_MESSAGE("fs_path_create(%s) - Provided base_path_ is not valid.", result_to_str(ret));
@@ -355,8 +345,8 @@ fs_path_result_t fs_path_create_from_executable_directory(fs_path_t** out_path_)
     choco_string_t* tmp_fullpath = NULL;
 
     // Preconditions
-    IF_ARG_NULL_GOTO_CLEANUP(out_path_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "fs_path_create_from_executable_directory", "out_path_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_path_, ret, FS_PATH_BAD_OPERATION, result_to_str(FS_PATH_BAD_OPERATION), "fs_path_create_from_executable_directory", "*out_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_path_, ret, FS_PATH_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_path_, ret, FS_PATH_BAD_OPERATION);
 
     // Prepare.
     // fullpath生成
@@ -555,9 +545,9 @@ static fs_path_result_t executable_fullpath_get(char** out_fullpath_, size_t* ou
     fs_path_result_t ret = FS_PATH_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_fullpath_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "executable_fullpath_get", "out_fullpath_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fullpath_, ret, FS_PATH_BAD_OPERATION, result_to_str(FS_PATH_BAD_OPERATION), "executable_fullpath_get", "*out_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_bufsize_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "executable_fullpath_get", "out_bufsize_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_fullpath_, ret, FS_PATH_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fullpath_, ret, FS_PATH_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_bufsize_, ret, FS_PATH_INVALID_ARGUMENT);
 
     // Output.
 #if defined(__APPLE__)
@@ -602,9 +592,9 @@ static fs_path_result_t executable_fullpath_get_apple(char** out_fullpath_, size
     char* buf = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_fullpath_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "executable_fullpath_get_apple", "out_fullpath_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fullpath_, ret, FS_PATH_BAD_OPERATION, result_to_str(FS_PATH_BAD_OPERATION), "executable_fullpath_get_apple", "*out_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_bufsize_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "executable_fullpath_get_apple", "out_bufsize_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_fullpath_, ret, FS_PATH_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fullpath_, ret, FS_PATH_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_bufsize_, ret, FS_PATH_INVALID_ARGUMENT);
 
     // Prepare.
     ret_general_allocator = general_allocator_allocate(bufsize, GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO, (void**)&buf);
@@ -659,9 +649,9 @@ static fs_path_result_t executable_fullpath_get_linux(char** out_fullpath_, size
     char* buf = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_fullpath_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "executable_fullpath_get_linux", "out_fullpath_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fullpath_, ret, FS_PATH_BAD_OPERATION, result_to_str(FS_PATH_BAD_OPERATION), "executable_fullpath_get_linux", "*out_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_bufsize_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "executable_fullpath_get_linux", "out_bufsize_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_fullpath_, ret, FS_PATH_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fullpath_, ret, FS_PATH_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_bufsize_, ret, FS_PATH_INVALID_ARGUMENT);
 
     // Prepare.
     while(!success) {
@@ -726,9 +716,9 @@ static fs_path_result_t executable_fullpath_get_freebsd(char** out_fullpath_, si
     mib[3] = -1;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_fullpath_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "executable_fullpath_get_freebsd", "out_fullpath_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fullpath_, ret, FS_PATH_BAD_OPERATION, result_to_str(FS_PATH_BAD_OPERATION), "executable_fullpath_get_freebsd", "*out_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_bufsize_, ret, FS_PATH_INVALID_ARGUMENT, result_to_str(FS_PATH_INVALID_ARGUMENT), "executable_fullpath_get_freebsd", "out_bufsize_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_fullpath_, ret, FS_PATH_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_fullpath_, ret, FS_PATH_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_bufsize_, ret, FS_PATH_INVALID_ARGUMENT);
 
     // Prepare.
     // バッファサイズ取得
@@ -778,25 +768,25 @@ cleanup:
 static const char* result_to_str(fs_path_result_t result_) {
     switch(result_) {
     case FS_PATH_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(FS_PATH_SUCCESS);
     case FS_PATH_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(FS_PATH_INVALID_ARGUMENT);
     case FS_PATH_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(FS_PATH_BAD_OPERATION);
     case FS_PATH_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(FS_PATH_DATA_CORRUPTED);
     case FS_PATH_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(FS_PATH_NO_MEMORY);
     case FS_PATH_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(FS_PATH_LIMIT_EXCEEDED);
     case FS_PATH_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(FS_PATH_OVERFLOW);
     case FS_PATH_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(FS_PATH_RUNTIME_ERROR);
     case FS_PATH_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FS_PATH_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FS_PATH_UNDEFINED_ERROR);
     }
 }
 

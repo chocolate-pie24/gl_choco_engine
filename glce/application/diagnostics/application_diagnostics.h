@@ -13,7 +13,7 @@ extern "C" {
 #include "application/core/application_types.h"
 
 typedef struct application_frame_state application_frame_state_t;
-typedef struct engine_event_view engine_event_view_t;
+typedef struct platform_event_view platform_event_view_t;
 typedef struct subsystem_allocator subsystem_allocator_t;
 
 typedef struct application_diagnostics_config {
@@ -21,7 +21,7 @@ typedef struct application_diagnostics_config {
     keycode_t validation_report;
 } application_diagnostics_config_t;
 
-application_result_t application_diagnostics_update(const application_diagnostics_config_t* config_, const engine_event_view_t* event_view_, application_frame_state_t* frame_state_);
+application_result_t application_diagnostics_update(const application_diagnostics_config_t* config_, const platform_event_view_t* event_view_, application_frame_state_t* frame_state_);
 
 application_result_t application_diagnostics_status_report(const subsystem_allocator_t* subsystem_allocator_);
 

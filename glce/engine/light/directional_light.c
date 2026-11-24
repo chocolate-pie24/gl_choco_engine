@@ -20,7 +20,7 @@ light_result_t directional_light_initialize(vec3f_t direction_, vec3f_t color_, 
     directional_light_t tmp_light = { 0 };
     vec3f_t normalized_direction = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_light_, ret, LIGHT_INVALID_ARGUMENT, light_result_to_str(LIGHT_INVALID_ARGUMENT), "directional_light_initialize", "out_light_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_light_, ret, LIGHT_INVALID_ARGUMENT);
     if(is_equal_float(vec3f_length(direction_), 0.0f)) {
         ret = LIGHT_INVALID_ARGUMENT;
         ERROR_MESSAGE("directional_light_initialize(%s) - Provided direction_ is not valid.", light_result_to_str(ret));

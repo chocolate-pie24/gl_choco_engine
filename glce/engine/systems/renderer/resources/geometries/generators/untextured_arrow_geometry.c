@@ -35,13 +35,11 @@ geometry_result_t untextured_arrow_geometry_vertices_create(uint16_t segment_cou
     size_t index = 0;
     mat4x4f_t model_mat = { 0 };
 
-    bool cylinder_generated = false;
-    bool cone_generated = false;
-
-    IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_arrow_geometry_vertices_create", "cone_")
-    IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_arrow_geometry_vertices_create", "cylinder_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "untextured_arrow_geometry_vertices_create", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_arrow_geometry_vertices_create", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(cone_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT);
     if(0 != *out_vertex_count_) {
         ret = GEOMETRY_BAD_OPERATION;
         ERROR_MESSAGE("untextured_arrow_geometry_vertices_create(%s) - Provided out_vertex_count_ is not valid.", geometry_result_to_str(ret));
@@ -54,14 +52,12 @@ geometry_result_t untextured_arrow_geometry_vertices_create(uint16_t segment_cou
         ERROR_MESSAGE("untextured_arrow_geometry_vertices_create(%s) - untextured_cylinder_geometry_vertices_create failed.", geometry_result_to_str(ret));
         goto cleanup;
     }
-    cylinder_generated = true;
 
     ret = untextured_cone_geometry_vertices_create(cone_, segment_count_, &tmp_cone_vertices, &tmp_cone_vertex_count);
     if(GEOMETRY_SUCCESS != ret) {
         ERROR_MESSAGE("untextured_arrow_geometry_vertices_create(%s) - untextured_cone_geometry_vertices_create failed.", geometry_result_to_str(ret));
         goto cleanup;
     }
-    cone_generated = true;
 
     // ConeをCylinderの上面に移動
     mat4f_translation(vec3f_initialize(0.0f, 0.0f, cylinder_->height), &model_mat);
@@ -82,7 +78,7 @@ geometry_result_t untextured_arrow_geometry_vertices_create(uint16_t segment_cou
         ERROR_MESSAGE("untextured_arrow_geometry_vertices_create(%s) - allocation size overflow.", geometry_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vertices);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = geometry_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("untextured_arrow_geometry_vertices_create(%s) - general_allocator_allocate failed.", geometry_result_to_str(ret));
@@ -106,17 +102,24 @@ geometry_result_t untextured_arrow_geometry_vertices_create(uint16_t segment_cou
     ret = GEOMETRY_SUCCESS;
 
 cleanup:
-    if(GEOMETRY_DATA_CORRUPTED == ret || GEOMETRY_SUCCESS == ret) {
+    if(GEOMETRY_DATA_CORRUPTED == ret) {
         return ret;
     }
-    if(cylinder_generated) {
-        general_allocator_free((void**)&tmp_cylinder_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    if(NULL != tmp_cylinder_vertices) {
+        untextured_cylinder_geometry_vertices_destroy(&tmp_cylinder_vertices);
     }
-    if(cone_generated) {
-        general_allocator_free((void**)&tmp_cone_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    if(NULL != tmp_cone_vertices) {
+        untextured_cone_geometry_vertices_destroy(&tmp_cone_vertices);
     }
     if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
     }
     return ret;
+}
+
+void untextured_arrow_geometry_vertices_destroy(point_normal_vertex_t** vertices_) {
+    if(NULL == vertices_ || NULL == *vertices_) {
+        return;
+    }
+    general_allocator_free((void**)vertices_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
 }

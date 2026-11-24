@@ -121,20 +121,6 @@ typedef enum {
 } filesystem_read_state_t;
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";                        /**< 実行結果コード文字列: 成功 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";      /**< 実行結果コード文字列: 無効な引数 */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";            /**< 実行結果コード文字列: 実行時エラー */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                    /**< 実行結果コード文字列: メモリ不足 */
-static const char* const s_result_str_file_open_error = "FILE_OPEN_ERROR";        /**< 実行結果コード文字列: ファイルオープン失敗 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";          /**< 実行結果コード文字列: システムリソースが使用可能範囲を超過 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";            /**< 実行結果コード文字列: API誤用 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";        /**< 実行結果コード文字列: 未定義エラー */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";          /**< 実行結果コード文字列: 内部データ破損 */
-static const char* const s_result_str_eof = "EOF";                                /**< 実行結果コード文字列: ファイル読み込みEOF */
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Mock functions
@@ -200,9 +186,9 @@ filesystem_result_t filesystem_create(filesystem_t** out_filesystem_, const char
     const char* open_mode_str = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "out_filesystem_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_filesystem_, ret, FILESYSTEM_BAD_OPERATION, result_to_str(FILESYSTEM_BAD_OPERATION), "filesystem_create", "*out_filesystem_")
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_create", "fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_filesystem_, ret, FILESYSTEM_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FILESYSTEM_INVALID_ARGUMENT);
     if('\0' == fullpath_[0] || '/' != fullpath_[0]) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
         ERROR_MESSAGE("filesystem_create(%s) - Provided fullpath_ is not valid.", result_to_str(ret));
@@ -386,9 +372,9 @@ filesystem_result_t filesystem_byte_read(filesystem_t* filesystem_, size_t read_
     filesystem_read_state_t status = FILESYSTEM_READ_STATE_ERROR;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "filesystem_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "out_read_bytes_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FILESYSTEM_INVALID_ARGUMENT, result_to_str(FILESYSTEM_INVALID_ARGUMENT), "filesystem_byte_read", "out_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(filesystem_, ret, FILESYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FILESYSTEM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FILESYSTEM_INVALID_ARGUMENT);
     if(0 == read_bytes_) {
         ret = FILESYSTEM_INVALID_ARGUMENT;
         ERROR_MESSAGE("filesystem_byte_read(%s) - provided read_bytes_ is not valid.", result_to_str(ret));
@@ -541,27 +527,27 @@ static filesystem_read_state_t read_state_get(FILE* file_handle_, size_t request
 static const char* result_to_str(filesystem_result_t result_) {
     switch(result_) {
     case FILESYSTEM_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(FILESYSTEM_SUCCESS);
     case FILESYSTEM_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(FILESYSTEM_INVALID_ARGUMENT);
     case FILESYSTEM_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(FILESYSTEM_RUNTIME_ERROR);
     case FILESYSTEM_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(FILESYSTEM_NO_MEMORY);
     case FILESYSTEM_FILE_OPEN_ERROR:
-        return s_result_str_file_open_error;
+        return STRINGIFY(FILESYSTEM_FILE_OPEN_ERROR);
     case FILESYSTEM_EOF:
-        return s_result_str_eof;
+        return STRINGIFY(FILESYSTEM_EOF);
     case FILESYSTEM_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(FILESYSTEM_LIMIT_EXCEEDED);
     case FILESYSTEM_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(FILESYSTEM_BAD_OPERATION);
     case FILESYSTEM_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(FILESYSTEM_DATA_CORRUPTED);
     case FILESYSTEM_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FILESYSTEM_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FILESYSTEM_UNDEFINED_ERROR);
     }
 }
 

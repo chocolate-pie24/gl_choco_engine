@@ -29,15 +29,6 @@ struct frame_allocator {
 // ============================================================
 // Private Constants
 // ============================================================
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
 static const char* const s_memory_tag_render_packet = "RENDER_PACKET";
 static const char* const s_memory_tag_undefined = "UNDEFINED";
 
@@ -69,8 +60,8 @@ frame_allocator_result_t frame_allocator_create(size_t memory_pool_size_, frame_
     void* tmp_memory_pool = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FRAME_ALLOCATOR_INVALID_ARGUMENT), "frame_allocator_create", "out_allocator_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, FRAME_ALLOCATOR_BAD_OPERATION, result_to_str(FRAME_ALLOCATOR_BAD_OPERATION), "frame_allocator_create", "*out_allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_allocator_, ret, FRAME_ALLOCATOR_BAD_OPERATION);
     if(0 == memory_pool_size_) {
         ret = FRAME_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("frame_allocator_create(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
@@ -78,22 +69,16 @@ frame_allocator_result_t frame_allocator_create(size_t memory_pool_size_, frame_
     }
 
     // Prepare.
-    ret_general_allocator = general_allocator_allocate(sizeof(frame_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_allocator);
+    ret_general_allocator = general_allocator_allocate(sizeof(frame_allocator_t), GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR, (void**)&tmp_allocator);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(memory_pool_size_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, &tmp_memory_pool);
+    ret_general_allocator = general_allocator_allocate(memory_pool_size_, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR, &tmp_memory_pool);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_create(%s) - general_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -101,9 +86,6 @@ frame_allocator_result_t frame_allocator_create(size_t memory_pool_size_, frame_
     ret_linear_allocator = linear_allocator_initialize(&tmp_allocator->linear_allocator, memory_pool_size_, tmp_memory_pool);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
-        if(LINEAR_ALLOCATOR_INVALID_ARGUMENT == ret_linear_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_create(%s) - linear_allocator_initialize failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -132,10 +114,10 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_memory_pool) {
-        general_allocator_free((void**)&tmp_memory_pool, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_memory_pool, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
     }
     if(NULL != tmp_allocator) {
-        general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_allocator, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
     }
     return ret;
 }
@@ -151,8 +133,8 @@ void frame_allocator_destroy(frame_allocator_t** allocator_) {
     }
 #endif
 
-    general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
-    general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)&(*allocator_)->linear_allocator_pool, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
+    general_allocator_free((void**)allocator_, GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR);
 }
 
 frame_allocator_result_t frame_allocator_allocate(frame_allocator_t* allocator_, size_t allocation_size_, frame_allocator_memory_tag_t memory_tag_, void** out_ptr_) {
@@ -163,9 +145,9 @@ frame_allocator_result_t frame_allocator_allocate(frame_allocator_t* allocator_,
     void* tmp_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FRAME_ALLOCATOR_INVALID_ARGUMENT), "frame_allocator_allocate", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FRAME_ALLOCATOR_INVALID_ARGUMENT), "frame_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FRAME_ALLOCATOR_BAD_OPERATION, result_to_str(FRAME_ALLOCATOR_BAD_OPERATION), "frame_allocator_allocate", "*out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FRAME_ALLOCATOR_BAD_OPERATION);
     if(!memory_tag_is_valid(memory_tag_)) {
         ret = FRAME_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("frame_allocator_allocate(%s) - Provided memory_tag_ is not valid.", result_to_str(ret));
@@ -198,9 +180,6 @@ frame_allocator_result_t frame_allocator_allocate(frame_allocator_t* allocator_,
     ret_linear_allocator = linear_allocator_allocate(&allocator_->linear_allocator, allocation_size_, (void**)&tmp_ptr);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
-        if(LINEAR_ALLOCATOR_INVALID_ARGUMENT == ret_linear_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_allocate(%s) - linear_allocator_allocate failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -234,7 +213,7 @@ frame_allocator_result_t frame_allocator_reset(frame_allocator_t* allocator_) {
     linear_allocator_result_t ret_linear_allocator = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FRAME_ALLOCATOR_INVALID_ARGUMENT), "frame_allocator_reset", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FRAME_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!frame_allocator_is_valid(allocator_)) {
         ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
@@ -247,9 +226,6 @@ frame_allocator_result_t frame_allocator_reset(frame_allocator_t* allocator_) {
     ret_linear_allocator = linear_allocator_reset(&allocator_->linear_allocator);
     if(LINEAR_ALLOCATOR_SUCCESS != ret_linear_allocator) {
         ret = result_convert_linear_allocator(ret_linear_allocator);
-        if(LINEAR_ALLOCATOR_INVALID_ARGUMENT == ret_linear_allocator) {
-            ret = FRAME_ALLOCATOR_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("frame_allocator_reset(%s) - linear_allocator_reset failed.", result_to_str(ret));
         goto cleanup;
     }
@@ -319,23 +295,23 @@ static void accounting_reset(frame_allocator_t* allocator_) {
 static const char* result_to_str(frame_allocator_result_t result_) {
     switch(result_) {
     case FRAME_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(FRAME_ALLOCATOR_SUCCESS);
     case FRAME_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(FRAME_ALLOCATOR_BAD_OPERATION);
     case FRAME_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(FRAME_ALLOCATOR_DATA_CORRUPTED);
     case FRAME_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(FRAME_ALLOCATOR_NO_MEMORY);
     case FRAME_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(FRAME_ALLOCATOR_INVALID_ARGUMENT);
     case FRAME_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(FRAME_ALLOCATOR_OVERFLOW);
     case FRAME_ALLOCATOR_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(FRAME_ALLOCATOR_LIMIT_EXCEEDED);
     case FRAME_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FRAME_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FRAME_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

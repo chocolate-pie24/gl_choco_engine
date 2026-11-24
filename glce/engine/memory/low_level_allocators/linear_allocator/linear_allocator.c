@@ -110,17 +110,6 @@
  */
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";                     /**< 実行結果種別文字列(処理成功) */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                 /**< 実行結果種別文字列(メモリ確保失敗) */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";   /**< 実行結果種別文字列(無効な引数) */
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";     /**< 実行結果種別文字列(不明なエラー) */
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Allocation helpers
@@ -149,8 +138,8 @@ linear_allocator_result_t linear_allocator_initialize(linear_allocator_t* alloca
     const uintptr_t pool_address = (uintptr_t)memory_pool_;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_initialize", "memory_pool_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
     if(0 == capacity_) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("linear_allocator_initialize(%s) - Provided capacity_ is not valid.", result_to_str(ret));
@@ -209,9 +198,9 @@ linear_allocator_result_t linear_allocator_allocate(linear_allocator_t* allocato
     size_t block_size = 0;
 
     // Preconditions
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, LINEAR_ALLOCATOR_BAD_OPERATION, result_to_str(LINEAR_ALLOCATOR_BAD_OPERATION), "linear_allocator_allocate", "out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, LINEAR_ALLOCATOR_BAD_OPERATION);
     if(0 == required_size_) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("linear_allocator_allocate(%s) - Provided required_size_ is not valid.", result_to_str(ret));
@@ -276,7 +265,7 @@ linear_allocator_result_t linear_allocator_reset(linear_allocator_t* allocator_)
     linear_allocator_result_t ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_reset", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!linear_allocator_is_valid(allocator_)) {
         ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
@@ -308,8 +297,8 @@ linear_allocator_result_t linear_allocator_rollback_point_get(const linear_alloc
     size_t offset = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback_point_get", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_rollback_point_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback_point_get", "out_rollback_point_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_rollback_point_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!linear_allocator_is_valid(allocator_)) {
         ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
@@ -354,8 +343,8 @@ linear_allocator_result_t linear_allocator_rollback(linear_allocator_t* allocato
     uintptr_t next_end_addr = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(rollback_point_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_rollback", "rollback_point_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(rollback_point_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
     if(!memory_utility_is_aligned((uintptr_t)(rollback_point_->offset), alignof(max_align_t))) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("linear_allocator_rollback(%s) - Provided offset is not valid.", result_to_str(ret));
@@ -416,8 +405,8 @@ linear_allocator_result_t linear_allocator_status_get(const linear_allocator_t* 
     size_t free_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_status_get", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "linear_allocator_status_get", "out_status_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!linear_allocator_is_valid(allocator_)) {
         ret = LINEAR_ALLOCATOR_DATA_CORRUPTED;
@@ -501,7 +490,7 @@ static linear_allocator_result_t allocation_is_ready(const linear_allocator_t* a
     size_t used_size = 0;
     size_t free_size = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT, result_to_str(LINEAR_ALLOCATOR_INVALID_ARGUMENT), "allocation_is_ready", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, LINEAR_ALLOCATOR_INVALID_ARGUMENT);
     if(0 == required_block_size_) {
         ret = LINEAR_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ is not valid.", result_to_str(ret));
@@ -539,21 +528,21 @@ cleanup:
 static const char* result_to_str(linear_allocator_result_t result_) {
     switch(result_) {
     case LINEAR_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(LINEAR_ALLOCATOR_SUCCESS);
     case LINEAR_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(LINEAR_ALLOCATOR_NO_MEMORY);
     case LINEAR_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(LINEAR_ALLOCATOR_DATA_CORRUPTED);
     case LINEAR_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(LINEAR_ALLOCATOR_BAD_OPERATION);
     case LINEAR_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(LINEAR_ALLOCATOR_INVALID_ARGUMENT);
     case LINEAR_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(LINEAR_ALLOCATOR_OVERFLOW);
     case LINEAR_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(LINEAR_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(LINEAR_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

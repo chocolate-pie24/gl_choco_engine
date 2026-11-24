@@ -127,10 +127,10 @@ static renderer_backend_result_t gl33_vao_create(renderer_backend_vao_t** out_va
 
     renderer_backend_vao_t* tmp_vao = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "out_vao_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_create", "*out_vao_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vao_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
-    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_vao_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vao);
+    ret_general_allocator = general_allocator_allocate(sizeof(renderer_backend_vao_t), GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE, (void**)&tmp_vao);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = renderer_backend_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("gl33_vao_create(%s) - general_allocator_allocate failed.", renderer_backend_result_to_str(ret));
@@ -179,7 +179,7 @@ static void gl33_vao_destroy(renderer_backend_vao_t** vao_) {
         WARN_MESSAGE("gl33_vao_destroy(RUNTIME_ERROR) - Failed to unbind vertex array.");
     }
     mock_glDeleteVertexArrays(1, &(*vao_)->vao_handle);
-    general_allocator_free((void**)vao_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)vao_, GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE);
 
     *vao_ = NULL;
 
@@ -201,8 +201,12 @@ cleanup:
 static renderer_backend_result_t gl33_vao_bind(const renderer_backend_vao_t* vao_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "gl33_vao_bind", "vao_")
-    IF_ARG_FALSE_GOTO_CLEANUP(0 != vao_->vao_handle, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "gl33_vao_bind", "vao_->vao_handle")
+    IF_ARG_NULL_GOTO_CLEANUP(vao_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(0 == vao_->vao_handle) {
+        ret = RENDERER_BACKEND_BAD_OPERATION;
+        ERROR_MESSAGE("gl33_vao_bind(%s) - Provided vao_ is not initialized.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     mock_glBindVertexArray(vao_->vao_handle);
 

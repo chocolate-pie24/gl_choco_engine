@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 chocolate-pie24
 
-#include "engine/systems/event_system/core/engine_event_view.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 
-bool engine_event_view_is_valid(const engine_event_view_t* event_view_) {
+bool platform_event_view_is_valid(const platform_event_view_t* event_view_) {
     if(NULL == event_view_) {
         return false;
     }

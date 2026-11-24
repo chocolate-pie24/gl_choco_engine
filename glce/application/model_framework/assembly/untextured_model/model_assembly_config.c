@@ -38,14 +38,14 @@ model_framework_result_t untextured_model_assembly_config_create(
     untextured_model_assembly_config_t input = { 0 };   // for Preconditions
 #endif
 
-    IF_ARG_NULL_GOTO_CLEANUP(coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "coordinate_configs_")
-    IF_ARG_NULL_GOTO_CLEANUP(*coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "*coordinate_configs_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "mesh_coordinate_ids_")
-    IF_ARG_NULL_GOTO_CLEANUP(*mesh_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "*mesh_coordinate_ids_")
-    IF_ARG_NULL_GOTO_CLEANUP(mesh_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "mesh_configs_")
-    IF_ARG_NULL_GOTO_CLEANUP(*mesh_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "*mesh_configs_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT, model_framework_result_to_str(MODEL_FRAMEWORK_INVALID_ARGUMENT), "untextured_model_assembly_config_create", "out_config_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, MODEL_FRAMEWORK_BAD_OPERATION, model_framework_result_to_str(MODEL_FRAMEWORK_BAD_OPERATION), "untextured_model_assembly_config_create", "*out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(*coordinate_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(*mesh_coordinate_ids_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(mesh_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(*mesh_configs_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, MODEL_FRAMEWORK_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_config_, ret, MODEL_FRAMEWORK_BAD_OPERATION);
     if(0 == coordinate_count_) {
         ret = MODEL_FRAMEWORK_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - Provided coordinate_count_ is not valid.", model_framework_result_to_str(ret));
@@ -69,12 +69,9 @@ model_framework_result_t untextured_model_assembly_config_create(
     }
 #endif
 
-    ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_assembly_config_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_config);
+    ret_general_allocator = general_allocator_allocate(sizeof(untextured_model_assembly_config_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_config);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = model_framework_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = MODEL_FRAMEWORK_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("untextured_model_assembly_config_create(%s) - general_allocator_allocate failed.", model_framework_result_to_str(ret));
         goto cleanup;
     }
@@ -114,17 +111,17 @@ void untextured_model_assembly_config_destroy(untextured_model_assembly_config_t
     }
 
     if(NULL != (*config_)->coordinate_configs) {
-        general_allocator_free((void**)&(*config_)->coordinate_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&(*config_)->coordinate_configs, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
 
     if(NULL != (*config_)->mesh_configs) {
-        general_allocator_free((void**)&(*config_)->mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&(*config_)->mesh_configs, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     if(NULL != (*config_)->mesh_coordinate_ids) {
-        general_allocator_free((void**)&(*config_)->mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&(*config_)->mesh_coordinate_ids, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
 
-    general_allocator_free((void**)config_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)config_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 bool untextured_model_assembly_config_is_valid(const untextured_model_assembly_config_t* config_) {

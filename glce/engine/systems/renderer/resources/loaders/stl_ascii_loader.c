@@ -276,10 +276,10 @@ loader_result_t stl_ascii_loader_load(const char* fullpath_, size_t* out_vertex_
     bool block_loaded = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "stl_ascii_loader_load", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "stl_ascii_loader_load", "out_vertex_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "stl_ascii_loader_load", "out_vertices_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, LOADER_BAD_OPERATION, loader_result_to_str(LOADER_BAD_OPERATION), "stl_ascii_loader_load", "*out_vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, LOADER_BAD_OPERATION);
     if('\0' == fullpath_[0]) {
         ret = LOADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("stl_ascii_loader_load(%s) - Provided fullpath_ is not valid.", loader_result_to_str(ret));
@@ -393,6 +393,13 @@ cleanup:
     return ret;
 }
 
+void stl_ascii_loader_vertices_destroy(point_normal_vertex_t** vertices_) {
+    if(NULL == vertices_ || NULL == *vertices_) {
+        return;
+    }
+    general_allocator_free((void**)vertices_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
+}
+
 // ============================================================
 // Loading helpers
 // ============================================================
@@ -411,9 +418,9 @@ static loader_result_t vertex_count_preload(const char* fullpath_, size_t* out_t
     bool complete = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "vertex_count_preload", "fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_triangle_count_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "vertex_count_preload", "out_triangle_count_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "vertex_count_preload", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_triangle_count_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, LOADER_INVALID_ARGUMENT);
     if('\0' == fullpath_[0]) {
         ret = LOADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("vertex_count_preload(%s) - Provided fullpath_ is not valid.", loader_result_to_str(LOADER_INVALID_ARGUMENT));
@@ -494,9 +501,9 @@ static loader_result_t triangle_data_block_load_next(fs_stream_t* fs_stream_, tr
     bool loaded = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "triangle_data_block_load_next", "fs_stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_data_block_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "triangle_data_block_load_next", "out_data_block_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_loaded_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "triangle_data_block_load_next", "out_loaded_")
+    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_data_block_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_loaded_, ret, LOADER_INVALID_ARGUMENT);
 
     // find "facet normal"
     while(true) {
@@ -613,7 +620,7 @@ static loader_result_t triangle_data_block_initialize(triangle_data_block_t* out
     choco_string_t* endfacet_line = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_data_block_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "triangle_data_block_initialize", "out_data_block_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_data_block_, ret, LOADER_INVALID_ARGUMENT);
 
     // Prepare.
     ret_choco_string = choco_string_default_create(&facet_normal_line);
@@ -727,8 +734,8 @@ static loader_result_t triangle_data_block_parse(const triangle_data_block_t* da
     vec3f_t tmp_vertex3 = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(data_block_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "triangle_data_block_parse", "data_block_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_triangle_data_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "triangle_data_block_parse", "out_triangle_data_")
+    IF_ARG_NULL_GOTO_CLEANUP(data_block_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_triangle_data_, ret, LOADER_INVALID_ARGUMENT);
 
     // Prepare.
     parse_result = sscanf(choco_string_c_str(data_block_->facet_normal_line), "  facet normal %f %f %f", &tmp_normal.elem[0], &tmp_normal.elem[1], &tmp_normal.elem[2]);
@@ -773,8 +780,8 @@ static loader_result_t triangle_normalize(const triangle_data_t* triangle_data_,
     loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(triangle_data_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "triangle_normalize", "triangle_data_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "triangle_normalize", "out_vertex_")
+    IF_ARG_NULL_GOTO_CLEANUP(triangle_data_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_, ret, LOADER_INVALID_ARGUMENT);
     if(!vec3f_is_finite(triangle_data_->normal)) {
         ret = LOADER_UNSUPPORTED_FILE;
         ERROR_MESSAGE("triangle_normalize(%s) - Invalid normal value.", loader_result_to_str(ret));

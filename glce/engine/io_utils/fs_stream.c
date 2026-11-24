@@ -110,18 +110,6 @@ struct fs_stream {
 #define FS_STREAM_READ_UNIT_SIZE 512  /**< ファイル読み込みの際に一度に読み込むバイト数(メモリの動的確保回数を減らすため,固定値にした) */
 #define FS_STREAM_TEXT_FILE_LINE_BUFFER_SIZE 1024    /**< 改行コードを除く1行本文の最大長は1023bytes(改行コードがCRLFの場合は1022bytesとなる) */
 
-static const char* const s_result_str_success = "SUCCESS";                      /**< 実行結果コード文字列: 正常終了 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";    /**< 実行結果コード文字列: 無効な引数 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";          /**< 実行結果コード文字列: API誤用 */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";        /**< 実行結果コード文字列: 内部データ破損or未初期化 */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                  /**< 実行結果コード文字列: メモリ不足 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";        /**< 実行結果コード文字列: システム使用可能範囲超過 */
-static const char* const s_result_str_overflow = "OVERFLOW";                    /**< 実行結果コード文字列: 計算オーバーフロー */
-static const char* const s_result_str_file_open_error = "FILE_OPEN_ERROR";      /**< 実行結果コード文字列: ファイルオープンエラー */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";          /**< 実行結果コード文字列: 実行時エラー */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";      /**< 実行結果コード文字列: 想定していないエラーが発生 */
-static const char* const s_result_str_eof = "EOF";                              /**< 実行結果コード文字列: EOF */
-
 // ============================================================
 // Private Function Declarations
 // ============================================================
@@ -175,9 +163,9 @@ fs_stream_result_t fs_stream_create(fs_stream_t** out_stream_, const char* fullp
     filesystem_t* tmp_filesystem = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "out_stream_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_stream_, ret, FS_STREAM_BAD_OPERATION, result_to_str(FS_STREAM_BAD_OPERATION), "fs_stream_create", "*out_stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_create", "fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_stream_, ret, FS_STREAM_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, FS_STREAM_INVALID_ARGUMENT);
     if('\0' == fullpath_[0] || '/' != fullpath_[0]) {
         ret = FS_STREAM_INVALID_ARGUMENT;
         ERROR_MESSAGE("fs_stream_create(%s) - Provided fullpath_ is not valid.", result_to_str(ret));
@@ -310,9 +298,9 @@ fs_stream_result_t fs_stream_byte_read(fs_stream_t* stream_, size_t read_bytes_,
     fs_stream_result_t ret = FS_STREAM_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "out_read_bytes_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_byte_read", "out_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FS_STREAM_INVALID_ARGUMENT);
     if(0 == read_bytes_) {
         ret = FS_STREAM_INVALID_ARGUMENT;
         ERROR_MESSAGE("fs_stream_byte_read(%s) - Provided read_bytes_ is not valid.", result_to_str(ret));
@@ -368,8 +356,8 @@ fs_stream_result_t fs_stream_text_file_read(fs_stream_t* stream_, choco_string_t
     bool complete = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_read", "stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_read", "out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!fs_stream_is_valid(stream_)) {
         ret = FS_STREAM_DATA_CORRUPTED;
@@ -446,8 +434,8 @@ fs_stream_result_t fs_stream_text_file_line_read(fs_stream_t* stream_, choco_str
     char tmp_buffer[FS_STREAM_TEXT_FILE_LINE_BUFFER_SIZE] = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_line_read", "stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "fs_stream_text_file_line_read", "out_string_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_string_, ret, FS_STREAM_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!fs_stream_is_valid(stream_)) {
         ret = FS_STREAM_DATA_CORRUPTED;
@@ -566,9 +554,9 @@ static fs_stream_result_t byte_read(fs_stream_t* stream_, size_t read_bytes_, si
     filesystem_result_t ret_filesystem = FILESYSTEM_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "byte_read", "stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "byte_read", "out_read_bytes_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FS_STREAM_INVALID_ARGUMENT, result_to_str(FS_STREAM_INVALID_ARGUMENT), "byte_read", "out_buffer_")
+    IF_ARG_NULL_GOTO_CLEANUP(stream_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_read_bytes_, ret, FS_STREAM_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_buffer_, ret, FS_STREAM_INVALID_ARGUMENT);
 
     // Commmit.
     ret_filesystem = filesystem_byte_read(stream_->filesystem, read_bytes_, out_read_bytes_, out_buffer_);
@@ -598,29 +586,29 @@ cleanup:
 static const char* result_to_str(fs_stream_result_t result_) {
     switch(result_) {
     case FS_STREAM_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(FS_STREAM_SUCCESS);
     case FS_STREAM_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(FS_STREAM_INVALID_ARGUMENT);
     case FS_STREAM_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(FS_STREAM_BAD_OPERATION);
     case FS_STREAM_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(FS_STREAM_DATA_CORRUPTED);
     case FS_STREAM_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(FS_STREAM_NO_MEMORY);
     case FS_STREAM_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(FS_STREAM_LIMIT_EXCEEDED);
     case FS_STREAM_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(FS_STREAM_OVERFLOW);
     case FS_STREAM_FILE_OPEN_ERROR:
-        return s_result_str_file_open_error;
+        return STRINGIFY(FS_STREAM_FILE_OPEN_ERROR);
     case FS_STREAM_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(FS_STREAM_RUNTIME_ERROR);
     case FS_STREAM_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FS_STREAM_UNDEFINED_ERROR);
     case FS_STREAM_EOF:
-        return s_result_str_eof;
+        return STRINGIFY(FS_STREAM_EOF);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FS_STREAM_UNDEFINED_ERROR);
     }
 }
 

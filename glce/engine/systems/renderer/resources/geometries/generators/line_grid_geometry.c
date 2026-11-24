@@ -45,9 +45,9 @@ geometry_result_t line_grid_geometry_vertices_create(line_grid_plane_t plane_, v
 
     line_vertex_t* tmp_vertices = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_grid_geometry_vertices_create", "out_vertices_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "line_grid_geometry_vertices_create", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "line_grid_geometry_vertices_create", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT);
     if(!line_grid_plane_is_valid(plane_)) {
         ret = GEOMETRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("line_grid_geometry_vertices_create(%s) - Provided plane_ is not valid.", geometry_result_to_str(ret));
@@ -123,7 +123,7 @@ geometry_result_t line_grid_geometry_vertices_create(line_grid_plane_t plane_, v
     line_count = axis1_count + axis2_count;
     vertex_count = line_count * 2;
 
-    ret_general_allocator = general_allocator_allocate(sizeof(line_vertex_t) * vertex_count, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vertices);
+    ret_general_allocator = general_allocator_allocate(sizeof(line_vertex_t) * vertex_count, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = geometry_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("line_grid_geometry_vertices_create(%s) - general_allocator_allocate failed.", geometry_result_to_str(ret));
@@ -202,9 +202,16 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
     }
     return ret;
+}
+
+void line_grid_geometry_vertices_destroy(line_vertex_t** vertices_) {
+    if(NULL == vertices_ || NULL == *vertices_) {
+        return;
+    }
+    general_allocator_free((void**)vertices_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
 }
 
 bool line_grid_plane_is_valid(line_grid_plane_t plane_) {

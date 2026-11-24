@@ -70,8 +70,8 @@ geometry_result_t geometry_conversion_untextured_mesh_geometry_to_aabb_3d(const 
     const point_normal_vertex_t* tmp_vertices = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(src_geometry_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "geometry_conversion_untextured_mesh_geometry_to_aabb_3d", "src_geometry_")
-    IF_ARG_NULL_GOTO_CLEANUP(dst_geometry_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "geometry_conversion_untextured_mesh_geometry_to_aabb_3d", "dst_geometry_")
+    IF_ARG_NULL_GOTO_CLEANUP(src_geometry_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(dst_geometry_, ret, GEOMETRY_INVALID_ARGUMENT);
 
     // Prepare.
     ret = untextured_mesh_geometry_vertices_get(src_geometry_, &tmp_vertices, &vertex_count);

@@ -41,10 +41,10 @@ geometry_result_t untextured_cylinder_geometry_vertices_create(const cylinder_t*
 
     point_normal_vertex_t* tmp_vertices = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cylinder_geometry_vertices_create", "cylinder_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cylinder_geometry_vertices_create", "out_vertices_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION, geometry_result_to_str(GEOMETRY_BAD_OPERATION), "untextured_cylinder_geometry_vertices_create", "*out_vertices_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT, geometry_result_to_str(GEOMETRY_INVALID_ARGUMENT), "untextured_cylinder_geometry_vertices_create", "out_vertex_count_")
+    IF_ARG_NULL_GOTO_CLEANUP(cylinder_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertices_, ret, GEOMETRY_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vertices_, ret, GEOMETRY_BAD_OPERATION);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vertex_count_, ret, GEOMETRY_INVALID_ARGUMENT);
     if(!cylinder_is_valid(cylinder_)) {
         ret = GEOMETRY_INVALID_ARGUMENT;
         ERROR_MESSAGE("untextured_cylinder_geometry_vertices_create(%s) - Provided cylinder_ is not valid.", geometry_result_to_str(ret));
@@ -77,7 +77,7 @@ geometry_result_t untextured_cylinder_geometry_vertices_create(const cylinder_t*
         ERROR_MESSAGE("untextured_cylinder_geometry_vertices_create(%s) - Vertex array size overflow.", geometry_result_to_str(ret));
         goto cleanup;
     }
-    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vertices);
+    ret_general_allocator = general_allocator_allocate(allocation_size, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY, (void**)&tmp_vertices);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = geometry_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("untextured_cylinder_geometry_vertices_create(%s) - general_allocator_allocate failed.", geometry_result_to_str(ret));
@@ -162,7 +162,14 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_vertices) {
-        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
     }
     return ret;
+}
+
+void untextured_cylinder_geometry_vertices_destroy(point_normal_vertex_t** vertices_) {
+    if(NULL == vertices_ || NULL == *vertices_) {
+        return;
+    }
+    general_allocator_free((void**)vertices_, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
 }

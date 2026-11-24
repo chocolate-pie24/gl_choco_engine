@@ -32,8 +32,6 @@ extern "C" {
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
-#include "engine/systems/event_system/core/event_system_types.h"
-
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
 
@@ -73,8 +71,6 @@ application_result_t application_result_convert_camera_registry(camera_registry_
 application_result_t application_result_convert_camera(camera_result_t result_);
 
 application_result_t application_result_convert_fs_path(fs_path_result_t result_);
-
-application_result_t application_result_convert_event_system(event_system_result_t result_);
 
 application_result_t application_result_convert_general_allocator(general_allocator_result_t result_);
 

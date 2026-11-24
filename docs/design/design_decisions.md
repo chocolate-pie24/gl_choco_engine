@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-18
+最終更新: 2026-11-24
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -915,6 +915,7 @@ Event、Camera、Renderer等のApplication-side module間で、raw eventその�
 ## Decision: Platform SystemはOS / Window System境界のSource Systemとする
 
 **Status:** Accepted  
+**Update (2026-11-19):** PlatformがOS / Window System由来のFactを収集・Normalizeし、Platform-owned Event Viewを公開する責務は維持する。一方、下記のEngine Event Systemへの統合を前提とした記述は2026-09-13時点の履歴であり、現行構成ではEvent IntegrationをApplicationが担当する。2026-11-19「Event Integration Architecture — Event Systemの撤去」を参照する。  
 **Date:** 2026-09-13  
 **Scope:** Platform / System Boundary
 
@@ -994,7 +995,9 @@ Platform backend内部でcallback等を利用すること自体は許容する�
 
 ## Decision: 外部event ingressはSource Event ViewからEngine Event Systemへ集約する
 
-**Status:** Accepted  
+**Status:** Superseded（Engine Event Systemによる統合構造は廃止。Source Systemが自身のEvent Viewを公開する原則は維持）  
+**Superseded by:** 2026-11-19「Event Integration Architecture — Event Systemの撤去」  
+**Update (2026-11-19):** 統合対象のEvent Sourceの多くはApplication固有であるため、Event Integrationの責務をEngineではなくApplicationへ移した。`engine_event_view_t`および独立Engine Event Systemを前提とする以下の本文は、2026-09-13時点の設計履歴として残す。  
 **Date:** 2026-09-13  
 **Scope:** Platform / Event System / External Event Ingress
 
@@ -1093,6 +1096,7 @@ Platform Systemそのものの責務境界は、独立Decision「Platform System
 ## Decision: GLFW Platformのevent collectionは同期pollingとsnapshot差分方式とする
 
 **Status:** Accepted  
+**Update (2026-11-19):** GLFW Backendによる同期PollingとSnapshot差分方式は維持する。以下の旧Engine Event Systemへの言及は当時の接続構造を記録したものであり、現在はApplicationがPlatform Event Viewを直接利用する。  
 **Date:** 2026-09-15  
 **Scope:** Platform / GLFW / Event Collection
 
@@ -1182,6 +1186,7 @@ GLCEのApplication updateはframe単位で同期的に進むため、現在必�
 ## Decision: Window close requestは通常eventより強いdelivery guaranteeを持たせる
 
 **Status:** Accepted  
+**Update (2026-11-19):** Window Closeの優先Delivery契約は維持する。独立Engine Event System撤去後はApplicationが`platform_event_view_t.window_close_requested`を直接参照する。以下のEngine Event View経由の記述は当時の履歴である。  
 **Date:** 2026-09-15  
 **Scope:** Platform / Window Event / Shutdown Signaling
 
@@ -2068,6 +2073,7 @@ Subsystem AllocatorおよびFrame AllocatorはLinear Allocatorを利用し、そ
 ## Decision: Runtime StatusとValidation Reportを分離し、diagnostic policyをApplicationに配置する
 
 **Status:** Accepted  
+**Update (2026-11-19):** Runtime StatusとValidationの分離、およびDiagnostic Input PolicyをApplicationが所有する原則は維持する。現行Application DiagnosticsはPlatform Event Viewを使用し、独立Engine Event Systemを経由しない。以下のEvent System経由の図と説明は2026-09-26時点の履歴である。  
 **Date:** 2026-09-26  
 **Scope:** Diagnostics / Validation / Application / Event System
 
@@ -3659,7 +3665,8 @@ callerへOutputしてよいかを確認するphaseとして`Output eligibility`�
 
 ## Decision: Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する
 
-**Status:** Accepted
+**Status:** Partially Superseded（Phong Materialの名称・意味とRegistry共有の判断は2026-11-24 Decisionで更新。以下の本文は2026-10-09時点の設計履歴）  
+**Update (2026-11-24):** `untextured_material_t`と対応するLoader / Registry / Pipelineは`phong_material_t`と`phong_material_*`へ改名済み。Phong反射特性はUntextured Mesh専用ではない。異なるMesh間のMaterial / Texture Registry共有を却下する判断は、具体的な共有用途が判明したため確定方針ではなくなった。ただしRegistryインスタンスの共有化やRenderer FrontendのOwnership再編は未実施であり、Textured Mesh・Text Rendering等の実装後に再評価する。`texture_map_t` / `textured_material_t`の最終的な利用形態も未確定。後続の2026-11-24 Decisionsを参照する。  
 **Update (2026-11-02):** 本DecisionはRenderer側Material / Mesh Sliceの区分として維持する。Application Model Assemblyも2026-11-02「AssemblyをUntextured / Textured Modelの独立Sliceに分離し、同一Model内の混在を禁止する」で独立Sliceへ分離するが、Product Configurationの適用有無とShader種別を同一視するものではない。  
 **Date:** 2026-10-09
 **Scope:** Renderer / Material / Texture Reference / Resource Ownership
@@ -3746,7 +3753,8 @@ Texture参照のlifetimeについては、Registryにgeneration等のstale-ID検
 
 ## Decision: Untextured Material ConfigurationはDiffuseのみを必須とし、その他の反射特性にデフォルト値を適用する
 
-**Status:** Accepted  
+**Status:** Accepted（Configurationの値とDefault仕様は維持）  
+**Update (2026-11-24):** Materialの実装名称は`phong_material_t`、`phong_material_config_loader`等へ変更済み。以下の`untextured_material_*`という表記は当時の名称であり、ConfigurationのRequired / Optional / Default仕様を変更するものではない。  
 **Date:** 2026-10-13  
 **Scope:** Untextured Material / Configuration Format / Default Values / Lighting
 
@@ -7680,6 +7688,7 @@ Calleeが受け取るInputについて、Caller側ではすでにValidである�
 ## Decision: SceneをApplication固有Stateと描画処理のOwnerとし、Applicationを実行基盤のOrchestratorとする
 
 **Status:** Accepted / Scene Context・共通vtableを導入（STL Viewer接続・描画確認済み、Sample Robotのvtable対応は未完了）  
+**Update (2026-11-19):** 独立Engine Event Systemを撤去した。ApplicationはPlatform Systemから`platform_event_view_t`をBorrowしてSceneへ渡す。以下の「Event SystemをApplicationがOwnする」「Engine Event ViewをSceneへ渡す」とする構成は2026-11-18時点の履歴であり、現在のEvent Integrationは2026-11-19 Decisionに従う。  
 **Date:** 2026-11-13  
 **Update (2026-11-16):** STL Viewerも独立SceneとしてOrbit Camera、Light、Render Packet、STL / Debug Geometry Resourceおよび`create / destroy / update / draw`を実装し、描画・Camera初期配置の動作を確認した。2種類のConcrete Sceneで基本的なLifecycleとRenderer Frontend Borrowの構造が成立した。当時はScene共通Interface、Scene Manager、vtable等の抽出を未決定としていた。  
 **Update (2026-11-18):** 2種類のConcreteが存在する状態でScene共通Lifecycleを検討した結果、`scene_context_t`と`scene_vtable_t`を導入した。Applicationが保持するSceneの所有先をScene Contextへ一本化し、STL Viewerは共通vtable経由で描画できることを確認した。Adapter / 動的Registry / 汎用Scene Graphは導入しない。Sample RobotのConcrete自体は存在するが、共通vtableへの接続は未完了である。  
@@ -8154,3 +8163,201 @@ Scene AからScene Bへの切替時にResourceを共有する問題について�
 - `validation_policy.md`
 
 ---
+
+---
+
+## Decision: Event Integration Architecture — Event Systemの撤去
+
+**Status:** Accepted  
+**Date:** 2026-11-19  
+**Scope:** Event Integration / Platform System / Application / Responsibility Boundary  
+**Supersedes:** 2026-09-13「外部event ingressはSource Event ViewからEngine Event Systemへ集約する」の統合構造
+
+### 背景・設計判断
+
+従来のGLCEでは、Platform Systemが取得したイベントをEngine Event Systemへ渡し、Engine Event Systemが複数Event Sourceを統合してApplicationへ提供する構造を採用していた。
+
+しかし、将来統合することが想定されるEvent Sourceの多くは、Application固有のものである。
+
+そのため、Application固有のイベントまで統合する仕組みをEngine側に保有することは、ApplicationとEngineの責務境界として適切ではないと判断した。
+
+### 決定
+
+独立したEngine Event Systemを撤去し、イベント統合の責務をApplication側へ移す。
+
+- Platform SystemはOSおよびPlatform由来のイベントを取得・管理し、Platform Event Viewとして提供する。
+- Applicationは必要なEvent Sourceから情報を取得し、イベントの統合と各Consumerへの提供を担当する。
+- 現在のEvent SourceはPlatform Systemのみであるため、Applicationは`platform_event_view_t`をそのままBorrowして利用する。
+
+### 維持する設計
+
+GLFW BackendによるSnapshot差分方式は維持する。
+
+Platform Systemは現在状態と前回状態の差分からWindow / Keyboard / Mouse Eventを生成し、Backendが保有するEvent StorageへのViewを提供する。
+
+Event ViewのOwnershipはPlatform System側にあり、Applicationへ移転しない。
+
+### 将来の拡張
+
+Application固有のEvent Sourceが追加された場合は、Application側に必要な統合処理を追加する。
+
+統合の方式、Event Representation、順序、Storage、Lifetime等については、具体的な要求に基づいて決定する。
+
+Engine側には、Application固有Event Sourceの統合を目的とする汎用Event Systemを設けない。
+
+### 以前の設計との関係
+
+旧Engine Event Systemによるイベント統合構造は、本決定によって廃止する。
+
+Snapshot差分によるPlatform Event生成方式は引き続き採用する。
+
+### Related Documents
+
+- `glce_near_term_todo.md`
+- `glce_renderer_resource_model_workplan.md`
+- `glce/include/engine/systems/platform_system/platform_system.h`
+- `glce/application/application.c`
+
+---
+
+## Decision: Phong MaterialをMesh固有の名称ドメインから分離する
+
+**Status:** Accepted / Material関連名称の変更は実装済み  
+**Date:** 2026-11-24  
+**Scope:** Renderer / Material / Naming / Resource Representation / Mesh Vertical Slice  
+**Updates:** 2026-10-09「Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する」のMaterial名称・表現上の位置づけ
+
+### Decision
+
+`ambient`、`diffuse`、`specular`、`shininess`で構成するPhong系反射特性を、Untextured Mesh固有のMaterialではなく、描画Meshの種類から独立した**`phong_material_t`**として表現する。
+
+関連するMaterial Resource操作の名称も次のとおり整理する。
+
+| 旧名称 | 新名称 |
+|---|---|
+| `untextured_mesh_material` / `untextured_material`に由来するMaterial型 | `phong_material_t` |
+| Untextured Mesh固有名のMaterial Registry | `phong_material_registry` |
+| Untextured Mesh固有名のMaterial Pipeline | `phong_material_pipeline` |
+| Untextured Mesh固有名のMaterial Config Loader | `phong_material_config_loader` |
+| `.untextured_mat` | `.phong_mat` |
+
+Material ValueはCPU側の反射係数を保持する。描画時に各Shaderがその係数をUniformとして利用できるため、値の意味は特定のMeshやShader Programに属さない。
+
+**名称・概念の独立と、Registryインスタンスの共有は別の判断とする。** 本DecisionはPhong Materialの表現と名称を確定するものであり、`phong_material_registry`を複数Meshが共有することや、その長寿命OwnerをRenderer Frontendへ変更することまでは決定しない。
+
+現行Untextured Meshの描画機能およびMaterialの反射係数の意味を変更せず、従来のMaterial ConfigのRequired / Optional / Default仕様を維持する。
+
+### Context
+
+従来、Phong反射係数を持つMaterialの型・Registry・Pipeline・Loaderには、Untextured Meshに対応した名称が付けられていた。
+
+一方、今後実装するTextured Meshも同じPhong反射係数を使用することが想定される。反射特性を表すValueまで`untextured`と呼ぶと、Resourceの意味と描画方式による分類が混在する。
+
+2026-10-09 DecisionでもPhong系反射特性をTextured Materialの基礎値として再利用する考え方は存在していたが、名称にはUntextured Mesh固有の意味が残っていた。
+
+### Rationale
+
+- Phong反射特性そのものと、Textureを使用するかどうかというMeshの描画方式を区別できる。
+- Material Valueの意味を、現在の唯一のConsumerであるUntextured Meshに従属させずに表現できる。
+- 将来のTextured Meshで同じMaterial Valueを利用しても、型名が矛盾しない。
+- Registry実装の共通化、Registryインスタンスの共有、Registryの長寿命Owner変更を独立して判断できる。
+- Material Valueの改名と、Renderer全体のResource Ownership再構成を同時に行わずに済む。
+
+### Considered Alternatives
+
+- **Untextured Mesh固有のMaterial名称を維持する。** 同じPhong反射特性を別Meshへ供給する際、Valueの名称が利用先と一致しなくなるため採用しない。
+- **Materialの改名と同時に共有Registryへ移行する。** 名称とOwnershipは別の設計判断であり、現時点ではResource群が揃っていないため先行しない。
+- **Phong系以外も含む万能な`material_t`を導入する。** 現時点で共通のContractが具体化しておらず、導入しない。
+
+### Consequences
+
+- Phong Materialの型・Config Loader・Registry・Pipeline・関連Assetには新名称を使用する。
+- 現行Untextured Meshは`phong_material_t`と対応するRegistryを引き続き利用する。
+- `untextured_mesh`から`solid_color_mesh`への将来的な改名は、Material Valueの命名整理とは別に扱う。
+- `texture_map_t`および`textured_material_t`は現時点のSourceに存在するが、Textured Meshでの最終的な利用・廃止、Texture IDをMeshへ直接保持するかなどは、具体的な実装時に判断する。旧Decisionに記載された型構成を無条件の最終仕様としない。
+
+### Revisit Conditions
+
+- Phong以外のLighting / Material Modelが実装され、既存のMaterialの責務や名称が意味を表さなくなった場合。
+- Textured Meshでの反射係数、Texture Map、Mesh Valueの実際の関係が確定した場合。
+
+### Related Decisions / Documents
+
+- 2026-10-09「Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する」
+- 2026-10-13「Untextured Material ConfigurationはDiffuseのみを必須とし、その他の反射特性にデフォルト値を適用する」
+- 2026-11-24「Renderer Resource Ownershipの再構成は描画Resource群の実装後に再評価する」
+- `design_notes.md`
+
+---
+
+## Decision: Renderer Resource Ownershipの再構成は描画Resource群の実装後に再評価する
+
+**Status:** Accepted（再構成の保留を決定。共有Registry構成そのものは未確定）  
+**Date:** 2026-11-24  
+**Scope:** Renderer Frontend / Mesh Vertical Slice / Geometry / Phong Material / Texture / Registry Ownership / Deferred Architecture
+
+### Decision
+
+当面、既存RendererのMeshごとのVertical SliceとResource Ownershipを維持する。Phong Material RegistryおよびTexture RegistryをRenderer Frontend直下の共通Ownerへ移動する作業、Geometry Registryの名称ドメイン変更、Renderer Frontend Configの全面再構成を先行実施しない。
+
+将来予定しているTextured Mesh、EBOを使用するIndexed Geometry、Text Rendering、UI Text Geometry等の利用形態が具体化してから、RegistryをMeshごとに所有するか、複数Meshで共有するかを再評価する。
+
+**保留は、Registry共有の必要性を否定するものではない。** Phong MaterialとTextureについては、複数Shader / Mesh間の共有を要する合理的な用途が確認されている。一方、その用途を成立させるOwnership、Reference Right、Texture Binding、Geometry / GPU Bufferの責務の最終設計は未確定とする。
+
+新しいMesh機能の開発は、現在のVertical Sliceを利用して進める。Registryの共有や抽象化は、実際に必要となった時点で、その機能とLifetime契約に基づき判断する。
+
+### Context
+
+Phong Materialの名称独立化をきっかけに、Resource Registryを描画Meshの名称ドメインから切り離し、Renderer Frontendが共有Registryを所有する案を検討した。
+
+MaterialとTextureは次の点でGeometryと異なる。
+
+- **Phong Material:** CPU上の反射係数であり、複数ShaderへUniformとして供給できる。Registryインスタンスの共有は自然な候補となる。
+- **Texture:** GPU Texture Objectは特定のShader ProgramやVAOに固定されず、複数ShaderがTexture UnitとSampler Uniformを通じて参照できる。UIで選択したTextureを3Dモデルに適用する具体的な用途があり、Textureの共有Identityを扱う必要がある。
+- **Geometry:** OpenGLのVBO自体はShader Programに直接従属せず、理論上は複数Shaderで利用できる。しかし現行GLCEでは、各Mesh SliceのShader / VAO、Vertex Layout、VBO Manager、Geometry RegistryのGPU Allocation管理が一組の描画契約を形成している。Geometry Registryだけを共通化すると、これらの関係を再設計する必要がある。
+
+また、現行OpenGL 3.3 Texture BackendはTexture Resourceに`unit_number`を保持し、そのUnitへBindingする。Texture Objectの共有と、描画時にどのTexture UnitへBindするかの指定は本来別の責務として整理できるが、具体的なBackend API変更は未実施である。
+
+したがって、現段階でMaterial / Textureの共有Registryだけを先行実装すると、Textured MeshやFont Atlasの追加時に再びOwnerやBinding Contractを変更する可能性があると判断した。
+
+### Rationale
+
+- 実装済みの描画Resourceだけから、将来のすべての共有関係を推測して固定しない。
+- Geometry Registryが管理するCPU GeometryとVBO Allocationの関係を、根拠なく切り離さない。
+- **Registryの実装共通化**と**Registryインスタンスの共有**を区別し、同じ型のRegistryを複数保持する構造も引き続き許容する。
+- Mesh Render Resource間の依存を増やさず、新しい描画機能を独立して追加できる現在のVertical Sliceを活用する。
+- 既存の描画動作を維持したまま、TextureやIndexed Geometryの実際のRequirementを観察できる。
+- 現時点では価値の確定していないRenderer Frontend ConfigやResource Ownershipの大規模な変更を避ける。
+
+### Considered Alternatives
+
+- **Phong Material RegistryとTexture Registryを直ちにRenderer Frontendへ移動する。** 共有要件は存在するが、Texture BindingやTextured Meshの利用形態が未確定のため、実装順序として採用しない。
+- **Geometry / Registry / PipelineをVertex型に由来する共通名称へ改名する。** Geometry RegistryはVertex型だけでなくTopology / Vertex Layout / VBO Allocationと結びつくため、現段階ではMesh Sliceと一致する名称ドメインを維持する。
+- **OpenGLのGeometryは異なるShaderで共有できないとする。** 事実としてVBOはShader Programに直接従属しない。ただし、現在のGLCEのResource OwnershipとGPU Allocationの分担からは、Mesh別の管理が適している。
+- **将来の共通化を禁止する。** UIと3Dモデルで同一Textureを使う等の具体的需要があり、共有可能性そのものは維持する。
+
+### Consequences
+
+- 現行のGeometry Registry、VBO Manager、Shader / VAO、MeshのVertical Sliceを維持する。これらの名前は当面、対応するMeshの名称ドメインに置く。
+- `phong_material_registry`の名前はMesh固有でなくても、そのRegistryインスタンスを直ちにFrontend共通Ownerへ移すことは要求しない。
+- 既存のTexture RegistryおよびTexture Unit Bindingの仕様を、このDecisionだけを理由に変更しない。
+- Renderer Frontend Configの再構成は、Resource Ownershipの再評価と合わせて検討する。
+- Textured Meshを追加する際にはEBO / Indexed Drawingを検討・整備する。ただしOpenGLのTextured DrawingそのものにEBOが必須という意味ではない。
+- Text RenderingのFont AtlasとGlyph Geometryに関しても、実際のResource / Lifetime要件を確認してから最終構造を決める。
+- 2026-10-09 Decisionにあった「異なるMesh間の共通Registryは作らない」という判断は、今後の共有可否を禁止するルールとして扱わない。また当時のTexture参照Lifetimeに関するReference Counting不採用の記述は、その後のRegistry Reference Right導入と区別し、現在の具体的なContractを各Registry / Frontend APIで確認する。
+
+### Revisit Conditions
+
+- Textured Meshと、そのGeometry・Material・TextureのResource Operationが成立した場合。
+- Text RenderingとFont Atlas / UI Text Geometryの利用経路が成立した場合。
+- 同一Textureまたは同一Phong Materialを複数Mesh / Shaderが参照する具体的な操作が実装段階に入った場合。
+- Mesh Slice別のRegistryインスタンス維持が、Resource Identity、Reference Right、Lifetime、Frontend Config等に実害を生じさせる場合。
+
+### Related Decisions / Documents
+
+- 2026-10-09「Untextured / Textured MeshのMaterial構成とTexture参照lifetimeを分離する」
+- 2026-10-25「Renderer FrontendをRenderer SubsystemのOwnership Rootとし、Modelの所有をApplication / Sceneへ分離する」
+- 2026-10-27「Renderer FrontendをMesh Import / Release / Drawの公開境界とする」
+- 2026-11-24「Phong MaterialをMesh固有の名称ドメインから分離する」
+- `design_notes.md`
+- `glce_near_term_todo.md`

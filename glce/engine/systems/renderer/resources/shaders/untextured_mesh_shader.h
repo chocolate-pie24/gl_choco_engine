@@ -60,7 +60,7 @@
  * - Directional LightとAmbient Lightの色はvec3f_t、
  *   強度はfloatとして受け取る。
  * - Directional Lightの方向はView座標系のvec3f_tとして受け取る。
- * - Materialにはuntextured_mesh_material_tを使用する。
+ * - Materialにはphong_material_tを使用する。
  * - Matrix、Light、Materialの値はShader Resource内に
  *   別途保持せず、BackendのUniform設定APIへ送信する。
  *
@@ -105,7 +105,7 @@ typedef struct untextured_mesh_shader untextured_mesh_shader_t;                 
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend Contextのopaque型 */
 typedef struct mat4x4f mat4x4f_t;
-typedef struct untextured_mesh_material untextured_mesh_material_t;
+typedef struct phong_material phong_material_t;
 typedef struct renderer_backend_vbo renderer_backend_vbo_t;
 
 shader_result_t untextured_mesh_shader_create(const char* vertex_shader_fullpath_, const char* fragment_shader_fullpath_, renderer_backend_context_t* backend_context_, const renderer_backend_vbo_t* vbo_, untextured_mesh_shader_t** out_shader_);
@@ -448,7 +448,7 @@ shader_result_t untextured_mesh_shader_directional_light_color_intensity_set(con
 shader_result_t untextured_mesh_shader_ambient_light_color_intensity_set(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_, vec3f_t color_, float intensity_);
 
 /**
- * @brief Untextured Mesh Materialの反射特性をUniformへ設定する。
+ * @brief Phong Materialの反射特性をUniformへ設定する。
  *
  * @par Public API Contract
  * - Shader Program生成時に取得したg_materialの
@@ -464,8 +464,7 @@ shader_result_t untextured_mesh_shader_ambient_light_color_intensity_set(const r
  * @par Validation
  * - backend_context_、shader_、material_のNULLを検査する。
  * - Shader Resourceのshallow validityを確認する。
- * - DEBUG / TEST Buildでは、
- *   untextured_mesh_material_is_valid()によって
+ * - DEBUG / TEST Buildでは、phong_material_is_valid()によって
  *   Materialのcanonical validityを確認する。
  * - RELEASE BuildではMaterialのsemantic validityを
  *   本API内で検証しない。
@@ -481,7 +480,7 @@ shader_result_t untextured_mesh_shader_ambient_light_color_intensity_set(const r
  * @param[in] shader_
  *            MaterialのUniform Locationを保持するShader Resource。
  * @param[in] material_
- *            設定するUntextured Mesh Material。
+ *            設定するPhong Material。
  *
  * @retval SHADER_SUCCESS 全Material Uniformの設定成功。
  * @retval SHADER_INVALID_ARGUMENT 引数がNULL、
@@ -493,14 +492,14 @@ shader_result_t untextured_mesh_shader_ambient_light_color_intensity_set(const r
  * @retval SHADER_UNDEFINED_ERROR 下位Backendで未分類のエラーが発生。
  *
  * @pre backend_context_とshader_は利用可能であること。
- * @pre material_は有効なuntextured_mesh_material_tを指していること。
+ * @pre material_は有効なphong_material_tを指していること。
  * @pre 対象Shader Programがuse()によって有効化されていること。
  *
  * @post 成功時、Ambient、Diffuse、Specular、Shininessの
  *       各Uniform送信が完了する。
  * @post Materialのownershipは移転しない。
  */
-shader_result_t untextured_mesh_shader_material_set(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_, const untextured_mesh_material_t* material_);
+shader_result_t untextured_mesh_shader_material_set(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_, const phong_material_t* material_);
 
 bool untextured_mesh_shader_is_valid(const renderer_backend_context_t* backend_context_, const untextured_mesh_shader_t* shader_);
 

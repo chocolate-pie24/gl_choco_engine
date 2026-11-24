@@ -8,9 +8,6 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-
-#include "application/scenes/core/scene_types.h"
 #include "application/scenes/vtables/scene_vtables.h"
 
 const scene_vtable_t* stl_viewer_vtable_get(void);

@@ -17,6 +17,7 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
+#include "engine/systems/renderer/resources/textures/core/texture_types.h"
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/buffer_managers/core/buffer_manager_types.h"
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
@@ -37,6 +38,7 @@ renderer_frontend_result_t renderer_frontend_result_convert_fs_path(fs_path_resu
 renderer_frontend_result_t renderer_frontend_result_convert_shader(shader_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_geometry(geometry_result_t result_);
 renderer_frontend_result_t renderer_frontend_result_convert_render_packet(render_packet_result_t result_);
+renderer_frontend_result_t renderer_frontend_result_convert_texture(texture_result_t result_);
 
 #ifdef __cplusplus
 }

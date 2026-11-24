@@ -2,44 +2,35 @@
 // Copyright (c) 2026 chocolate-pie24
 
 #include "engine/systems/renderer/render_packet/core/render_packet_err_utils.h"
-#include "engine/systems/renderer/render_packet/core/render_packet_types.h"
+
+#include "engine/base/choco_macros.h"
 
 #include "engine/memory/frame_allocator/frame_allocator.h"
 
-#include "engine/systems/renderer/renderer_frontend/core/renderer_frontend_types.h"
-
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
+#include "engine/systems/renderer/render_packet/core/render_packet_types.h"
 
 const char* render_packet_result_to_str(render_packet_result_t result_) {
     switch(result_) {
     case RENDER_PACKET_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(RENDER_PACKET_SUCCESS);
     case RENDER_PACKET_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(RENDER_PACKET_INVALID_ARGUMENT);
     case RENDER_PACKET_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(RENDER_PACKET_RUNTIME_ERROR);
     case RENDER_PACKET_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(RENDER_PACKET_OVERFLOW);
     case RENDER_PACKET_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(RENDER_PACKET_BAD_OPERATION);
     case RENDER_PACKET_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(RENDER_PACKET_DATA_CORRUPTED);
     case RENDER_PACKET_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(RENDER_PACKET_NO_MEMORY);
     case RENDER_PACKET_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(RENDER_PACKET_LIMIT_EXCEEDED);
     case RENDER_PACKET_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RENDER_PACKET_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RENDER_PACKET_UNDEFINED_ERROR);
     }
 }
 

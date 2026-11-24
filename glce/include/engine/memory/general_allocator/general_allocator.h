@@ -84,15 +84,19 @@ typedef enum {
 } general_allocator_result_t;
 
 typedef enum {
-    GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM = 0,  /**< メモリタグ: システム系 */
-    GENERAL_ALLOCATOR_MEMORY_TAG_STRING,      /**< メモリタグ: 文字列系 */
-    GENERAL_ALLOCATOR_MEMORY_TAG_RING_QUEUE,  /**< メモリタグ: リングキュー */
-    GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER,    /**< メモリタグ: レンダラー */
-    GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO,     /**< メモリタグ: ファイルI/O */
-    GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA,      /**< メモリタグ: カメラシステム */
-    GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE,     /**< メモリタグ: テクスチャ */
-    GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY,    /**< メモリタグ: ジオメトリ */
-    GENERAL_ALLOCATOR_MEMORY_TAG_MAX,         /**< メモリタグカウント用max値 */
+    GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR,         /**< Allocator本体、Memory Pool、内部管理情報 */
+    GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION,       /**< Application State、Scene、Model Framework */
+    GENERAL_ALLOCATOR_MEMORY_TAG_STRING,            /**< Choco String */
+    GENERAL_ALLOCATOR_MEMORY_TAG_RING_QUEUE,        /**< Ring Queue */
+    GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO,           /**< Filesystem、FS Path、FS Stream */
+    GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA,            /**< Camera関連 */
+    GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY,          /**< Geometry、Geometry Loader、頂点情報 */
+    GENERAL_ALLOCATOR_MEMORY_TAG_MATERIAL,          /**< MaterialおよびMaterial固有のResource */
+    GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE,           /**< CPU/GPU Texture管理Resource、Texture Loader */
+    GENERAL_ALLOCATOR_MEMORY_TAG_SHADER,            /**< Shader Resource、Compile/Link関連 */
+    GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE,   /**< VBO Manager、VBO、VAO管理情報 */
+    GENERAL_ALLOCATOR_MEMORY_TAG_RENDER_PACKET,     /**< Render Packet関連 */
+    GENERAL_ALLOCATOR_MEMORY_TAG_MAX,               /**< メモリタグカウント用max値 */
 } general_allocator_memory_tag_t;
 
 typedef struct general_allocator_status {

@@ -61,69 +61,24 @@ extern "C" {
  */
 #define IS_POWER_OF_TWO(val_) ( ((size_t)(val_) != 0u) && ( (((size_t)(val_) & ((size_t)(val_) - 1u)) == 0u)))
 
-/**
- * @brief 引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする
- *
- * @param[in] ptr_ NULL判定対象変数
- * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
- * @param[in] result_code_ 実行結果コード
- * @param[in] result_str_ 実行結果コードの文字列
- * @param[in] function_name_ このマクロを使用する関数名称
- * @param[in] variable_name_ NULL判定対象変数名
- *
- * @code{.c}
- * #define ERROR_CODE 1
- * #define SUCCESS 0
- * int func(void) {
- *      int result = ERROR_CODE;
- *      int* a = NULL;
- *      IF_ARG_NULL_GOTO_CLEANUP(a, result, ERROR_CODE, "error_code", "func", "a")  // NULLなのでcleanupに飛ぶ
- *      result = SUCCESS;
- * cleanup:
- *      return result;
- * }
- * @endcode
- */
-#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, return_variable_, result_code_, result_str_, function_name_, variable_name_) \
+#define IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret_, code_) \
     do { \
-        if(NULL == ptr_) { \
-            ERROR_MESSAGE("%s(%s) - Argument %s requires a valid pointer.", function_name_, result_str_, variable_name_); \
-            return_variable_ = result_code_; \
-            goto cleanup;  \
+        if(NULL == (ptr_)) { \
+            ERROR_MESSAGE("%s(%s) - %s must not be NULL.", __func__, #code_, #ptr_); \
+            (ret_) = (code_); \
+            goto cleanup; \
         } \
-    } while(0); \
+    } while(0)
 
-/**
- * @brief 引数ptr_がNULLでなければret_コードを出力し、cleanupにジャンプする
- *
- * @param[in] ptr_ NULL判定対象変数
- * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
- * @param[in] result_code_ 実行結果コード
- * @param[in] result_str_ 実行結果コードの文字列
- * @param[in] function_name_ このマクロを使用する関数名称
- * @param[in] variable_name_ NULL判定対象変数名
- *
- * @code{.c}
- * #define ERROR_CODE 1
- * #define SUCCESS 0
- * int func(void) {
- *      int result = ERROR_CODE;
- *      int a = 0;
- *      IF_ARG_NOT_NULL_GOTO_CLEANUP(&a, result, ERROR_CODE, "error_code", "func", "a")  // 非NULLなのでcleanupに飛ぶ
- *      result = SUCCESS;
- * cleanup:
- *      return result;
- * }
- * @endcode
- */
-#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, return_variable_, result_code_, result_str_, function_name_, variable_name_) \
+#define IF_ARG_NOT_NULL_GOTO_CLEANUP(ptr_, ret_, code_) \
     do { \
-        if(NULL != ptr_) { \
-            ERROR_MESSAGE("%s(%s) - Argument %s requires a null pointer.", function_name_, result_str_, variable_name_); \
-            return_variable_ = result_code_; \
-            goto cleanup;  \
+        if(NULL != (ptr_)) { \
+            ERROR_MESSAGE("%s(%s) - %s must be NULL.", \
+                          __func__, #code_, #ptr_); \
+            (ret_) = (code_); \
+            goto cleanup; \
         } \
-    } while(0); \
+    } while(0)
 
 /**
  * @brief 引数ptr_がNULLであればret_コードを出力し、cleanupにジャンプする
@@ -158,37 +113,9 @@ extern "C" {
         } \
     } while(0); \
 
-/**
- * @brief 引数is_valid_がfalseであればret_コードを出力し、cleanupにジャンプする
- *
- * @param[in] is_valid_ true/false判定変数
- * @param[in] return_variable_ この関数を呼び出す関数のリターン変数
- * @param[in] result_code_ 実行結果コード
- * @param[in] result_str_ 実行結果コードの文字列
- * @param[in] function_name_ このマクロを使用する関数名称
- * @param[in] variable_name_ true/false判定対象変数名
- *
- * @code{.c}
- * #define ERROR_CODE 1
- * #define SUCCESS 0
- * int func(void) {
- *      int result = ERROR_CODE;
- *      bool a = false;
- *      IF_ARG_FALSE_GOTO_CLEANUP(a, result, ERROR_CODE, "error_code", "func", "a")  // falseなのでcleanupに飛ぶ
- *      result = SUCCESS;
- * cleanup:
- *      return result;
- * }
- * @endcode
- */
-#define IF_ARG_FALSE_GOTO_CLEANUP(is_valid_, return_variable_, result_code_, result_str_, function_name_, variable_name_) \
-    do { \
-        if(!(is_valid_)) { \
-            ERROR_MESSAGE("%s(%s) - Argument %s is not valid.", function_name_, result_str_, variable_name_); \
-            return_variable_ = result_code_; \
-            goto cleanup;  \
-        } \
-    } while(0); \
+// token_を文字列に変換する
+// 例: STRINGIFY(APPLICATION_INVALID_ARGUMENT) -> "APPLICATION_INVALID_ARGUMENT"
+#define STRINGIFY(token_) #token_
 
 #ifdef __cplusplus
 }

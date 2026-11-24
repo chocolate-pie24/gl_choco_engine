@@ -40,10 +40,14 @@
 renderer_backend_result_t renderer_backend_shader_create(renderer_backend_context_t* backend_context_, renderer_backend_shader_t** out_shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_create", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_create", "out_shader_handle_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_create", "*out_shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_handle_, ret, RENDERER_BACKEND_BAD_OPERATION);
+    if(NULL == backend_context_->shader_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_shader_create(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->shader_vtable->renderer_shader_create(out_shader_handle_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -66,10 +70,14 @@ void renderer_backend_shader_destroy(renderer_backend_context_t* backend_context
 renderer_backend_result_t renderer_backend_shader_compile(shader_stage_t shader_stage_, const char* shader_source_, renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_compile", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_source_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_compile", "shader_source_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_compile", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_compile", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_source_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->shader_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_shader_compile(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->shader_vtable->renderer_shader_compile(shader_stage_, shader_source_, shader_handle_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -84,9 +92,13 @@ cleanup:
 renderer_backend_result_t renderer_backend_shader_link(renderer_backend_context_t* backend_context_, renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_link", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_link", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_link", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->shader_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_shader_link(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->shader_vtable->renderer_shader_link(shader_handle_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -101,9 +113,13 @@ cleanup:
 renderer_backend_result_t renderer_backend_shader_use(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_use", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_use", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_use", "shader_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->shader_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_shader_use(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->shader_vtable->renderer_shader_use(shader_handle_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -118,11 +134,15 @@ cleanup:
 renderer_backend_result_t renderer_backend_shader_uniform_location_get(const renderer_backend_context_t* backend_context_, const renderer_backend_shader_t* shader_handle_, const char* name_, int32_t* out_location_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_uniform_location_get", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "shader_handle_")
-    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_location_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_uniform_location_get", "out_location_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(name_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_location_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->shader_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_shader_uniform_location_get(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->shader_vtable->renderer_shader_uniform_location_get(shader_handle_, name_, out_location_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -137,9 +157,13 @@ cleanup:
 renderer_backend_result_t renderer_backend_shader_mat4f_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, bool should_transpose_, const float* data_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_mat4f_uniform_set", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_mat4f_uniform_set", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->shader_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_shader_mat4f_uniform_set(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->shader_vtable->renderer_shader_mat4f_uniform_set(location_, should_transpose_, data_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -154,9 +178,13 @@ cleanup:
 renderer_backend_result_t renderer_backend_shader_vec3f_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const float* data_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_vec3f_uniform_set", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_vec3f_uniform_set", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_vec3f_uniform_set", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->shader_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_shader_vec3f_uniform_set(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->shader_vtable->renderer_shader_vec3f_uniform_set(location_, data_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -171,8 +199,12 @@ cleanup:
 renderer_backend_result_t renderer_backend_shader_float_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, float data_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_float_uniform_set", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_float_uniform_set", "backend_context_->shader_vtable")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->shader_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_shader_float_uniform_set(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->shader_vtable->renderer_shader_float_uniform_set(location_, data_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
@@ -187,9 +219,13 @@ cleanup:
 renderer_backend_result_t renderer_backend_shader_vec4u8_uniform_set(const renderer_backend_context_t* backend_context_, int32_t location_, const uint8_t* data_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_vec4u8_uniform_set", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_->shader_vtable, ret, RENDERER_BACKEND_BAD_OPERATION, renderer_backend_result_to_str(RENDERER_BACKEND_BAD_OPERATION), "renderer_backend_shader_vec4u8_uniform_set", "backend_context_->shader_vtable")
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_shader_vec4u8_uniform_set", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->shader_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_shader_vec4u8_uniform_set(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
 
     ret = backend_context_->shader_vtable->renderer_shader_vec4u8_uniform_set(location_, data_);
     if(RENDERER_BACKEND_SUCCESS != ret) {

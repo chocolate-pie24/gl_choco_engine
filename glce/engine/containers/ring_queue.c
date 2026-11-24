@@ -109,20 +109,6 @@ struct ring_queue {
 };
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";                    /**< リングキューAPI実行結果コード(処理成功)に対応する文字列 */
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";  /**< リングキューAPI実行結果コード(無効な引数)に対応する文字列 */
-static const char* const s_result_str_no_memory = "NO_MEMORY";                /**< リングキューAPI実行結果コード(メモリ不足)に対応する文字列 */
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";        /**< リングキューAPI実行結果コード(実行時エラー)に対応する文字列 */
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";    /**< リングキューAPI実行結果コード(未定義エラー)に対応する文字列 */
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";      /**< リングキューAPI実行結果コード(システム使用可能範囲上限超過)に対応する文字列 */
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";        /**< リングキューAPI実行結果コード(API誤用)に対応する文字列 */
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";      /**< リングキューAPI実行結果コード(内部データ破損)に対応する文字列 */
-static const char* const s_result_str_overflow = "OVERFLOW";                  /**< リングキューAPI実行結果コード(計算過程でオーバーフロー発生)に対応する文字列 */
-static const char* const s_result_str_empty = "EMPTY";                        /**< リングキューAPI実行結果コード(キューが空)に対応する文字列 */
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Utilities
@@ -180,8 +166,8 @@ ring_queue_result_t ring_queue_create(size_t max_element_count_, size_t element_
     size_t stride = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_create", "out_queue_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_queue_, ret, RING_QUEUE_BAD_OPERATION, result_to_str(RING_QUEUE_BAD_OPERATION), "ring_queue_create", "*out_queue_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_queue_, ret, RING_QUEUE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_queue_, ret, RING_QUEUE_BAD_OPERATION);
     if(0 == max_element_count_ || 0 == element_size_) {
         ret = RING_QUEUE_INVALID_ARGUMENT;
         ERROR_MESSAGE("ring_queue_create(%s) - Provided max_element_count_ or element_size_ is not valid.", result_to_str(ret));
@@ -332,8 +318,8 @@ ring_queue_result_t ring_queue_push(const void* data_, size_t element_size_, siz
     char* target_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "queue_")
-    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_push", "data_")
+    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(data_, ret, RING_QUEUE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
@@ -413,8 +399,8 @@ ring_queue_result_t ring_queue_pop(size_t element_size_, size_t element_align_, 
     char* head_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "queue_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_data_, ret, RING_QUEUE_INVALID_ARGUMENT, result_to_str(RING_QUEUE_INVALID_ARGUMENT), "ring_queue_pop", "out_data_")
+    IF_ARG_NULL_GOTO_CLEANUP(queue_, ret, RING_QUEUE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_data_, ret, RING_QUEUE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!ring_queue_is_valid(queue_)) {
         ret = RING_QUEUE_DATA_CORRUPTED;
@@ -559,27 +545,27 @@ bool ring_queue_is_valid(const ring_queue_t* queue_) {
 static const char* result_to_str(ring_queue_result_t result_) {
     switch(result_) {
     case RING_QUEUE_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(RING_QUEUE_SUCCESS);
     case RING_QUEUE_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(RING_QUEUE_INVALID_ARGUMENT);
     case RING_QUEUE_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(RING_QUEUE_NO_MEMORY);
     case RING_QUEUE_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(RING_QUEUE_RUNTIME_ERROR);
     case RING_QUEUE_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RING_QUEUE_UNDEFINED_ERROR);
     case RING_QUEUE_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(RING_QUEUE_LIMIT_EXCEEDED);
     case RING_QUEUE_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(RING_QUEUE_BAD_OPERATION);
     case RING_QUEUE_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(RING_QUEUE_DATA_CORRUPTED);
     case RING_QUEUE_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(RING_QUEUE_OVERFLOW);
     case RING_QUEUE_EMPTY:
-        return s_result_str_empty;
+        return STRINGIFY(RING_QUEUE_EMPTY);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(RING_QUEUE_UNDEFINED_ERROR);
     }
 }
 

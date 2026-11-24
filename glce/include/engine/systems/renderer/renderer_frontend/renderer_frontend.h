@@ -25,13 +25,23 @@ typedef struct renderer_frontend renderer_frontend_t;
 typedef struct subsystem_allocator subsystem_allocator_t;
 typedef struct directional_light directional_light_t;
 typedef struct ambient_light ambient_light_t;
+
+typedef struct ui_mesh_config ui_mesh_config_t;
 typedef struct untextured_mesh_config untextured_mesh_config_t;
-typedef struct untextured_mesh untextured_mesh_t;
+
 typedef struct line_vertex line_vertex_t;
-typedef struct line_mesh line_mesh_t;
-typedef struct aabb_3d aabb_3d_t;
-typedef struct untextured_mesh_material untextured_mesh_material_t;
+typedef struct point_vertex point_vertex_t;
+typedef struct ui_vertex ui_vertex_t;
 typedef struct point_normal_vertex point_normal_vertex_t;
+
+typedef struct line_mesh line_mesh_t;
+typedef struct point_mesh point_mesh_t;
+typedef struct ui_mesh ui_mesh_t;
+typedef struct untextured_mesh untextured_mesh_t;
+
+typedef struct phong_material phong_material_t;
+
+typedef struct aabb_3d aabb_3d_t;
 typedef struct render_packet render_packet_t;
 
 typedef struct {
@@ -49,11 +59,24 @@ typedef struct {
 typedef struct {
     vbo_config_t vbo_config;
     size_t max_geometry_count;
+} point_mesh_resource_config_t;
+
+typedef struct {
+    vbo_config_t vbo_config;
+    size_t max_geometry_count;
+    size_t max_texture_count;
+} ui_mesh_resource_config_t;
+
+typedef struct {
+    vbo_config_t vbo_config;
+    size_t max_geometry_count;
     size_t max_material_count;
 } untextured_mesh_resource_config_t;
 
 typedef struct {
     line_mesh_resource_config_t line_mesh_resource_config;
+    point_mesh_resource_config_t point_mesh_resource_config;
+    ui_mesh_resource_config_t ui_mesh_resource_config;
     untextured_mesh_resource_config_t untextured_mesh_resource_config;
 } renderer_frontend_config_t;
 
@@ -62,6 +85,17 @@ renderer_frontend_result_t renderer_frontend_create(const renderer_frontend_conf
 void renderer_frontend_deinitialize(renderer_frontend_t* renderer_frontend_);
 
 renderer_frontend_result_t renderer_frontend_draw_packet(render_packet_t* render_packet_, renderer_frontend_t* renderer_frontend_);
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Frame Operations.
+//////////////////////////////////////////////////////////////////////////////////////////
+void renderer_frontend_depth_test_set(renderer_frontend_t* renderer_frontend_, bool enable_);
+
+renderer_frontend_result_t renderer_frontend_viewport_set(renderer_frontend_t* renderer_frontend_, int32_t x_, int32_t y_, int32_t framebuffer_width_, int32_t framebuffer_height_);
+
+void renderer_frontend_framebuffer_clear(renderer_frontend_t* renderer_frontend_, uint32_t mask_);
+
+renderer_frontend_result_t renderer_frontend_draw_arrays(renderer_frontend_t* renderer_frontend_, rendering_primitive_t primitive_, const draw_range_t* draw_range_);
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // for Untexture Mesh
@@ -114,7 +148,7 @@ renderer_frontend_result_t renderer_frontend_untextured_mesh_render_update(rende
 
 renderer_frontend_result_t renderer_frontend_untextured_mesh_import(renderer_frontend_t* renderer_frontend_, const untextured_mesh_config_t* config_, const char* asset_root_path_, untextured_mesh_t* out_mesh_);
 
-renderer_frontend_result_t renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* geometry_resource_name_, const char* material_resource_name_, const point_normal_vertex_t* vertices_, size_t vertex_count_, const untextured_mesh_material_t* material_, untextured_mesh_t* out_mesh_);
+renderer_frontend_result_t renderer_frontend_untextured_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* geometry_resource_name_, const char* material_resource_name_, const point_normal_vertex_t* vertices_, size_t vertex_count_, const phong_material_t* material_, untextured_mesh_t* out_mesh_);
 
 renderer_frontend_result_t renderer_frontend_untextured_mesh_release(renderer_frontend_t* renderer_frontend_, const untextured_mesh_t* mesh_);
 
@@ -134,8 +168,35 @@ renderer_frontend_result_t renderer_frontend_line_mesh_import_from_aabb(renderer
 
 renderer_frontend_result_t renderer_frontend_line_mesh_release(renderer_frontend_t* renderer_frontend_, const line_mesh_t* mesh_);
 
-// TODO: UI mesh, Point mesh.
+//////////////////////////////////////////////////////////////////////////////////////////
+// for Point Mesh
+//////////////////////////////////////////////////////////////////////////////////////////
+// TODO: private helper化
+renderer_frontend_result_t renderer_frontend_point_mesh_draw(renderer_frontend_t* renderer_frontend_, const point_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
 
+renderer_frontend_result_t renderer_frontend_point_mesh_render_update(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
+
+renderer_frontend_result_t renderer_frontend_point_mesh_import_from_vertices(renderer_frontend_t* renderer_frontend_, const char* resource_name_, const point_vertex_t* vertices_, size_t vertex_count_, point_mesh_t* out_mesh_);
+
+renderer_frontend_result_t renderer_frontend_point_mesh_release(renderer_frontend_t* renderer_frontend_, const point_mesh_t* mesh_);
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// for UI Mesh
+//////////////////////////////////////////////////////////////////////////////////////////
+// TODO: private helper化
+renderer_frontend_result_t renderer_frontend_ui_mesh_draw(renderer_frontend_t* renderer_frontend_, const ui_mesh_t* mesh_, const mat4x4f_t* model_matrix_);
+
+renderer_frontend_result_t renderer_frontend_ui_mesh_render_update(renderer_frontend_t* renderer_frontend_, const mat4x4f_t* view_matrix_, const mat4x4f_t* projection_matrix_);
+
+renderer_frontend_result_t renderer_frontend_ui_mesh_import_from_file(renderer_frontend_t* renderer_frontend_, const ui_mesh_config_t* config_, const char* asset_root_path_, int32_t texture_unit_index_, ui_mesh_t* out_mesh_);
+
+renderer_frontend_result_t renderer_frontend_ui_mesh_import_from_solid_color(renderer_frontend_t* renderer_frontend_, const ui_mesh_config_t* config_, const char* asset_root_path_, uint8_t red_, uint8_t green_, uint8_t blue_, int32_t texture_unit_index_, ui_mesh_t* out_mesh_);
+
+renderer_frontend_result_t renderer_frontend_ui_mesh_release(renderer_frontend_t* renderer_frontend_, const ui_mesh_t* mesh_);
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Validator
+//////////////////////////////////////////////////////////////////////////////////////////
 bool renderer_frontend_is_valid(const renderer_frontend_t* renderer_frontend_);
 
 #ifdef __cplusplus

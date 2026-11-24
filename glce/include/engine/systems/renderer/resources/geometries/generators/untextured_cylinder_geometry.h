@@ -18,6 +18,8 @@ extern "C" {
 
 geometry_result_t untextured_cylinder_geometry_vertices_create(const cylinder_t* cylinder_, uint16_t segment_count_, point_normal_vertex_t** out_vertices_, size_t* out_vertex_count_);
 
+void untextured_cylinder_geometry_vertices_destroy(point_normal_vertex_t** vertices_);
+
 #ifdef __cplusplus
 }
 #endif

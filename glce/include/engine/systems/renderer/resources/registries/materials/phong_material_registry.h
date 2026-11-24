@@ -3,15 +3,15 @@
 
 /** @ingroup renderer
  *
- * @file untextured_mesh_material_registry.h
+ * @file phong_material_registry.h
  * @author chocolate-pie24
- * @brief Untextured Mesh Materialの登録、検索、利用権管理、およびResource解放を提供する。
+ * @brief Phong Materialの登録、検索、利用権管理、およびResource解放を提供する。
  *
  * @details
- * Untextured Mesh MaterialをResource NameおよびMaterial IDによって管理するRegistry。
+ * Phong MaterialをResource NameおよびMaterial IDによって管理するRegistry。
  * Reference Countを使用してResourceの共有と生存期間を管理する。
  *
- * @section untextured_mesh_material_registry_boundary_contract Module Boundary Contract
+ * @section phong_material_registry_boundary_contract Module Boundary Contract
  *
  * @par Ownership
  * - Registryは登録済みResource Nameを所有する。
@@ -67,8 +67,8 @@
  *   プロジェクト作成者が実装との整合性を確認・修正した。
  * - 実装コードはプロジェクト作成者が作成した。
  */
-#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_REGISTRIES_MATERIALS_UNTEXTURED_MESH_MATERIAL_REGISTRY_H
-#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_REGISTRIES_MATERIALS_UNTEXTURED_MESH_MATERIAL_REGISTRY_H
+#ifndef GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_REGISTRIES_MATERIALS_PHONG_MATERIAL_REGISTRY_H
+#define GLCE_ENGINE_SYSTEMS_RENDERER_RESOURCES_REGISTRIES_MATERIALS_PHONG_MATERIAL_REGISTRY_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,13 +80,13 @@ extern "C" {
 
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 
-typedef struct untextured_mesh_material_registry untextured_mesh_material_registry_t;
+typedef struct phong_material_registry phong_material_registry_t;
 
 typedef struct subsystem_allocator subsystem_allocator_t;
-typedef struct untextured_mesh_material untextured_mesh_material_t;
+typedef struct phong_material phong_material_t;
 
 /**
- * @brief Untextured Mesh Material Registryを生成する。
+ * @brief Phong Material Registryを生成する。
  *
  * @par Public API Contract
  * - 最大登録数は1以上UINT16_MAX以下とする。
@@ -116,10 +116,10 @@ typedef struct untextured_mesh_material untextured_mesh_material_t;
  * @pre allocator_は利用可能なSubsystem Allocatorを指していること。
  * @post 成功時、*out_registry_は通常操作に使用できるRegistryを指す。
  */
-resource_registry_result_t untextured_mesh_material_registry_create(size_t max_material_count_, subsystem_allocator_t* allocator_, untextured_mesh_material_registry_t** out_registry_);
+resource_registry_result_t phong_material_registry_create(size_t max_material_count_, subsystem_allocator_t* allocator_, phong_material_registry_t** out_registry_);
 
 /**
- * @brief Untextured Mesh Material Registryの終了処理を行う。
+ * @brief Phong Material Registryの終了処理を行う。
  *
  * @par Public API Contract
  * - 全Entryを走査し、登録済みResourceを解放する。
@@ -146,7 +146,7 @@ resource_registry_result_t untextured_mesh_material_registry_create(size_t max_m
  * @post 正常終了後、取得済みのMaterial ID、利用権、
  *       およびborrowはすべて無効となる。
  */
-void untextured_mesh_material_registry_deinitialize(untextured_mesh_material_registry_t* registry_);
+void phong_material_registry_deinitialize(phong_material_registry_t* registry_);
 
 /**
  * @brief Resource Nameに対応するMaterialの登録状態を確認する。
@@ -176,10 +176,10 @@ void untextured_mesh_material_registry_deinitialize(untextured_mesh_material_reg
  * @post 成功時、out_exists_へ登録状態が出力される。
  * @post Registryの登録状態およびReference Countは変更されない。
  */
-resource_registry_result_t untextured_mesh_material_registry_exists(const untextured_mesh_material_registry_t* registry_, const char* resource_name_, bool* out_exists_);
+resource_registry_result_t phong_material_registry_exists(const phong_material_registry_t* registry_, const char* resource_name_, bool* out_exists_);
 
 /**
- * @brief Material IDに対応するUntextured Mesh Materialを取得する。
+ * @brief Material IDに対応するPhong Materialを取得する。
  *
  * @par Public API Contract
  * - 指定IDはRegistryの有効範囲内であり、登録済みである必要がある。
@@ -197,15 +197,15 @@ resource_registry_result_t untextured_mesh_material_registry_exists(const untext
  * @param[in] registry_ 検索対象のRegistry。
  * @param[in] material_id_ 取得するMaterialのID。
  *
- * @return 成功時はUntextured Mesh Materialへのconstポインタ。
+ * @return 成功時はPhong Materialへのconstポインタ。
  * @return 失敗時はNULL。
  *
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  */
-const untextured_mesh_material_t* untextured_mesh_material_registry_material_get(const untextured_mesh_material_registry_t* registry_, uint16_t material_id_);
+const phong_material_t* phong_material_registry_material_get(const phong_material_registry_t* registry_, uint16_t material_id_);
 
 /**
- * @brief 登録済みUntextured Mesh Materialの利用権を取得する。
+ * @brief 登録済みPhong Materialの利用権を取得する。
  *
  * @par Public API Contract
  * - Resource Nameは空文字列ではないNUL終端文字列とする。
@@ -242,14 +242,14 @@ const untextured_mesh_material_t* untextured_mesh_material_registry_material_get
  * @post 成功時、out_material_id_には対象ResourceのMaterial IDが格納される。
  * @post Resource自体の所有権および登録状態は変更されない。
  */
-resource_registry_result_t untextured_mesh_material_registry_acquire(untextured_mesh_material_registry_t* registry_, const char* resource_name_, uint16_t* out_material_id_);
+resource_registry_result_t phong_material_registry_acquire(phong_material_registry_t* registry_, const char* resource_name_, uint16_t* out_material_id_);
 
 /**
- * @brief Untextured Mesh Materialを指定名でRegistryへ新規登録する。
+ * @brief Phong Materialを指定名でRegistryへ新規登録する。
  *
  * @par Public API Contract
  * - Resource Nameは空文字列ではないNUL終端文字列とする。
- * - Materialはuntextured_mesh_material_is_valid()の
+ * - Materialはphong_material_is_valid()の
  *   条件を満たす必要がある。
  * - 同じResource Nameの重複登録は許可しない。
  * - 重複登録の場合はBAD_OPERATIONを返す。
@@ -271,7 +271,7 @@ resource_registry_result_t untextured_mesh_material_registry_acquire(untextured_
  *
  * @param[in,out] registry_ 登録先のRegistry。
  * @param[in] resource_name_ 登録するResource Name。
- * @param[in] material_ 登録するUntextured Mesh Material。
+ * @param[in] material_ 登録するPhong Material。
  * @param[out] out_material_id_ 登録したMaterial IDの出力先。
  *
  * @retval RESOURCE_REGISTRY_SUCCESS 登録成功。
@@ -286,7 +286,7 @@ resource_registry_result_t untextured_mesh_material_registry_acquire(untextured_
  *
  * @pre registry_は利用可能状態にあるRegistryを指していること。
  * @pre resource_name_は読み取り可能なNUL終端文字列を指していること。
- * @pre material_は読み取り可能なUntextured Mesh Materialを指していること。
+ * @pre material_は読み取り可能なPhong Materialを指していること。
  * @pre out_material_id_は書き込み可能な出力先を指していること。
  *
  * @post 成功時、指定名と出力IDによって登録したMaterialを参照できる。
@@ -294,10 +294,10 @@ resource_registry_result_t untextured_mesh_material_registry_acquire(untextured_
  * @post 成功時、対象EntryのReference Countは1となり、
  *       callerは対象Resourceの利用権を1つ保持する。
  */
-resource_registry_result_t untextured_mesh_material_registry_register(untextured_mesh_material_registry_t* registry_, const char* resource_name_, const untextured_mesh_material_t* material_, uint16_t* out_material_id_);
+resource_registry_result_t phong_material_registry_register(phong_material_registry_t* registry_, const char* resource_name_, const phong_material_t* material_, uint16_t* out_material_id_);
 
 /**
- * @brief 指定IDのUntextured Mesh Materialの利用権を返却する。
+ * @brief 指定IDのPhong Materialの利用権を返却する。
  *
  * @par Public API Contract
  * - 指定IDはRegistryの有効範囲内である必要がある。
@@ -339,10 +339,10 @@ resource_registry_result_t untextured_mesh_material_registry_register(untextured
  * @post 返却前のReference Countが1の場合、
  *       対象EntryはEmpty Stateとなり、Resource Nameは解放済みとなる。
  */
-resource_registry_result_t untextured_mesh_material_registry_release(untextured_mesh_material_registry_t* registry_, uint16_t material_id_);
+resource_registry_result_t phong_material_registry_release(phong_material_registry_t* registry_, uint16_t material_id_);
 
 /**
- * @brief Untextured Mesh Material Registryのcanonical validityを判定する。
+ * @brief Phong Material Registryのcanonical validityを判定する。
  *
  * @par Validation Scope
  * 以下の条件を検証する。
@@ -384,7 +384,7 @@ resource_registry_result_t untextured_mesh_material_registry_release(untextured_
  *      およびEntryが参照するResourceのstorageは、
  *      検証処理に必要な範囲で読み取り可能であること。
  */
-bool untextured_mesh_material_registry_is_valid(const untextured_mesh_material_registry_t* registry_);
+bool phong_material_registry_is_valid(const phong_material_registry_t* registry_);
 
 #ifdef __cplusplus
 }

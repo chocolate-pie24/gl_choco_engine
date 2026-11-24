@@ -17,89 +17,6 @@
 
 #include "engine/memory/low_level_allocators/free_list_allocator/free_list_allocator.h"
 
-/*
- * Module Internal Contract
- *
- * Stable state:
- * - initializedなGeneral Allocatorは、有効なowned backing memory poolとinitializedなFree List Allocatorを保持する。
- * - memory_pool != NULLである。
- * - free_list_allocator.memory_pool == memory_poolである。
- *
- * Backing memory:
- * - General Allocatorは自身が使用するbacking memory poolを所有する。
- * - GLCE_BUILD_MEMORY_POLICY_DESKTOPではbacking memory poolをmalloc()によって取得し、destroy時にfree()によって解放する。
- * - GLCE_BUILD_MEMORY_POLICY_EMBEDDEDではstatic storageをbacking memory poolとして使用し、
- *   destroy時にstorage自体の解放は行わない。
- * - どちらのBuild Policyでもdeinitialize後はmemory_pool == NULLへ戻す。
- * - backing memory pool上のphysical allocation管理はFree List Allocatorへ委譲する。
- *
- * Accounting:
- * - total_allocatedはcallerが要求した論理allocation sizeの累積値を表す。
- * - memory_tag_allocated[i]は各memory tagについて、callerが要求した論理allocation sizeの累積値を表す。
- * - Stable stateでは、sum(memory_tag_allocated[]) == total_allocatedが成立する。
- * - accounting値にはFree List Allocatorが管理するblock header、
- *   alignment paddingその他のphysical allocation overheadを含めない。
- *
- * State Transition:
- * - Public APIのentry / exitではStable stateを維持する。
- * - createではbacking memory pool取得からFree List Allocator initialization、
- *   accounting initialization完了までpartial initialization stateを許容する。
- * - allocateではFree List Allocatorのallocation成功からaccounting更新完了まで、
- *   Free List stateとGeneral Allocator accountingが一時的に異なる時点を許容する。
- * - freeではFree List Allocatorのfree成功からaccounting更新完了まで、
- *   同様のtransient stateを許容する。
- * - destroyではFree List Allocatorを先にdeinitializeし、
- *   その後backing memory poolとlogical accountingをdeinitializeする。
- * - Commit完了時にはStable stateへ復帰する。
- *
- * AI支援:
- * - 本セクションはChatGPTを用いて草案を作成し、
- *   プロジェクト作成者が実装との整合性を確認・修正した。
- * - 実装コードはプロジェクト作成者が作成した。
- */
-
-/*
- * Module Validation Policy
- *
- * - ValidationはModule Internal Contractを基準として行う。
- *
- * - canonical validatorはinitializedなStable stateについて、
- *   General Allocator自身のlocal invariant、logical accounting invariant、
- *   backing memory poolとFree List Allocatorのownership relation、
- *   およびowned Free List Allocatorのcanonical validityを検証する。
- *
- * - shallow validatorはGeneral Allocator rootについて、
- *   operationを開始するために必要なlocal structural invariantのみを検証する。
- * - 現在のshallow validatorはmemory_poolが存在することを確認する。
- *
- * - accounting_is_valid()はGeneral Allocatorが所有するlogical accounting invariantを検証する。
- * - memory_tag_allocated[]の合計がoverflowせず計算可能であり、その合計がtotal_allocatedと一致することを要求する。
- * - General Allocatorのlogical accountingとFree List Allocatorが保持する
- *   live allocation payload総量のcross-layer整合性検証は将来検討する。
- *
- * - public APIのPreconditionsでは、General Allocator自身が直接使用または変更するstateについて必要なvalidationを行う。
- * - Free List Allocator固有のstateおよびsemantic invariantは、
- *   対応するFree List Allocator public APIへvalidationを委譲し、General Allocator側では重複して検証しない。
- *
- * - canonical validator内でfree_list_allocator_is_valid()を実行する。
- *   これはowned childを含むGeneral Allocator全体のownership closureを
- *   canonical validationするためであり、通常Public APIのPreconditionでFree List Allocator固有validationを
- *   重複実行することとは区別する。
- *
- * - Postcondition validationでは、
- *   current operationによってGeneral Allocator自身が変更したstateを検証する。
- * - Free List Allocator自身のPostcondition validationは
- *   対応するFree List Allocator APIへ委譲する。
- *
- * - DEBUG_BUILD / TEST_BUILD / RELEASE_BUILDごとのvalidation実行条件は、
- *   各Public APIのValidation Policyで個別に定義する。
- *
- * AI支援:
- * - 本セクションはChatGPTを用いて草案を作成し、
- *   プロジェクト作成者が実装との整合性を確認・修正した。
- * - 実装コードはプロジェクト作成者が作成した。
- */
-
 // ============================================================
 // Private Type Definitions
 // ============================================================
@@ -118,23 +35,18 @@ typedef struct general_allocator {
 // ============================================================
 static general_allocator_t s_general_allocator;
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
-static const char* const s_memory_tag_system = "SYSTEM";
+static const char* const s_memory_tag_allocator = "ALLOCATOR";
+static const char* const s_memory_tag_application = "APPLICATION";
 static const char* const s_memory_tag_string = "STRING";
 static const char* const s_memory_tag_ring_queue = "RING_QUEUE";
-static const char* const s_memory_tag_renderer = "RENDERER";
 static const char* const s_memory_tag_file_io = "FILE_IO";
 static const char* const s_memory_tag_camera = "CAMERA";
-static const char* const s_memory_tag_texture = "TEXTURE";
 static const char* const s_memory_tag_geometry = "GEOMETRY";
+static const char* const s_memory_tag_material = "MATERIAL";
+static const char* const s_memory_tag_texture = "TEXTURE";
+static const char* const s_memory_tag_shader = "SHADER";
+static const char* const s_memory_tag_vertex_resource = "VERTEX_RESOURCE";
+static const char* const s_memory_tag_render_packet = "RENDER_PACKET";
 static const char* const s_memory_tag_undefined = "UNDEFINED";
 
 // 組み込み向けに静的領域でmemory poolを用意(アライメントはmax_align_tでfree list allocatorのメモリ要件を満たす)
@@ -291,8 +203,8 @@ general_allocator_result_t general_allocator_allocate(size_t allocation_size_, g
     void* tmp_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT, result_to_str(GENERAL_ALLOCATOR_INVALID_ARGUMENT), "general_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, GENERAL_ALLOCATOR_BAD_OPERATION, result_to_str(GENERAL_ALLOCATOR_BAD_OPERATION), "general_allocator_allocate", "*out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, GENERAL_ALLOCATOR_BAD_OPERATION);
     if(0 == allocation_size_) {
         ret = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("general_allocator_allocate(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));
@@ -507,7 +419,7 @@ general_allocator_result_t general_allocator_status_get(general_allocator_status
     size_t max_allocation_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT, result_to_str(GENERAL_ALLOCATOR_INVALID_ARGUMENT), "general_allocator_status_get", "out_status_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, GENERAL_ALLOCATOR_INVALID_ARGUMENT);
     if(!general_allocator_is_initialized()) {
         ret = GENERAL_ALLOCATOR_BAD_OPERATION;
         ERROR_MESSAGE("general_allocator_status_get(%s) - general allocator is not initialized.", result_to_str(ret));
@@ -572,22 +484,30 @@ cleanup:
 // - 実装コードはプロジェクト作成者が作成した。
 const char* general_allocator_memory_tag_to_str(general_allocator_memory_tag_t memory_tag_) {
     switch(memory_tag_) {
-    case GENERAL_ALLOCATOR_MEMORY_TAG_SYSTEM:
-        return s_memory_tag_system;
+    case GENERAL_ALLOCATOR_MEMORY_TAG_ALLOCATOR:
+        return s_memory_tag_allocator;
+    case GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION:
+        return s_memory_tag_application;
     case GENERAL_ALLOCATOR_MEMORY_TAG_STRING:
         return s_memory_tag_string;
     case GENERAL_ALLOCATOR_MEMORY_TAG_RING_QUEUE:
         return s_memory_tag_ring_queue;
-    case GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER:
-        return s_memory_tag_renderer;
     case GENERAL_ALLOCATOR_MEMORY_TAG_FILE_IO:
         return s_memory_tag_file_io;
     case GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA:
         return s_memory_tag_camera;
-    case GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE:
-        return s_memory_tag_texture;
     case GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY:
         return s_memory_tag_geometry;
+    case GENERAL_ALLOCATOR_MEMORY_TAG_MATERIAL:
+        return s_memory_tag_material;
+    case GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE:
+        return s_memory_tag_texture;
+    case GENERAL_ALLOCATOR_MEMORY_TAG_SHADER:
+        return s_memory_tag_shader;
+    case GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE:
+        return s_memory_tag_vertex_resource;
+    case GENERAL_ALLOCATOR_MEMORY_TAG_RENDER_PACKET:
+        return s_memory_tag_render_packet;
     case GENERAL_ALLOCATOR_MEMORY_TAG_MAX:
         return s_memory_tag_undefined;
     default:
@@ -673,23 +593,23 @@ static bool general_allocator_is_initialized(void) {
 static const char* result_to_str(general_allocator_result_t result_) {
     switch(result_) {
     case GENERAL_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(GENERAL_ALLOCATOR_SUCCESS);
     case GENERAL_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(GENERAL_ALLOCATOR_DATA_CORRUPTED);
     case GENERAL_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(GENERAL_ALLOCATOR_BAD_OPERATION);
     case GENERAL_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(GENERAL_ALLOCATOR_INVALID_ARGUMENT);
     case GENERAL_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(GENERAL_ALLOCATOR_NO_MEMORY);
     case GENERAL_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(GENERAL_ALLOCATOR_OVERFLOW);
     case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(GENERAL_ALLOCATOR_LIMIT_EXCEEDED);
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(GENERAL_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(GENERAL_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

@@ -53,15 +53,12 @@ camera_result_t orbit_camera_create(float fovy_, float aspect_, float near_clip_
     camera_t* tmp_camera = NULL;
     orbit_camera_t* tmp_orbit_camera = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_create", "out_camera_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_camera_, ret, CAMERA_BAD_OPERATION, camera_result_to_str(CAMERA_BAD_OPERATION), "orbit_camera_create", "*out_camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_camera_, ret, CAMERA_BAD_OPERATION);
 
     ret_general_allocator = general_allocator_allocate(sizeof(orbit_camera_t), GENERAL_ALLOCATOR_MEMORY_TAG_CAMERA, (void**)&tmp_orbit_camera);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = camera_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = CAMERA_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("orbit_camera_create(%s) - general_allocator_allocate failed.", camera_result_to_str(ret));
         goto cleanup;
     }
@@ -74,9 +71,6 @@ camera_result_t orbit_camera_create(float fovy_, float aspect_, float near_clip_
 
     ret = position_from_target_update(tmp_camera, initial_target_, initial_distance_);
     if(CAMERA_SUCCESS != ret) {
-        if(CAMERA_INVALID_ARGUMENT == ret) {
-            ret = CAMERA_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("orbit_camera_create(%s) - position_from_target_update failed.", camera_result_to_str(ret));
         goto cleanup;
     }
@@ -119,8 +113,8 @@ void orbit_camera_destroy(orbit_camera_t** camera_) {
 camera_result_t orbit_camera_command_update(orbit_camera_t* camera_, const mouse_event_t* event_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_command_update", "camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(event_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_command_update", "event_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(event_, ret, CAMERA_INVALID_ARGUMENT);
 
     switch(event_->event_code) {
     case MOUSE_EVENT_BUTTON:
@@ -163,16 +157,13 @@ camera_result_t orbit_camera_command_execute(orbit_camera_t* camera_, bool* out_
     float new_distance = 0.0;
     bool view_dirty = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_command_execute", "camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_view_dirty_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_command_execute", "out_view_dirty_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_view_dirty_, ret, CAMERA_INVALID_ARGUMENT);
 
     new_distance = camera_->distance;
 
     ret = camera_euler_get(camera_->camera, &current_euler);
     if(CAMERA_SUCCESS != ret) {
-        if(CAMERA_INVALID_ARGUMENT == ret) {
-            ret = CAMERA_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("orbit_camera_command_execute(%s) - camera_euler_get failed.", camera_result_to_str(ret));
         goto cleanup;
     }
@@ -196,9 +187,6 @@ camera_result_t orbit_camera_command_execute(orbit_camera_t* camera_, bool* out_
     if(view_dirty) {
         ret = orbit_camera_update(camera_, new_distance, current_euler);
         if(CAMERA_SUCCESS != ret) {
-            if(CAMERA_INVALID_ARGUMENT == ret) {
-                ret = CAMERA_DATA_CORRUPTED;
-            }
             ERROR_MESSAGE("orbit_camera_command_execute(%s) - orbit_camera_update failed.", camera_result_to_str(ret));
             goto cleanup;
         }
@@ -220,7 +208,7 @@ cleanup:
 camera_result_t orbit_camera_viewing_frustum_update(orbit_camera_t* camera_, float fovy_, float aspect_, float near_clip_, float far_clip_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_viewing_frustum_update", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_viewing_frustum_update(camera_->camera, fovy_, aspect_, near_clip_, far_clip_);
 
@@ -231,8 +219,8 @@ cleanup:
 camera_result_t orbit_camera_perspective_matrix_get(orbit_camera_t* camera_, mat4x4f_t* out_mat_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_perspective_matrix_get", "camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_perspective_matrix_get", "out_mat_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_perspective_matrix_get(camera_->camera, out_mat_);
 
@@ -243,8 +231,8 @@ cleanup:
 camera_result_t orbit_camera_view_matrix_get(orbit_camera_t* camera_, mat4x4f_t* out_mat_) {
     camera_result_t ret = CAMERA_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_view_matrix_get", "camera_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_view_matrix_get", "out_mat_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_mat_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_view_matrix_get(camera_->camera, out_mat_);
 
@@ -266,22 +254,16 @@ static camera_result_t orbit_camera_update(orbit_camera_t* camera_, float new_di
     vec3f_t backward_vec = { 0 };
     vec3f_t target = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "orbit_camera_update", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_position_get(camera_->camera, &current_camera_pos);
     if(CAMERA_SUCCESS != ret) {
-        if(CAMERA_INVALID_ARGUMENT == ret) {
-            ret = CAMERA_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("orbit_camera_update(%s) - camera_position_get failed.", camera_result_to_str(ret));
         goto cleanup;
     }
 
     ret = camera_backward_vector_get(camera_->camera, &backward_vec);
     if(CAMERA_SUCCESS != ret) {
-        if(CAMERA_INVALID_ARGUMENT == ret) {
-            ret = CAMERA_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("orbit_camera_update(%s) - camera_backward_vector_get failed.", camera_result_to_str(ret));
         goto cleanup;
     }
@@ -292,18 +274,12 @@ static camera_result_t orbit_camera_update(orbit_camera_t* camera_, float new_di
 
     ret = camera_euler_update(camera_->camera, new_euler_);
     if(CAMERA_SUCCESS != ret) {
-        if(CAMERA_INVALID_ARGUMENT == ret) {
-            ret = CAMERA_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("orbit_camera_update(%s) - camera_euler_update failed.", camera_result_to_str(ret));
         goto cleanup;
     }
 
     ret = position_from_target_update(camera_->camera, target, new_distance_);
     if(CAMERA_SUCCESS != ret) {
-        if(CAMERA_INVALID_ARGUMENT == ret) {
-            ret = CAMERA_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("orbit_camera_update(%s) - position_from_target_update failed.", camera_result_to_str(ret));
         goto cleanup;
     }
@@ -322,13 +298,10 @@ static camera_result_t position_from_target_update(camera_t* camera_, vec3f_t ta
     vec3f_t new_camera_pos = { 0 };
     vec3f_t backward_vec = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT, camera_result_to_str(CAMERA_INVALID_ARGUMENT), "position_from_target_update", "camera_")
+    IF_ARG_NULL_GOTO_CLEANUP(camera_, ret, CAMERA_INVALID_ARGUMENT);
 
     ret = camera_backward_vector_get(camera_, &backward_vec);
     if(CAMERA_SUCCESS != ret) {
-        if(CAMERA_INVALID_ARGUMENT == ret) {
-            ret = CAMERA_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("position_from_target_update(%s) - camera_backward_vector_get failed.", camera_result_to_str(ret));
         goto cleanup;
     }
@@ -337,9 +310,6 @@ static camera_result_t position_from_target_update(camera_t* camera_, vec3f_t ta
 
     ret = camera_position_update(camera_, new_camera_pos);
     if(CAMERA_SUCCESS != ret) {
-        if(CAMERA_INVALID_ARGUMENT == ret) {
-            ret = CAMERA_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("position_from_target_update(%s) - camera_position_update failed.", camera_result_to_str(ret));
         goto cleanup;
     }

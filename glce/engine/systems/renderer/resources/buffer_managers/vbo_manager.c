@@ -147,17 +147,17 @@ buffer_manager_result_t vbo_manager_create(renderer_backend_context_t* backend_c
 
     bool vbo_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "config_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_create", "out_vbo_manager_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_manager_, ret, BUFFER_MANAGER_BAD_OPERATION, buffer_manager_result_to_str(BUFFER_MANAGER_BAD_OPERATION), "vbo_manager_create", "*out_vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_vbo_manager_, ret, BUFFER_MANAGER_BAD_OPERATION);
     if(!vbo_manager_config_is_valid(config_)) {
         ret = BUFFER_MANAGER_INVALID_ARGUMENT;
         ERROR_MESSAGE("vbo_manager_create(%s) - Provided config_ is not valid.", buffer_manager_result_to_str(ret));
         goto cleanup;
     }
 
-    ret_general_allocator = general_allocator_allocate(sizeof(vbo_manager_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_vbo_manager);
+    ret_general_allocator = general_allocator_allocate(sizeof(vbo_manager_t), GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE, (void**)&tmp_vbo_manager);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = buffer_manager_result_convert_general_allocator(ret_general_allocator);
         ERROR_MESSAGE("vbo_manager_create(%s) - general_allocator_allocate failed.", buffer_manager_result_to_str(ret));
@@ -240,7 +240,7 @@ cleanup:
         range_allocator_destroy(&tmp_allocator);
     }
     if(NULL != tmp_vbo_manager) {
-        general_allocator_free((void**)&tmp_vbo_manager, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_vbo_manager, GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE);
     }
     return ret;
 }
@@ -261,7 +261,7 @@ void vbo_manager_destroy(vbo_manager_t** vbo_manager_) {
     renderer_backend_vbo_destroy((*vbo_manager_)->backend_context, &(*vbo_manager_)->vbo);
     range_allocator_destroy(&(*vbo_manager_)->range_allocator);
 
-    general_allocator_free((void**)vbo_manager_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)vbo_manager_, GENERAL_ALLOCATOR_MEMORY_TAG_VERTEX_RESOURCE);
 }
 
 buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t size_, const void* write_data_, range_allocation_t* out_allocation_handle_) {
@@ -275,9 +275,9 @@ buffer_manager_result_t vbo_manager_write(vbo_manager_t* vbo_manager_, size_t si
     bool allocate_success = false;
     bool vbo_bound = false;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "write_data_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_write", "out_allocation_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(write_data_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
     if(0 == size_) {
         ret = BUFFER_MANAGER_INVALID_ARGUMENT;
         ERROR_MESSAGE("vbo_manager_write(%s) - Provided size_ is not valid.", buffer_manager_result_to_str(ret));
@@ -371,8 +371,8 @@ buffer_manager_result_t vbo_manager_free(vbo_manager_t* vbo_manager_, const rang
 
     range_allocator_result_t ret_range_allocator = RANGE_ALLOCATOR_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_free", "allocation_handle_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_handle_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
     if(!range_allocation_is_valid(allocation_handle_)) {    // NOTE: O(1)なのと、API誤用がありうるため全ビルドで実行
         ret = BUFFER_MANAGER_INVALID_ARGUMENT;
         ERROR_MESSAGE("vbo_manager_free(%s) - Provided allocation_handle_ is not valid.", buffer_manager_result_to_str(ret));
@@ -415,7 +415,7 @@ buffer_manager_result_t vbo_manager_bind(vbo_manager_t* vbo_manager_) {
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_bind", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(NULL == vbo_manager_->backend_context || NULL == vbo_manager_->vbo) {
         ret = BUFFER_MANAGER_DATA_CORRUPTED;
@@ -442,7 +442,7 @@ buffer_manager_result_t vbo_manager_unbind(const vbo_manager_t* vbo_manager_) {
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT, buffer_manager_result_to_str(BUFFER_MANAGER_INVALID_ARGUMENT), "vbo_manager_unbind", "vbo_manager_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, BUFFER_MANAGER_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(NULL == vbo_manager_->backend_context) {
         ret = BUFFER_MANAGER_DATA_CORRUPTED;

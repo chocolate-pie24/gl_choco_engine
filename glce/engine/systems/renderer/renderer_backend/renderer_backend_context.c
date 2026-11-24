@@ -18,17 +18,21 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
 
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_backend.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_shader.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vao.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_vbo.h"
 #include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_texture.h"
+#include "engine/systems/renderer/renderer_backend/renderer_backend_concretes/gl33/gl33_frame_operations.h"
 
 #include "config/build_config.h"
 
+static void backend_api_initialize(void);
 static const renderer_shader_vtable_t* shader_vtable_get(void);
 static const renderer_vao_vtable_t* vao_vtable_get(void);
 static const renderer_vbo_vtable_t* vbo_vtable_get(void);
 static const renderer_texture_vtable_t* texture_vtable_get(void);
+static const renderer_frame_operations_vtable_t* frame_operations_vtable_get(void);
 
 renderer_backend_result_t renderer_backend_create(subsystem_allocator_t* allocator_, renderer_backend_context_t** out_backend_context_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
@@ -38,9 +42,9 @@ renderer_backend_result_t renderer_backend_create(subsystem_allocator_t* allocat
     renderer_backend_context_t* tmp_backend_context = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "out_backend_context_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT, renderer_backend_result_to_str(RENDERER_BACKEND_INVALID_ARGUMENT), "renderer_backend_create", "*out_backend_context_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_backend_context_, ret, RENDERER_BACKEND_BAD_OPERATION);
 
     // Simulation.
     ret_subsystem_allocator = subsystem_allocator_allocate(allocator_, sizeof(renderer_backend_context_t), SUBSYSTEM_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_backend_context);
@@ -86,6 +90,17 @@ renderer_backend_result_t renderer_backend_create(subsystem_allocator_t* allocat
         goto cleanup;
     }
 
+    // Frame Operations.
+    tmp_backend_context->frame_operations_vtable = frame_operations_vtable_get();
+    if(NULL == tmp_backend_context->frame_operations_vtable) {
+        ret = RENDERER_BACKEND_RUNTIME_ERROR;
+        ERROR_MESSAGE("renderer_backend_create(%s) - Failed to get frame_operations vtable.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    // Backend API初期化
+    backend_api_initialize();
+
     // commit.
     *out_backend_context_ = tmp_backend_context;
 
@@ -122,8 +137,17 @@ bool renderer_backend_is_valid(const renderer_backend_context_t* backend_context
     if(NULL == texture_vtable_get() || backend_context_->texture_vtable != texture_vtable_get()) {
         return false;
     }
+    if(NULL == frame_operations_vtable_get() || backend_context_->frame_operations_vtable != frame_operations_vtable_get()) {
+        return false;
+    }
 
     return true;
+}
+
+static void backend_api_initialize(void) {
+#if defined(GLCE_BUILD_GRAPHICS_API_GL33)
+    gl33_backend_initialize();
+#endif
 }
 
 static const renderer_shader_vtable_t* shader_vtable_get(void) {
@@ -153,6 +177,14 @@ static const renderer_vbo_vtable_t* vbo_vtable_get(void) {
 static const renderer_texture_vtable_t* texture_vtable_get(void) {
 #if defined(GLCE_BUILD_GRAPHICS_API_GL33)
     return gl33_texture_vtable_get();
+#else
+    return NULL;
+#endif
+}
+
+static const renderer_frame_operations_vtable_t* frame_operations_vtable_get(void) {
+#if defined(GLCE_BUILD_GRAPHICS_API_GL33)
+    return gl33_frame_operations_vtable_get();
 #else
     return NULL;
 #endif

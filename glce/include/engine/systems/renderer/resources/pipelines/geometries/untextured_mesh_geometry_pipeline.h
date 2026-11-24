@@ -164,8 +164,6 @@ typedef struct point_normal_vertex point_normal_vertex_t;
  *   callerが保持する。
  * - STL ASCII Loaderから返された頂点配列のownershipは
  *   本Operationが一時的に取得する。
- * - 頂点配列はGeneral Allocatorの
- *   GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRYを使用して解放する。
  * - CPU Geometryは頂点配列をコピーするため、
  *   Loaderの頂点配列とは独立したstorageを所有する。
  * - VBO転送とDraw Rangeの構築が完了した後、

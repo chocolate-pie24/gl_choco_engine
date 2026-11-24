@@ -19,7 +19,7 @@
  * - 本ModuleはGPU Texture Resource本体と、
  *   対応するRenderer Backend Texture Handleを所有する。
  * - Resource本体はGeneral Allocatorから確保し、
- *   GENERAL_ALLOCATOR_MEMORY_TAG_RENDERERで管理する。
+ *   GENERAL_ALLOCATOR_MEMORY_TAG_TEXTUREで管理する。
  * - GPU Textureの生成・破棄はRenderer Backendへ委譲する。
  * - destroy()は所有するBackend TextureとResource本体を解放する。
  * - CPU Texture Resource、Pixel Data、およびTexture Registryは

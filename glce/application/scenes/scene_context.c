@@ -10,13 +10,15 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/systems/event_system/core/engine_event_view.h"
+#include "engine/systems/platform_system/core/platform_system_types.h"
 
 #include "application/scenes/core/scene_types.h"
 #include "application/scenes/core/scene_err_utils.h"
 #include "application/scenes/vtables/scene_vtables.h"
+
 #include "application/scenes/scene_concretes/demos/sample_robot/sample_robot.h"
 #include "application/scenes/scene_concretes/demos/stl_viewer/stl_viewer.h"
+#include "application/scenes/scene_concretes/demos/test_scene/test_scene.h"
 
 struct scene_context {
     void* scene;
@@ -33,15 +35,12 @@ scene_result_t scene_context_create(scene_context_t** out_scene_) {
 
     scene_context_t* tmp_scene_context = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(out_scene_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_create", "out_scene_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_, ret, SCENE_BAD_OPERATION, scene_result_to_str(SCENE_BAD_OPERATION), "scene_context_create", "*out_scene_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_scene_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_scene_, ret, SCENE_BAD_OPERATION);
 
-    ret_general_allocator = general_allocator_allocate(sizeof(scene_context_t), GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER, (void**)&tmp_scene_context);
+    ret_general_allocator = general_allocator_allocate(sizeof(scene_context_t), GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION, (void**)&tmp_scene_context);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
         ret = scene_result_convert_general_allocator(ret_general_allocator);
-        if(GENERAL_ALLOCATOR_INVALID_ARGUMENT == ret_general_allocator) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("scene_context_create(%s) - general_allocator_allocate failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -69,7 +68,7 @@ cleanup:
         return ret;
     }
     if(NULL != tmp_scene_context) {
-        general_allocator_free((void**)&tmp_scene_context, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)&tmp_scene_context, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
     }
     return ret;
 }
@@ -86,7 +85,7 @@ void scene_context_destroy(renderer_frontend_t* renderer_frontend_, scene_contex
 #endif
 
     if(NULL == (*scene_)->vtable) {
-        general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+        general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
         return;
     }
     (*scene_)->vtable->scene_destroy(renderer_frontend_, &(*scene_)->scene);
@@ -94,7 +93,7 @@ void scene_context_destroy(renderer_frontend_t* renderer_frontend_, scene_contex
         ERROR_MESSAGE("scene_context_destroy(%s) - scene_destroy failed.", scene_result_to_str(SCENE_DATA_CORRUPTED));
         return;
     }
-    general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_RENDERER);
+    general_allocator_free((void**)scene_, GENERAL_ALLOCATOR_MEMORY_TAG_APPLICATION);
 }
 
 scene_list_t scene_context_current_scene_get(const scene_context_t* scene_) {
@@ -111,12 +110,12 @@ scene_result_t scene_context_change_scene(scene_context_t* scene_, renderer_fron
     const scene_vtable_t* next_vtable = NULL;
     void* tmp_scene = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_change_scene", "scene_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_change_scene", "renderer_frontend_")
-    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_change_scene", "asset_root_path_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_root_path_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!scene_context_is_valid(scene_)) {
-        ret = SCENE_INVALID_ARGUMENT;
+        ret = SCENE_DATA_CORRUPTED;
         ERROR_MESSAGE("scene_context_change_scene(%s) - Precondition validation failed for 'scene_'.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -189,14 +188,14 @@ cleanup:
     return ret;
 }
 
-scene_result_t scene_context_update(scene_context_t* scene_, const engine_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_) {
+scene_result_t scene_context_update(scene_context_t* scene_, const platform_event_view_t* event_view_, float delta_time_, bool window_resized_, int framebuffer_width_, int framebuffer_height_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_update", "scene_")
-    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_update", "event_view_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(event_view_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!scene_context_is_valid(scene_)) {
-        ret = SCENE_INVALID_ARGUMENT;
+        ret = SCENE_DATA_CORRUPTED;
         ERROR_MESSAGE("scene_context_update(%s) - Precondition validation failed for 'scene_'.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -208,9 +207,6 @@ scene_result_t scene_context_update(scene_context_t* scene_, const engine_event_
     }
     ret = scene_->vtable->scene_update(scene_->scene, event_view_, delta_time_, window_resized_, framebuffer_width_, framebuffer_height_);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("scene_context_update(%s) - scene_update failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -224,11 +220,11 @@ cleanup:
 scene_result_t scene_context_draw(scene_context_t* scene_, renderer_frontend_t* renderer_frontend_) {
     scene_result_t ret = SCENE_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_draw", "scene_")
-    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT, scene_result_to_str(SCENE_INVALID_ARGUMENT), "scene_context_draw", "renderer_frontend_")
+    IF_ARG_NULL_GOTO_CLEANUP(scene_, ret, SCENE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(renderer_frontend_, ret, SCENE_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!scene_context_is_valid(scene_)) {
-        ret = SCENE_INVALID_ARGUMENT;
+        ret = SCENE_DATA_CORRUPTED;
         ERROR_MESSAGE("scene_context_draw(%s) - Precondition validation failed for 'scene_'.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -240,9 +236,6 @@ scene_result_t scene_context_draw(scene_context_t* scene_, renderer_frontend_t* 
     }
     ret = scene_->vtable->scene_draw(scene_->scene, renderer_frontend_);
     if(SCENE_SUCCESS != ret) {
-        if(SCENE_INVALID_ARGUMENT == ret) {
-            ret = SCENE_DATA_CORRUPTED;
-        }
         ERROR_MESSAGE("scene_context_draw(%s) - scene_draw failed.", scene_result_to_str(ret));
         goto cleanup;
     }
@@ -259,6 +252,7 @@ bool scene_context_is_valid(const scene_context_t* scene_) {
     }
     if(SCENE_SAMPLE_ROBOT != scene_->current_scene &&
        SCENE_STL_VIEWER != scene_->current_scene &&
+       SCENE_TEST != scene_->current_scene &&
        SCENE_NONE != scene_->current_scene) {
         return false;
     }
@@ -269,6 +263,9 @@ bool scene_context_is_valid(const scene_context_t* scene_) {
         return false;
     }
     if(SCENE_STL_VIEWER == scene_->current_scene && (scene_->vtable != stl_viewer_vtable_get() || NULL == scene_->scene)) {
+        return false;
+    }
+    if(SCENE_TEST == scene_->current_scene && (scene_->vtable != test_scene_vtable_get() || NULL == scene_->scene)) {
         return false;
     }
     if(!scene_->vtable->scene_is_valid(scene_->scene)) {
@@ -285,6 +282,8 @@ static const scene_vtable_t* scene_vtable_get(scene_list_t scene_) {
         return stl_viewer_vtable_get();
     case SCENE_SAMPLE_ROBOT:
         return sample_robot_vtable_get();
+    case SCENE_TEST:
+        return test_scene_vtable_get();
     default:
         return NULL;
     }

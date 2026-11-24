@@ -3,40 +3,32 @@
 
 #include "engine/systems/renderer/resources/textures/core/texture_err_utils.h"
 
-#include "engine/systems/renderer/resources/textures/core/texture_types.h"
+#include "engine/base/choco_macros.h"
 
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_runtime_error = "RUNTIME_ERROR";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_limit_exceeded = "LIMIT_EXCEEDED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
+#include "engine/systems/renderer/resources/textures/core/texture_types.h"
 
 const char* texture_result_to_str(texture_result_t result_) {
     switch(result_) {
     case TEXTURE_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(TEXTURE_SUCCESS);
     case TEXTURE_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(TEXTURE_INVALID_ARGUMENT);
     case TEXTURE_RUNTIME_ERROR:
-        return s_result_str_runtime_error;
+        return STRINGIFY(TEXTURE_RUNTIME_ERROR);
     case TEXTURE_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(TEXTURE_NO_MEMORY);
     case TEXTURE_LIMIT_EXCEEDED:
-        return s_result_str_limit_exceeded;
+        return STRINGIFY(TEXTURE_LIMIT_EXCEEDED);
     case TEXTURE_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(TEXTURE_BAD_OPERATION);
     case TEXTURE_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(TEXTURE_DATA_CORRUPTED);
     case TEXTURE_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(TEXTURE_OVERFLOW);
     case TEXTURE_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(TEXTURE_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(TEXTURE_UNDEFINED_ERROR);
     }
 }
 

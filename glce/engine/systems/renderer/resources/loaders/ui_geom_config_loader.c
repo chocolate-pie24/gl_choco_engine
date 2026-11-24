@@ -131,8 +131,8 @@ loader_result_t ui_geom_config_loader_load(const char* config_fullpath_, ui_geom
     ui_geom_config_t tmp_config = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "ui_geom_config_loader_load", "config_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "ui_geom_config_loader_load", "out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(config_fullpath_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT);
     if('\0' == config_fullpath_[0]) {
         ret = LOADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("ui_geom_config_loader_load(%s) - Provided config_fullpath_ is not valid.", loader_result_to_str(ret));
@@ -254,9 +254,9 @@ static loader_result_t config_state_collect(fs_stream_t* fs_stream_,  choco_stri
     bool complete = false;
     size_t line_count = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_collect", "fs_stream_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_string_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_collect", "line_string_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_collect", "out_state_")
+    IF_ARG_NULL_GOTO_CLEANUP(fs_stream_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(line_string_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_state_, ret, LOADER_INVALID_ARGUMENT);
 
     while(!complete) {
         ret_fs_stream = fs_stream_text_file_line_read(fs_stream_, line_string_);
@@ -325,8 +325,8 @@ static loader_result_t line_collect(ui_geom_config_state_t* state_, const choco_
 
     glce_config_utility_line_type_t line_type = GLCE_CONFIG_UTILITY_LINE_TYPE_INVALID;
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "line_collect", "state_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "line_collect", "line_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, LOADER_INVALID_ARGUMENT);
 
     line_type = glce_config_utility_line_type_get(choco_string_c_str(line_), choco_string_length(line_));
     switch(line_type) {
@@ -388,8 +388,8 @@ static loader_result_t key_value_collect(ui_geom_config_state_t* state_, const c
 
     glce_config_utility_key_value_t key_value = { 0 };
 
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "key_value_collect", "state_")
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "key_value_collect", "line_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, LOADER_INVALID_ARGUMENT);
     if(0 == line_length_) {
         ret = LOADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("key_value_collect(%s) - Provided line_length_ is not valid.", loader_result_to_str(ret));
@@ -457,8 +457,8 @@ static loader_result_t value_store(char* dst_, size_t dst_buffer_size_, const ch
 
     size_t value_length = 0;
 
-    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "value_store", "dst_")
-    IF_ARG_NULL_GOTO_CLEANUP(value_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "value_store", "value_")
+    IF_ARG_NULL_GOTO_CLEANUP(dst_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(value_, ret, LOADER_INVALID_ARGUMENT);
     if(0 == dst_buffer_size_) {
         ret = LOADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("value_store(%s) - Provided dst_buffer_size_ is not valid.", loader_result_to_str(ret));
@@ -534,8 +534,8 @@ static loader_result_t config_state_parse(const ui_geom_config_state_t* state_, 
     int64_t tmp_width = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_parse", "state_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT, loader_result_to_str(LOADER_INVALID_ARGUMENT), "config_state_parse", "out_config_")
+    IF_ARG_NULL_GOTO_CLEANUP(state_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_config_, ret, LOADER_INVALID_ARGUMENT);
     if(state_->icon_height[0] < '0' || state_->icon_height[0] > '9') {  // 文字列先頭の数値以外を拒否
         ret = LOADER_UNSUPPORTED_FILE;
         goto cleanup;

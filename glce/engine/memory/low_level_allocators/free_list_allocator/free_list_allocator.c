@@ -108,17 +108,6 @@ typedef struct free_list_block_header {
 } free_list_block_header_t;
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_data_corrupted = "DATA_CORRUPTED";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_no_memory = "NO_MEMORY";
-static const char* const s_result_str_overflow = "OVERFLOW";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Allocation helpers
@@ -167,8 +156,8 @@ free_list_allocator_result_t free_list_allocator_initialize(size_t memory_pool_s
     size_t minimum_block_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "memory_pool_")
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_initialize", "allocator_")
+    IF_ARG_NULL_GOTO_CLEANUP(memory_pool_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
     if(0 == memory_pool_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("free_list_allocator_initialize(%s) - Provided memory_pool_size_ is not valid.", result_to_str(ret));
@@ -292,9 +281,9 @@ free_list_allocator_result_t free_list_allocator_allocate(free_list_allocator_t*
     void* tmp_ptr = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocate", "out_ptr_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, result_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_list_allocator_allocate", "*out_ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_ptr_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION);
     if(0 == allocation_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("free_list_allocator_allocate(%s) - Provided allocation_size_ is not valid.", result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT));
@@ -370,8 +359,8 @@ free_list_allocator_result_t free_list_allocator_free(free_list_allocator_t* all
     free_list_block_header_t* allocation_block = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_free", "ptr_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
@@ -468,9 +457,9 @@ free_list_allocator_result_t free_list_allocator_allocation_info_get(const free_
     const free_list_block_header_t* block = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "ptr_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_allocated_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_allocation_info_get", "out_allocated_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(ptr_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_allocated_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
@@ -528,8 +517,8 @@ free_list_allocator_result_t free_list_allocator_status_get(const free_list_allo
     bool free_block_found = false;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_status_get", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_list_allocator_status_get", "out_status_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_status_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!free_list_allocator_is_valid(allocator_)) {
         ret = FREE_LIST_ALLOCATOR_DATA_CORRUPTED;
@@ -676,7 +665,7 @@ static free_list_allocator_result_t allocation_block_size_calc(size_t payload_of
     size_t aligned_size = 0;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(out_required_block_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_block_size_calc", "out_required_block_size_")
+    IF_ARG_NULL_GOTO_CLEANUP(out_required_block_size_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
     if(0 == allocation_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("allocation_block_size_calc(%s) - Provided allocation_size_ is not valid.", result_to_str(ret));
@@ -715,9 +704,9 @@ static free_list_allocator_result_t free_block_find_first_fit(const free_list_al
     free_list_block_header_t* block = NULL;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_find_first_fit", "allocator_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "free_block_find_first_fit", "out_free_block_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_free_block_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION, result_to_str(FREE_LIST_ALLOCATOR_BAD_OPERATION), "free_block_find_first_fit", "*out_free_block_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocator_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_free_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_free_block_, ret, FREE_LIST_ALLOCATOR_BAD_OPERATION);
     if(0 == required_block_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("free_block_find_first_fit(%s) - Provided required_block_size_ is not valid.", result_to_str(ret));
@@ -751,7 +740,7 @@ static free_list_allocator_result_t allocation_is_ready(const free_list_block_he
     free_list_allocator_result_t ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(allocation_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT, result_to_str(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT), "allocation_is_ready", "allocation_block_")
+    IF_ARG_NULL_GOTO_CLEANUP(allocation_block_, ret, FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
     if(0 == required_block_size_) {
         ret = FREE_LIST_ALLOCATOR_INVALID_ARGUMENT;
         ERROR_MESSAGE("allocation_is_ready(%s) - Provided required_block_size_ is not valid.", result_to_str(ret));
@@ -1072,21 +1061,21 @@ static bool ptr_is_allocated(const free_list_allocator_t* allocator_, const void
 static const char* result_to_str(free_list_allocator_result_t result_) {
     switch(result_) {
     case FREE_LIST_ALLOCATOR_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_SUCCESS);
     case FREE_LIST_ALLOCATOR_DATA_CORRUPTED:
-        return s_result_str_data_corrupted;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_DATA_CORRUPTED);
     case FREE_LIST_ALLOCATOR_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_BAD_OPERATION);
     case FREE_LIST_ALLOCATOR_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_INVALID_ARGUMENT);
     case FREE_LIST_ALLOCATOR_NO_MEMORY:
-        return s_result_str_no_memory;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_NO_MEMORY);
     case FREE_LIST_ALLOCATOR_OVERFLOW:
-        return s_result_str_overflow;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_OVERFLOW);
     case FREE_LIST_ALLOCATOR_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_UNDEFINED_ERROR);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(FREE_LIST_ALLOCATOR_UNDEFINED_ERROR);
     }
 }
 

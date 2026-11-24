@@ -33,11 +33,11 @@ shader_result_t shader_program_builder_create_from_files(renderer_backend_contex
 
     renderer_backend_shader_t* tmp_shader = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "vertex_shader_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "fragment_shader_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "out_shader_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_program_builder_create_from_files", "*out_shader_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_fullpath_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_, ret, SHADER_BAD_OPERATION);
     if('\0' == vertex_shader_fullpath_[0]) {
         ret = SHADER_INVALID_ARGUMENT;
         ERROR_MESSAGE("shader_program_builder_create_from_files(%s) - Provided vertex_shader_fullpath_ is not valid.", shader_result_to_str(ret));
@@ -100,9 +100,9 @@ static shader_result_t shader_source_load(const char* shader_fullpath_, choco_st
     fs_stream_t* fs_stream = NULL;
     choco_string_t* shader_source = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(shader_fullpath_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "shader_fullpath_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_shader_source_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "out_shader_source_")
-    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_source_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_source_load", "*out_shader_source_")
+    IF_ARG_NULL_GOTO_CLEANUP(shader_fullpath_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_shader_source_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_shader_source_, ret, SHADER_BAD_OPERATION);
 
     // シェーダーソース格納用choco_string生成
     ret_choco_string = choco_string_default_create(&shader_source);
@@ -152,10 +152,10 @@ static shader_result_t shader_program_build(renderer_backend_shader_t* shader_, 
 
     renderer_backend_result_t ret_renderer_backend = RENDERER_BACKEND_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_program_build", "backend_context_")
-    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_program_build", "shader_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_source_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_program_build", "vertex_shader_source_")
-    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_source_, ret, SHADER_INVALID_ARGUMENT, shader_result_to_str(SHADER_INVALID_ARGUMENT), "shader_program_build", "fragment_shader_source_")
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(shader_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(vertex_shader_source_, ret, SHADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(fragment_shader_source_, ret, SHADER_INVALID_ARGUMENT);
 
     ret_renderer_backend = renderer_backend_shader_compile(SHADER_STAGE_VERTEX, choco_string_c_str(vertex_shader_source_), backend_context_, shader_);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {

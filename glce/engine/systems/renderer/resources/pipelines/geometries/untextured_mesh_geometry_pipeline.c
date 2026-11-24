@@ -27,95 +27,6 @@
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_err_utils.h"
 
 /*
- * Module Internal Contract
- *
- * Module State:
- * - 本Moduleは永続的な内部状態を保持しない。
- * - VBO ManagerとGeometry Registryはcallerからborrowする。
- * - STLファイルの読み込み、CPU Geometryの生成、
- *   GPU頂点データ転送、Registry登録、および利用権返却を
- *   一連のOperationとして調整する。
- *
- * Resource Construction:
- * - ASCII STLファイルの読み込みと頂点データ生成は
- *   STL ASCII Loaderへ委譲する。
- * - Loaderはpoint_normal_vertex_tの配列を生成し、
- *   そのownershipを本Operationへ移転する。
- * - CPU Geometryの生成はUntextured Mesh Geometry Moduleへ委譲する。
- * - CPU GeometryはLoaderの頂点配列をコピーして生成する。
- * - VBO Allocationの確保と頂点データの転送は
- *   VBO Managerへ委譲する。
- * - Resource Nameの複製と登録状態の管理は
- *   Geometry Registryへ委譲する。
- *
- * Temporary Ownership:
- * - Loader成功後、返された頂点配列を本Operationが所有する。
- * - 頂点配列はGENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRYを使用して
- *   General Allocatorから確保されている。
- * - CPU Geometry生成後、Registry登録までは
- *   本OperationがCPU Geometryを一時的に所有する。
- * - VBO書込成功後、Registry登録までは
- *   本OperationがVBO Allocationの解放責務を持つ。
- * - VBO書込成功状態はvbo_writtenによって管理する。
- * - VBO Allocation Descriptorはtmp_buffer_rangeに保持する。
- *
- * - VBO転送とDraw Range構築後、一時頂点配列を解放する。
- * - 一時頂点配列のownershipはRegistryへ移転しない。
- * - Registry登録成功時、CPU GeometryとVBO Allocationの
- *   解放責務はGeometry Registryへ移転する。
- * - Registry登録成功後、本Operationはこれらを解放しない。
- *
- * Draw Range:
- * - VBO書込サイズはVertex Countと
- *   sizeof(point_normal_vertex_t)から計算する。
- * - size_mul_checked()によって書込サイズのoverflowを検査する。
- * - VBO Allocation Offsetはsizeof(point_normal_vertex_t)の
- *   倍数である必要がある。
- * - Offsetの整合性を確認した後、Draw Rangeを構築する。
- * - first_vertex_countはAllocation Offsetを
- *   sizeof(point_normal_vertex_t)で除算して求める。
- * - vertex_countにはLoaderが返したVertex Countを使用する。
- *
- * Commit:
- * - CPU GeometryとVBO Allocation Descriptorを
- *   Geometry Registryへ渡す。
- * - Registry登録成功がOwnership TransferのCommit境界となる。
- * - Registryは登録ResourceのReference Countを1に初期化する。
- * - Geometry IDは登録成功後にcallerへ出力する。
- *
- * Failure / Rollback:
- * - Commit前の回復可能な失敗では、
- *   確保済みVBO Allocationを先に解放する。
- * - VBO Allocationの解放成功後、CPU Geometryを破棄する。
- * - Loaderから取得した一時頂点配列が残っている場合は、
- *   General Allocatorを使用して解放する。
- * - VBO Allocationのrollbackに失敗した場合は
- *   DATA_CORRUPTEDとして処理を中断する。
- * - DATA_CORRUPTEDの場合は通常のcleanupを行わない。
- * - 特にRegistry登録時の整合性異常では、
- *   Ownership Transferの完了状態を保証できないため、
- *   Pipeline側からResourceを解放しない。
- * - 回復可能な失敗ではGeometry IDの出力先を変更しない。
- *
- * Validation Responsibility:
- * - 外部ASCII STLファイルの構文と頂点データの
- *   semantic validityはSTL ASCII Loaderへ委譲する。
- * - CPU Geometryの構造的条件と頂点数の妥当性は
- *   Untextured Mesh Geometry Moduleへ委譲する。
- * - VBO Allocationと書込条件の検証はVBO Managerへ委譲する。
- * - Resource Name、登録状態、Reference Countの検証は
- *   Geometry Registryへ委譲する。
- * - 本Moduleは書込サイズのoverflowと、
- *   Allocation Offset / Vertex Strideの整合性を検証する。
- * - 下位Moduleのcanonical validationを重複して実行しない。
- *
- * AI支援:
- * - 本セクションはChatGPTを用いて草案を作成し、
- *   プロジェクト作成者が実装との整合性を確認・修正した。
- * - 実装コードはプロジェクト作成者が作成した。
- */
-
-/*
  * API-specific Validation Policy
  *
  * Preconditions:
@@ -163,8 +74,6 @@
  * Temporary Vertex Release:
  * - VBO転送とDraw Range構築後、
  *   Loaderから取得した一時頂点配列を解放する。
- * - 解放にはgeneral_allocator_free()を使用し、
- *   GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRYを指定する。
  * - Registryへ登録するCPU Geometryは独立した
  *   頂点storageを所有しているため、この解放の影響を受けない。
  * - RegistryへはLoaderの一時頂点配列を渡さない。
@@ -220,11 +129,11 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vb
 
     untextured_mesh_geometry_t* geometry = NULL;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_file", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_file", "geometry_registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_file", "out_geometry_id_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_file", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_file", "resource_fullpath_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_fullpath_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_resource_registry = untextured_mesh_geometry_registry_exists(geometry_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -272,7 +181,8 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_file(vb
         }
         tmp_buffer_range.draw_range.first_vertex_count = tmp_buffer_range.allocation_info.offset / sizeof(point_normal_vertex_t);
         tmp_buffer_range.draw_range.vertex_count = vertex_count;
-        general_allocator_free((void**)&vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
+
+        stl_ascii_loader_vertices_destroy(&vertices);
 
         ret_resource_registry = untextured_mesh_geometry_registry_register(geometry_registry_, resource_name_, &geometry, &tmp_buffer_range, &tmp_geometry_id);
         if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -300,7 +210,7 @@ cleanup:
     }
     untextured_mesh_geometry_destroy(&geometry);
     if(NULL != vertices) {
-        general_allocator_free((void**)&vertices, GENERAL_ALLOCATOR_MEMORY_TAG_GEOMETRY);
+        stl_ascii_loader_vertices_destroy(&vertices);
     }
 
     return ret;
@@ -322,11 +232,11 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_import_from_vertice
     bool vbo_written = false;
 
     // Preconditions
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_vertices", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_vertices", "geometry_registry_")
-    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_vertices", "resource_name_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_vertices", "out_geometry_id_")
-    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_import_from_vertices", "vertices_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(resource_name_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_geometry_id_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(vertices_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_resource_registry = untextured_mesh_geometry_registry_exists(geometry_registry_, resource_name_, &exists);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {
@@ -445,8 +355,8 @@ resource_pipeline_result_t untextured_mesh_geometry_pipeline_release(vbo_manager
 
     resource_registry_result_t ret_resource_registry = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
-    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_release", "vbo_manager_")
-    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT, resource_pipeline_result_to_str(RESOURCE_PIPELINE_INVALID_ARGUMENT), "untextured_mesh_geometry_pipeline_release", "geometry_registry_")
+    IF_ARG_NULL_GOTO_CLEANUP(vbo_manager_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(geometry_registry_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_resource_registry = untextured_mesh_geometry_registry_release(geometry_registry_, vbo_manager_, geometry_id_);
     if(RESOURCE_REGISTRY_SUCCESS != ret_resource_registry) {

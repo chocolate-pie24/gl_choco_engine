@@ -20,15 +20,6 @@ typedef struct token_range {
 } token_range_t;
 
 // ============================================================
-// Private Constants
-// ============================================================
-static const char* const s_result_str_success = "SUCCESS";
-static const char* const s_result_str_bad_operation = "BAD_OPERATION";
-static const char* const s_result_str_invalid_argument = "INVALID_ARGUMENT";
-static const char* const s_result_str_undefined_error = "UNDEFINED_ERROR";
-static const char* const s_result_str_unsupported_format = "UNSUPPORTED_FORMAT";
-
-// ============================================================
 // Private Function Declarations
 // ============================================================
 // Parsing helpers
@@ -182,8 +173,8 @@ glce_config_utility_result_t glce_config_utility_key_value_parse(const char* lin
     glce_config_utility_key_value_t key_value = { 0 };
 
     // Preconditions.
-    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, GLCE_CONFIG_UTILITY_INVALID_ARGUMENT, result_to_str(GLCE_CONFIG_UTILITY_INVALID_ARGUMENT), "glce_config_utility_key_value_parse", "line_")
-    IF_ARG_NULL_GOTO_CLEANUP(out_key_value_, ret, GLCE_CONFIG_UTILITY_INVALID_ARGUMENT, result_to_str(GLCE_CONFIG_UTILITY_INVALID_ARGUMENT), "glce_config_utility_key_value_parse", "out_key_value_")
+    IF_ARG_NULL_GOTO_CLEANUP(line_, ret, GLCE_CONFIG_UTILITY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_key_value_, ret, GLCE_CONFIG_UTILITY_INVALID_ARGUMENT);
     if(!line_is_valid(line_, char_count_)) {
         ret = GLCE_CONFIG_UTILITY_INVALID_ARGUMENT;
         ERROR_MESSAGE("glce_config_utility_key_value_parse(%s) - Provided line_ is not valid.", result_to_str(ret));
@@ -387,17 +378,17 @@ static void token_copy(const char* line_, const token_range_t* range_, char out_
 static const char* result_to_str(glce_config_utility_result_t result_) {
     switch(result_) {
     case GLCE_CONFIG_UTILITY_SUCCESS:
-        return s_result_str_success;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_SUCCESS);
     case GLCE_CONFIG_UTILITY_INVALID_ARGUMENT:
-        return s_result_str_invalid_argument;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_INVALID_ARGUMENT);
     case GLCE_CONFIG_UTILITY_BAD_OPERATION:
-        return s_result_str_bad_operation;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_BAD_OPERATION);
     case GLCE_CONFIG_UTILITY_UNDEFINED_ERROR:
-        return s_result_str_undefined_error;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_UNDEFINED_ERROR);
     case GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT:
-        return s_result_str_unsupported_format;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_UNSUPPORTED_FORMAT);
     default:
-        return s_result_str_undefined_error;
+        return STRINGIFY(GLCE_CONFIG_UTILITY_UNDEFINED_ERROR);
     }
 }
 
