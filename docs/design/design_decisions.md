@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-24
+最終更新: 2026-11-25
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -8361,3 +8361,210 @@ MaterialとTextureは次の点でGeometryと異なる。
 - 2026-11-24「Phong MaterialをMesh固有の名称ドメインから分離する」
 - `design_notes.md`
 - `glce_near_term_todo.md`
+
+---
+
+## Decision: 固定幅Bitmap FontをOfflineでC Asset化し、静的Catalogから参照する
+
+**Status:** Accepted（一部実装済み。GPU処理は未実装）  
+**Date:** 2026-11-25  
+**Scope:** Font / Asset Compilation / Embedded / Runtime Dependency / Static Resource Identity  
+**Updates:** 2026-11-24「Renderer Resource Ownershipの再構成は描画Resource群の実装後に再評価する」におけるText Renderingの未確定部分
+
+### Decision
+
+初期Text RenderingにはSpleenの固定幅Bitmap Fontを使用し、対象を印字可能ASCII `0x20`〜`0x7E`（95文字）、Spleenの6サイズ（5x8、6x12、8x16、12x24、16x32、32x64）に限定する。
+
+FontのBDFはGLCE Runtimeで解析しない。Repository Root直下の`tools/bdf_font_atlas_generator/generate.py`を用い、開発時にBDFから**固定セルFont Atlas、Font Metadata、および1bit/pixelのPixel Data**を生成する。生成結果は`glce/engine/systems/renderer/resources/fonts/generated/`以下の`.h/.c`へC言語の静的データとして埋め込む。BMP AtlasやRuntime用Font Metadata Fileは必要としない。
+
+- Glyphは文字コード昇順に16列の固定セルへ配置する。BDFの`FONTBOUNDINGBOX`、各Glyphの`BBX`と`DWIDTH`をConverterが解析・検証し、Glyph位置とBaselineを共通セルへ正規化する。
+- Atlasは1bit/pixel、row-major、MSB-first、各行のByte Padding、左上原点とする。`row_stride = (atlas_width + 7) / 8`とする。
+- 共通型`font_atlas_asset_t`はAtlas寸法、Cell寸法、列数、文字コード範囲、`advance_x`、`line_height`および`const uint8_t* pixels`を保持する。現時点でGlyph個別のUV / Advance配列は不要とする。
+- 各生成`.c`はPixel DataとAsset Descriptorを`static const`で保持する。`.h`には`const font_atlas_asset_t* <font>_asset_get(void)`というGetter APIを生成し、実行期間全体で有効なBorrowed Pointerを返す。Initialize / Deinitialize / Freeは不要。
+- Include Guardは生成先の`glce/`基準の実際の相対パスとファイル名から構成する。生成`.h/.c`にはDoxygenと自動生成元の記録を付け、`generate.py`はChatGPT生成と目的・使用方法を冒頭で明示する。
+- Font Catalogは`font_catalog.h/.c`の静的な検索機能とし、`font_asset_catalog_find(font_name, width, height)`によりAssetを取得する。名前・サイズ・Getterの対応表は**手動管理**し、自動生成しない。実行時の登録 / 削除、Allocation、Reference Count、Catalog Instanceの生成は不要。
+- Spleen由来のGlyph Dataに対応するBSD-2-ClauseのCopyright / License情報を、元Font Assetおよび生成物と結びつけて維持する。
+
+この決定の「静的」とは**CPU側のFont Atlas Asset**に限る。Runtime生成されるGPU Font TextureのCreate / Destroy / Lifetimeとは区別する。
+
+### Context
+
+BDFをRuntimeで解析する方法、BDFからBMP Atlasと別Metadata Fileを生成する方法、`.h/.c`にはMetadataだけ埋め込みBMP LoaderでPixel Dataを読み込む方法を検討した。
+
+初期要件では使用Font・文字集合・サイズが限定され、Fontは実行時に頻繁に変更されない。RuntimeのParser、ファイルI/O、長寿命CPU Pixel Allocationを設ける価値が小さい。一方、GPU Uploadや文字列描画は実行時操作として残る。
+
+Font Catalogを自動生成する案では、ファイル名からFamily / Sizeを推測するか、BDF MetadataをGLCEの検索名へ変換する追加規則が必要になる。6種類の対応関係であれば、手動の表を1か所に置く方が単純と判断した。
+
+`extern const font_atlas_asset_t`によるグローバルデータSymbol公開からGetter APIへ変更したのは、性能上の理由ではなく、生成`.c`をAssetの定義・所有の単位とし、外部にはBorrow操作のみを公開するためである。
+
+### Rationale
+
+- Font AssetのExternal Format / Glyph Rasterization / Baseline Normalizationを開発時のPython Toolへ閉じ込められる。
+- RuntimeはBDF LoaderやBMP Loaderを経由せず、検証済みの固定表現を参照できる。
+- 1bit/pixelの静的表現はROM / Flash容量を節約しやすく、Desktop / Embedded双方に利用できる。
+- Font Catalogの動的Registry化を避け、Asset IdentityのAuthorityを名前・寸法と静的Getterの対応表へ集約する。
+- MetadataとPixel DataのOwner / LifetimeをGenerated C Translation Unitへ閉じられる。
+- 実行中のGPU ResourceのLifetimeを静的Font Assetと混同しない。
+
+### Considered Alternatives
+
+- **Runtime BDF Parser / Glyph Rasterizer。** 初期の固定Font集合に対して、Parser、Error Handling、Allocation、File I/Oの責務が増えるため採用しない。
+- **BMP Atlas + Runtime Metadata Loader。** 生成するC Sourceだけで完結できるため採用しない。
+- **CソースにはMetadataのみ生成し、Pixel DataはBMP Loaderへ委譲する。** RuntimeのAsset取得経路が2つになり、今回の用途では一貫性が弱いため採用しない。
+- **1pixelを1byteまたはRGBAで静的保存する。** 固定幅Bitmap Fontの2値情報に対して静的容量を増やすため採用しない。
+- **Generated Assetを`extern const`変数として公開する。** 技術的には成立するが、生成`.c`へ実体を閉じ込めるGetter方式を選択する。
+- **CatalogのエントリをGeneratorで自動生成する。** 検索名 / サイズの解釈規則が増えるため、現在は手動の静的対応表を使用する。
+- **CPU Font Assetに通常の参照カウント付きRegistryを設ける。** Static Lifetimeでは登録・解放・Right管理が不要なため採用しない。
+
+### Consequences
+
+- 現時点の`font_atlas_asset.h`と`font_catalog.h/.c`、生成済みSpleen Asset群をこの静的Asset Layerとして利用する。
+- Font CatalogのAPI名と実際のファイル名は、`font_asset_catalog_find()` / `font_catalog.h/.c`である。
+- GPU Font Texture、Text Geometry、UI Text Shaderについては後続Decisionを参照する。
+- 生成済みAssetの契約と、BDF Converterが受理するBDFの条件・License条件を変更する場合は、Generatorと生成物を同時に更新する。
+
+### Revisit Conditions
+
+- Runtime Font Replacement / Hot Reload / User-provided Font / Multilingual Shaping等が正式要件になった場合。
+- 固定幅・固定セルの表現では目的のFontを正しく格納できなくなった場合。
+- Fontの種類・数が増え、Catalog手動対応表の保守が実際の負担になった場合。
+- EmbeddedのROM / Flash配置や静的データのLinkingについて、対象Hardwareの制約が具体化した場合。
+
+### Related Documents
+
+- `font_text_rendering_spec.md`
+- `glce_font_text_rendering_workplan.md`
+- `glce/engine/systems/renderer/resources/fonts/font_atlas_asset.h`
+- `glce/engine/systems/renderer/resources/fonts/font_catalog.h`
+- `tools/bdf_font_atlas_generator/generate.py`
+
+---
+
+## Decision: UI Text Meshを独立Vertical Sliceとし、Font GPU Textureを専用管理する
+
+**Status:** Accepted（Architecture方針。`ui_text_mesh` / Shader / Render Resourceの具体API・内部構造は未実装）  
+**Date:** 2026-11-25  
+**Scope:** Renderer Frontend / UI Text Mesh / Shader / Render Resource / Font GPU Texture Ownership
+
+### Decision
+
+文字列の描画は通常の`ui_mesh`に混ぜず、**`ui_text_mesh`を独立したMesh Vertical Slice**として設計する。以下は独立したモジュール / Ownership Domainとする。
+
+- `ui_text_mesh_t`（文字描画Request / Valueの表現。具体Fieldは未確定）
+- `ui_text_mesh_shader`（専用Shader ProgramおよびText用VAOを担当する候補）
+- `ui_text_mesh_render_resource`（Text SliceのGPU Resource / Lifetimeを統括）
+- Font GPU Texture管理（仮称`font_texture_cache`。静的AssetとGPU Textureの対応を保持）
+- String → Glyph配置 → Text VertexのGeometry生成経路
+
+通常の`ui_mesh_shader`とはShader Programを共有しない。初期段階でVertex / Fragmentの一部に類似性があっても、Text専用Programを新設する。これにより、現行`ui_mesh_shader`のShader Program / VAO OwnershipをTextの都合で分解・共有化しない。
+
+文字列から生成するGeometryは**Dynamic VBO**を使用する方針とする。Text用VAO / VBOは通常UI側とは独立したResourceとし、GLのShader、Texture、VAO、VBO、Draw等のlow-level operationは既存Renderer Backendの共通Mechanismを利用・必要に応じて拡張する。
+
+静的なFont AssetはRegistryを持たない一方、GPU TextureはRenderer Backend Contextに従うLifetimeを持つ。**Font GPU Textureの長寿命OwnerはUI Text Mesh Render Resource Domain**とする。通常の`texture_registry`は経由せず、利用Font AssetとGPU Textureの対応を専用管理する。通常UIの`texture_id`をFontに流用することは要求しない。GPU TextureのGenerate / Deinitializeは必要であり、CPU Assetの不変性を理由に省略しない。
+
+### Context
+
+当初は既存`ui_mesh_shader`を再利用し、追加Dynamic VBOから同じShaderへDrawする案を検討した。しかし現行Shader ObjectはProgramとVAOを併せて管理しているため、異なるVBO構成の共有にはVAO管理を含む再設計が必要になる。
+
+また、通常UI MeshはGeometry / Texture Registry IDから描画Resourceを取得するが、Text Geometryは文字列から生成・更新され、Font Atlasは通常Textureとは異なる静的CPU AssetとGPU Residencyの関係を持つ。Font用GPU TextureをRegistry抜きで作るだけでは、Texture IDのIdentity / Storage / Release経路が欠落するという問題が生じた。
+
+### Rationale
+
+- 通常UI / UI TextのGeometry更新方式、Texture Identity、Lifetimeを独立に扱える。
+- Shaderの共有のためだけに既存UI SliceのVAO / Program Ownershipを再編せずに済む。
+- Text専用ShaderでPacked BitmapのBit Extraction等を自由に実装できる。
+- Font GPU TextureのOwnerを明示し、静的CPU Font AssetとGPU Resourceを別のLifetimeとして扱える。
+- 短期の重複よりVertical Sliceの責務と拡張可能性を優先できる。
+
+### Considered Alternatives
+
+- **通常`ui_mesh`へText Geometryを追加する。** Registry IDを中心とする通常UIと、動的Text Geometryの更新モデルが異なるため採用しない。
+- **通常`ui_mesh_shader`のProgramをTextと共有する。** 現行Shader / VAO Ownershipの変更が必要となり、Text固有のサンプリングにも制約があるため採用しない。
+- **通常`texture_registry`へFont Textureを登録する。** CPU Texture Resource保持や参照権管理を含む従来契約をFont専用Textureへ適用する必要がないため、現段階では採用しない。
+- **GPU Textureを毎回Create / Destroyする。** Text描画のたびにGPU Uploadするのではなく、Text SliceのLifetime中でGPU Textureを保持して再利用する方針を選択する。
+- **Font GPU Textureに通常UIの`texture_id`を付与する。** ID解決のためにTexture Registryとの接続が必要になるため、Font専用対応管理を採用する。
+
+### Consequences
+
+- Renderer Frontendに`ui_text_mesh_render_resource`を統合する作業を追加する。
+- 通常`ui_mesh`は従来構造を維持する。Text側のShader / Render Resource / Draw APIは新設する。
+- GPU TextureをFont Assetから作る際のBackend Texture Format、Sampling、Upload仕様は次Decisionに従う。
+- GPU Font Textureの生成タイミング（eager / lazy）、Entry管理の方法・上限、Backend Handleの公開範囲、Draw時の選択方法、Failure Rollback、Dynamic VBOの更新方式、Mesh Valueの文字列Lifetimeは実装前に決める。**専用管理を採用したことは、具体的なCache実装やAPIまで確定したことを意味しない。**
+
+### Revisit Conditions
+
+- Text / UIのShaderやResource管理で実際に維持コストの高い重複が確認された場合。
+- 複数Vertical Sliceで同一GPU Font Atlasを共有する具体的要求が生じた場合。
+- Dynamic VBOの性能・同期・容量制約が、別のBuffer Strategyを必要とする場合。
+
+### Related Documents
+
+- `font_text_rendering_spec.md`
+- `glce_font_text_rendering_workplan.md`
+- 2026-11-24「Renderer Resource Ownershipの再構成は描画Resource群の実装後に再評価する」
+
+---
+
+## Decision: Font GPU AtlasをRGBAへ展開せずPacked Bitmapのまま整数Textureで扱う
+
+**Status:** Accepted（GPU表現方針。GL33 Backend / UI Text Shaderは未実装）  
+**Date:** 2026-11-25  
+**Scope:** Text Rendering / Font Texture / GPU Memory / Shader Sampling / OpenGL 3.3
+
+### Decision
+
+BDF Converterが出力した1bit/pixelのAtlasを、GPU Upload時にもRGBA8 / R8へ展開しない。OpenGL 3.3 Backendでは**`GL_R8UI`の整数TextureにPacked Byte列をそのまま格納**し、`ui_text_mesh_shader`がFragment Shaderで必要なBitを抽出する方式を採用する。
+
+`GL_R8UI`はNativeな1bit Textureではない。1 Texel（8bit）へ8論理Pixelを格納することで、**実効1bit/pixel相当の密度**を実現する。
+
+- Textureの物理寸法は`((atlas_width + 7) / 8, atlas_height)`とする。論理Atlas寸法は`font_atlas_asset_t`に保持する。
+- CPU AssetのRow-major / MSB-first / Byte Paddingの契約を保持して転送する。
+- GL33では`GL_R8UI`、`GL_RED_INTEGER`、`GL_UNSIGNED_BYTE`で整数TextureをUploadする方向とする。
+- Shaderは`usampler2D`と整数演算で`x / 8`に対応するByteを`texelFetch`し、`bit_index = 7 - (x % 8)`から0/1のMaskを得る。
+- 初期のSamplingはNearest相当とし、整数TextureのLinear Filteringや補間によるSmooth Renderingは要求しない。
+- Mask=0を透明、Mask=1を不透明として、Fragment OutputのAlphaを作る。Alpha BlendingのBackend描画State管理は別途実装する。
+- Texture生成・Upload等のGL API呼出しはRenderer Backendの責務とし、Font Resourceの外部APIにOpenGL固有のenumを漏らさない。
+
+文字色、拡大縮小、行間、UVとGPU Texture Rowの上下方向の変換、Sampler / Texture Unitの具体契約は、Text Slice実装時に定義する。
+
+### Context
+
+当初、既存UI Shaderを再利用するため、CPU Assetを1bit、Upload時に一時RGBA8へ展開してGPU上はRGBA Textureにする方針を採用した。途中ではGPU上をR8にする案や、R8 TextureのSwizzleを利用する案も検討した。
+
+しかし、その後に`ui_text_mesh`、`ui_text_mesh_shader`、`ui_text_mesh_render_resource`を独立させる設計へ変更した。通常UI ShaderのRGBA Sampling互換性を維持する必要がなくなったため、Packed BitmapをそのままGPUへUploadする方針を改めて採用した。
+
+例えば32x64セル、16列×6行のAtlasでは、論理2048×384 Pixelに対し、Packed Dataは24KiB、RGBA8では768KiBとなる（Texture内部の実物理Allocation量はBackend / Driver依存）。Packed方式ならGPU容量だけでなくUpload時のRGBA一時RAMも不要になる。
+
+### Rationale
+
+- Static CPU Asset、Upload Buffer、GPU Storageの全段階でPacked Bitmapを維持できる。
+- Embeddedで問題になり得る一時RGBA BufferのPeak RAMを回避できる。
+- Shader ProgramがText専用になったため、GPU Bit Extractionの追加が通常UIへ波及しない。
+- Spleenの2値Bitmap特性とNearest Samplingが一致する。
+- OpenGL固有の整数Texture機能をBackendとText専用Shaderの実装境界に限定できる。
+
+### Considered Alternatives
+
+- **1bit Static Asset → Temporary RGBA8 → GPU RGBA8。** 既存UI Shader共有時には合理的だったが、専用Shaderを採用したため現在は採用しない。
+- **1bit Static Asset → Temporary R8 → GPU R8。** RGBAより少ないGPU Memoryだが、一時展開と1byte/pixelのGPU Storageを要するため採用しない。
+- **GPU向けのNative 1bit Texture Format。** OpenGL 3.3の通常Texture Uploadでは要求どおりの汎用1bit形式を直接使用できないため、R8UIをByte Packed Storageとして利用する。
+
+### Consequences
+
+- GPU Upload時のRGBA展開Module / Temporary Bufferは当面作らない。
+- GL33 BackendにPacked Font Atlasを格納するTexture操作、整数TextureのFilter設定、必要なBackend Handle / Lifetime APIを追加・確認する。
+- UI Text Fragment Shaderは通常UI Shaderとは独立し、整数Texture Sampling / Bit復元を行う。
+- GlyphごとのUVは論理Atlas座標で表現し、Shaderで論理Pixel → Packed Byte Texelへ変換する。Atlasの左上原点とGPU座標系の整合を実装時にテストする。
+- Alpha Blendingは描画結果の合成に必要であり、Text Shaderだけでは完結しない。
+
+### Revisit Conditions
+
+- 対象Graphics Backendに整数Textureがなく、Packed方式を同等に実現できない場合。
+- Text RenderingのProfileでBit ExtractionのCostが許容できない場合。
+- Filtered / Antialiased / Smooth Scaling等、2値Bitmap以外の描画品質が要件になった場合。
+- 文字色、複数Texture Unit等のRuntime描画要件に応じ、Sampler Contractを拡張する場合。
+
+### Related Documents
+
+- `font_text_rendering_spec.md`
+- `glce_font_text_rendering_workplan.md`

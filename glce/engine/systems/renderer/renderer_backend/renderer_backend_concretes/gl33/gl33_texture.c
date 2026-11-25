@@ -47,7 +47,9 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
 static renderer_backend_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_);
 static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
-static renderer_backend_result_t gl33_texture_pixel_upload(int32_t width_, int32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
+static renderer_backend_result_t gl33_texture_pixel_upload_rgba8(int32_t width_, int32_t height_, const uint8_t* pixels_);
+static renderer_backend_result_t gl33_texture_pixel_upload_rgb8(int32_t width_, int32_t height_, const uint8_t* pixels_);
+static renderer_backend_result_t gl33_texture_pixel_upload_r8ui(int32_t width_, int32_t height_, const uint8_t* pixels_);
 
 static bool resolve_min_filter_config(texture_min_filter_config_t src_, GLint* dst_);
 static bool resolve_mag_filter_config(texture_mag_filter_config_t src_, GLint* dst_);
@@ -70,7 +72,9 @@ static const renderer_texture_vtable_t s_gl33_texture_vtable = {
     .renderer_texture_destroy = gl33_texture_destroy,
     .renderer_texture_bind = gl33_texture_bind,
     .renderer_texture_unbind = gl33_texture_unbind,
-    .renderer_texture_pixel_upload = gl33_texture_pixel_upload,
+    .renderer_texture_pixel_upload_rgba8 = gl33_texture_pixel_upload_rgba8,
+    .renderer_texture_pixel_upload_rgb8 = gl33_texture_pixel_upload_rgb8,
+    .renderer_texture_pixel_upload_r8ui = gl33_texture_pixel_upload_r8ui,
     .renderer_texture_is_valid = gl33_texture_is_valid,
 };  /**< OpenGL3.3用テクスチャ操作仮想関数テーブル */
 
@@ -315,67 +319,62 @@ cleanup:
     return ret;
 }
 
-/**
- * @brief 現在bindされている2D TextureへPixel Dataを転送する
- *
- * @details
- * 現在のActive Texture UnitでGL_TEXTURE_2Dにbindされている
- * Textureを対象として、glTexImage2D()を呼び出す。
- *
- * channel_count_が3の場合はGL_RGB、
- * 4の場合はGL_RGBAを使用する。
- * Pixel Componentの型はGL_UNSIGNED_BYTEとする。
- *
- * Pixel DataのRow Alignmentに対応するため、
- * 転送前にGL_UNPACK_ALIGNMENTを1に設定する。
- *
- * 成功経路ではGL_UNPACK_ALIGNMENTを4に設定する。
- * 処理前の値を保存・復元するわけではない。
- *
- * 現在の実装ではOpenGL APIの実行結果を検証しない。
- * また、対象Textureのbind状態も検証しない。
- *
- * @warning
- * 呼び出し前に対象Texture Unitをactiveにし、
- * 対象の2D Textureをbindしておくこと。
- *
- * @pre
- * pixels_は、width_ * height_ * channel_count_ byteの
- * Pixel Dataを読み取り可能なStorageを指すこと。
- *
- * @param[in] width_ Pixel Dataの幅。0より大きいこと。
- * @param[in] height_ Pixel Dataの高さ。0より大きいこと。
- * @param[in] channel_count_ Channel数。3または4。
- * @param[in] pixels_ 転送元Pixel Data
- *
- * @retval RENDERER_BACKEND_SUCCESS
- * OpenGLへの転送要求を実行した
- *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT
- * pixels_がNULL、width_またはheight_が0以下、
- * あるいはchannel_count_が3と4以外の場合
- */
-static renderer_backend_result_t gl33_texture_pixel_upload(int32_t width_, int32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
+static renderer_backend_result_t gl33_texture_pixel_upload_rgba8(int32_t width_, int32_t height_, const uint8_t* pixels_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     if(0 >= width_ || 0 >= height_) {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_pixel_upload(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
+        ERROR_MESSAGE("gl33_texture_pixel_upload_rgba8(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
-    if(3 == channel_count_) {
-        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
-        mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (GLsizei)width_, (GLsizei)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
-    } else if(4 == channel_count_) {
-        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
-        mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width_, (GLsizei)height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
-    } else {
+    mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
+    mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
+
+    ret = RENDERER_BACKEND_SUCCESS;
+
+cleanup:
+    if(RENDERER_BACKEND_SUCCESS == ret) {
+        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    }
+    return ret;
+}
+
+static renderer_backend_result_t gl33_texture_pixel_upload_rgb8(int32_t width_, int32_t height_, const uint8_t* pixels_) {
+    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(0 >= width_ || 0 >= height_) {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_pixel_upload(%s) - Provided channel count is not valid.", renderer_backend_result_to_str(ret));
+        ERROR_MESSAGE("gl33_texture_pixel_upload_rgb8(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
+
+    mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
+    mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
+
+    ret = RENDERER_BACKEND_SUCCESS;
+
+cleanup:
+    if(RENDERER_BACKEND_SUCCESS == ret) {
+        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    }
+    return ret;
+}
+
+static renderer_backend_result_t gl33_texture_pixel_upload_r8ui(int32_t width_, int32_t height_, const uint8_t* pixels_) {
+    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(0 >= width_ || 0 >= height_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("gl33_texture_pixel_upload_r8ui(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
+    mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, (GLsizei)width_, (GLsizei)height_, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, pixels_);
 
     ret = RENDERER_BACKEND_SUCCESS;
 

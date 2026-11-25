@@ -29,7 +29,9 @@ typedef renderer_backend_result_t (*pfn_renderer_texture_create)(int32_t texture
 typedef void (*pfn_renderer_texture_destroy)(renderer_backend_texture_t** texture_handle_); /**< renderer_texture_vtableが保持するrenderer_texture_destroyの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_texture_bind)(const renderer_backend_texture_t* texture_handle_);   /**< renderer_texture_vtableが保持するrenderer_texture_bindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_texture_unbind)(const renderer_backend_texture_t* texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_unbindの前方宣言 */
-typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload)(int32_t width_, int32_t height_, uint8_t channel_count_, const uint8_t* pixels_);  /**< renderer_texture_vtableが保持するrenderer_texture_pixel_uploadの前方宣言 */
+typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload_rgba8)(int32_t width_, int32_t height_, const uint8_t* pixels_);
+typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload_rgb8)(int32_t width_, int32_t height_, const uint8_t* pixels_);
+typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload_r8ui)(int32_t width_, int32_t height_, const uint8_t* pixels_);
 typedef bool (*pfn_renderer_texture_is_valid)(const renderer_backend_texture_t* texture_handle_);
 
 /**
@@ -134,24 +136,9 @@ typedef struct renderer_texture_vtable {
      */
     pfn_renderer_texture_unbind renderer_texture_unbind;
 
-    /**
-     * @brief 現在active / bindされている2Dテクスチャ対象に対してピクセルデータをGPUへ転送する
-     *
-     * @warning 本APIを呼び出す前にrenderer_texture_bindによって対象テクスチャユニットのactive化とbindを行っておくこと
-     *
-     * @param width_ 転送ピクセルデータの幅
-     * @param height_ 転送ピクセルデータの高さ
-     * @param channel_count_ 転送ピクセルデータのチャンネルカウント(RGB or RGBAのみ許可)
-     * @param pixels_ 転送ピクセルデータ
-     *
-     * @retval RENDERER_BACKEND_INVALID_ARGUMENT 以下のいずれか
-     * - pixels_ == NULL
-     * - width_ == 0
-     * - height_ == 0
-     * - channel_count_が3, 4以外
-     * @retval RENDERER_BACKEND_SUCCESS 処理に成功し、正常終了
-     */
-    pfn_renderer_texture_pixel_upload renderer_texture_pixel_upload;
+    pfn_renderer_texture_pixel_upload_rgba8 renderer_texture_pixel_upload_rgba8;
+    pfn_renderer_texture_pixel_upload_rgb8 renderer_texture_pixel_upload_rgb8;
+    pfn_renderer_texture_pixel_upload_r8ui renderer_texture_pixel_upload_r8ui;
 
     /**
      * @brief Concrete側Texture管理Objectの妥当性を検証する

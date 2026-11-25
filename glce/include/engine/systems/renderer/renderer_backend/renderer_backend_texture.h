@@ -149,51 +149,11 @@ renderer_backend_result_t renderer_backend_texture_bind(const renderer_backend_c
  */
 renderer_backend_result_t renderer_backend_texture_unbind(const renderer_backend_context_t* backend_context_, const renderer_backend_texture_t* texture_handle_);
 
-/**
- * @brief 現在bind中の2D TextureへPixel Dataを転送する
- *
- * @details
- * Texture vtableを介してConcrete側のPixel Uploadを呼び出す。
- *
- * 現在のGL33 Concreteでは、GL_TEXTURE_2Dに対して
- * glTexImage2D()を呼び出す。
- *
- * channel_count_は3(RGB)または4(RGBA)のみ許可する。
- * Pixel Dataの型にはGL_UNSIGNED_BYTEを使用する。
- *
- * 現在のGL33 Concreteは転送前にGL_UNPACK_ALIGNMENTを1へ、
- * 成功経路の終了時に4へ設定する。
- *
- * OpenGL APIの実行結果やTextureのbind状態は検証しない。
- *
- * @warning
- * 本APIを呼び出す前に対象Textureを
- * renderer_backend_texture_bind()等によってbindしておくこと。
- *
- * @pre
- * pixels_は転送に必要なPixel Dataを読み取り可能な
- * Storageを指していること。
- *
- * @param[in] backend_context_
- * Texture vtableを保持するRenderer Backend Context
- *
- * @param[in] width_ Pixel Dataの幅。0より大きいこと。
- * @param[in] height_ Pixel Dataの高さ。0より大きいこと。
- * @param[in] channel_count_ Channel数。3または4。
- * @param[in] pixels_ 転送元Pixel Data
- *
- * @retval RENDERER_BACKEND_SUCCESS
- * Concrete側の転送処理が成功した
- *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT
- * backend_context_またはpixels_がNULL、
- * width_またはheight_が0以下、
- * またはchannel_count_が3と4以外
- *
- * @retval RENDERER_BACKEND_BAD_OPERATION
- * Texture vtableが設定されていない
- */
-renderer_backend_result_t renderer_backend_texture_pixel_upload(const renderer_backend_context_t* backend_context_, int32_t width_, int32_t height_, uint8_t channel_count_, const uint8_t* pixels_);
+renderer_backend_result_t renderer_backend_texture_pixel_upload_rgba8(const renderer_backend_context_t* backend_context_, int32_t width_, int32_t height_, const uint8_t* pixels_);
+
+renderer_backend_result_t renderer_backend_texture_pixel_upload_rgb8(const renderer_backend_context_t* backend_context_, int32_t width_, int32_t height_, const uint8_t* pixels_);
+
+renderer_backend_result_t renderer_backend_texture_pixel_upload_r8ui(const renderer_backend_context_t* backend_context_, int32_t width_, int32_t height_, const uint8_t* pixels_);
 
 /**
  * @brief Renderer Backend Textureの構造的妥当性を検証する

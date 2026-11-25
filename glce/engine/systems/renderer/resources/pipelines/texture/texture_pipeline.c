@@ -16,6 +16,7 @@
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/loaders/bmp_loader.h"
 #include "engine/systems/renderer/resources/textures/core/texture_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_format.h"
 #include "engine/systems/renderer/resources/textures/texture_cpu_resource.h"
 #include "engine/systems/renderer/resources/textures/texture_gpu_resource.h"
 #include "engine/systems/renderer/resources/registries/texture/texture_registry.h"
@@ -236,8 +237,7 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
 
     const int32_t tmp_width = 32;
     const int32_t tmp_height = 32;
-    const uint8_t tmp_channel_count = 3;
-    const size_t pixel_size = (size_t)tmp_width * (size_t)tmp_height * (size_t)tmp_channel_count;
+    const size_t pixel_size = (size_t)tmp_width * (size_t)tmp_height * (size_t)3;
     uint8_t* tmp_pixels = NULL;
     size_t pixel_count = 0;
 
@@ -259,9 +259,8 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
         tmp_pixels[ii + 2] = blue_;
     }
 
-    out_resource_info_->channel_count = tmp_channel_count;
+    out_resource_info_->format = TEXTURE_FORMAT_RGB8;
     out_resource_info_->height = tmp_height;
-    out_resource_info_->pixel_data_size = pixel_size;
     out_resource_info_->width = tmp_width;
     *out_pixels_ = tmp_pixels;
 

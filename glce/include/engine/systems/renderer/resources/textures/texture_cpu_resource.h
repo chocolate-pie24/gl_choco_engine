@@ -72,6 +72,8 @@ extern "C" {
 
 typedef struct texture_cpu_resource texture_cpu_resource_t; /**< テクスチャCPU側リソース内部状態管理構造体前方宣言 */
 
+typedef struct texture_resource_info texture_resource_info_t;
+
 texture_result_t texture_cpu_resource_create(const texture_resource_info_t* resource_info_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_);
 
 void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_resource_);

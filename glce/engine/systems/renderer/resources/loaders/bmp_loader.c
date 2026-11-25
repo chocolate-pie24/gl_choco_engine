@@ -17,9 +17,9 @@
 
 #include "engine/io_utils/fs_stream.h"
 
+#include "engine/systems/renderer/resources/textures/core/texture_format.h"
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/loaders/core/loader_err_utils.h"
-
 
 /*
  * Module Internal Contract
@@ -400,9 +400,17 @@ loader_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* 
         goto cleanup;
     }
 
-    tmp_resource_info.channel_count = tmp_channel_count;
+    if(3 == tmp_channel_count) {
+        tmp_resource_info.format = TEXTURE_FORMAT_RGB8;
+    } else if(4 == tmp_channel_count) {
+        tmp_resource_info.format = TEXTURE_FORMAT_RGBA8;
+    } else {
+        ret = LOADER_RUNTIME_ERROR;
+        ERROR_MESSAGE("bmp_loader_load(%s) - Invalid texture format.", loader_result_to_str(ret));
+        goto cleanup;
+    }
+
     tmp_resource_info.height = pixel_layout.height;
-    tmp_resource_info.pixel_data_size = new_pixel_size;
     tmp_resource_info.width = pixel_layout.width;
     //////////////////////////////////////////////////////////////////////////////////////////
     // pixel_normalizeが成功したため、以降はGLCE内部で利用可能なbmpであることが確定

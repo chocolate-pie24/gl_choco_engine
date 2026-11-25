@@ -22,6 +22,7 @@
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/resources/textures/core/texture_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_format.h"
 #include "engine/systems/renderer/resources/textures/core/texture_err_utils.h"
 
 /*

@@ -91,30 +91,77 @@ cleanup:
     return ret;
 }
 
-renderer_backend_result_t renderer_backend_texture_pixel_upload(const renderer_backend_context_t* backend_context_, int32_t width_, int32_t height_, uint8_t channel_count_, const uint8_t* pixels_) {
+renderer_backend_result_t renderer_backend_texture_pixel_upload_rgba8(const renderer_backend_context_t* backend_context_, int32_t width_, int32_t height_, const uint8_t* pixels_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     if(NULL == backend_context_->texture_vtable) {
         ret = RENDERER_BACKEND_DATA_CORRUPTED;
-        ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload_rgba8(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
     if(0 >= width_ || 0 >= height_) {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
-        goto cleanup;
-    }
-    if(3 != channel_count_ && 4 != channel_count_) {
-        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Invalid channel_count_. expected = 3(RGB) or 4(RGBA), actual = %d", renderer_backend_result_to_str(ret), channel_count_);
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload_rgba8(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
-    ret = backend_context_->texture_vtable->renderer_texture_pixel_upload(width_, height_, channel_count_, pixels_);
+    ret = backend_context_->texture_vtable->renderer_texture_pixel_upload_rgba8(width_, height_, pixels_);
     if(RENDERER_BACKEND_SUCCESS != ret) {
-        ERROR_MESSAGE("renderer_backend_texture_pixel_upload(%s) - Failed to upload texture pixels.", renderer_backend_result_to_str(ret));
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload_rgba8(%s) - Failed to upload texture pixels.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
+renderer_backend_result_t renderer_backend_texture_pixel_upload_rgb8(const renderer_backend_context_t* backend_context_, int32_t width_, int32_t height_, const uint8_t* pixels_) {
+    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->texture_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload_rgb8(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(0 >= width_ || 0 >= height_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload_rgb8(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = backend_context_->texture_vtable->renderer_texture_pixel_upload_rgb8(width_, height_, pixels_);
+    if(RENDERER_BACKEND_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload_rgb8(%s) - Failed to upload texture pixels.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
+}
+
+renderer_backend_result_t renderer_backend_texture_pixel_upload_r8ui(const renderer_backend_context_t* backend_context_, int32_t width_, int32_t height_, const uint8_t* pixels_) {
+    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+
+    IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    if(NULL == backend_context_->texture_vtable) {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload_r8ui(%s) - Provided backend_context_ is corrupted.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(0 >= width_ || 0 >= height_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload_r8ui(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+
+    ret = backend_context_->texture_vtable->renderer_texture_pixel_upload_r8ui(width_, height_, pixels_);
+    if(RENDERER_BACKEND_SUCCESS != ret) {
+        ERROR_MESSAGE("renderer_backend_texture_pixel_upload_r8ui(%s) - Failed to upload texture pixels.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 

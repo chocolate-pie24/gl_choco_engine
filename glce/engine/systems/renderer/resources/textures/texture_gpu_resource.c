@@ -15,6 +15,7 @@
 #include "engine/systems/renderer/renderer_backend/renderer_backend_texture.h"
 
 #include "engine/systems/renderer/resources/textures/core/texture_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_format.h"
 #include "engine/systems/renderer/resources/textures/core/texture_err_utils.h"
 
 struct texture_gpu_resource {
@@ -38,11 +39,6 @@ texture_result_t texture_gpu_resource_create(const renderer_backend_context_t* b
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_INVALID_ARGUMENT);
-    if(!texture_resource_info_is_valid(resource_info_)) {
-        ret = TEXTURE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - Provided resource_info_ is not valid.", texture_result_to_str(ret));
-        goto cleanup;
-    }
 
     ret_general_allocator = general_allocator_allocate(sizeof(texture_gpu_resource_t), GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_texture_gpu_resource);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -66,10 +62,30 @@ texture_result_t texture_gpu_resource_create(const renderer_backend_context_t* b
     }
     texture_bound = true;
 
-    ret_renderer_backend = renderer_backend_texture_pixel_upload(backend_context_, resource_info_->width, resource_info_->height, resource_info_->channel_count, pixels_);
-    if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
-        ret = texture_result_convert_renderer_backend(ret_renderer_backend);
-        ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_pixel_upload failed.", texture_result_to_str(ret));
+    if(TEXTURE_FORMAT_RGBA8 == resource_info_->format) {
+        ret_renderer_backend = renderer_backend_texture_pixel_upload_rgba8(backend_context_, resource_info_->width, resource_info_->height, pixels_);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ret = texture_result_convert_renderer_backend(ret_renderer_backend);
+            ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_pixel_upload_rgba8 failed.", texture_result_to_str(ret));
+            goto cleanup;
+        }
+    } else if(TEXTURE_FORMAT_RGB8 == resource_info_->format) {
+        ret_renderer_backend = renderer_backend_texture_pixel_upload_rgb8(backend_context_, resource_info_->width, resource_info_->height, pixels_);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ret = texture_result_convert_renderer_backend(ret_renderer_backend);
+            ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_pixel_upload_rgb8 failed.", texture_result_to_str(ret));
+            goto cleanup;
+        }
+    } else if(TEXTURE_FORMAT_R8UI == resource_info_->format)  {
+        ret_renderer_backend = renderer_backend_texture_pixel_upload_r8ui(backend_context_, resource_info_->width, resource_info_->height, pixels_);
+        if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
+            ret = texture_result_convert_renderer_backend(ret_renderer_backend);
+            ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_pixel_upload_r8ui failed.", texture_result_to_str(ret));
+            goto cleanup;
+        }
+    } else {
+        ret = TEXTURE_INVALID_ARGUMENT;
+        ERROR_MESSAGE("texture_gpu_resource_create(%s) - Provided resource_info_ is not valid.", texture_result_to_str(ret));
         goto cleanup;
     }
 
