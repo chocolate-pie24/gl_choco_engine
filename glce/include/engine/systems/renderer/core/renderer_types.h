@@ -80,6 +80,17 @@ typedef enum {
   RENDERER_CLEAR_STENCIL_BIT = 1 << 2, // 0x04
 } renderer_clear_mask_t;
 
+/**
+ * @brief TextureのGPU上でのデータ表現を定義する
+ */
+typedef enum texture_format {
+    TEXTURE_FORMAT_RGB8,  /**< 各Channelが8bitの正規化値であるRGB形式。Alphaを持たないカラー画像等に使用する。 */
+    TEXTURE_FORMAT_RGBA8, /**< 各Channelが8bitの正規化値であるRGBA形式。Alphaを持つカラー画像等に使用する。 */
+    TEXTURE_FORMAT_R8UI,  /**< 1 Texelを8bit符号なし整数として扱う形式。Bit Packed Font Atlas等に使用する。 */
+} texture_format_t;
+
+bool texture_format_is_valid(texture_format_t format_);
+
 bool buffer_usage_is_valid(buffer_usage_t usage_);
 
 bool draw_range_is_valid(const draw_range_t* draw_range_);

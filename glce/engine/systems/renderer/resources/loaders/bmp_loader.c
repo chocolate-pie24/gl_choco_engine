@@ -17,208 +17,9 @@
 
 #include "engine/io_utils/fs_stream.h"
 
-#include "engine/systems/renderer/resources/textures/core/texture_format.h"
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/loaders/core/loader_err_utils.h"
 
-/*
- * Module Internal Contract
- *
- * Trust Boundary:
- * - BMP Loader moduleはexternal BMP fileを読み込み、
- *   GLCE内部で利用可能なtexture pixel representationへ変換するExternal Trust Boundaryである。
- * - fileから読み込んだraw byte、parse後のheader、
- *   derived layout、normalized pixel data、resource metadata candidateは、
- *   public outputへcommitされるまでは本module内部のuntrusted candidateとして扱う。
- * - external BMP representationからGLCE内部trusted representationへのtrust promotionは、
- *   load operationに必要なformat validation、checked transformation、
- *   pixel normalizationおよび必要なvalidationが完了し、
- *   public outputへのcommitが成功した時点で成立する。
- *
- * Header Representation:
- * - file_header_tおよびinfo_header_tはBMP file headerからparseしたprivate representationである。
- * - parse成功だけではheaderのsemantic validityは成立しない。
- * - header_is_valid()成功後は、本moduleが後続処理で要求する
- *   BMP header semantic conditionが成立済みとして扱う。
- * - これはprivate processing contractの成立を意味するものであり、
- *   external BMP representation全体のtrust promotionを意味しない。
- * - header validation成功後も、public commitまではLoader内部のcandidate representationとして扱う。
- *
- * Pixel Layout Representation:
- * - pixel_layout_tはvalidated BMP headerから導出されるprivate processing contextである。
- * - pixel_layout_tは独立したexternal representationまたはpublic domain objectではなく、
- *   pixel loadおよびpixel normalizationを安全に実行するためのderived informationを保持する。
- * - pixel_layout_initialize_from_header()はchecked transformationとして、
- *   row stride、raw pixel data size、pixel buffer size、pixel offset、
- *   image dimensions、bit count、vertical flip requirementを導出する。
- * - pixel_layout_initialize_from_header()成功後のpixel_layout_tはvalid-by-constructionとして扱う。
- * - private helper間では、initializer成功によって成立済みの
- *   pixel_layout_t内部relationを信頼し、同一semanticを重複して再検証しない。
- *
- * Pixel Representation:
- * - BMP fileから読み込んだpixel bufferは、pixel_layout_tが示す
- *   BMP file representationとして扱う。
- * - normalization成功後のpixel dataはBMP row paddingを含まず、
- *   GLCEで使用するRGBまたはRGBA channel orderへ変換済みである。
- * - BMPがbottom-up representationである場合はvertical flipを行い、
- *   GLCE内部で使用するorientationへ正規化する。
- * - normalization済みpixel dataのchannel countは3または4である。
- *
- * Resource Metadata:
- * - normalization完了後、pixel layoutおよびnormalized pixel data sizeから
- *   texture_resource_info_tを構築する。
- * - texture_resource_info_tを構成する各fieldおよびfield間relationの
- *   semantic ownershipはTexture Domainに属する。
- * - BMP Loader moduleはtexture resource metadata固有のsemanticを独自に再定義せず、
- *   validityの確認をtexture_resource_info_is_valid()へ委譲する。
- *
- * Ownership:
- * - pixel loadおよびnormalizationで生成するtemporary pixel storageは
- *   General AllocatorからGENERAL_ALLOCATOR_MEMORY_TAG_TEXTUREで確保する。
- * - module内部ではpublic outputへcommitするまでtemporary resourceとして管理する。
- * - public commit完了後のoutput pixel storageはBMP Loader moduleのinternal ownershipから外れる。
- *
- * AI支援:
- * - 本セクションはChatGPTを用いて草案を作成し、
- *   プロジェクト作成者が実装との整合性を確認・修正した。
- * - 実装コードはプロジェクト作成者が作成した。
- */
-
-/*
- * Module Validation Policy
- *
- * General:
- * - BMP Loader moduleはExternal Trust Boundaryであるため、
- *   external BMP dataをGLCE内部representationとして受理するために必要なvalidationを
- *   RELEASE_BUILDを含む通常実行経路で行う。
- * - Loader内部でformat validation、checked transformation、
- *   pixel normalization等が段階的に成功しても、
- *   candidate representationはpublic outputへcommitされるまではuntrustedとして扱う。
- * - external BMP representationからGLCE内部trusted representationへのtrust promotionは、
- *   load operationが正常にcommitされ、public outputが公開された時点で成立する。
- * - malformed BMP、unsupported representation、external I/O failureは、
- *   established internal stateのcorruptionとは区別する。
- *
- * Header Validation:
- * - header_load()はBMP header byte列を読み込み、
- *   file_header_tおよびinfo_header_tへparseする。
- * - parse処理自身はbyte representationからfield valueへの変換を担当し、
- *   BMP header semanticのvalidityは確定しない。
- *
- * header_is_valid():
- * - parse済みfile_header_tおよびinfo_header_tについて、
- *   本moduleの後続処理が受理可能なBMP header representationであることを検証する。
- * - 次を確認する。
- *   - bf_type == 0x4D42であること。
- *   - bf_reserved1 == 0であること。
- *   - bf_reserved2 == 0であること。
- *   - bf_sizeがBMP header sizeより大きいこと。
- *   - bf_off_bitsがBMP header size以上であること。
- *   - bf_off_bits < bf_sizeであること。
- *   - bi_size == 40であり、BITMAPINFOHEADERであること。
- *   - bi_planes == 1であること。
- *   - bi_compression == 0であり、非圧縮BMPであること。
- *   - bi_height != 0であること。
- *   - bi_width > 0であること。
- *   - bi_bit_countがBMP headerとして認識する
- *     1 / 4 / 8 / 16 / 24 / 32のいずれかであること。
- * - header_is_valid()成功後は、
- *   downstream processingに必要なBMP header semanticが成立済みとして扱う。
- * - downstream private helperでは同じheader semanticを重複して再検証しない。
- * - header validation成功はLoader全体のtrust promotionを意味しない。
- * - pixel buffer range、size arithmetic、pixel dataの存在、
- *   GLCE内部pixel formatへの変換可能性はheader_is_valid()単独では確定しない。
- *
- * Derived Layout Validation:
- * - pixel_layout_initialize_from_header()はvalidated headerを入力とする
- *   checked transformationである。
- * - width、height、bit countからrow stride、raw pixel data size、
- *   pixel buffer size、pixel offsetおよびorientation informationを導出する。
- * - size_t arithmeticを行う際には、operationに必要なoverflow checkを行う。
- * - calculated pixel buffer rangeがBMP headerで宣言されたfile range内に
- *   収まることを確認する。
- * - transformationに成功したpixel_layout_tはvalid-by-constructionとして扱う。
- * - pixel_layout_tはprivate derived processing contextであり、
- *   standalone canonical validatorは設けない。
- * - private helper間ではinitializer成功によって成立済みの
- *   pixel_layout_t内部relationを信頼し、同一semanticを重複して再検証しない。
- *
- * Operation-specific Validation:
- * - private pixel processing helperは、
- *   pixel_layout_tの成立済みinternal relationを一律に再検証しない。
- * - 各helperは自身のoperationが直接consumeするsemantic preconditionのみを検証する。
- * - pixel_bgr_to_rgb()は、自身が処理可能なpixel representationとして
- *   bit_countが24または32であることを確認する。
- * - したがってheader_is_valid()が1 / 4 / 8 / 16bit representationを
- *   BMP headerとして認識していても、
- *   GLCE内部pixel representationへnormalizeできないformatは
- *   downstream operationでLOADER_UNSUPPORTED_FILEとしてrejectする。
- * - padding removalやvertical flipに必要なstride、raw_data_size、height等のrelationは、
- *   pixel_layout_initialize_from_header()成功によって成立済みの
- *   internal contractとして扱う。
- *
- * External File Consistency:
- * - BMP headerが宣言するfile size、pixel offsetおよびderived pixel buffer rangeについて、
- *   actual file readと整合することを通常実行経路で確認する。
- * - required byte countを取得できない場合や、
- *   declared representationとactual file contentが整合しない場合は、
- *   malformed / unsupported external representationとして扱う。
- * - external fileのformat不整合をLOADER_DATA_CORRUPTEDへ分類しない。
- *
- * Pixel Normalization:
- * - external BMP pixel representationはpublic commitまでuntrusted candidateとして扱う。
- * - pixel normalizationでは、必要に応じてrow padding removal、
- *   BGR / BGRAからRGB / RGBAへのchannel normalization、
- *   vertical orientation normalizationを行う。
- * - normalization helperは、自身が直接consumeするformat semanticを検証する。
- * - normalization成功はそのprocessing stepのcontract成立を意味するが、
- *   Loader全体のtrust promotionはまだ成立しない。
- *
- * Final Resource Validation:
- * - pixel normalization完了後、
- *   pixel layoutおよびnormalized pixel data sizeから
- *   texture_resource_info_t candidateを構築する。
- * - texture_resource_info_t固有のsemantic ownershipはTexture Domainに属する。
- * - BMP Loader moduleではwidth、height、channel_count、pixel_data_size等の
- *   metadata semanticを独自に再定義せず、
- *   validityの確認をtexture_resource_info_is_valid()へ委譲する。
- *
- * Commit Eligibility:
- * - DEBUG_BUILD / TEST_BUILDではpublic outputへcommitする前に
- *   texture_resource_info_is_valid()を実行し、
- *   candidate metadataのCommit eligibilityをdiagnosticとして確認する。
- * - このvalidationはTexture Domainが所有するmetadata semanticについて、
- *   Loaderが構築したcandidateがpublic commit可能であることを確認する。
- * - validation failure時はcandidateをpublic outputへ公開せず、
- *   LOADER_UNSUPPORTED_FILEとしてrejectする。
- * - RELEASE_BUILDではautomatic Commit eligibility validationを行わない。
- * - build modeにかかわらず、
- *   Loader内部のcandidate representationはpublic outputへのcommitまで
- *   untrustedとして扱う。
- * - load operationが正常にcommitされ、
- *   resource metadataおよびnormalized pixel storageがpublic outputへ公開された時点で、
- *   GLCE内部trusted representationへのtrust promotionが成立する。
- *
- * Corruption Handling:
- * - external BMPのmalformed format、unsupported representation、
- *   candidate validation failureはinternal DATA_CORRUPTEDとは区別する。
- * - lower moduleからLOADER_DATA_CORRUPTEDへ変換されるfailureを受け取った場合は、
- *   provenanceを推測して別resultへ再分類しない。
- * - LOADER_DATA_CORRUPTEDが確定した場合はfail-stop ruleに従い、
- *   suspectなownership graphを辿る通常cleanupまたはresource releaseを行わない。
- *
- * Private Helper Validation:
- * - private helperでもpointer existenceなど、
- *   helper自身が安全にoperationを開始するために必要なlocal preconditionは検証する。
- * - 一方で、validated headerやvalid-by-constructionなpixel_layout_tについて、
- *   upstream checked operationで成立済みのsemantic conditionを
- *   防御的に重複検証しない。
- *
- * AI支援:
- * - 本セクションはChatGPTを用いて草案を作成し、
- *   プロジェクト作成者が実装との整合性を確認・修正した。
- * - 実装コードはプロジェクト作成者が作成した。
- */
 // ============================================================
 // Private Type Definitions
 // ============================================================
@@ -336,7 +137,7 @@ static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_);
 // ============================================================
 // Public API
 // ============================================================
-loader_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_) {
+loader_result_t bmp_loader_load(const char* fullpath_, int32_t* out_width_, int32_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_) {
     loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     uint8_t* tmp_pixels = NULL;
@@ -346,13 +147,14 @@ loader_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* 
     file_header_t tmp_file_header = { 0 };
     info_header_t tmp_info_header = { 0 };
     pixel_layout_t pixel_layout = { 0 };
-    texture_resource_info_t tmp_resource_info = { 0 };
     uint8_t tmp_channel_count = 0;
     size_t new_pixel_size = 0;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_width_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_height_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_channel_count_, ret, LOADER_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION);
     if('\0' == fullpath_[0]) {
@@ -399,35 +201,15 @@ loader_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* 
         ERROR_MESSAGE("bmp_loader_load(%s) - pixel_normalize failed.", loader_result_to_str(ret));
         goto cleanup;
     }
-
-    if(3 == tmp_channel_count) {
-        tmp_resource_info.format = TEXTURE_FORMAT_RGB8;
-    } else if(4 == tmp_channel_count) {
-        tmp_resource_info.format = TEXTURE_FORMAT_RGBA8;
-    } else {
-        ret = LOADER_RUNTIME_ERROR;
-        ERROR_MESSAGE("bmp_loader_load(%s) - Invalid texture format.", loader_result_to_str(ret));
-        goto cleanup;
-    }
-
-    tmp_resource_info.height = pixel_layout.height;
-    tmp_resource_info.width = pixel_layout.width;
     //////////////////////////////////////////////////////////////////////////////////////////
     // pixel_normalizeが成功したため、以降はGLCE内部で利用可能なbmpであることが確定
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    // Commit eligibility.
-#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
-    if(!texture_resource_info_is_valid(&tmp_resource_info)) {
-        ret = LOADER_UNSUPPORTED_FILE;
-        ERROR_MESSAGE("bmp_loader_load(%s) - Commit eligibility validation failed for 'tmp_resource_info'.", loader_result_to_str(ret));
-        goto cleanup;
-    }
-#endif
-
     // Commit.
+    *out_width_ = pixel_layout.width;
+    *out_height_ = pixel_layout.height;
+    *out_channel_count_ = tmp_channel_count;
     *out_pixels_ = pixel_normalized;
-    *out_resource_info_ = tmp_resource_info;
     pixel_normalized = NULL;
 
     ret = LOADER_SUCCESS;

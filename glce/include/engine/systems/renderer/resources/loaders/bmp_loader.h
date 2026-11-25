@@ -52,14 +52,10 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <stddef.h>
 
-#include "engine/systems/renderer/resources/textures/core/texture_types.h"
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 
-typedef struct texture_resource_info texture_resource_info_t;
-
-loader_result_t bmp_loader_load(const char* fullpath_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_);
+loader_result_t bmp_loader_load(const char* fullpath_, int32_t* out_width_, int32_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_);
 
 void bmp_loader_pixels_destroy(uint8_t** pixels_);
 

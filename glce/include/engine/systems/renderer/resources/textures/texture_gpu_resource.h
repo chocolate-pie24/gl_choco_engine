@@ -113,114 +113,18 @@ typedef struct texture_gpu_resource texture_gpu_resource_t;
 typedef struct renderer_backend_context renderer_backend_context_t;
 typedef struct texture_resource_info texture_resource_info_t;
 
-/**
- * @brief 指定されたPixel DataからGPU Texture Resourceを生成する。
- *
- * @par Public API Contract
- * - Texture Metadataのsemantic validityを検証する。
- * - GPU Texture Resource本体をGeneral Allocatorから確保する。
- * - Renderer BackendへTexture Unit Index、
- *   Min / Mag Filter、S / T方向のWrap Configを渡し、
- *   Backend Textureを生成する。
- * - 生成したBackend TextureをBindする。
- * - MetadataのWidth、Height、Channel Countを使用し、
- *   入力Pixel DataをGPUへ転送する。
- * - Pixel転送後にBackend TextureをUnbindする。
- * - Backend ContextへのBorrowed PointerをResource内に保持する。
- * - DEBUG / TEST Buildでは完成したResourceの
- *   is_valid()によるPostcondition Validationを実行する。
- * - 全処理の成功後に生成Resourceの所有ポインタを出力する。
- *
- * @par Input Validation
- * - backend_context_、resource_info_、pixels_、
- *   out_texture_resource_のNULLを検査する。
- * - *out_texture_resource_はNULLである必要がある。
- * - Metadataはtexture_resource_info_is_valid()で検証する。
- * - WidthとHeightは正値、Channel Countは3または4とする。
- * - Pixel Data SizeはWidth * Height * Channel Countと
- *   一致する必要がある。
- * - Texture Unit IndexおよびTexture Configの検証は
- *   Renderer Backendへ委譲する。
- * - Pixel DataのAllocation Validityや各Pixelの内容は
- *   本APIでは独立して検証しない。
- *
- * @par Ownership
- * - 成功時、callerはGPU Texture Resourceの所有権を取得する。
- * - GPU Texture ResourceはBackend Textureを所有する。
- * - Backend ContextのPointerはborrowとして内部に保持する。
- * - 入力MetadataとPixel DataのOwnershipは取得しない。
- * - 入力MetadataとPixel DataのPointerをResource内に保持しない。
- * - callerは不要になったResourceをdestroy()で破棄する。
- *
- * @par Failure Contract
- * - 生成失敗時、完成したResourceを出力しない。
- * - Backend Textureの生成後に失敗した場合、
- *   Backend Textureの破棄を試行する。
- * - TextureがBind済みの場合、CleanupでUnbindを試行する。
- * - CleanupでUnbindが失敗した場合は
- *   TEXTURE_DATA_CORRUPTEDを設定する。
- * - Resource本体が確保済みの場合は
- *   General Allocatorへの返却を試行する。
- * - DATA_CORRUPTEDの場合もCleanup処理自体は試行する。
- * - Backend Textureの破棄とResource本体の解放は
- *   void APIによるため、Cleanupの完全成功を検証しない。
- * - 失敗時には*out_texture_resource_を変更しない。
- *
- * @param[in] backend_context_
- *            GPU Textureの生成と操作に使用するBackend Context。
- * @param[in] texture_unit_index_
- *            GPU TextureをBindするTexture Unit Index。
- * @param[in] min_filter_config_
- *            Minification Filterの設定。
- * @param[in] mag_filter_config_
- *            Magnification Filterの設定。
- * @param[in] wrap_config_s_axis_
- *            S方向のTexture Wrapping設定。
- * @param[in] wrap_config_t_axis_
- *            T方向のTexture Wrapping設定。
- * @param[in] resource_info_
- *            Pixel Dataに対応するTexture Metadata。
- * @param[in] pixels_
- *            GPUへ転送するPixel Data。
- * @param[out] out_texture_resource_
- *             生成したGPU Texture Resourceの所有ポインタ出力先。
- *
- * @retval TEXTURE_SUCCESS
- *         GPU Texture Resourceの生成成功。
- * @retval TEXTURE_INVALID_ARGUMENT
- *         NULL引数、無効なTexture Metadata、
- *         または下位Backendの入力条件が不正。
- * @retval TEXTURE_BAD_OPERATION
- *         出力先がNULLでない、
- *         または下位BackendのOperationが成立しない。
- * @retval TEXTURE_NO_MEMORY
- *         Resource本体または下位Resourceの確保に失敗。
- * @retval TEXTURE_LIMIT_EXCEEDED
- *         AllocatorまたはBackendのResource制限を超過。
- * @retval TEXTURE_OVERFLOW
- *         AllocatorまたはBackendで計算範囲を超過。
- * @retval TEXTURE_RUNTIME_ERROR
- *         下位Backendの実行時エラー。
- * @retval TEXTURE_DATA_CORRUPTED
- *         内部整合性異常、Postcondition Validation失敗、
- *         またはCleanup時のUnbind失敗。
- * @retval TEXTURE_UNDEFINED_ERROR
- *         下位Moduleで未分類のエラーが発生。
- *
- * @pre backend_context_は利用可能であること。
- * @pre pixels_はresource_info_->pixel_data_size Byte以上の
- *      読み取り可能なPixel Dataを参照すること。
- * @pre out_texture_resource_は書き込み可能なPointerを指し、
- *      *out_texture_resource_はNULLに初期化されていること。
- *
- * @post 成功時、*out_texture_resource_は完成した
- *       GPU Texture Resourceを指す。
- * @post 成功時、生成中にBindしたTextureはUnbind済みとなる。
- * @post Backend Context、Texture Metadata、
- *       Pixel DataのOwnershipは移転しない。
- */
-texture_result_t texture_gpu_resource_create(const renderer_backend_context_t* backend_context_, int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, const texture_resource_info_t* resource_info_, const uint8_t* pixels_, texture_gpu_resource_t** out_texture_resource_);
-
+texture_result_t texture_gpu_resource_create(
+    const renderer_backend_context_t* backend_context_,
+    int32_t texture_unit_index_,
+    texture_format_t format_,
+    texture_min_filter_config_t min_filter_config_,
+    texture_mag_filter_config_t mag_filter_config_,
+    texture_wrap_config_t wrap_config_s_axis_,
+    texture_wrap_config_t wrap_config_t_axis_,
+    int32_t width_,
+    int32_t height_,
+    const uint8_t* pixels_,
+    texture_gpu_resource_t** out_texture_resource_);
 /**
  * @brief GPU Texture Resourceを破棄する。
  *

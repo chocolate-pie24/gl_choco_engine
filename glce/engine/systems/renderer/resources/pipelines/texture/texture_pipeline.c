@@ -16,14 +16,13 @@
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/loaders/bmp_loader.h"
 #include "engine/systems/renderer/resources/textures/core/texture_types.h"
-#include "engine/systems/renderer/resources/textures/core/texture_format.h"
 #include "engine/systems/renderer/resources/textures/texture_cpu_resource.h"
 #include "engine/systems/renderer/resources/textures/texture_gpu_resource.h"
 #include "engine/systems/renderer/resources/registries/texture/texture_registry.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_err_utils.h"
 
-static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_);
+static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, int32_t* out_width_, int32_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_);
 
 resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backend_context_t* backend_context_, texture_registry_t* registry_, int32_t texture_unit_index_, const char* resource_name_, const char* texture_fullpath_, uint16_t* out_texture_id_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
@@ -35,9 +34,13 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
     texture_cpu_resource_t* cpu_resource = NULL;
     texture_gpu_resource_t* gpu_resource = NULL;
 
-    texture_resource_info_t resource_info = { 0 };
+    int32_t tmp_width = 0;
+    int32_t tmp_height = 0;
+    uint8_t tmp_channel_count = 0;
     uint8_t* tmp_pixels = NULL; // CPUリソースにmoveされるピクセルデータ
     const uint8_t* tmp_pixels2 = NULL;  // CPUリソースから借用するピクセルデータ
+
+    texture_format_t tmp_format = 0;
     uint16_t tmp_texture_id = 0;
     bool exists = false;
 
@@ -62,7 +65,7 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
             goto cleanup;
         }
     } else {
-        ret_loader = bmp_loader_load(texture_fullpath_, &resource_info, &tmp_pixels);
+        ret_loader = bmp_loader_load(texture_fullpath_, &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixels);
         if(LOADER_SUCCESS != ret_loader) {
             ret = resource_pipeline_result_convert_loader(ret_loader);
             ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - Failed to load BMP file(%s).", resource_pipeline_result_to_str(ret), texture_fullpath_);
@@ -70,7 +73,7 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
         }
 
         // CPU側リソース生成
-        ret_texture = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
+        ret_texture = texture_cpu_resource_create(tmp_width, tmp_height, tmp_channel_count, &tmp_pixels, &cpu_resource);
         if(TEXTURE_SUCCESS != ret_texture) {
             ret = resource_pipeline_result_convert_texture(ret_texture);
             ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
@@ -85,7 +88,16 @@ resource_pipeline_result_t texture_pipeline_import_from_bmp(const renderer_backe
         }
 
         // GPU側リソース生成
-        ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
+        if(3 == tmp_channel_count) {
+            tmp_format = TEXTURE_FORMAT_RGB8;
+        } else if(4 == tmp_channel_count) {
+            tmp_format = TEXTURE_FORMAT_RGBA8;
+        } else {
+            ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+            ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - Invalid texture channel count.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, tmp_format, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, tmp_width, tmp_height, tmp_pixels2, &gpu_resource);
         if(TEXTURE_SUCCESS != ret_texture) {
             ret = resource_pipeline_result_convert_texture(ret_texture);
             ERROR_MESSAGE("texture_pipeline_import_from_bmp(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
@@ -128,9 +140,13 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
     texture_cpu_resource_t* cpu_resource = NULL;
     texture_gpu_resource_t* gpu_resource = NULL;
 
-    texture_resource_info_t resource_info = { 0 };
+    int32_t tmp_width = 0;
+    int32_t tmp_height = 0;
+    uint8_t tmp_channel_count = 0;
     uint8_t* tmp_pixels = NULL; // CPUリソースにmoveされるピクセルデータ
     const uint8_t* tmp_pixels2 = NULL;  // CPUリソースから借用するピクセルデータ
+
+    texture_format_t tmp_format = 0;
     uint16_t tmp_texture_id = 0;
     bool exists = false;
 
@@ -154,14 +170,14 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
             goto cleanup;
         }
     } else {
-        ret = solid_color_texture_generate(red_, green_, blue_, &resource_info, &tmp_pixels);
+        ret = solid_color_texture_generate(red_, green_, blue_, &tmp_width, &tmp_height, &tmp_channel_count, &tmp_pixels);
         if(RESOURCE_PIPELINE_SUCCESS != ret) {
             ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - solid_color_texture_generate failed.", resource_pipeline_result_to_str(ret));
             goto cleanup;
         }
 
         // CPU側リソース生成
-        ret_texture = texture_cpu_resource_create(&resource_info, &tmp_pixels, &cpu_resource);
+        ret_texture = texture_cpu_resource_create(tmp_width, tmp_height, tmp_channel_count, &tmp_pixels, &cpu_resource);
         if(TEXTURE_SUCCESS != ret_texture) {
             ret = resource_pipeline_result_convert_texture(ret_texture);
             ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_cpu_resource_create failed.", resource_pipeline_result_to_str(ret));
@@ -176,7 +192,16 @@ resource_pipeline_result_t texture_pipeline_import_from_solid_color(const render
         }
 
         // GPU側リソース生成
-        ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, &resource_info, tmp_pixels2, &gpu_resource);
+        if(3 == tmp_channel_count) {
+            tmp_format = TEXTURE_FORMAT_RGB8;
+        } else if(4 == tmp_channel_count) {
+            tmp_format = TEXTURE_FORMAT_RGBA8;
+        } else {
+            ret = RESOURCE_PIPELINE_RUNTIME_ERROR;
+            ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - Invalid texture channel count.", resource_pipeline_result_to_str(ret));
+            goto cleanup;
+        }
+        ret_texture = texture_gpu_resource_create(backend_context_, texture_unit_index_, tmp_format, TEXTURE_MIN_FILTER_CONFIG_NEAREST, TEXTURE_MAG_FILTER_CONFIG_NEAREST, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE, tmp_width, tmp_height, tmp_pixels2, &gpu_resource);
         if(TEXTURE_SUCCESS != ret_texture) {
             ret = resource_pipeline_result_convert_texture(ret_texture);
             ERROR_MESSAGE("texture_pipeline_import_from_solid_color(%s) - texture_gpu_resource_create failed.", resource_pipeline_result_to_str(ret));
@@ -230,7 +255,7 @@ cleanup:
     return ret;
 }
 
-static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, texture_resource_info_t* out_resource_info_, uint8_t** out_pixels_) {
+static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uint8_t green_, uint8_t blue_, int32_t* out_width_, int32_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_) {
     resource_pipeline_result_t ret = RESOURCE_PIPELINE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -243,7 +268,9 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
 
     IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, RESOURCE_PIPELINE_BAD_OPERATION);
-    IF_ARG_NULL_GOTO_CLEANUP(out_resource_info_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_width_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_height_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_channel_count_, ret, RESOURCE_PIPELINE_INVALID_ARGUMENT);
 
     ret_general_allocator = general_allocator_allocate(pixel_size, GENERAL_ALLOCATOR_MEMORY_TAG_TEXTURE, (void**)&tmp_pixels);
     if(GENERAL_ALLOCATOR_SUCCESS != ret_general_allocator) {
@@ -259,9 +286,9 @@ static resource_pipeline_result_t solid_color_texture_generate(uint8_t red_, uin
         tmp_pixels[ii + 2] = blue_;
     }
 
-    out_resource_info_->format = TEXTURE_FORMAT_RGB8;
-    out_resource_info_->height = tmp_height;
-    out_resource_info_->width = tmp_width;
+    *out_channel_count_ = 3;
+    *out_height_ = tmp_height;
+    *out_width_ = tmp_width;
     *out_pixels_ = tmp_pixels;
 
     tmp_pixels = NULL;

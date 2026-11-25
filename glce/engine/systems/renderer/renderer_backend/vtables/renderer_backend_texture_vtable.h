@@ -25,13 +25,11 @@ extern "C" {
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
-typedef renderer_backend_result_t (*pfn_renderer_texture_create)(int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_createの前方宣言 */
+typedef renderer_backend_result_t (*pfn_renderer_texture_create)(int32_t texture_unit_index_, texture_format_t format_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_createの前方宣言 */
 typedef void (*pfn_renderer_texture_destroy)(renderer_backend_texture_t** texture_handle_); /**< renderer_texture_vtableが保持するrenderer_texture_destroyの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_texture_bind)(const renderer_backend_texture_t* texture_handle_);   /**< renderer_texture_vtableが保持するrenderer_texture_bindの前方宣言 */
 typedef renderer_backend_result_t (*pfn_renderer_texture_unbind)(const renderer_backend_texture_t* texture_handle_);    /**< renderer_texture_vtableが保持するrenderer_texture_unbindの前方宣言 */
-typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload_rgba8)(int32_t width_, int32_t height_, const uint8_t* pixels_);
-typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload_rgb8)(int32_t width_, int32_t height_, const uint8_t* pixels_);
-typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload_r8ui)(int32_t width_, int32_t height_, const uint8_t* pixels_);
+typedef renderer_backend_result_t (*pfn_renderer_texture_pixel_upload)(const renderer_backend_texture_t* texture_handle_, int32_t width_, int32_t height_, const uint8_t* pixels_);
 typedef bool (*pfn_renderer_texture_is_valid)(const renderer_backend_texture_t* texture_handle_);
 
 /**
@@ -39,53 +37,6 @@ typedef bool (*pfn_renderer_texture_is_valid)(const renderer_backend_texture_t* 
  *
  */
 typedef struct renderer_texture_vtable {
-    /**
-     * @brief Concrete側のTexture管理Objectを生成する
-     *
-     * @details
-     * Texture管理ObjectのStorageを確保し、
-     * Texture Handleの生成とFilter / Wrap設定を行う。
-     *
-     * 現在のGL33 Concreteでは、
-     * OpenGL APIの実行結果を検証しない。
-     *
-     * @param[in] texture_unit_index_
-     * Texture Unitの0始まりのIndex
-     *
-     * @param[in] min_filter_config_ 縮小Filter設定
-     * @param[in] mag_filter_config_ 拡大Filter設定
-     * @param[in] wrap_config_s_axis_ S軸のWrap設定
-     * @param[in] wrap_config_t_axis_ T軸のWrap設定
-     *
-     * @param[out] out_texture_handle_
-     * 生成した管理Objectの格納先。
-     * 呼び出し前に*out_texture_handle_はNULLであること。
-     *
-     * @retval RENDERER_BACKEND_SUCCESS
-     * Concrete側の生成処理が成功した
-     *
-     * @retval RENDERER_BACKEND_INVALID_ARGUMENT
-     * Output Pointer、Texture Unit Index、Filter / Wrap設定、
-     * または下位Allocatorへの入力が不正
-     *
-     * @retval RENDERER_BACKEND_BAD_OPERATION
-     * 下位Allocatorの操作条件違反
-     *
-     * @retval RENDERER_BACKEND_NO_MEMORY
-     * 管理ObjectのStorage確保に失敗した
-     *
-     * @retval RENDERER_BACKEND_LIMIT_EXCEEDED
-     * 下位Allocatorの管理上限を超えた
-     *
-     * @retval RENDERER_BACKEND_OVERFLOW
-     * 下位Allocatorで算術Overflowが検出された
-     *
-     * @retval RENDERER_BACKEND_DATA_CORRUPTED
-     * 下位Allocatorの内部データ破損が検出された
-     *
-     * @retval RENDERER_BACKEND_UNDEFINED_ERROR
-     * 下位Allocatorから未定義または変換対象外の結果を受け取った
-     */
     pfn_renderer_texture_create renderer_texture_create;
 
     /**
@@ -136,9 +87,7 @@ typedef struct renderer_texture_vtable {
      */
     pfn_renderer_texture_unbind renderer_texture_unbind;
 
-    pfn_renderer_texture_pixel_upload_rgba8 renderer_texture_pixel_upload_rgba8;
-    pfn_renderer_texture_pixel_upload_rgb8 renderer_texture_pixel_upload_rgb8;
-    pfn_renderer_texture_pixel_upload_r8ui renderer_texture_pixel_upload_r8ui;
+    pfn_renderer_texture_pixel_upload renderer_texture_pixel_upload;
 
     /**
      * @brief Concrete側Texture管理Objectの妥当性を検証する

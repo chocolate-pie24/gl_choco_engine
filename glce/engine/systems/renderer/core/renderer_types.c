@@ -9,6 +9,19 @@
 
 #include "engine/base/choco_math/choco_math.h"
 
+bool texture_format_is_valid(texture_format_t format_) {
+    switch(format_) {
+    case TEXTURE_FORMAT_RGB8:
+        return true;
+    case TEXTURE_FORMAT_RGBA8:
+        return true;
+    case TEXTURE_FORMAT_R8UI:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool buffer_usage_is_valid(buffer_usage_t usage_) {
     switch(usage_) {
     case BUFFER_USAGE_DYNAMIC:

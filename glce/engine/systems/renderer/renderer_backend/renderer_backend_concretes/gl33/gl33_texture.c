@@ -37,19 +37,18 @@ struct renderer_backend_texture {
     GLuint handle;          /**< テクスチャGPU側リソースハンドル */
     int32_t unit_number;    /**< シェーダーが参照するテクスチャ用スロット番号(GL_TEXTURE0などのenum値ではなく、GL_TEXTURE0 + unit_num_として使用される0始まりのtexture unit index) */
 
+    texture_format_t format;
     texture_min_filter_config_t min_filter_config;  /**< テクスチャを縮小表示する際のピクセルの補間設定 */
     texture_mag_filter_config_t mag_filter_config;  /**< テクスチャを拡大表示する際のピクセルの補間設定 */
     texture_wrap_config_t wrap_config_s_axis;       /**< テクスチャがラップする箇所のピクセル設定(s軸) */
     texture_wrap_config_t wrap_config_t_axis;       /**< テクスチャがラップする箇所のピクセル設定(t軸) */
 };
 
-static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_);
+static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, texture_format_t format_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_);
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
 static renderer_backend_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_);
 static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
-static renderer_backend_result_t gl33_texture_pixel_upload_rgba8(int32_t width_, int32_t height_, const uint8_t* pixels_);
-static renderer_backend_result_t gl33_texture_pixel_upload_rgb8(int32_t width_, int32_t height_, const uint8_t* pixels_);
-static renderer_backend_result_t gl33_texture_pixel_upload_r8ui(int32_t width_, int32_t height_, const uint8_t* pixels_);
+static renderer_backend_result_t gl33_texture_pixel_upload(const renderer_backend_texture_t* texture_handle_, int32_t width_, int32_t height_, const uint8_t* pixels_);
 
 static bool resolve_min_filter_config(texture_min_filter_config_t src_, GLint* dst_);
 static bool resolve_mag_filter_config(texture_mag_filter_config_t src_, GLint* dst_);
@@ -72,9 +71,7 @@ static const renderer_texture_vtable_t s_gl33_texture_vtable = {
     .renderer_texture_destroy = gl33_texture_destroy,
     .renderer_texture_bind = gl33_texture_bind,
     .renderer_texture_unbind = gl33_texture_unbind,
-    .renderer_texture_pixel_upload_rgba8 = gl33_texture_pixel_upload_rgba8,
-    .renderer_texture_pixel_upload_rgb8 = gl33_texture_pixel_upload_rgb8,
-    .renderer_texture_pixel_upload_r8ui = gl33_texture_pixel_upload_r8ui,
+    .renderer_texture_pixel_upload = gl33_texture_pixel_upload,
     .renderer_texture_is_valid = gl33_texture_is_valid,
 };  /**< OpenGL3.3用テクスチャ操作仮想関数テーブル */
 
@@ -83,72 +80,7 @@ const renderer_texture_vtable_t* gl33_texture_vtable_get(void) {
     return &s_gl33_texture_vtable;
 }
 
-/**
- * @brief OpenGL 3.3 Textureの管理Objectを生成する
- *
- * @details
- * General Allocatorから管理ObjectのStorageを確保し、
- * glGenTextures()によってTexture Handleの生成を要求する。
- *
- * 指定されたTexture UnitをactiveにしてTextureをbindし、
- * Min / Mag FilterおよびS / T軸のWrap設定を適用する。
- *
- * 処理開始時のActive Texture Unitは保存・復元するが、
- * 設定対象UnitのGL_TEXTURE_2D Bindingは0に変更する。
- * 処理前のBindingは復元しない。
- *
- * 現在の実装ではOpenGL APIの実行結果や、
- * 生成されたTexture Handleが0ではないことを検証しない。
- * SUCCESSはOpenGL Resourceの正常性まで保証しない。
- *
- * @param[in] texture_unit_index_
- * Texture Unitの0始まりのIndex。
- * 0以上であることを検査するが、
- * OpenGL実装のTexture Unit上限は確認しない。
- *
- * @param[in] min_filter_config_
- * 縮小Filter設定。NEARESTまたはLINEARを許可する。
- *
- * @param[in] mag_filter_config_
- * 拡大Filter設定。NEARESTまたはLINEARを許可する。
- *
- * @param[in] wrap_config_s_axis_
- * S軸のWrap設定。
- *
- * @param[in] wrap_config_t_axis_
- * T軸のWrap設定。
- *
- * @param[out] out_texture_handle_
- * 生成したTexture管理Objectの格納先。
- * 呼び出し前に*out_texture_handle_はNULLであること。
- *
- * @retval RENDERER_BACKEND_SUCCESS
- * 管理Object生成とOpenGL設定APIの呼び出しが完了した
- *
- * @retval RENDERER_BACKEND_INVALID_ARGUMENT
- * Output Pointer、Texture Unit Index、または
- * Filter / Wrap設定が入力条件を満たさない。
- * General Allocator由来の引数不正も含む。
- *
- * @retval RENDERER_BACKEND_BAD_OPERATION
- * General Allocatorの操作条件を満たしていない
- *
- * @retval RENDERER_BACKEND_NO_MEMORY
- * 管理ObjectのStorageを確保できなかった
- *
- * @retval RENDERER_BACKEND_LIMIT_EXCEEDED
- * General Allocatorの管理上限を超えた
- *
- * @retval RENDERER_BACKEND_OVERFLOW
- * General Allocatorで算術Overflowを検出した
- *
- * @retval RENDERER_BACKEND_DATA_CORRUPTED
- * General Allocatorで内部データ破損を検出した
- *
- * @retval RENDERER_BACKEND_UNDEFINED_ERROR
- * General Allocatorから未定義の結果を受け取った
- */
-static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_) {
+static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, texture_format_t format_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -165,6 +97,21 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
     if(0 > texture_unit_index_) {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
         ERROR_MESSAGE("gl33_texture_create(%s) - Provided texture_unit_index_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(!texture_format_is_valid(format_)) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("gl33_texture_create(%s) - Provided format_ is not valid.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(TEXTURE_FORMAT_R8UI == format_ && TEXTURE_MAG_FILTER_CONFIG_LINEAR == mag_filter_config_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("gl33_texture_create(%s) - LINEAR filtering is not supported for R8UI format.", renderer_backend_result_to_str(ret));
+        goto cleanup;
+    }
+    if(TEXTURE_FORMAT_R8UI == format_ && TEXTURE_MIN_FILTER_CONFIG_LINEAR == min_filter_config_) {
+        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
+        ERROR_MESSAGE("gl33_texture_create(%s) - LINEAR filtering is not supported for R8UI format.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
     if(!resolve_min_filter_config(min_filter_config_, &min_filter) || !resolve_mag_filter_config(mag_filter_config_, &mag_filter)) {
@@ -185,6 +132,7 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
         goto cleanup;
     }
     tmp_texture->handle = 0;
+    tmp_texture->format = format_;
     tmp_texture->unit_number = texture_unit_index_;
     tmp_texture->min_filter_config = min_filter_config_;
     tmp_texture->mag_filter_config = mag_filter_config_;
@@ -319,62 +267,33 @@ cleanup:
     return ret;
 }
 
-static renderer_backend_result_t gl33_texture_pixel_upload_rgba8(int32_t width_, int32_t height_, const uint8_t* pixels_) {
+// Callerは対象となるTexture handleを事前にBindしておくこと
+static renderer_backend_result_t gl33_texture_pixel_upload(const renderer_backend_texture_t* texture_handle_, int32_t width_, int32_t height_, const uint8_t* pixels_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     if(0 >= width_ || 0 >= height_) {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_pixel_upload_rgba8(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
+        ERROR_MESSAGE("gl33_texture_pixel_upload(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
-    mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
-    mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
+    if(TEXTURE_FORMAT_R8UI == texture_handle_->format) {
+        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
+        mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, (GLsizei)width_, (GLsizei)height_, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, pixels_);
+    } else if(TEXTURE_FORMAT_RGB8 == texture_handle_->format) {
+        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
+        mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
 
-    ret = RENDERER_BACKEND_SUCCESS;
-
-cleanup:
-    if(RENDERER_BACKEND_SUCCESS == ret) {
-        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    }
-    return ret;
-}
-
-static renderer_backend_result_t gl33_texture_pixel_upload_rgb8(int32_t width_, int32_t height_, const uint8_t* pixels_) {
-    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    if(0 >= width_ || 0 >= height_) {
-        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_pixel_upload_rgb8(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
+    } else if(TEXTURE_FORMAT_RGBA8 == texture_handle_->format) {
+        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
+        mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
+    } else {
+        ret = RENDERER_BACKEND_DATA_CORRUPTED;
+        ERROR_MESSAGE("gl33_texture_pixel_upload(%s) - Provided texture_handle_ is corrupted.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
-
-    mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
-    mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
-
-    ret = RENDERER_BACKEND_SUCCESS;
-
-cleanup:
-    if(RENDERER_BACKEND_SUCCESS == ret) {
-        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    }
-    return ret;
-}
-
-static renderer_backend_result_t gl33_texture_pixel_upload_r8ui(int32_t width_, int32_t height_, const uint8_t* pixels_) {
-    renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-
-    IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
-    if(0 >= width_ || 0 >= height_) {
-        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_pixel_upload_r8ui(%s) - Provided width_ or height_ is not valid.", renderer_backend_result_to_str(ret));
-        goto cleanup;
-    }
-
-    mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
-    mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, (GLsizei)width_, (GLsizei)height_, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, pixels_);
 
     ret = RENDERER_BACKEND_SUCCESS;
 
@@ -589,6 +508,14 @@ static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_hand
     }
     if(!texture_wrap_config_is_valid(texture_handle_->wrap_config_t_axis)) {
         return false;
+    }
+    if(!texture_format_is_valid(texture_handle_->format)) {
+        return false;
+    }
+    if(TEXTURE_FORMAT_R8UI == texture_handle_->format) {
+        if(TEXTURE_MIN_FILTER_CONFIG_NEAREST != texture_handle_->min_filter_config || TEXTURE_MAG_FILTER_CONFIG_NEAREST != texture_handle_->mag_filter_config) {
+            return false;
+        }
     }
     return true;
 }
