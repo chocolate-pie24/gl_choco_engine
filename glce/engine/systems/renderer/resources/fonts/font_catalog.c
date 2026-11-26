@@ -35,7 +35,7 @@ static const font_asset_entry_t s_font_assets[] = {
     { "spleen", 32, 64, spleen_32x64_asset_get },
 };
 
-const font_atlas_asset_t* font_asset_catalog_find(const char* font_name_, uint32_t width_, uint32_t height_) {
+const font_atlas_asset_t* font_asset_catalog_find(const char* font_name_, int32_t width_, int32_t height_) {
     const font_atlas_asset_t* out_asset = NULL;
 
     for(size_t i = 0; i != MAX_FONT_ASSET_ENTRIES; ++i) {

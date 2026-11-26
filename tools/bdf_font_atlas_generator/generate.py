@@ -7,10 +7,16 @@
 """Generate GLCE fixed-width font atlas C assets from Spleen BDF files.
 
 Purpose:
-    Convert printable ASCII glyphs (0x20-0x7E) in monospaced BDF fonts
-    into a packed, 1-bit-per-pixel atlas and C metadata.  The generated
-    assets require no BDF parser, image loader, or CPU pixel allocation
-    at GLCE runtime.  The runtime can expand the atlas to RGBA8 on upload.
+    Convert printable ASCII glyphs (0x20-0x7E) in fixed-width BDF fonts
+    into a packed, 1-bit-per-pixel font atlas and C metadata.
+
+    The generated assets require no BDF parser, image loader, or CPU
+    pixel allocation for the font atlas at GLCE runtime.
+
+    Each byte stores eight horizontally consecutive logical pixels.
+    GLCE uploads the packed data directly to an R8UI texture without
+    expanding it to RGBA8. During rendering, the fragment shader
+    extracts individual bits to reconstruct the glyphs.
 
 Usage (from the repository root):
     python3 tools/bdf_font_atlas_generator/generate.py \\
@@ -28,9 +34,18 @@ The generated .h/.c files refer to the existing font_atlas_asset_t defined
 in engine/systems/renderer/resources/fonts/font_atlas_asset.h.  They do not
 create or modify that shared header.
 
-Only fixed-width BDF fonts are accepted.  The generated atlas uses ASCII
-code order, 16 columns, MSB-first bits, row-major storage, byte-padded rows,
-and a top-left origin.  The BDF font bounding box defines each glyph cell.
+Only fixed-width BDF fonts containing all printable ASCII glyphs
+(0x20-0x7E) are accepted. The input BDF may contain additional glyphs.
+
+The generator extracts the 95 required glyphs and arranges them
+in ASCII code order into 16 columns and 6 rows. The BDF
+FONTBOUNDINGBOX defines the dimensions of each glyph cell.
+
+The generated atlas uses 1-bit-per-pixel encoding, MSB-first bits,
+row-major storage, byte-padded rows, and a top-left origin.
+
+See README.md for the supported BDF contract, atlas layout,
+dimension calculations, and packed pixel data representation.
 
 The generated .c contains font-derived glyph data.  Its SPDX identifier
 is BSD-2-Clause, matching Spleen; do not use this generator with another

@@ -55,7 +55,6 @@ static void mock_glActiveTexture(GLenum texture_);
 static void mock_glBindTexture(GLenum target_, GLuint texture_);
 static void mock_glTexParameteri(GLenum target_, GLenum pname_, GLint param_);
 static void mock_glDeleteTextures(GLsizei n_, const GLuint* textures_);
-static void mock_glPixelStorei(GLenum pname_, GLint param_);
 static void mock_glTexImage2D(GLenum target_, GLint level_, GLint internalformat_, GLsizei width_, GLsizei height_, GLint border_, GLenum format_, GLenum type_, const void* data_);
 
 static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_handle_);
@@ -249,6 +248,7 @@ cleanup:
 }
 
 // Callerは対象となるTexture handleを事前にBindしておくこと
+// gl33_backend_initialize()でglPixelStorei(GL_UNPACK_ALIGNMENT, 1);が実行されている
 static renderer_backend_result_t gl33_texture_pixel_upload(const renderer_backend_texture_t* texture_handle_, int32_t width_, int32_t height_, const uint8_t* pixels_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
@@ -261,14 +261,11 @@ static renderer_backend_result_t gl33_texture_pixel_upload(const renderer_backen
     }
 
     if(TEXTURE_FORMAT_R8UI == texture_handle_->config.format) {
-        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
         mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, (GLsizei)width_, (GLsizei)height_, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, pixels_);
     } else if(TEXTURE_FORMAT_RGB8 == texture_handle_->config.format) {
-        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
         mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
 
     } else if(TEXTURE_FORMAT_RGBA8 == texture_handle_->config.format) {
-        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
         mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
     } else {
         ret = RENDERER_BACKEND_DATA_CORRUPTED;
@@ -279,9 +276,6 @@ static renderer_backend_result_t gl33_texture_pixel_upload(const renderer_backen
     ret = RENDERER_BACKEND_SUCCESS;
 
 cleanup:
-    if(RENDERER_BACKEND_SUCCESS == ret) {
-        mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    }
     return ret;
 }
 
@@ -427,10 +421,6 @@ static void NO_COVERAGE mock_glTexParameteri(GLenum target_, GLenum pname_, GLin
 
 static void NO_COVERAGE mock_glDeleteTextures(GLsizei n_, const GLuint* textures_) {
     glDeleteTextures(n_, textures_);
-}
-
-static void NO_COVERAGE mock_glPixelStorei(GLenum pname_, GLint param_) {
-    glPixelStorei(pname_, param_);
 }
 
 static void NO_COVERAGE mock_glTexImage2D(GLenum target_, GLint level_, GLint internalformat_, GLsizei width_, GLsizei height_, GLint border_, GLenum format_, GLenum type_, const void* data_) {
