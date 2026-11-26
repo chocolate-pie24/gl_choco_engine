@@ -21,8 +21,8 @@
 
 typedef struct font_asset_entry {
     const char* name;
-    uint32_t width;
-    uint32_t height;
+    int32_t width;
+    int32_t height;
     const font_atlas_asset_t* (*asset_get)(void);
 } font_asset_entry_t;
 
