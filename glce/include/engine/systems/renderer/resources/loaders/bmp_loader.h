@@ -55,7 +55,9 @@ extern "C" {
 
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 
-loader_result_t bmp_loader_load(const char* fullpath_, int32_t* out_width_, int32_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_);
+typedef struct texture_cpu_pixel_layout texture_cpu_pixel_layout_t;
+
+loader_result_t bmp_loader_load(const char* fullpath_, texture_cpu_pixel_layout_t* out_pixel_layout_, uint8_t** out_pixels_);
 
 void bmp_loader_pixels_destroy(uint8_t** pixels_);
 

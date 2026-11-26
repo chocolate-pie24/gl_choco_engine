@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
@@ -25,11 +26,7 @@ struct texture_gpu_resource {
 texture_result_t texture_gpu_resource_create(
     const renderer_backend_context_t* backend_context_,
     int32_t texture_unit_index_,
-    texture_format_t format_,
-    texture_min_filter_config_t min_filter_config_,
-    texture_mag_filter_config_t mag_filter_config_,
-    texture_wrap_config_t wrap_config_s_axis_,
-    texture_wrap_config_t wrap_config_t_axis_,
+    const texture_gpu_config_t* config_,
     int32_t width_,
     int32_t height_,
     const uint8_t* pixels_,
@@ -46,6 +43,7 @@ texture_result_t texture_gpu_resource_create(
     bool texture_bound = false;
 
     IF_ARG_NULL_GOTO_CLEANUP(backend_context_, ret, TEXTURE_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, TEXTURE_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_INVALID_ARGUMENT);
@@ -57,7 +55,7 @@ texture_result_t texture_gpu_resource_create(
         goto cleanup;
     }
 
-    ret_renderer_backend = renderer_backend_texture_create(backend_context_, texture_unit_index_, format_, min_filter_config_, mag_filter_config_, wrap_config_s_axis_, wrap_config_t_axis_, &tmp_backend_texture);
+    ret_renderer_backend = renderer_backend_texture_create(backend_context_, texture_unit_index_, config_, &tmp_backend_texture);
     if(RENDERER_BACKEND_SUCCESS != ret_renderer_backend) {
         ret = texture_result_convert_renderer_backend(ret_renderer_backend);
         ERROR_MESSAGE("texture_gpu_resource_create(%s) - renderer_backend_texture_create failed.", texture_result_to_str(ret));

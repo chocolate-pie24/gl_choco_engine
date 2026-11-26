@@ -19,6 +19,7 @@
 
 #include "engine/systems/renderer/resources/loaders/core/loader_types.h"
 #include "engine/systems/renderer/resources/loaders/core/loader_err_utils.h"
+#include "engine/systems/renderer/resources/textures/core/texture_cpu_resource_types.h"
 
 // ============================================================
 // Private Type Definitions
@@ -137,13 +138,15 @@ static const char* invalid_reason_to_str(bmp_invalid_reason_t reason_);
 // ============================================================
 // Public API
 // ============================================================
-loader_result_t bmp_loader_load(const char* fullpath_, int32_t* out_width_, int32_t* out_height_, uint8_t* out_channel_count_, uint8_t** out_pixels_) {
+loader_result_t bmp_loader_load(const char* fullpath_, texture_cpu_pixel_layout_t* out_pixel_layout_, uint8_t** out_pixels_) {
     loader_result_t ret = LOADER_INVALID_ARGUMENT;
 
     uint8_t* tmp_pixels = NULL;
     uint8_t* pixel_normalized = NULL;
 
     bmp_invalid_reason_t reason = BMP_FILE_UNDEFINED;
+
+    texture_cpu_pixel_layout_t tmp_cpu_pixel_layout = { 0 };
     file_header_t tmp_file_header = { 0 };
     info_header_t tmp_info_header = { 0 };
     pixel_layout_t pixel_layout = { 0 };
@@ -152,9 +155,7 @@ loader_result_t bmp_loader_load(const char* fullpath_, int32_t* out_width_, int3
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(fullpath_, ret, LOADER_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(out_width_, ret, LOADER_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(out_height_, ret, LOADER_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(out_channel_count_, ret, LOADER_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(out_pixel_layout_, ret, LOADER_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_pixels_, ret, LOADER_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_pixels_, ret, LOADER_BAD_OPERATION);
     if('\0' == fullpath_[0]) {
@@ -205,10 +206,21 @@ loader_result_t bmp_loader_load(const char* fullpath_, int32_t* out_width_, int3
     // pixel_normalizeが成功したため、以降はGLCE内部で利用可能なbmpであることが確定
     //////////////////////////////////////////////////////////////////////////////////////////
 
+    tmp_cpu_pixel_layout.channel_count = tmp_channel_count;
+    tmp_cpu_pixel_layout.width = pixel_layout.width;
+    tmp_cpu_pixel_layout.height = pixel_layout.height;
+
+    // Result Validation.
+#if defined(DEBUG_BUILD) || defined(TEST_BUILD)
+    if(!texture_cpu_pixel_layout_is_valid(tmp_cpu_pixel_layout)) {
+        ret = LOADER_DATA_CORRUPTED;
+        ERROR_MESSAGE("bmp_loader_load(%s) - Result validation failed for 'tmp_cpu_pixel_layout'.", loader_result_to_str(ret));
+        goto cleanup;
+    }
+#endif
+
     // Commit.
-    *out_width_ = pixel_layout.width;
-    *out_height_ = pixel_layout.height;
-    *out_channel_count_ = tmp_channel_count;
+    *out_pixel_layout_ = tmp_cpu_pixel_layout;
     *out_pixels_ = pixel_normalized;
     pixel_normalized = NULL;
 

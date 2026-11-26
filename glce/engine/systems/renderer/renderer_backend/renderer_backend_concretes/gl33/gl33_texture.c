@@ -23,9 +23,8 @@
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
-#include "engine/systems/renderer/core/renderer_types.h"
-
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
+#include "engine/systems/renderer/renderer_backend/core/renderer_backend_texture_types.h"
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_err_utils.h"
 #include "engine/systems/renderer/renderer_backend/vtables/renderer_backend_texture_vtable.h"
 
@@ -36,15 +35,10 @@
 struct renderer_backend_texture {
     GLuint handle;          /**< テクスチャGPU側リソースハンドル */
     int32_t unit_number;    /**< シェーダーが参照するテクスチャ用スロット番号(GL_TEXTURE0などのenum値ではなく、GL_TEXTURE0 + unit_num_として使用される0始まりのtexture unit index) */
-
-    texture_format_t format;
-    texture_min_filter_config_t min_filter_config;  /**< テクスチャを縮小表示する際のピクセルの補間設定 */
-    texture_mag_filter_config_t mag_filter_config;  /**< テクスチャを拡大表示する際のピクセルの補間設定 */
-    texture_wrap_config_t wrap_config_s_axis;       /**< テクスチャがラップする箇所のピクセル設定(s軸) */
-    texture_wrap_config_t wrap_config_t_axis;       /**< テクスチャがラップする箇所のピクセル設定(t軸) */
+    texture_gpu_config_t config;
 };
 
-static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, texture_format_t format_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_);
+static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, const texture_gpu_config_t* config_, renderer_backend_texture_t** out_texture_handle_);
 static void gl33_texture_destroy(renderer_backend_texture_t** texture_handle_);
 static renderer_backend_result_t gl33_texture_bind(const renderer_backend_texture_t* texture_handle_);
 static renderer_backend_result_t gl33_texture_unbind(const renderer_backend_texture_t* texture_handle_);
@@ -80,7 +74,7 @@ const renderer_texture_vtable_t* gl33_texture_vtable_get(void) {
     return &s_gl33_texture_vtable;
 }
 
-static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, texture_format_t format_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_) {
+static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_, const texture_gpu_config_t* config_, renderer_backend_texture_t** out_texture_handle_) {
     renderer_backend_result_t ret = RENDERER_BACKEND_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
@@ -92,6 +86,7 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
     GLint wrap_config_t_axis = GL_REPEAT;
     GLint current_unit = GL_TEXTURE0;
 
+    IF_ARG_NULL_GOTO_CLEANUP(config_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_handle_, ret, RENDERER_BACKEND_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_handle_, ret, RENDERER_BACKEND_BAD_OPERATION);
     if(0 > texture_unit_index_) {
@@ -99,29 +94,19 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
         ERROR_MESSAGE("gl33_texture_create(%s) - Provided texture_unit_index_ is not valid.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
-    if(!texture_format_is_valid(format_)) {
+    if(!texture_gpu_config_is_valid(config_)) {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_create(%s) - Provided format_ is not valid.", renderer_backend_result_to_str(ret));
+        ERROR_MESSAGE("gl33_texture_create(%s) - Provided config_ is not valid.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
-    if(TEXTURE_FORMAT_R8UI == format_ && TEXTURE_MAG_FILTER_CONFIG_LINEAR == mag_filter_config_) {
+    if(!resolve_min_filter_config(config_->min_filter_config, &min_filter) || !resolve_mag_filter_config(config_->mag_filter_config, &mag_filter)) {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_create(%s) - LINEAR filtering is not supported for R8UI format.", renderer_backend_result_to_str(ret));
+        ERROR_MESSAGE("gl33_texture_create(%s) - Provided config_->min_filter_config or config_->mag_filter_config is not valid.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
-    if(TEXTURE_FORMAT_R8UI == format_ && TEXTURE_MIN_FILTER_CONFIG_LINEAR == min_filter_config_) {
+    if(!resolve_wrap_config(config_->wrap_config_s_axis, &wrap_config_s_axis) || !resolve_wrap_config(config_->wrap_config_t_axis, &wrap_config_t_axis)) {
         ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_create(%s) - LINEAR filtering is not supported for R8UI format.", renderer_backend_result_to_str(ret));
-        goto cleanup;
-    }
-    if(!resolve_min_filter_config(min_filter_config_, &min_filter) || !resolve_mag_filter_config(mag_filter_config_, &mag_filter)) {
-        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_create(%s) - Provided min_filter_config_ or mag_filter_config_ is not valid.", renderer_backend_result_to_str(ret));
-        goto cleanup;
-    }
-    if(!resolve_wrap_config(wrap_config_s_axis_, &wrap_config_s_axis) || !resolve_wrap_config(wrap_config_t_axis_, &wrap_config_t_axis)) {
-        ret = RENDERER_BACKEND_INVALID_ARGUMENT;
-        ERROR_MESSAGE("gl33_texture_create(%s) - Provided wrap_config_s_axis_ or wrap_config_t_axis_ is not valid.", renderer_backend_result_to_str(ret));
+        ERROR_MESSAGE("gl33_texture_create(%s) - Provided config_->wrap_config_s_axis or config_->wrap_config_t_axis is not valid.", renderer_backend_result_to_str(ret));
         goto cleanup;
     }
 
@@ -132,12 +117,8 @@ static renderer_backend_result_t gl33_texture_create(int32_t texture_unit_index_
         goto cleanup;
     }
     tmp_texture->handle = 0;
-    tmp_texture->format = format_;
     tmp_texture->unit_number = texture_unit_index_;
-    tmp_texture->min_filter_config = min_filter_config_;
-    tmp_texture->mag_filter_config = mag_filter_config_;
-    tmp_texture->wrap_config_s_axis = wrap_config_s_axis_;
-    tmp_texture->wrap_config_t_axis = wrap_config_t_axis_;
+    tmp_texture->config = *config_;
 
     mock_glGetIntegerv(GL_ACTIVE_TEXTURE, &current_unit);
 
@@ -279,14 +260,14 @@ static renderer_backend_result_t gl33_texture_pixel_upload(const renderer_backen
         goto cleanup;
     }
 
-    if(TEXTURE_FORMAT_R8UI == texture_handle_->format) {
+    if(TEXTURE_FORMAT_R8UI == texture_handle_->config.format) {
         mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
         mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, (GLsizei)width_, (GLsizei)height_, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, pixels_);
-    } else if(TEXTURE_FORMAT_RGB8 == texture_handle_->format) {
+    } else if(TEXTURE_FORMAT_RGB8 == texture_handle_->config.format) {
         mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
         mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
 
-    } else if(TEXTURE_FORMAT_RGBA8 == texture_handle_->format) {
+    } else if(TEXTURE_FORMAT_RGBA8 == texture_handle_->config.format) {
         mock_glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // 4byte境界にアラインされていないテクスチャ(width * bytes_per_pixel が 4 の倍数でないテクスチャ)に対応させるため設定
         mock_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)width_, (GLsizei)height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
     } else {
@@ -497,25 +478,8 @@ static bool gl33_texture_is_valid(const renderer_backend_texture_t* texture_hand
     if(0 == texture_handle_->handle) {
         return false;
     }
-    if(!texture_min_filter_config_is_valid(texture_handle_->min_filter_config)) {
+    if(!texture_gpu_config_is_valid(&texture_handle_->config)) {
         return false;
-    }
-    if(!texture_mag_filter_config_is_valid(texture_handle_->mag_filter_config)) {
-        return false;
-    }
-    if(!texture_wrap_config_is_valid(texture_handle_->wrap_config_s_axis)) {
-        return false;
-    }
-    if(!texture_wrap_config_is_valid(texture_handle_->wrap_config_t_axis)) {
-        return false;
-    }
-    if(!texture_format_is_valid(texture_handle_->format)) {
-        return false;
-    }
-    if(TEXTURE_FORMAT_R8UI == texture_handle_->format) {
-        if(TEXTURE_MIN_FILTER_CONFIG_NEAREST != texture_handle_->min_filter_config || TEXTURE_MAG_FILTER_CONFIG_NEAREST != texture_handle_->mag_filter_config) {
-            return false;
-        }
     }
     return true;
 }

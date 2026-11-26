@@ -70,8 +70,9 @@ extern "C" {
 #include "engine/systems/renderer/resources/textures/core/texture_types.h"
 
 typedef struct texture_cpu_resource texture_cpu_resource_t; /**< テクスチャCPU側リソース内部状態管理構造体前方宣言 */
+typedef struct texture_cpu_pixel_layout texture_cpu_pixel_layout_t;
 
-texture_result_t texture_cpu_resource_create(int32_t width_, int32_t height_, uint8_t channel_count_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_);
+texture_result_t texture_cpu_resource_create(const texture_cpu_pixel_layout_t* layout_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_);
 
 void texture_cpu_resource_destroy(texture_cpu_resource_t** texture_resource_);
 

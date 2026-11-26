@@ -16,13 +16,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "engine/base/choco_math/choco_math.h"
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
 #include "engine/memory/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/resources/textures/core/texture_types.h"
+#include "engine/systems/renderer/resources/textures/core/texture_cpu_resource_types.h"
 #include "engine/systems/renderer/resources/textures/core/texture_err_utils.h"
 
 // ============================================================
@@ -33,47 +33,29 @@
  *
  */
 struct texture_cpu_resource {
-    int32_t width;
-    int32_t height;
-    uint8_t channel_count;
+    texture_cpu_pixel_layout_t pixel_layout;
     uint8_t* pixels;        /**< テクスチャピクセルデータ */
 };
 
 // ============================================================
 // Public API
 // ============================================================
-texture_result_t texture_cpu_resource_create(int32_t width_, int32_t height_, uint8_t channel_count_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_) {
+texture_result_t texture_cpu_resource_create(const texture_cpu_pixel_layout_t* layout_, uint8_t** pixels_, texture_cpu_resource_t** out_texture_resource_) {
     texture_result_t ret = TEXTURE_INVALID_ARGUMENT;
 
     general_allocator_result_t ret_general_allocator = GENERAL_ALLOCATOR_INVALID_ARGUMENT;
 
     texture_cpu_resource_t* tmp_cpu_resource = NULL;
 
-    size_t tmp_pixel_size = 0;
-
     // Preconditions.
+    IF_ARG_NULL_GOTO_CLEANUP(layout_, ret, TEXTURE_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_texture_resource_, ret, TEXTURE_INVALID_ARGUMENT);
     IF_ARG_NOT_NULL_GOTO_CLEANUP(*out_texture_resource_, ret, TEXTURE_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(pixels_, ret, TEXTURE_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(*pixels_, ret, TEXTURE_INVALID_ARGUMENT);
-    if(0 >= width_ || 0 >= height_) {
+    if(!texture_cpu_pixel_layout_is_valid(*layout_)) {
         ret = TEXTURE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Provided width_ or height_ is not valid.", texture_result_to_str(ret));
-        goto cleanup;
-    }
-    if(1 != channel_count_ && 3 != channel_count_ && 4 != channel_count_) {
-        ret = TEXTURE_INVALID_ARGUMENT;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Provided channel_count_ is not valid.", texture_result_to_str(ret));
-        goto cleanup;
-    }
-    if(!size_mul_checked((size_t)width_, (size_t)height_, &tmp_pixel_size)) {
-        ret = TEXTURE_OVERFLOW;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Pixel data size overflow.", texture_result_to_str(ret));
-        goto cleanup;
-    }
-    if(!size_mul_checked((size_t)channel_count_, tmp_pixel_size, &tmp_pixel_size)) {
-        ret = TEXTURE_OVERFLOW;
-        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Pixel data size overflow.", texture_result_to_str(ret));
+        ERROR_MESSAGE("texture_cpu_resource_create(%s) - Provided layout_ is not valid.", texture_result_to_str(ret));
         goto cleanup;
     }
 
@@ -85,9 +67,7 @@ texture_result_t texture_cpu_resource_create(int32_t width_, int32_t height_, ui
         goto cleanup;
     }
 
-    tmp_cpu_resource->width = width_;
-    tmp_cpu_resource->height = height_;
-    tmp_cpu_resource->channel_count = channel_count_;
+    tmp_cpu_resource->pixel_layout = *layout_;
     tmp_cpu_resource->pixels = *pixels_;
 
     // Result validation.
@@ -159,7 +139,6 @@ cleanup:
 }
 
 bool texture_cpu_resource_is_valid(const texture_cpu_resource_t* texture_resource_) {
-    size_t tmp_pixel_size = 0;
     if(NULL == texture_resource_) {
         return false;
     }
@@ -169,16 +148,7 @@ bool texture_cpu_resource_is_valid(const texture_cpu_resource_t* texture_resourc
     if(!general_allocator_ptr_is_allocated((const void*) texture_resource_->pixels)) {
         return false;
     }
-    if(0 >= texture_resource_->width || 0 >= texture_resource_->height) {
-        return false;
-    }
-    if(1 != texture_resource_->channel_count && 3 != texture_resource_->channel_count && 4 != texture_resource_->channel_count) {
-        return false;
-    }
-    if(!size_mul_checked((size_t)texture_resource_->width, (size_t)texture_resource_->height, &tmp_pixel_size)) {
-        return false;
-    }
-    if(!size_mul_checked((size_t)texture_resource_->channel_count, tmp_pixel_size, &tmp_pixel_size)) {
+    if(!texture_cpu_pixel_layout_is_valid(texture_resource_->pixel_layout)) {
         return false;
     }
     return true;

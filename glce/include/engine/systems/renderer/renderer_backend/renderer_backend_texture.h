@@ -21,13 +21,13 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "engine/systems/renderer/core/renderer_types.h"
-
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 typedef struct renderer_backend_context renderer_backend_context_t; /**< Renderer Backend内部状態管理構造体前方宣言 */
 
-renderer_backend_result_t renderer_backend_texture_create(const renderer_backend_context_t* backend_context_, int32_t texture_unit_index_, texture_format_t format_, texture_min_filter_config_t min_filter_config_, texture_mag_filter_config_t mag_filter_config_, texture_wrap_config_t wrap_config_s_axis_, texture_wrap_config_t wrap_config_t_axis_, renderer_backend_texture_t** out_texture_handle_);
+typedef struct texture_gpu_config texture_gpu_config_t;
+
+renderer_backend_result_t renderer_backend_texture_create(const renderer_backend_context_t* backend_context_, int32_t texture_unit_index_, const texture_gpu_config_t* config_, renderer_backend_texture_t** out_texture_handle_);
 
 /**
  * @brief Renderer Backend Textureを破棄する

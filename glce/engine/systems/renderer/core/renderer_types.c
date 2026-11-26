@@ -5,22 +5,8 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 
 #include "engine/base/choco_math/choco_math.h"
-
-bool texture_format_is_valid(texture_format_t format_) {
-    switch(format_) {
-    case TEXTURE_FORMAT_RGB8:
-        return true;
-    case TEXTURE_FORMAT_RGBA8:
-        return true;
-    case TEXTURE_FORMAT_R8UI:
-        return true;
-    default:
-        return false;
-    }
-}
 
 bool buffer_usage_is_valid(buffer_usage_t usage_) {
     switch(usage_) {
@@ -46,41 +32,4 @@ bool draw_range_is_valid(const draw_range_t* draw_range_) {
         return false;
     }
     return true;
-}
-
-bool texture_mag_filter_config_is_valid(texture_mag_filter_config_t config_) {
-    switch(config_) {
-    case TEXTURE_MAG_FILTER_CONFIG_NEAREST:
-        return true;
-    case TEXTURE_MAG_FILTER_CONFIG_LINEAR:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool texture_min_filter_config_is_valid(texture_min_filter_config_t config_) {
-    switch(config_) {
-    case TEXTURE_MIN_FILTER_CONFIG_NEAREST:
-        return true;
-    case TEXTURE_MIN_FILTER_CONFIG_LINEAR:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool texture_wrap_config_is_valid(texture_wrap_config_t config_) {
-    switch(config_) {
-    case TEXTURE_WRAP_CONFIG_REPEAT:
-        return true;
-    case TEXTURE_WRAP_CONFIG_MIRRORED_REPEAT:
-        return true;
-    case TEXTURE_WRAP_CONFIG_CLAMP_TO_EDGE:
-        return true;
-    case TEXTURE_WRAP_CONFIG_CLAMP_TO_BORDER:
-        return true;
-    default:
-        return false;
-    }
 }
