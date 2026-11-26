@@ -12,7 +12,7 @@ extern "C" {
 
 #include "engine/systems/renderer/resources/fonts/font_atlas_asset.h"
 
-const font_atlas_asset_t* font_asset_catalog_find(const char* font_name_, int32_t width_, int32_t height_);
+const font_atlas_asset_t* font_asset_catalog_find(const char* font_name_, int32_t cell_width_, int32_t cell_height_);
 
 #ifdef __cplusplus
 }

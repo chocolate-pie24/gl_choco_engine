@@ -35,11 +35,11 @@ static const font_asset_entry_t s_font_assets[] = {
     { "spleen", 32, 64, spleen_32x64_asset_get },
 };
 
-const font_atlas_asset_t* font_asset_catalog_find(const char* font_name_, int32_t width_, int32_t height_) {
+const font_atlas_asset_t* font_asset_catalog_find(const char* font_name_, int32_t cell_width_, int32_t cell_height_) {
     const font_atlas_asset_t* out_asset = NULL;
 
     for(size_t i = 0; i != MAX_FONT_ASSET_ENTRIES; ++i) {
-        if(s_font_assets[i].width == width_ && s_font_assets[i].height == height_) {
+        if(s_font_assets[i].width == cell_width_ && s_font_assets[i].height == cell_height_) {
             if(choco_string_is_equal(s_font_assets[i].name, font_name_)) {
                 out_asset = s_font_assets[i].asset_get();
             }

@@ -61,3 +61,6 @@ cleanup:
     return ret;
 }
 
+void font_gpu_resource_destroy(texture_gpu_resource_t** gpu_resource_) {
+    texture_gpu_resource_destroy(gpu_resource_);
+}

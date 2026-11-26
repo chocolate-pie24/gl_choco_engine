@@ -10,6 +10,7 @@
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 
 #include "engine/systems/renderer/resources/shaders/core/shader_resource_types.h"
+#include "engine/systems/renderer/resources/fonts/core/font_types.h"
 
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/pipelines/core/resource_pipeline_types.h"
@@ -306,6 +307,31 @@ resource_pipeline_result_t resource_pipeline_result_convert_buffer_manager(buffe
     case BUFFER_MANAGER_OVERFLOW:
         return RESOURCE_PIPELINE_OVERFLOW;
     case BUFFER_MANAGER_UNDEFINED_ERROR:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    default:
+        return RESOURCE_PIPELINE_UNDEFINED_ERROR;
+    }
+}
+
+resource_pipeline_result_t resource_pipeline_result_convert_font(font_result_t result_) {
+    switch(result_) {
+    case FONT_SUCCESS:
+        return RESOURCE_PIPELINE_SUCCESS;
+    case FONT_NO_MEMORY:
+        return RESOURCE_PIPELINE_NO_MEMORY;
+    case FONT_RUNTIME_ERROR:
+        return RESOURCE_PIPELINE_RUNTIME_ERROR;
+    case FONT_INVALID_ARGUMENT:
+        return RESOURCE_PIPELINE_INVALID_ARGUMENT;
+    case FONT_DATA_CORRUPTED:
+        return RESOURCE_PIPELINE_DATA_CORRUPTED;
+    case FONT_BAD_OPERATION:
+        return RESOURCE_PIPELINE_BAD_OPERATION;
+    case FONT_OVERFLOW:
+        return RESOURCE_PIPELINE_OVERFLOW;
+    case FONT_LIMIT_EXCEEDED:
+        return RESOURCE_PIPELINE_LIMIT_EXCEEDED;
+    case FONT_UNDEFINED_ERROR:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;
     default:
         return RESOURCE_PIPELINE_UNDEFINED_ERROR;

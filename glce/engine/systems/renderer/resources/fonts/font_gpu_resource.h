@@ -18,6 +18,8 @@ typedef struct texture_gpu_resource texture_gpu_resource_t;
 
 font_result_t font_gpu_resource_create(const renderer_backend_context_t* backend_context_, int32_t texture_unit_index_, const font_atlas_asset_t* asset_, texture_gpu_resource_t** out_gpu_resource_);
 
+void font_gpu_resource_destroy(texture_gpu_resource_t** gpu_resource_);
+
 #ifdef __cplusplus
 }
 #endif

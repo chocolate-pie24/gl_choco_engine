@@ -11,14 +11,10 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/memory/general_allocator/general_allocator.h"
 #include "engine/memory/subsystem_allocator/subsystem_allocator.h"
 
-#include "engine/containers/choco_string.h"
-
 #include "engine/systems/renderer/resources/textures/texture_gpu_resource.h"
-
-#include "engine/systems/renderer/resources/fonts/font_atlas_asset.h"
+#include "engine/systems/renderer/resources/fonts/font_gpu_resource.h"
 
 #include "engine/systems/renderer/resources/registries/core/resource_registry_types.h"
 #include "engine/systems/renderer/resources/registries/core/resource_registry_err_utils.h"
@@ -27,11 +23,8 @@
 // Private Type Definitions
 // ============================================================
 typedef struct registry_entry {
-    choco_string_t* resource_name;
-
     const font_atlas_asset_t* atlas_asset;
     texture_gpu_resource_t* gpu_resource;
-
     uint16_t reference_count;
 } registry_entry_t;
 
@@ -55,7 +48,7 @@ static bool registry_entry_is_registered(const registry_entry_t* entry_);
 static bool registry_entry_is_valid(const registry_entry_t* entry_);
 
 // Lookup
-static bool find_by_font_name(const font_registry_t* registry_, const char* name_, int32_t cell_width_, int32_t cell_height_, size_t* out_index_);
+static bool find_by_atlas_asset(const font_registry_t* registry_, const font_atlas_asset_t* asset_, size_t* out_index_);
 
 resource_registry_result_t font_registry_create(size_t max_font_count_, subsystem_allocator_t* allocator_, font_registry_t** out_registry_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
@@ -152,7 +145,7 @@ void font_registry_deinitialize(font_registry_t* registry_) {
     registry_->max_font_count = 0;
 }
 
-resource_registry_result_t font_registry_exists(const font_registry_t* registry_, const char* font_name_, int32_t cell_width_, int32_t cell_height_, bool* out_exists_) {
+resource_registry_result_t font_registry_exists(const font_registry_t* registry_, const font_atlas_asset_t* asset_, bool* out_exists_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t tmp_id = 0;
@@ -160,13 +153,8 @@ resource_registry_result_t font_registry_exists(const font_registry_t* registry_
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(font_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_exists_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
-    if('\0' == font_name_[0]) {
-        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("font_registry_exists(%s) - provided font name is not valid.", resource_registry_result_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!font_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
@@ -175,7 +163,7 @@ resource_registry_result_t font_registry_exists(const font_registry_t* registry_
     }
 #endif
 
-    exists = find_by_font_name(registry_, font_name_, cell_width_, cell_height_, &tmp_id);
+    exists = find_by_atlas_asset(registry_, asset_, &tmp_id);
     *out_exists_ = exists;
 
     ret = RESOURCE_REGISTRY_SUCCESS;
@@ -218,20 +206,15 @@ const texture_gpu_resource_t* font_registry_gpu_resource_get(const font_registry
     return registry_->entries[font_id_].gpu_resource;
 }
 
-resource_registry_result_t font_registry_acquire(font_registry_t* registry_, const char* font_name_, int32_t cell_width_, int32_t cell_height_, uint16_t* out_font_id_) {
+resource_registry_result_t font_registry_acquire(font_registry_t* registry_, const font_atlas_asset_t* asset_, uint16_t* out_font_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
 
     size_t tmp_index = 0;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(font_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(out_font_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
-    if('\0' == font_name_[0]) {
-        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("font_registry_acquire(%s) - provided resource name is not valid.", resource_registry_result_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!font_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
@@ -239,9 +222,9 @@ resource_registry_result_t font_registry_acquire(font_registry_t* registry_, con
         goto cleanup;
     }
 #endif
-    if(!find_by_font_name(registry_, font_name_, cell_width_, cell_height_, &tmp_index)) {   // リソースの登録状態確認
+    if(!find_by_atlas_asset(registry_, asset_, &tmp_index)) {   // リソースの登録状態確認
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("font_registry_acquire(%s) - Provided resource name is not registered.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("font_registry_acquire(%s) - Provided font atlas asset is not registered.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
     if(UINT16_MAX < tmp_index) {
@@ -264,27 +247,18 @@ cleanup:
     return ret;
 }
 
-resource_registry_result_t font_registry_register(font_registry_t* registry_, const char* font_name_, const font_atlas_asset_t* atlas_asset_, texture_gpu_resource_t** gpu_resource_, uint16_t* out_font_id_) {
+resource_registry_result_t font_registry_register(font_registry_t* registry_, const font_atlas_asset_t* asset_, texture_gpu_resource_t** gpu_resource_, uint16_t* out_font_id_) {
     resource_registry_result_t ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-
-    choco_string_result_t ret_choco_string = CHOCO_STRING_INVALID_ARGUMENT;
 
     size_t tmp_index = 0;
     bool found_free_slot = false;
-    choco_string_t* tmp_name = NULL;
 
     // Preconditions.
     IF_ARG_NULL_GOTO_CLEANUP(registry_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(font_name_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
-    IF_ARG_NULL_GOTO_CLEANUP(atlas_asset_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
+    IF_ARG_NULL_GOTO_CLEANUP(asset_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(gpu_resource_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
     IF_ARG_NULL_GOTO_CLEANUP(*gpu_resource_, ret, RESOURCE_REGISTRY_BAD_OPERATION);
     IF_ARG_NULL_GOTO_CLEANUP(out_font_id_, ret, RESOURCE_REGISTRY_INVALID_ARGUMENT);
-    if('\0' == font_name_[0]) {
-        ret = RESOURCE_REGISTRY_INVALID_ARGUMENT;
-        ERROR_MESSAGE("font_registry_register(%s) - provided font name is not valid.", resource_registry_result_to_str(ret));
-        goto cleanup;
-    }
 #if defined(DEBUG_BUILD) || defined(TEST_BUILD)
     if(!font_registry_is_valid(registry_)) {
         ret = RESOURCE_REGISTRY_DATA_CORRUPTED;
@@ -297,9 +271,9 @@ resource_registry_result_t font_registry_register(font_registry_t* registry_, co
         ERROR_MESSAGE("font_registry_register(%s) - Provided *gpu_resource_ is not valid.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
-    if(find_by_font_name(registry_, font_name_, atlas_asset_->cell_width, atlas_asset_->cell_height, &tmp_index)) {   // リソースの重複チェック
+    if(find_by_atlas_asset(registry_, asset_, &tmp_index)) {   // リソースの重複チェック
         ret = RESOURCE_REGISTRY_BAD_OPERATION;
-        ERROR_MESSAGE("font_registry_register(%s) - provided resource name is already registered.", resource_registry_result_to_str(ret));
+        ERROR_MESSAGE("font_registry_register(%s) - provided font atlas asset is already registered.", resource_registry_result_to_str(ret));
         goto cleanup;
     }
 
@@ -317,19 +291,10 @@ resource_registry_result_t font_registry_register(font_registry_t* registry_, co
         goto cleanup;
     }
 
-    // リソース名称生成
-    ret_choco_string = choco_string_create_from_c_string(font_name_, &tmp_name);
-    if(CHOCO_STRING_SUCCESS != ret_choco_string) {
-        ret = resource_registry_result_convert_choco_string(ret_choco_string);
-        ERROR_MESSAGE("font_registry_register(%s) - choco_string_create_from_c_string failed.", resource_registry_result_to_str(ret));
-        goto cleanup;
-    }
-
     // Commit.
     // entry登録, 所有権移動commit
-    registry_->entries[tmp_index].atlas_asset = atlas_asset_;
+    registry_->entries[tmp_index].atlas_asset = asset_;
     registry_->entries[tmp_index].gpu_resource = *gpu_resource_;
-    registry_->entries[tmp_index].resource_name = tmp_name;
     registry_->entries[tmp_index].reference_count = 1;
 
     // Postconditions.
@@ -343,18 +308,11 @@ resource_registry_result_t font_registry_register(font_registry_t* registry_, co
 
     // Output.
     *gpu_resource_ = NULL;
-    tmp_name = NULL;
-
     *out_font_id_ = (uint16_t)tmp_index;
 
     ret = RESOURCE_REGISTRY_SUCCESS;
 
 cleanup:
-    if(RESOURCE_REGISTRY_DATA_CORRUPTED != ret) {
-        if(NULL != tmp_name) {
-            choco_string_destroy(&tmp_name);
-        }
-    }
     return ret;
 }
 
@@ -420,8 +378,7 @@ static void registry_entry_deinitialize(registry_entry_t* entry_) {
         return;
     }
     entry_->atlas_asset = NULL;
-    choco_string_destroy(&entry_->resource_name);
-    texture_gpu_resource_destroy(&entry_->gpu_resource);
+    font_gpu_resource_destroy(&entry_->gpu_resource);
     entry_->reference_count = 0;
 }
 
@@ -442,9 +399,6 @@ static bool registry_entry_is_empty(const registry_entry_t* entry_) {
     if(NULL == entry_) {
         return false;
     }
-    if(NULL != entry_->resource_name) {
-        return false;
-    }
     if(NULL != entry_->atlas_asset) {
         return false;
     }
@@ -459,9 +413,6 @@ static bool registry_entry_is_empty(const registry_entry_t* entry_) {
 
 static bool registry_entry_is_registered(const registry_entry_t* entry_) {
     if(NULL == entry_) {
-        return false;
-    }
-    if(NULL == entry_->resource_name) {
         return false;
     }
     if(NULL == entry_->atlas_asset) {
@@ -491,34 +442,24 @@ static bool registry_entry_is_valid(const registry_entry_t* entry_) {
         return false;
     }
 
-    if(!general_allocator_ptr_is_allocated(entry_->resource_name)) {
-        return false;
-    }
-
     // 登録済みentryの検査
-    if(!choco_string_is_valid(entry_->resource_name)) {
-        return false;
-    }
-    if(0 == choco_string_length(entry_->resource_name)) {
-        return false;
-    }
     if(!texture_gpu_resource_is_valid(entry_->gpu_resource)) {
         return false;
     }
     return true;
 }
 
-static bool find_by_font_name(const font_registry_t* registry_, const char* name_, int32_t cell_width_, int32_t cell_height_, size_t* out_index_) {
+static bool find_by_atlas_asset(const font_registry_t* registry_, const font_atlas_asset_t* asset_, size_t* out_index_) {
     size_t tmp_slot = 0;
     bool found = false;
 
-    if(NULL == name_ || NULL == registry_ || NULL == out_index_) {
+    if(NULL == registry_ || NULL == asset_ || NULL == out_index_) {
         return false;
     }
 
     for(size_t i = 0; i != registry_->max_font_count; ++i) {
-        if(registry_entry_is_registered(&registry_->entries[i]) && choco_string_is_equal(choco_string_c_str(registry_->entries[i].resource_name), name_)) {
-            if(registry_->entries[i].atlas_asset->cell_width == cell_width_ && registry_->entries[i].atlas_asset->cell_height == cell_height_) {
+        if(registry_entry_is_registered(&registry_->entries[i])) {
+            if(registry_->entries[i].atlas_asset == asset_) {
                 tmp_slot = i;
                 found = true;
                 break;

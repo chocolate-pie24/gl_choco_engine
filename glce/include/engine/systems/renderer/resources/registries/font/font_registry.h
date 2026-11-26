@@ -24,15 +24,15 @@ resource_registry_result_t font_registry_create(size_t max_font_count_, subsyste
 
 void font_registry_deinitialize(font_registry_t* registry_);
 
-resource_registry_result_t font_registry_exists(const font_registry_t* registry_, const char* font_name_, int32_t cell_width_, int32_t cell_height_, bool* out_exists_);
+resource_registry_result_t font_registry_exists(const font_registry_t* registry_, const font_atlas_asset_t* asset_, bool* out_exists_);
 
 const font_atlas_asset_t* font_registry_atlas_asset_get(const font_registry_t* registry_, uint16_t font_id_);
 
 const texture_gpu_resource_t* font_registry_gpu_resource_get(const font_registry_t* registry_, uint16_t font_id_);
 
-resource_registry_result_t font_registry_acquire(font_registry_t* registry_, const char* font_name_, int32_t cell_width_, int32_t cell_height_, uint16_t* out_font_id_);
+resource_registry_result_t font_registry_acquire(font_registry_t* registry_, const font_atlas_asset_t* asset_, uint16_t* out_font_id_);
 
-resource_registry_result_t font_registry_register(font_registry_t* registry_, const char* font_name_, const font_atlas_asset_t* atlas_asset_, texture_gpu_resource_t** gpu_resource_, uint16_t* out_font_id_);
+resource_registry_result_t font_registry_register(font_registry_t* registry_, const font_atlas_asset_t* asset_, texture_gpu_resource_t** gpu_resource_, uint16_t* out_font_id_);
 
 resource_registry_result_t font_registry_release(font_registry_t* registry_, uint16_t font_id_);
 
