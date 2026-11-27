@@ -49,6 +49,7 @@
 #include "engine/base/choco_macros.h"
 
 #include "engine/memory/gpu_allocators/range_allocator/range_allocator.h"
+#include "engine/memory/gpu_allocators/linear_range_allocator/linear_range_allocator.h"
 #include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
@@ -149,6 +150,29 @@ buffer_manager_result_t buffer_manager_result_convert_general_allocator(general_
     case GENERAL_ALLOCATOR_LIMIT_EXCEEDED:
         return BUFFER_MANAGER_LIMIT_EXCEEDED;
     case GENERAL_ALLOCATOR_UNDEFINED_ERROR:
+        return BUFFER_MANAGER_UNDEFINED_ERROR;
+    default:
+        return BUFFER_MANAGER_UNDEFINED_ERROR;
+    }
+}
+
+buffer_manager_result_t buffer_manager_result_convert_linear_range_allocator(linear_range_allocator_result_t result_) {
+    switch(result_) {
+    case LINEAR_RANGE_ALLOCATOR_SUCCESS:
+        return BUFFER_MANAGER_SUCCESS;
+    case LINEAR_RANGE_ALLOCATOR_INVALID_ARGUMENT:
+        return BUFFER_MANAGER_INVALID_ARGUMENT;
+    case LINEAR_RANGE_ALLOCATOR_LIMIT_EXCEEDED:
+        return BUFFER_MANAGER_LIMIT_EXCEEDED;
+    case LINEAR_RANGE_ALLOCATOR_NO_MEMORY:
+        return BUFFER_MANAGER_NO_MEMORY;
+    case LINEAR_RANGE_ALLOCATOR_DATA_CORRUPTED:
+        return BUFFER_MANAGER_DATA_CORRUPTED;
+    case LINEAR_RANGE_ALLOCATOR_BAD_OPERATION:
+        return BUFFER_MANAGER_BAD_OPERATION;
+    case LINEAR_RANGE_ALLOCATOR_OVERFLOW:
+        return BUFFER_MANAGER_OVERFLOW;
+    case LINEAR_RANGE_ALLOCATOR_UNDEFINED_ERROR:
         return BUFFER_MANAGER_UNDEFINED_ERROR;
     default:
         return BUFFER_MANAGER_UNDEFINED_ERROR;

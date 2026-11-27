@@ -49,6 +49,7 @@ extern "C" {
 #endif
 
 #include "engine/memory/gpu_allocators/range_allocator/range_allocator.h"
+#include "engine/memory/gpu_allocators/linear_range_allocator/linear_range_allocator.h"
 #include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
@@ -246,6 +247,8 @@ buffer_manager_result_t buffer_manager_result_convert_range_allocator(range_allo
 buffer_manager_result_t buffer_manager_result_convert_renderer_backend(renderer_backend_result_t result_);
 
 buffer_manager_result_t buffer_manager_result_convert_general_allocator(general_allocator_result_t result_);
+
+buffer_manager_result_t buffer_manager_result_convert_linear_range_allocator(linear_range_allocator_result_t result_);
 
 #ifdef __cplusplus
 }
