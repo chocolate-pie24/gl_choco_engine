@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/camera/core/camera_types.h"
 #include "engine/light/core/light_types.h"

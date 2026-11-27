@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/core/geometry_primitive/aabb_3d.h"
 

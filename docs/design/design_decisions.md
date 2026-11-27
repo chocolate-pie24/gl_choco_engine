@@ -8451,7 +8451,8 @@ Font Catalogを自動生成する案では、ファイル名からFamily / Size�
 
 ## Decision: UI Text Meshを独立Vertical Sliceとし、Font GPU Textureを専用管理する
 
-**Status:** Accepted（独立Vertical Slice方針を維持。Font Registry実装済み。Text描画経路は未実装）  
+**Status:** Accepted（独立Vertical Slice方針を維持。Font Registry / PipelineおよびText専用Shader / VAOの基本実装済み。Text Geometry / Draw経路の統合・Runtime Verificationは未完了）  
+**Update (2026-11-27 / F3):** `ui_text_mesh_shader`およびText専用VAOの基本実装が完了した。通常UIとのProgram / VAOの独立性に加え、Vertex型も独立させ、`ui_text_vertex_t`を採用した。ShaderはProgramとVAOを所有し、VBOおよびFont GPU Textureは所有しない。以下の旧UpdateにおけるText Shader未実装の記述は当時の履歴とする。2026-11-27「UI Text専用Vertex型を使用し、Texture座標を非正規化16bit整数で保持する」および「Font BitmapはGlyph Maskとして扱い、文字色をUniformで指定する」を参照する。Text Geometry、Dynamic VBO、Render Resource / Frontend統合、上位Ownerの具体化およびGPU Runtime Verificationは引き続き後続Workで扱う。  
 **Update (2026-11-27):** `font_pipeline`の実装が完了した。RegistryはAsset Pointer Identityに基づいてGPU Resourceを共有する。独立Text Sliceの方針は維持するが、Text Shader / Geometry / Renderer Frontend統合と上位Ownerの具体的な構成は未実装である。下記の2026-11-26 UpdateにおけるPipeline未実装の記述は当時の履歴とする。2026-11-27「Font Asset Identityの解決とRuntime Resource管理を分離する」を参照する。  
 **Update (2026-11-26):** 仮称`font_texture_cache`による独自管理案を、既存Resource Registryと同じReference Count方式の`font_registry`へ具体化した。静的CPU AssetはBorrow、GPU ResourceはRegistryが所有し、最後のReleaseで破棄する。通常Texture Registryとは独立した管理を維持する。以下のCache案・Entry管理未確定という記述は当時の履歴とし、2026-11-26「Font GPU Resourceの管理には既存Registry Architectureを適用する」を参照する。Text Sliceへの統合と`font_pipeline`は未実装。  
 **Date:** 2026-11-25  
@@ -8518,7 +8519,8 @@ Font Catalogを自動生成する案では、ファイル名からFamily / Size�
 
 ## Decision: Font GPU AtlasをRGBAへ展開せずPacked Bitmapのまま整数Textureで扱う
 
-**Status:** Accepted（GL33 BackendのR8UI対応とGPU Resource生成経路は実装済み。Shader / Runtime統合は未完了）  
+**Status:** Accepted（GL33 BackendのR8UI対応、GPU Resource生成経路およびText Shaderの基本実装済み。Draw経路の統合・Runtime Verificationは未完了）  
+**Update (2026-11-27 / F3):** Text専用Fragment ShaderによるPacked Byteの取得とMSB-firstのBit Extractionを実装した。Texture座標は左上原点の非正規化Logical Atlas Pixel座標とし、Shader内の正規化・逆変換・Y反転を行わない。文字色はRGBA Uniformで指定し、Mask=0ではAlpha=0、Mask=1ではUniform Alphaを出力する。以下のMask=1を不透明とする記述は当初の想定であり、現行仕様は2026-11-27のText Vertex / 座標表現およびGlyph Mask / Text Colorの2件のDecisionに従う。旧UpdateのShader未実装という記述、本文の文字色・座標方向未確定という記述も当時の履歴である。Packed Upload方式と整数Textureの採用は維持する。Glyph Cell / Atlas境界、Sampler / Texture Unit、Blend / Depth StateおよびGPU Runtime Verificationは未完了である。  
 **Update (2026-11-27):** `font_gpu_resource_destroy()`を追加し、Font GPU Resourceの生成・破棄のAPIを同じModuleへ集約した。既存`texture_gpu_resource_t`の再利用とPacked Upload方式は維持する。RegistryとPipelineの実装も完了したが、ShaderとGPU Runtime Verificationは未完了である。  
 **Update (2026-11-26):** `font_gpu_resource`は既存`texture_gpu_resource_t`を再利用し、Packed Dimensions、R8UI、Nearest Filter、Clamp to Edgeを指定して静的Pixel Dataを直接Uploadする。GPU FormatはCreate時に確定する。GL33 Backend初期化時に`GL_UNPACK_ALIGNMENT = 1`を設定する方針へ整理した。2026-11-26のTexture表現分離およびTexture UploadのDecisionを参照する。GPU実機でのUpload・描画の確認は統合時に行う。  
 **Date:** 2026-11-25  
@@ -8926,7 +8928,8 @@ engine/
 
 ## Decision: Font Asset Identityの解決とRuntime Resource管理を分離する
 
-**Status:** Accepted / Implemented（Font Registry / GPU Resource Lifecycle / Pipeline実装済み。Renderer Frontend統合およびRuntime Verificationは未完了）  
+**Status:** Accepted / Implemented（Font Registry / GPU Resource Lifecycle / Pipeline実装済み。Text Shader / VAOの基本実装済み。Renderer Frontend統合およびRuntime Verificationは未完了）  
+**Update (2026-11-27 / F3):** Text専用Shader / VAOの基本実装が完了した。Asset Pointer Identity、RegistryによるGPU ResourceのOwnership、Pipelineの入力・Lifecycle契約は変更しない。以下のConsequencesにおけるText Shaderを後続Workとする記述は本Decision策定時点の履歴とする。Text Geometry / Draw経路、上位Owner、Backend Context / Texture Unitの具体的運用およびRuntime Verificationは引き続き後続Workで扱う。  
 **Date:** 2026-11-27  
 **Scope:** Font Catalog / Asset Identity / Resource Registry / Resource Pipeline / GPU Resource Lifecycle / Dependency  
 **Updates:** 2026-11-26「Font GPU Resourceの管理には既存Registry Architectureを適用する」
@@ -9046,3 +9049,239 @@ GPU Resourceの実体型は`texture_gpu_resource_t`であるため、この構�
 - `font_text_rendering_spec.md`
 - `glce_font_text_rendering_workplan.md`
 
+---
+
+## Decision: UI Text専用Vertex型を使用し、Texture座標を非正規化16bit整数で保持する
+
+**Status:** Accepted / Implemented（基本実装済み。Sampling境界の契約とRuntime Verificationは未完了）  
+**Date:** 2026-11-27  
+**Scope:** Text Rendering / Vertex Format / Coordinate Representation / Renderer Backend / Memory Efficiency
+
+### Decision
+
+Text Geometryは通常UIの`ui_vertex_t`を共有せず、独立した`ui_text_vertex_t`を使用する。
+
+```c
+typedef struct ui_text_vertex {
+    vec2f_t position;
+    vec2u16_t tex_coord;
+} ui_text_vertex_t;
+```
+
+Texture座標には0.0〜1.0の正規化UVではなく、左上原点、X右方向・Y下方向を正とする非正規化Logical Atlas Pixel座標を使用する。
+
+CPU / VBO上ではTexture座標を16bit符号なし整数型で保持し、Vertex Attribute取得時に正規化せず浮動小数点型へ変換する。Vertex ShaderからFragment Shaderへは浮動小数点型で渡し、Rasterizerによる補間を利用する。Fragment Shaderは補間後の座標を`floor()`と整数型への変換によってLogical Pixel座標へ変換する。
+
+### Context — Vertex型を共有しない理由
+
+当初、通常UIとTextのVertexはともにPositionとTexture Coordinateを保持し、両者とも`vec2f_t`の組合せで表現できるため、既存の`ui_vertex_t`を共有する案を検討した。
+
+しかし、通常UIとTextは独立したVertical Sliceとして設計されており、VertexのMember構成が同じであっても、同じSemanticや将来の変更要求を持つとは限らない。Shader Program / VAOおよびGeometryの更新方式も独立している。
+
+Phong Materialについては、異なるMesh種別で同じPhong反射特性を利用する具体的な必要性があったため、共通型を採用した。一方、通常UIとTextのVertexについては、共通型であることを要求する具体的な利用関係が存在しない。
+
+このため、構造上の類似性だけを理由とした型の共有は行わず、独立した`ui_text_vertex_t`を設ける判断とした。共通化の判断はMember構成の一致だけでなく、Semantic、実際の利用関係、変更要求に基づいて行う。
+
+実際、その後の設計議論でText側のTexture座標を16bit整数型へ変更することになった。この変更を通常UI側へ波及させずに実施できたことは、Vertex型を独立させたことの具体的な効果である。
+
+### Context — 正規化UVを使用しない理由
+
+当初は通常のTexture Samplingと同様に、正規化UVを使用する方式を検討した。しかし、Packed Font AtlasのFragment Shaderでは、最終的にLogical Atlas上の整数Pixel座標が必要となる。
+
+正規化UV方式と今回の採用方式の違いは以下となる（両方式とも最終的なPixel選択には整数化が必要である）。
+
+```text
+正規化UV方式:
+    Logical Atlas座標
+        ↓ Atlas寸法で除算
+    正規化UV
+        ↓ Rasterizerによる補間
+    補間済みUV
+        ↓ Atlas寸法を乗算
+    補間済みLogical Atlas座標
+        ↓ floor() / 整数型変換
+    Logical Pixel座標
+
+採用方式:
+    Logical Atlas座標
+        ↓ Rasterizerによる補間
+    補間済みLogical Atlas座標
+        ↓ floor() / 整数型変換
+    Logical Pixel座標
+```
+
+Text専用Shaderでは通常TextureとのSampling互換性を維持する必要がないため、正規化と逆変換を行う理由がない。このため、Logical Atlas Pixel座標を直接使用する方式を採用した。これにより、座標変換のためだけにAtlas Dimensions Uniformを保持する必要もなくなった。
+
+Logical Pixel座標とGPU Texture上のPhysical Texel座標は同一ではない。1 Texelに水平方向の8 Logical Pixelsを格納する既存Packed表現に従い、`x / 8`で対象Byteを特定し、`7 - (x % 8)`でMSB-firstのBit番号を導出する。各Fragmentは独立してこの処理を行い、Fragment間の実行順序や他FragmentによるShift結果に依存しない。Byte内のMSB-firstという規則はCPUのEndiannessとは別の概念である。具体的なSampling仕様は`font_text_rendering_spec.md`を参照する。
+
+### Context — 整数Storageと浮動小数点補間の分離
+
+CPU側で生成するGlyph Cellの境界は整数座標であり、小数値を保持する必要はない。小数座標が必要になるのは、Rasterizerが各Vertexの座標を補間する段階である。
+
+GLSLではVertex ShaderからFragment Shaderへ整数型の値を渡す場合、`flat`による非補間の受け渡しが必要となる。そのため、整数型のままShader間でTexture座標を渡す方式では、Glyph内部の座標を適切に補間できない。
+
+一方、CPU / VBO上のStorage Formatまで浮動小数点型に固定する必要はない。このため、CPU / VBO上のStorage Formatと、Shader上の演算・補間に使用する型を分離する。
+
+```text
+CPU / VBO
+    uint16 × 2
+        ↓
+Vertex Attribute Conversion
+    GL_UNSIGNED_SHORT / GL_FALSE
+        ↓
+Vertex Shader
+    vec2
+        ↓
+Rasterizer
+    Floating-point Interpolation
+        ↓
+Fragment Shader
+    vec2 → floor() → ivec2
+```
+
+GL33 Backendの`glVertexAttribPointer()`が提供する型変換を利用する。Texture座標のAttributeに`GL_UNSIGNED_SHORT`、Normalizedに`GL_FALSE`を指定することで、整数値を正規化せずfloat型のVertex Shader Inputへ渡せる。このため、Vertex Shaderに整数型Attributeの取得や明示的な型変換を追加する必要がない。
+
+Positionは従来どおりfloat型を維持し、既存UI Shaderと同様のModel / View / Projection Matrixによる変換を使用する。通常UIのVertex FormatやShaderを変更する必要はない。
+
+### Context — 16bit整数型を採用する理由
+
+現在のSpleen Fontの最大Atlas寸法は、32x64 Font、16列×6行の512×384 Logical Pixelsである。8bit符号なし整数型では全Fontの座標を表現できないが、16bit符号なし整数型であればGlyph Cellの境界座標を含めて表現できる。
+
+また、一般的な4 Byte alignmentのABIではVertex DataのMemory Layoutは以下となる。
+
+| Vertex Format | Position | Texture Coordinate | Total |
+|---|---:|---:|---:|
+| float32 Texture座標 | 8 Byte | 8 Byte | 16 Byte |
+| uint16 Texture座標 | 8 Byte | 4 Byte | 12 Byte |
+
+このLayoutでは、同一Vertex数を前提として1 Vertexあたり4 Byte、CPU / VBO StorageおよびVertex Data転送量を25%削減できる。実際のStrideは`sizeof(ui_text_vertex_t)`、Member Offsetは`offsetof()`に従う。この比較はGPU DriverのPhysical Allocationや描画性能の改善を保証するものではない。
+
+16bit整数型の採用は単なるMemory最適化ではなく、CPU側で保持する座標のSemanticにも適合する。座標の格納範囲とShaderにおける演算・補間の精度は別々に決定できる。
+
+### Rationale
+
+- Vertical SliceごとにVertex Formatを独立して変更できる。
+- 構造上の類似性だけを理由とした型の共有を避けられる。
+- Logical Atlas座標から正規化UVへの変換と、その逆変換を除去できる。
+- Storage FormatとShader上の演算型を独立して決定できる。
+- Rasterizerによる補間を維持しながらCPU / GPU間のVertex Dataを小容量化できる。
+- OpenGLが既に提供するAttribute変換機構を利用できる。
+
+### Considered Alternatives
+
+- **`ui_vertex_t`を共有する。** Semanticおよび変更要求を共有する具体的な必要性がなく、Text固有のVertex Format変更が通常UIへ波及するため採用しない。
+- **正規化UVを使用する。** Logical Pixel座標への逆変換と、そのためのAtlas Dimensionsが必要になるため採用しない。
+- **float32による座標Storageを維持する。** CPU側で小数座標を保持する必要がなく、16bit整数によるStorage削減が可能なため採用しない。
+- **uint32による座標Storageを使用する。** float32に対するStorage削減効果がない。
+- **uint8による座標Storageを使用する。** 現行の全Font AtlasのCell境界を表現できない。
+- **整数型のままShader間で受け渡す。** `flat`によってRasterizerの座標補間が行われないため採用しない。
+- **Vertex Shader内で整数型からfloat型へ明示的に変換する。** 実現可能だが、整数型Vertex Attributeの設定とShader側の変換を必要とする。既存のAttribute変換機構で実現できるため採用しない。
+
+### Consequences
+
+- Text Geometryは`ui_text_vertex_t`を使用する。`choco_math`に`vec2i16_t` / `vec2u16_t`と関連APIを追加し、Renderer Backendに16bit符号なし整数のVertex Attribute対応を追加した。
+- GL33 BackendではPositionに`GL_FLOAT`、Texture座標に`GL_UNSIGNED_SHORT`を使用する。Texture座標はNormalized=falseとする。Shader Program / VAOは`ui_text_mesh_shader`が所有し、VBOおよびFont GPU TextureのOwnershipは持たない。
+- Geometry生成時にはTexture座標がCell境界を含めて0〜`UINT16_MAX`の表現範囲内にあることを保証する。具体的な検査位置・Result CodeとGlyph Cell / Atlas境界におけるSampling保証はF4で決定する。現行`texelFetch()`にWrap設定による範囲補正を期待しない。
+- 本DecisionはFont Atlas Asset自身の寸法型を16bitへ変更するものではなく、通常UIのVertex Formatを変更するものでもない。
+- Text専用Shader / VAOおよびVertex Formatの基本実装は完了した。`glce_source_context(20261127-034731).txt`で基本実装を確認し、利用者環境でBuild成功が報告された。その後の最終Review指摘（Position Attribute Typeと各Mesh Shader自身のAllocation Validity検査順序）についても修正完了の報告を受けている。修正後Sourceの再照合・Build再確認、GLSLの実行時Compile / Link、GPU Runtime Verificationは未実施であり、実装完了と統合検証完了は区別する。
+
+### Revisit Conditions
+
+- 現行Vertex Formatの表現範囲を超えるAtlasを使用する場合。
+- Glyph Cellの境界として小数座標が必要になった場合。
+- 別Graphics Backendで同等のAttribute変換を実現できない場合。
+- 実際のProfile結果から別のVertex Formatが必要になった場合。
+- 異なるVertical SliceでVertex型を共有する具体的な要求が生じた場合。
+
+### Related Decisions / Documents
+
+- 2026-11-25「UI Text Meshを独立Vertical Sliceとし、Font GPU Textureを専用管理する」
+- 2026-11-25「Font GPU AtlasをRGBAへ展開せずPacked Bitmapのまま整数Textureで扱う」
+- `font_text_rendering_spec.md`
+- `glce_font_text_rendering_workplan.md`
+
+---
+
+## Decision: Font BitmapはGlyph Maskとして扱い、文字色をUniformで指定する
+
+**Status:** Accepted / Implemented（ShaderおよびColor設定APIの基本実装済み。描画Stateとの統合・Runtime Verificationは未完了）  
+**Date:** 2026-11-27  
+**Scope:** Text Rendering / Glyph Mask / Text Color / Shader Uniform / Resource Sharing
+
+### Decision
+
+Font AtlasにはGlyphの形状を表す1bitのMaskのみを格納し、文字色の情報は保持しない。文字色はShader ProgramのRGBA Uniformである`g_text_color`として指定する。
+
+CPU側では`vec4u8_t`を使用し、既存Renderer Backendの`renderer_backend_shader_vec4u8_uniform_set()`によって各成分を255.0fで除算し、0.0〜1.0の浮動小数点RGBAへ変換する。
+
+Fragment OutputのAlphaは、Text ColorのAlphaとGlyph Maskの積によって決定する。
+
+```glsl
+color = vec4(
+    g_text_color.rgb,
+    g_text_color.a * float(pixel_bit)
+);
+```
+
+Mask=0の場合はAlpha=0、Mask=1の場合はUniformで指定されたAlphaとなる。Mask=1は常に完全不透明であることを意味しない。RGBはMask値にかかわらず`g_text_color.rgb`を使用する。
+
+### Context — Glyph形状と描画時の文字色を分離する
+
+通常のUI描画ではTextureそのものが色情報を持つ。一方、今回のFont Atlasは1bit Bitmapであり、保持しているのはGlyphの形状だけである。
+
+当初の議論では、Textureの色情報とVertexやShaderで指定する色情報との関係を整理した。通常Textureの場合でもVertex ColorやUniformとの合成は可能であり、Textureによって最終的な描画色が固定されるわけではない。しかし、今回のFont Bitmapはそもそも色を保持しないため、Glyph形状と描画時の文字色を独立して扱える。
+
+```text
+Font Asset / Packed GPU Texture
+    Glyph Mask (0 / 1)
+            │
+            ├──→ Text Fragment Shader → Fragment RGBA
+            │
+Text Color Uniform
+    RGBA
+```
+
+文字色をVertex Dataへ保持する方式も検討可能である。この方式であれば同一Draw Call内の文字ごと、あるいはVertexごとに異なる色を指定することができる。一方、初期Text Renderingではそのような色の使い分けを単一Draw Callで行う具体的な要求がない。
+
+そのため、現在必要な単一色の文字描画についてはUniformによる指定を採用する。Font TextureおよびVertex Dataへ色情報を持ち込まず、同一Font Atlasを異なる色で再利用できる構造とする。
+
+この選択はFont ResourceのIdentityにも関係する。描画時の色が異なってもFont Atlasの形状やGPU Textureは変化しないため、文字色をFont RegistryのKeyやResource Identityへ含めない。既存のAsset Pointer IdentityによるResource共有をそのまま維持できる。
+
+### Rationale
+
+- Glyphの形状と描画時の色情報を独立させられる。
+- 文字色ごとにFont AssetやGPU Textureを生成する必要がない。
+- 色をFont RegistryのResource Identityへ含めずに済む。
+- 同一Geometryに対する色の変更だけでVertex Dataを再生成・再Uploadする必要がない。
+- Vertex Formatに色情報を追加せずに済む。
+- 既存Renderer BackendのRGBA Uniform設定機構を再利用できる。
+
+### Considered Alternatives
+
+- **Font Textureへ色情報を格納する。** Glyph形状と描画時の色が結合するため採用しない。
+- **色ごとにFont Textureを生成する。** 同じGlyph形状を重複保持することになるため採用しない。
+- **Per-Vertex Colorを採用する。** 同一Draw内での色の使い分けに有効だが、現時点の要求に対してVertex Dataを増やす必要がない。
+- **Shader内で色を固定する。** 描画時の色変更ができないため採用しない。
+
+### Consequences
+
+- `ui_text_mesh_shader`はText Color UniformのLocationを保持し、`ui_text_mesh_shader_text_color_set()`を提供する。Uniform設定は対象Shader Programが選択済みであることを前提とする。
+- Font Asset、Font RegistryおよびFont GPU Resourceは文字色を管理しない。`ui_text_vertex_t`にもColor Fieldを追加しない。
+- 現行方式では、同一Draw Call中のText Colorは共通となる。異なる色のTextを描画する際のDraw単位、Batching方式、および上位APIでの色の保持・指定方法は後続Workで決定する。
+- Glyph MaskからAlphaを生成することと、Framebuffer上で背景と適切に合成することは別の責務である。Alpha=0のFragmentを出力することだけでDepth Write等の影響がなくなるとはみなさない。Alpha Blending、Depth Test / Write、描画Stateの管理責務、Sampler / Texture Unitの具体契約は本Decisionでは確定しない。
+- ShaderとText Color設定APIの基本実装は完了しているが、実行時のUniform設定、透過合成、Depth Stateとの整合およびGPU Runtime Verificationは後続Workで確認する。
+
+### Revisit Conditions
+
+- 文字単位またはVertex単位の色指定が具体的な要件となった場合。
+- 色の異なるTextを単一Draw CallへBatchingする必要が生じた場合。
+- Color Fontや多色Glyphをサポートする場合。
+- Anti-aliasing等により2値Mask以外のCoverage表現が必要になった場合。
+
+### Related Decisions / Documents
+
+- 2026-11-25「Font GPU AtlasをRGBAへ展開せずPacked Bitmapのまま整数Textureで扱う」
+- 2026-11-27「Font Asset Identityの解決とRuntime Resource管理を分離する」
+- 2026-11-27「UI Text専用Vertex型を使用し、Texture座標を非正規化16bit整数で保持する」
+- `font_text_rendering_spec.md`
+- `glce_font_text_rendering_workplan.md`

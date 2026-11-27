@@ -10,7 +10,7 @@
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/camera/core/camera_types.h"
 #include "engine/camera/core/camera_err_utils.h"

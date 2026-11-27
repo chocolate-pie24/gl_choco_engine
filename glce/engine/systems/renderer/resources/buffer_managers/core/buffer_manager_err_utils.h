@@ -48,8 +48,8 @@
 extern "C" {
 #endif
 
-#include "engine/memory/low_level_allocators/range_allocator/range_allocator.h"
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/gpu_allocators/range_allocator/range_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 

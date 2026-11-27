@@ -5,7 +5,7 @@
 
 #include "engine/base/choco_macros.h"
 
-#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+#include "engine/memory/cpu_allocators/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/renderer/renderer_backend/core/renderer_backend_types.h"
 

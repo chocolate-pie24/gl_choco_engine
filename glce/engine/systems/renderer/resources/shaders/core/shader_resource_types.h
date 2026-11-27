@@ -10,7 +10,7 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "engine/memory/low_level_allocators/range_allocator/range_allocator.h"
+#include "engine/memory/gpu_allocators/range_allocator/range_allocator.h"
 
 #include "engine/systems/renderer/core/renderer_types.h"
 

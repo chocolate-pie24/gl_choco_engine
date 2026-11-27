@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 chocolate-pie24
 
-#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+#include "engine/memory/cpu_allocators/subsystem_allocator/subsystem_allocator.h"
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -13,7 +13,7 @@
 #include "engine/base/choco_message.h"
 
 #include "engine/memory/low_level_allocators/linear_allocator/linear_allocator.h"
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 /*
  * Module Internal Contract

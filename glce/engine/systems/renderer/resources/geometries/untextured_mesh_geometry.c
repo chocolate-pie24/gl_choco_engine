@@ -23,7 +23,7 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/core/geometry_primitive/vertex.h"
 

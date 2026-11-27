@@ -12,7 +12,7 @@
 
 #include "engine/core/geometry_primitive/vertex.h"
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/resources/geometries/core/geometry_types.h"
 #include "engine/systems/renderer/resources/geometries/core/geometry_err_utils.h"

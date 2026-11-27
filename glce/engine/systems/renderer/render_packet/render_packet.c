@@ -11,8 +11,8 @@
 #include "engine/base/choco_math/math_types.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/memory/frame_allocator/frame_allocator.h"
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/frame_allocator/frame_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/render_packet/core/render_packet_types.h"
 #include "engine/systems/renderer/render_packet/core/render_packet_err_utils.h"

@@ -14,7 +14,7 @@
 #include "engine/base/memory_utility.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 /*
  * Module Internal Contract

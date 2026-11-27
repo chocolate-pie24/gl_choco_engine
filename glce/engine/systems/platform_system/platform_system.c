@@ -8,7 +8,7 @@
 #include "engine/base/choco_macros.h"
 #include "engine/base/choco_message.h"
 
-#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+#include "engine/memory/cpu_allocators/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 #include "engine/systems/platform_system/core/platform_system_err_utils.h"

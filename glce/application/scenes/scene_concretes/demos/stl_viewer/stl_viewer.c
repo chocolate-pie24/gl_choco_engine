@@ -27,7 +27,7 @@
 
 #include "engine/systems/platform_system/core/platform_system_types.h"
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/resources/geometries/line_mesh_geometry.h"
 #include "engine/systems/renderer/resources/geometries/generators/line_grid_geometry.h"

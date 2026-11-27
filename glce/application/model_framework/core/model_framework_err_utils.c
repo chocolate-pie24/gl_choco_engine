@@ -5,7 +5,7 @@
 
 #include "engine/base/choco_macros.h"
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/containers/choco_string.h"
 #include "engine/containers/ring_queue.h"

@@ -11,7 +11,7 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/memory/subsystem_allocator/subsystem_allocator.h"
+#include "engine/memory/cpu_allocators/subsystem_allocator/subsystem_allocator.h"
 
 #include "engine/systems/renderer/resources/textures/texture_gpu_resource.h"
 #include "engine/systems/renderer/resources/fonts/font_gpu_resource.h"

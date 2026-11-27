@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-#include "engine/memory/frame_allocator/frame_allocator.h"
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/frame_allocator/frame_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 #include "engine/systems/renderer/render_packet/core/render_packet_types.h"
 

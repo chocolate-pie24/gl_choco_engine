@@ -10,7 +10,7 @@ extern "C" {
 
 #include "engine/camera/core/camera_types.h"
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 const char* camera_result_to_str(camera_result_t result_);
 

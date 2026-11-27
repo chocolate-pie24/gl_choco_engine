@@ -5,7 +5,7 @@
 
 #include "engine/base/choco_macros.h"
 
-#include "engine/memory/frame_allocator/frame_allocator.h"
+#include "engine/memory/cpu_allocators/frame_allocator/frame_allocator.h"
 
 #include "engine/systems/renderer/render_packet/core/render_packet_types.h"
 

@@ -186,7 +186,7 @@
  * プロジェクト作成者が実装との整合性を確認・修正した。
  * 実装コードはプロジェクト作成者が作成し、その内容に責任を負う。
  */
-#include "engine/memory/low_level_allocators/range_allocator/range_allocator.h"
+#include "engine/memory/gpu_allocators/range_allocator/range_allocator.h"
 
 #include <stdio.h>  // for fprintf
 #include <stddef.h>
@@ -199,7 +199,7 @@
 #include "engine/base/choco_message.h"
 #include "engine/base/choco_math/choco_math.h"
 
-#include "engine/memory/general_allocator/general_allocator.h"
+#include "engine/memory/cpu_allocators/general_allocator/general_allocator.h"
 
 /**
  * @brief nodeの利用状態、range用途、およびlist接続状態を表す
