@@ -23,7 +23,7 @@ GLCEではAIを、単なる文章生成手段ではなく、設計議論、設�
 
 このドキュメントに記載されている方針は、一般的なソフトウェア開発に対する普遍的なベストプラクティスを主張するものではありません。GLCEの目的、制約、設計思想に基づいて採用されているプロジェクト固有の方針です。
 
-最終更新: 2026-11-25
+最終更新: 2026-11-27
 
 この文書は、GLCEで確定した重要な設計判断と、その判断理由・却下案・見直し条件を記録する。
 
@@ -2440,7 +2440,8 @@ GLCEではMemory基盤がallocation、ownership、backing range、allocator-spec
 
 ## Decision: Texture resource validation responsibilityをBMP Loader / Resource Core / Texture CPU Resourceへ分離する
 
-**Status:** Accepted  
+**Status:** Partially Superseded（External Trust BoundaryとOwnershipの分離は維持。共通Texture Metadata型は廃止）  
+**Update (2026-11-26):** BMP LoaderによるExternal Formatの検証・NormalizationとCPU ResourceによるStorage Ownershipの分離は維持する。ただし旧Resource Coreは2026-10-15に廃止され、今回さらに`texture_resource_info_t`を廃止した。CPU側は`texture_cpu_pixel_layout_t`、GPU側は`texture_gpu_config_t`で表現する。以下の旧型・配置・Validator名は当時の設計履歴である。2026-11-26「TextureのCPU側Pixel RepresentationとGPU側Storage Formatを分離する」を参照する。  
 **Date:** 2026-10-02  
 **Scope:** Texture / Resource / Validation / Trust Boundary
 
@@ -3214,6 +3215,8 @@ false positive側
 
 #### `texture_resource_info_t` / Texture CPU Resource
 
+2026-11-26注記: 以下は当時のSource Auditの記録である。旧`texture_resource_info_t`は廃止済みであり、現行Texture表現は2026-11-26のTexture表現分離Decisionを参照する。ここで説明するcaller-controlled inputと内部stateの区別は維持する。
+
 `texture_cpu_resource_create()`では、callerから渡された`texture_resource_info_t`がinvalidなら`RESOURCE_INVALID_ARGUMENT`とする。
 
 ```text
@@ -3970,7 +3973,8 @@ Material Configurationの`ambient`省略時のデフォルト`diffuse * 0.1f`、
 
 ## Decision: Renderer専用ResourceをRenderer Domainへ統合し、Range AllocatorをMemory Domainへ移動する
 
-**Status:** Accepted / Implementation Pending  
+**Status:** Partially Superseded（Directory統合は実装済み。Resource Domainの将来の配置方針を変更。Range Allocatorの移動は維持）  
+**Update (2026-11-26):** 当時のDirectory統合は実装済みであり、現行SourceもRenderer配下のResource Domainを維持している。一方、Resource DomainをSystemsから独立させる方向を決定した。実際の移動はText Rendering完了後とし、GPU依存Moduleを含む最終配置・Ownershipは別途設計する。2026-11-26「Resource DomainをSystemsから独立させる」を参照する。  
 **Date:** 2026-10-15  
 **Scope:** Renderer / Resource Domain / Directory Architecture / Memory Range Allocation
 
@@ -4171,7 +4175,8 @@ Shader別Meshを導入する際、既存`untextured_mesh_render_resource_draw()`
 
 ## Decision: Renderer Resource Directory Consolidationの実装完了とResource Core廃止に伴うResult Domain再編
 
-**Status:** Accepted / Implemented（Source配置・Result型の再編）  
+**Status:** Partially Superseded（Directory統合・Result Domain再編の実装履歴。Texture型の配置と将来のResource Domain配置を更新）  
+**Update (2026-11-26):** 項目9のTexture Filter / Wrap設定型とValidatorは`renderer_backend/core/renderer_backend_texture_types.h/.c`へ移し、GPU Formatとともに`texture_gpu_config_t`として整理した。CPU側は`texture_cpu_pixel_layout_t`を`resources/textures/core/texture_cpu_resource_types.h/.c`へ置く。旧`texture_resource_info_t`は廃止した。Resource DomainのSystemsからの独立化はText Rendering完了後に行う。2026-11-26のTexture表現分離およびResource Domain独立のDecisionを参照する。旧Resource Core廃止とResult Domain分離は維持する。  
 **Date:** 2026-10-15  
 **Scope:** Renderer Resource / Directory Architecture / Geometry・Loader・Texture Result / Migration History
 
@@ -4323,7 +4328,8 @@ renderer_backend/     resources/textures/
 
 ## Decision: Texture Resource MetadataのSemantic OwnerをTexture Domainとし、Loaderからの直接利用を当面維持する
 
-**Status:** Accepted / Implemented（現在のTexture Metadata／BMP Loaderの責務分担）  
+**Status:** Partially Superseded（旧Metadata表現を更新。BMP LoaderのExternal Trust BoundaryとCPU LayoutのSemantic Ownerは維持）  
+**Update (2026-11-26):** `texture_resource_info_t`とそのValidatorは廃止し、CPU側のPixel Layoutを`texture_cpu_pixel_layout_t`で表す。BMP Loaderはこの型を直接利用し、GPU Formatを決定しない。GPU Texture設定はRenderer Backend側が所有し、CPU表現からGPU表現への対応付けはPipeline等が担当する。以下の旧Metadata型に関する記述は当時の履歴とする。2026-11-26「TextureのCPU側Pixel RepresentationとGPU側Storage Formatを分離する」を参照する。  
 **Date:** 2026-10-15  
 **Scope:** Texture Metadata / Loader / External Trust Boundary / Dependency / Validation Ownership
 
@@ -8293,6 +8299,7 @@ Material ValueはCPU側の反射係数を保持する。描画時に各Shaderが
 ## Decision: Renderer Resource Ownershipの再構成は描画Resource群の実装後に再評価する
 
 **Status:** Accepted（再構成の保留を決定。共有Registry構成そのものは未確定）  
+**Update (2026-11-26):** Resource DomainをSystemsから独立させる方向は決定した。実装はText Rendering完了後とする。ただしDirectory配置とRegistryインスタンスの共有・長寿命Ownerの再構成は別判断であり、後者の具体構造は引き続き未確定。2026-11-26「Resource DomainをSystemsから独立させる」を参照する。  
 **Date:** 2026-11-24  
 **Scope:** Renderer Frontend / Mesh Vertical Slice / Geometry / Phong Material / Texture / Registry Ownership / Deferred Architecture
 
@@ -8366,7 +8373,9 @@ MaterialとTextureは次の点でGeometryと異なる。
 
 ## Decision: 固定幅Bitmap FontをOfflineでC Asset化し、静的Catalogから参照する
 
-**Status:** Accepted（一部実装済み。GPU処理は未実装）  
+**Status:** Accepted（CPU側Asset / Catalog実装済み）  
+**Update (2026-11-27):** CatalogはName / Cell Dimensionsから静的Assetを解決する役割を維持する。RegistryとPipelineは解決済みAsset Pointerを受け取るため、CatalogはRuntime Resource管理に直接依存せず、PipelineもCatalogを参照しない。2026-11-27「Font Asset Identityの解決とRuntime Resource管理を分離する」を参照する。  
+**Update (2026-11-26):** Font Atlas AssetとCatalogのCPU側機能は実装済み。Atlas / CellのPixel寸法および`advance_x` / `line_height`は`int32_t`とし、列数・文字コード範囲は`uint32_t`を維持する。CatalogのCell Dimensionsも`int32_t`へ統一した。論理Atlas寸法からPacked Dimensionsを導出するAPIを追加した。Generatorの入出力契約は`tools/bdf_font_atlas_generator/README.md`に記載する。GPU Resource生成とRegistryも別Moduleとして実装済みだが、描画経路の統合は未完了。  
 **Date:** 2026-11-25  
 **Scope:** Font / Asset Compilation / Embedded / Runtime Dependency / Static Resource Identity  
 **Updates:** 2026-11-24「Renderer Resource Ownershipの再構成は描画Resource群の実装後に再評価する」におけるText Renderingの未確定部分
@@ -8434,7 +8443,7 @@ Font Catalogを自動生成する案では、ファイル名からFamily / Size�
 
 - `font_text_rendering_spec.md`
 - `glce_font_text_rendering_workplan.md`
-- `glce/engine/systems/renderer/resources/fonts/font_atlas_asset.h`
+- `glce/include/engine/systems/renderer/resources/fonts/font_atlas_asset.h`
 - `glce/engine/systems/renderer/resources/fonts/font_catalog.h`
 - `tools/bdf_font_atlas_generator/generate.py`
 
@@ -8442,7 +8451,9 @@ Font Catalogを自動生成する案では、ファイル名からFamily / Size�
 
 ## Decision: UI Text Meshを独立Vertical Sliceとし、Font GPU Textureを専用管理する
 
-**Status:** Accepted（Architecture方針。`ui_text_mesh` / Shader / Render Resourceの具体API・内部構造は未実装）  
+**Status:** Accepted（独立Vertical Slice方針を維持。Font Registry実装済み。Text描画経路は未実装）  
+**Update (2026-11-27):** `font_pipeline`の実装が完了した。RegistryはAsset Pointer Identityに基づいてGPU Resourceを共有する。独立Text Sliceの方針は維持するが、Text Shader / Geometry / Renderer Frontend統合と上位Ownerの具体的な構成は未実装である。下記の2026-11-26 UpdateにおけるPipeline未実装の記述は当時の履歴とする。2026-11-27「Font Asset Identityの解決とRuntime Resource管理を分離する」を参照する。  
+**Update (2026-11-26):** 仮称`font_texture_cache`による独自管理案を、既存Resource Registryと同じReference Count方式の`font_registry`へ具体化した。静的CPU AssetはBorrow、GPU ResourceはRegistryが所有し、最後のReleaseで破棄する。通常Texture Registryとは独立した管理を維持する。以下のCache案・Entry管理未確定という記述は当時の履歴とし、2026-11-26「Font GPU Resourceの管理には既存Registry Architectureを適用する」を参照する。Text Sliceへの統合と`font_pipeline`は未実装。  
 **Date:** 2026-11-25  
 **Scope:** Renderer Frontend / UI Text Mesh / Shader / Render Resource / Font GPU Texture Ownership
 
@@ -8507,7 +8518,9 @@ Font Catalogを自動生成する案では、ファイル名からFamily / Size�
 
 ## Decision: Font GPU AtlasをRGBAへ展開せずPacked Bitmapのまま整数Textureで扱う
 
-**Status:** Accepted（GPU表現方針。GL33 Backend / UI Text Shaderは未実装）  
+**Status:** Accepted（GL33 BackendのR8UI対応とGPU Resource生成経路は実装済み。Shader / Runtime統合は未完了）  
+**Update (2026-11-27):** `font_gpu_resource_destroy()`を追加し、Font GPU Resourceの生成・破棄のAPIを同じModuleへ集約した。既存`texture_gpu_resource_t`の再利用とPacked Upload方式は維持する。RegistryとPipelineの実装も完了したが、ShaderとGPU Runtime Verificationは未完了である。  
+**Update (2026-11-26):** `font_gpu_resource`は既存`texture_gpu_resource_t`を再利用し、Packed Dimensions、R8UI、Nearest Filter、Clamp to Edgeを指定して静的Pixel Dataを直接Uploadする。GPU FormatはCreate時に確定する。GL33 Backend初期化時に`GL_UNPACK_ALIGNMENT = 1`を設定する方針へ整理した。2026-11-26のTexture表現分離およびTexture UploadのDecisionを参照する。GPU実機でのUpload・描画の確認は統合時に行う。  
 **Date:** 2026-11-25  
 **Scope:** Text Rendering / Font Texture / GPU Memory / Shader Sampling / OpenGL 3.3
 
@@ -8533,7 +8546,7 @@ BDF Converterが出力した1bit/pixelのAtlasを、GPU Upload時にもRGBA8 / R
 
 しかし、その後に`ui_text_mesh`、`ui_text_mesh_shader`、`ui_text_mesh_render_resource`を独立させる設計へ変更した。通常UI ShaderのRGBA Sampling互換性を維持する必要がなくなったため、Packed BitmapをそのままGPUへUploadする方針を改めて採用した。
 
-例えば32x64セル、16列×6行のAtlasでは、論理2048×384 Pixelに対し、Packed Dataは24KiB、RGBA8では768KiBとなる（Texture内部の実物理Allocation量はBackend / Driver依存）。Packed方式ならGPU容量だけでなくUpload時のRGBA一時RAMも不要になる。
+例えば32x64セル、16列×6行のAtlasでは、論理512×384 Pixel（Packed Textureは64×384 Texel）に対し、Packed Dataは24KiB、RGBA8では768KiBとなる（Texture内部の実物理Allocation量はBackend / Driver依存）。Packed方式ならGPU容量だけでなくUpload時のRGBA一時RAMも不要になる。
 
 ### Rationale
 
@@ -8568,3 +8581,468 @@ BDF Converterが出力した1bit/pixelのAtlasを、GPU Upload時にもRGBA8 / R
 
 - `font_text_rendering_spec.md`
 - `glce_font_text_rendering_workplan.md`
+
+---
+
+## Decision: TextureのCPU側Pixel RepresentationとGPU側Storage Formatを分離する
+
+**Status:** Accepted / Implemented（Resource表現・Backend Texture操作の再編。GPU実機検証は別途実施）  
+**Date:** 2026-11-26  
+**Scope:** Texture / CPU Pixel Layout / GPU Storage Format / Semantic Ownership / Renderer Backend Boundary
+
+### Decision
+
+CPU側のPixel Dataの表現と、GPU側のTexture Storage / Samplingに関する設定を異なるSemanticとして扱う。CPU / GPU双方で共通のMetadata型を要求せず、従来の`texture_resource_info_t`を廃止する。
+
+CPU側では`texture_cpu_pixel_layout_t`が`width`、`height`、`channel_count`を保持する。現在の通常Texture CPU Resourceでは、各Channelを8bitとし、Pixel DataはChannelをInterleaveしたTightly PackedなByte列として扱う。Width / Heightは`int32_t`、Channel Countは`uint8_t`とする。現在のCPU Layoutが許容するChannel Countは1 / 3 / 4であり、BMP Loaderの対応範囲は3 / 4である。Pixel Data SizeはLayoutからchecked multiplicationによって導出し、独立したMetadata Fieldとして重複保持しない。
+
+GPU側では`texture_gpu_config_t`がGPU Storage Format、Min / Mag Filter、S / T方向のWrap設定を保持する。Texture Unit IndexはConfigに含めず、Resource生成時に別途指定する。GPU FormatはCreate時に確定し、以降のUploadでは改めて指定しない。現在のFormatは`TEXTURE_FORMAT_RGB8`、`TEXTURE_FORMAT_RGBA8`、`TEXTURE_FORMAT_R8UI`とする。R8UIでは現行のMin / Mag Filterの選択範囲において両方をNearestとする契約をGPU Config Validatorで定義する。
+
+CPU側とGPU側の対応付けは、CPU Resourceの表現そのものではなく、それをGPU Resourceへ接続するOperationの責務とする。
+
+```text
+BMP Loader / Solid Color Generator          Static Font Atlas Asset
+                ↓                                       ↓
+texture_cpu_resource                         font_gpu_resource
+                ↓                             R8UI / Packed Dimensions
+texture_pipeline                                       │
+RGB8 / RGBA8の選択                                     │
+                └─────────────┬─────────────────────────┘
+                              ↓
+                     texture_gpu_resource
+                              ↓
+                       Renderer Backend
+```
+
+通常TextureのPipelineはCPU Layoutを基にGPU Formatを決定する。Font Atlasは通常TextureのCPU Pixel Layoutへ変換せず、`font_gpu_resource`が論理Atlas寸法から導出したPacked Dimensionsと静的Pixel Dataを直接GPU Resource生成へ渡す。いずれの経路も既存の`texture_gpu_resource_t`を使用する。
+
+### Context
+
+Text Renderingの導入により、RGB / RGBAの通常Textureとは異なるR8UI整数Textureを扱う必要が生じた。Font Atlasは1bit/pixelのBitmapをByte単位にPackした静的Assetであるため、CPU上の論理Pixelの寸法とGPU上のTexelの寸法は一致しない。
+
+従来のようにCPU / GPUでTexture Metadataを共通化すると、CPU側のChannel CountにGPU Storage FormatやSamplingの意味まで持たせることになり、同じ1 Channelでも正規化値と符号なし整数値の違いを表現しにくい。また、通常Texture CPU ResourceをFontにも要求すると、静的Pixel Dataのために不要なCPU Resource ObjectやOwnership管理を導入することになる。
+
+当初はGPU FormatごとにUpload APIを分ける方法も検討した。しかしTexture Create時にFilter設定を行う以上、FormatがUpload時まで確定しない構造では、整数TextureとFilterの組み合わせをCreate時に判断できない。そのためFormatをGPU Configへ含めてCreate時に確定し、Upload処理は保持済みFormatに従う単一APIとした。
+
+### Semantic OwnershipとModule配置
+
+| 対象 | Semantic / Resource Owner |
+|---|---|
+| CPU Pixel Layout、Data Sizeの導出とLayout Validity | `resources/textures/core/texture_cpu_resource_types.h/.c` |
+| GPU Format、Filter、Wrapおよび組み合わせのValidity | `renderer_backend/core/renderer_backend_texture_types.h/.c` |
+| CPU Pixel StorageのOwnership | `texture_cpu_resource` |
+| Backend Texture HandleのOwnership | `texture_gpu_resource` |
+| CPU表現からGPU表現への対応付け | `texture_pipeline`、`font_gpu_resource`等の具体的な生成経路 |
+| Font Atlasの論理表現とPacked Dimensions | `font_atlas_asset` |
+
+型を同じTexture関連という理由だけで集約せず、各Semanticを定義・利用する責務に従って配置する。GPU Texture設定はBackend側の契約として扱い、OpenGL固有のEnumへの変換はConcrete Backend内部に閉じる。
+
+`renderer_types.h`の残りの型についても整理を検討したが、ファイルの廃止自体を目的としない。Applicationが使用するRenderer-levelの型をBackend Coreへ移し、ApplicationからBackendへの新たな依存を発生させる構成は採用しない。現行の共通Renderer型の配置とHeader公開範囲については、Renderer全体の責務整理と合わせて再評価する。
+
+### Rationale
+
+- CPU側のPixel表現を特定GPU Storage Formatへ固定せずに済む。
+- GPU FormatとSampling設定の整合性をCreate時に確認できる。
+- CPU ResourceとGPU Resourceで同じMetadataを重複保持する必要がなくなる。
+- 静的Asset等、通常Texture CPU Resourceを必要としない生成経路でもGPU Resourceを再利用できる。
+- CPU側のChannel CountとGPU上のTexel Formatの意味を区別できる。
+- 新しいCPU表現が必要になった場合、具体的なImport / Resource生成経路で対応できる。
+
+### Considered Alternatives
+
+- **CPU / GPU共通のTexture Metadataを維持する。** CPU StorageとGPU StorageのSemanticが異なり、FontのPacked表現を自然に扱えないため採用しない。
+- **Upload時にGPU Formatを指定する、またはFormat別のUpload APIを設ける。** FormatとCreate時のFilter設定との関係を別Operationに分散させるため採用しない。
+- **CPU側にもGPU Formatと同等の汎用Pixel Format体系を導入する。** 現行の通常CPU Pixel Layoutで必要な機能を表現でき、Fontには独立した静的表現があるため先行導入しない。
+- **すべてのGPU Textureを通常Texture CPU Resourceから生成する。** 静的Font Asset等に不要なCPU Resource生成・Storage管理を要求するため採用しない。
+
+### Consequences
+
+- BMP LoaderはExternal Trust Boundaryとしての責務を維持し、GPU Formatの選択を行わない。
+- 通常Texture RegistryのCPU / GPU Resource Ownership Commitは維持する。CPU側のMetadata変更はこのOwnershipを変更するものではない。
+- GPU ResourceはUpload後のCPU Pixel Storageを所有しない。Font生成時も静的Pixel Dataを一時Borrowする。
+- GPU Format固有のConfig検証はBackend Texture Typesへ集約する。実DeviceのCapability / Size LimitやGPU Error Handlingの具体方針は独立Workで設計する。
+
+### Revisit Conditions
+
+- 現行の8bit Interleaved CPU Layoutでは表現できないImage / Pixel Sourceを通常Textureとして共有する具体的需要が生じた場合。
+- Mipmap、HDR、Depth Texture、圧縮Texture等によってGPU FormatとConfigの関係を拡張する必要が生じた場合。
+- CPUとGPUのResource Domainを再配置し、現在のPipeline / Backend境界を再設計する場合。
+
+### Related Decisions / Documents
+
+- 2026-08-30「Texture RegistryをCPU / GPU Texture Resourceのownership commit boundaryとする」
+- 2026-10-02「Texture resource validation responsibilityをBMP Loader / Resource Core / Texture CPU Resourceへ分離する」
+- 2026-10-15「Texture Resource MetadataのSemantic OwnerをTexture Domainとし、Loaderからの直接利用を当面維持する」
+- 2026-11-25「Font GPU AtlasをRGBAへ展開せずPacked Bitmapのまま整数Textureで扱う」
+- `font_text_rendering_spec.md`
+
+---
+
+## Decision: GL33 BackendのTexture UploadはTightly Packed Pixel Dataを前提とする
+
+**Status:** Accepted / Implemented（Backend初期化とUpload経路。実GPUでの確認は別途実施）  
+**Date:** 2026-11-26  
+**Scope:** Renderer Backend / OpenGL 3.3 / Texture Upload / Pixel Store / State Ownership
+
+### Decision
+
+GL33 BackendのTexture Uploadへ渡すPixel Dataは、指定されたGPU Formatと物理Texture寸法に対応するTightly PackedなByte列とする。Row Alignmentのためだけの追加Paddingは要求しない。Packed Font Atlasの最終Byte内の未使用BitはFont Asset表現の一部であり、OpenGLのRow Alignment用Paddingとは区別する。
+
+`gl33_backend_initialize()`で`glPixelStorei(GL_UNPACK_ALIGNMENT, 1)`を実行する。各Texture UploadはこのBackend初期化済みStateを前提とし、個々のUploadでUnpack Alignmentを変更・復元しない。GLCEが管理するContextでこのStateを維持することを前提とする。
+
+Backendは低レベルなTexture操作を提供する。Upload APIは対象TextureがCallerによって事前にBindされていることを要求し、内部でBind / Unbindを行わない。Create、Bind、Upload、UnbindというResource生成手順とFailure時の処理は`texture_gpu_resource`が構成する。
+
+### Context
+
+Packed Font Atlasの導入時、`mock_glPixelStorei()`をUpload経路に追加せずに済むよう、1行あたりのByte数を4の倍数に制限する案を検討した。
+
+しかし、例えばSpleen 5x8の95文字を16列×6行へ配置したAtlasは、論理寸法80×48 Pixel、Packed寸法10×48 Texel（480 Byte）となる。R8UIでは1 Texelが1 Byteであるため1行は10 Byteであり、4の倍数ではない。4 Byte Alignmentを要求すれば、Atlasの配置規則を制限するか、表現上不要なRow Paddingを追加する必要がある。通常RGB8 Textureでも、Widthによっては同じ問題が生じる。
+
+GLCEがBackend初期化とTexture Uploadを管理する現在の構造では、Unpack Alignmentを初期化時に一度だけ1へ設定することで、余分なData加工やUploadごとのState変更を避けられると判断した。
+
+また、Upload APIの内部で自動的にTextureをBindする案も検討した。しかしBackendは個々の低レベルOperationのMechanismを提供し、複数Operationを組み合わせたResource Lifecycleは上位Resource Moduleが構成する方針であるため、Bindを暗黙に実行する構造は採用しなかった。
+
+### Rationale
+
+- Packed Font AtlasをそのままUploadでき、Alignmentのための再Packingを必要としない。
+- 通常RGB / RGBA Textureも同じTightly Packed契約で扱える。
+- TextureごとのPixel Store Stateの変更・復元を行わずに済む。
+- Backend操作のState前提と、GPU Resource生成のOrchestrationを区別できる。
+
+### Considered Alternatives
+
+- **Row Byte Countを4の倍数に限定する。** Font Atlasや通常RGB Textureの有効な寸法を不必要に制限するため採用しない。
+- **Uploadごとに`GL_UNPACK_ALIGNMENT`を変更し、元に戻す。** GLCE管理下のContextでは固定した契約を利用できるため現段階では採用しない。
+- **Upload API内部でBind / Unbindを行う。** Backendの個別OperationにResource生成手順の一部を暗黙に含めるため採用しない。
+
+### Consequences
+
+- Upload Callerは対象TextureのBindと、Format / 寸法に対応する十分なPixel Storageを保証する。
+- Font AtlasのPacked WidthはRow Byte Countと一致し、Alignment用の追加Storageを必要としない。
+- Backend初期化後のUnpack Alignmentを他のOperationで変更する機能を導入する場合は、本契約との整合を考慮する。
+- このDecisionはGPU APIの成功検出やHardware Capability検査の方針を確定するものではない。それらは独立したGPU Error Handling Workで検討する。
+
+### Revisit Conditions
+
+- 外部Library等が同じGL ContextのPixel Store Stateを変更する要件が生じた場合。
+- Row Strideを持つ外部BufferをCopyなしでUploadする必要が生じた場合。
+- 複数Contextの初期化・共有や別Graphics BackendによってUpload契約の見直しが必要となった場合。
+
+### Related Decisions / Documents
+
+- 2026-11-25「Font GPU AtlasをRGBAへ展開せずPacked Bitmapのまま整数Textureで扱う」
+- 2026-11-26「TextureのCPU側Pixel RepresentationとGPU側Storage Formatを分離する」
+- `font_text_rendering_spec.md`
+
+---
+
+## Decision: Font GPU Resourceの管理には既存Registry Architectureを適用する
+
+**Status:** Partially Superseded（Registry管理方式は維持。Identity / Name Ownership / Pipelineの設計は2026-11-27 Decisionで更新）  
+**Update (2026-11-27):** Reference Count方式、固定Capacity、CPU AssetのBorrowとGPU ResourceのOwnは維持する。一方、Name + Cell DimensionsによるRegistry検索をAsset Pointer Identityへ変更し、Resource NameとChoco Stringへの依存を除去した。RegistryはAssetのFieldを参照しない。`font_pipeline`および`font_gpu_resource_destroy()`も実装済み。以下のName所有・寸法比較・Choco String検査・Pipeline未実装に関する本文は当時の履歴であり、現行IdentityとLifecycleの正本は2026-11-27「Font Asset Identityの解決とRuntime Resource管理を分離する」とする。  
+**Date:** 2026-11-26  
+**Scope:** Font Catalog / Font Registry / GPU Resource Ownership / Reference Rights / Validation Boundary
+
+### Decision
+
+Font GPU Resourceの管理には独自のCache Architectureを導入せず、既存のResource Registryと同様のReference Count方式を採用する。通常の`texture_registry`とは別に`font_registry`を設けるが、GPU Resourceの型は既存の`texture_gpu_resource_t`を再利用する。
+
+Font CatalogとFont Registryは異なる責務を持つ。`font_catalog`は実行期間全体で有効なStatic Assetを検索する。一方`font_registry`はRuntimeに登録されたFont GPU Resourceと、その利用権・Lifetimeを管理する。
+
+Registryの検索KeyはFont Name、Cell Width、Cell Heightの組み合わせとする。Cell DimensionsはFont Atlas AssetのFieldから取得し、Registry Entryに重複保持しない。Atlas全体のLogical DimensionsやPacked DimensionsをFont Sizeの識別に使用しない。
+
+```text
+Font Catalog
+    static Font Name / Cell Dimensions / Asset Getterの対応
+
+Font Registry Entry
+    owns     resource_name
+    borrows  const font_atlas_asset_t* atlas_asset
+    owns     texture_gpu_resource_t* gpu_resource
+    manages  reference_count
+```
+
+Registryは生成済みGPU Resourceを受け取り、Register成功時にOwnershipを移転する。最初の利用権をRegisterで成立させ、登録済みResourceの再利用にはAcquireを使用する。Releaseで利用権を返却し、最後の利用権が失われた時点でGPU ResourceとRegistry所有のNameを破棄してEntryをEmpty Stateへ戻す。CPU Asset自体は破棄しない。
+
+Registry本体・Entry配列は既存Registryと同じSubsystem Allocatorによる固定Capacityの構造を使用する。GPU Resourceの生成とCatalog検索はRegistryの責務に含めない。後続のStatelessな`font_pipeline`でCatalog、GPU Resource生成、Registryを接続する方針とするが、具体的なPipeline APIや上位Ownerへの統合は未実装である。
+
+### Context
+
+2026-11-25のText Slice独立化のDecisionでは、Font GPU Textureを通常Texture Registryから分離し、仮称`font_texture_cache`によって管理することを想定していた。静的CPU AssetにはRuntimeの参照カウントやAllocation管理が不要であるが、GPU TextureはRuntimeに生成・破棄されるため、複数のTextから共有する場合にはLifetime管理が必要となる。
+
+実装を具体化すると、必要な機能はIdentityによる検索、登録、利用権取得、利用権解放、ResourceのBorrowであり、既存Registryが担当する責務と一致した。CPU側をOwnせずBorrowする点は異なるものの、それだけのために別のCache管理方式を導入する必要はないと判断した。
+
+Registry EntryへCell Width / Heightを独立Fieldとして保持する案も検討した。しかしStatic Assetに同じ情報が存在し、不変のFieldを参照できるため、重複保持を行わない構造とした。
+
+### Validation Boundary — Registryの契約とFontの契約を分離する
+
+Font RegistryのCanonical InvariantはRegistry自身の管理責務を対象とする。Empty / Registered State、Reference Count、Name、Borrowed Asset Pointer、Owned GPU Resource等の管理関係を検査する。
+
+Cell DimensionsはRegistryでは検索Keyとして比較するだけであり、配列Index、Allocation Size、Glyph配置等の計算には使用しない。このためCell Width / Heightの正値条件をRegistry固有のPreconditionやCanonical Invariantには含めない。
+
+- `exists`は一致するEntryが存在しない場合、通常の検索結果として`SUCCESS`と`false`を返す。
+- `acquire`は一致するEntryが存在しない場合、Registry Stateを変更せず`BAD_OPERATION`を返す。
+- `register`でもCell Dimensionsの値域だけを理由に拒否しない。例えば負数のCell Widthを持つAssetが渡されたとしても、Registryの検索・登録・Reference Count管理・Releaseは成立する。
+
+これは負数やゼロのCell DimensionsをFontとして有効と定義するものではない。Fontとしての寸法のValidityは、Glyph配置、Vertex生成等で実際にそのSemanticをConsumeするModuleが、Operationに必要な契約に従って扱う。Static Assetの生成契約も維持する。
+
+RegistryがBorrowするAssetは登録期間中に有効で、検索Keyに用いるFieldを含め不変であることをCallerの契約とする。また、登録するGPU Resourceが当該Font Atlas Assetから生成されたものであるという対応関係もCaller側で成立させる。RegistryはPixel Dataの内容やGPU Storageの由来を再認証しない。後続Pipelineでは正しいAssetからGPU Resourceを生成して登録する経路を構成する。
+
+### Validation Boundary — GPU ResourceのAllocation方式を隠蔽する
+
+`texture_gpu_resource_t`はOpaque Resourceである。Font Registryが必要とするのはGPU ResourceのValidityとOwnership Transfer / Destroy契約であり、そのObjectをGeneral Allocatorから確保したという実装詳細ではない。
+
+そのため、Font RegistryのEntry ValidatorからGPU Resourceに対する`general_allocator_ptr_is_allocated()`を除去し、`texture_gpu_resource_is_valid()`へ委譲する。GPU ResourceのAllocation方式を変更した場合に、その変更がRegistryへ波及する構造を避けるためである。
+
+この判断はAllocation Validityの診断自体を不要とするものではない。Resource自身が保証すべき診断と、Registryが必要とする契約を分離する。現時点のGPU Resource Validatorが提供する検査範囲を超えるAllocation Livenessの保証が、委譲によって自動的に得られるわけではない。
+
+Choco StringについてはContainer Layerとの現行の関係を踏まえ、Registry側の`general_allocator_ptr_is_allocated()`を当面維持した。すべてのOpaque Typeに対するAllocation検査を一律に廃止するProject-wide Policyを決定したわけではない。共通のValidation実行規則は`validation_policy.md`に従う。
+
+### Rationale
+
+- Font専用の新しいLifetime管理方式を追加せず、既存Registryの操作・Ownership契約を利用できる。
+- 静的AssetのLifetimeとRuntime GPU ResourceのLifetimeを独立して扱える。
+- 同一Fontを複数Consumerが使用する間、同じGPU Resourceを共有できる。
+- EntryにCell Dimensionsを重複保持しないため、対応するField間Invariantを追加せずに済む。
+- Registry固有の管理契約と、Fontとしての描画契約を区別できる。
+- Opaque GPU Resourceの内部Allocation方式をRegistryへ漏らさずに済む。
+
+### Considered Alternatives
+
+- **独自Font Texture Cacheを実装する。** 現時点で必要なResource管理機能は既存RegistryのPatternで表現できるため採用しない。
+- **通常Texture Registryをそのまま利用する。** CPU Texture ResourceをOwnする通常Textureの契約と、静的Font AssetをBorrowする契約が異なるため採用しない。
+- **静的Font Atlas自体をReference Count管理する。** CPU AssetはStatic Lifetimeであり不要なため採用しない。
+- **Cell DimensionsをEntryへCopyする。** 不変Assetの同じFieldを重複保持する必要がないため採用しない。
+- **Fontとしての寸法の妥当性をRegistryでも検査する。** 検索Keyの比較とResource管理には正値条件を必要とせず、ConsumeするOperationの契約と分離する方針とした。
+- **RegistryからGPU ResourceのAllocation方式を直接検査する。** Opaque Resourceの実装詳細に依存するため採用しない。
+
+### Consequences
+
+- Font Registryは既存RegistryのResult Domainを使用し、NameとGPU Resourceの所有、AssetのBorrow、Reference Rightの管理を担当する。
+- Font Catalogは静的検索機能のまま維持する。Catalogに存在することとGPU Resourceが登録されていることは別の状態となる。
+- Font GPU Resourceの長寿命OwnershipはRegistryに置く。Text Sliceへの統合時にはRegistryのDeinitializeをBackend ContextのLifetime内で完了させる。
+- RegistryにはGPU Resource生成やCatalog検索を持ち込まず、Pipelineへ接続責務を置く。
+- Font Registryは実装済みだが、Pipeline、Text Shader、Text Sliceの統合、およびGPUを用いたRuntime Verificationは後続Workで扱う。
+
+### Revisit Conditions
+
+- Runtime Font Replacement等によってCPU AssetのStatic Lifetime / Immutability契約が成立しなくなった場合。
+- GPU ResourceをReference Countが0になっても保持するResidency / Eviction Policyが具体的に必要になった場合。
+- 複数Text Sliceや別System間での共有が、現在のRegistry Ownershipでは成立しない場合。
+- GPU ResourceのAllocation診断を含む共通Validation Architectureを再構成する場合。
+
+### Related Decisions / Documents
+
+- 2026-09-12「Resource Pipelineはstateless orchestrationとして維持する」
+- 2026-11-25「固定幅Bitmap FontをOfflineでC Asset化し、静的Catalogから参照する」
+- 2026-11-25「UI Text Meshを独立Vertical Sliceとし、Font GPU Textureを専用管理する」
+- `validation_policy.md`
+- `font_text_rendering_spec.md`
+- `glce_font_text_rendering_workplan.md`
+
+---
+
+## Decision: Resource DomainをSystemsから独立させる
+
+**Status:** Accepted / Implementation Deferred（方向性のみ確定。具体的な配置・Ownership再編は未確定）  
+**Date:** 2026-11-26  
+**Scope:** Engine Architecture / Resource Domain / Renderer Boundary / Directory Structure / Deferred Refactoring
+
+### Decision
+
+現在`engine/systems/renderer/resources/`配下に集約しているResource Domainについて、将来はSystemsから独立したResource Domainへ再構成する方向を採用する。想定する独立領域は`engine/resources/`とする。
+
+ただし、現行`resources/`以下の全Moduleを機械的に移動することを決定したものではない。CPU Resource、Asset Loader、GPU Resource、Shader、Registry、Pipeline、Buffer Manager等について、実際のSemantic OwnershipとDependencyに従い具体的な配置を検討する。Renderer Backendおよび描画実行に固有の責務はRenderer側に閉じることを基本とする。
+
+Text Renderingの実装中にこの再編を始めると作業Scopeが大きく拡張するため、現在の配置を維持してText Renderingを完成させた後に着手する。
+
+### Context
+
+2026-10-15には、CPU Resource、GPU Resource、Registry、Pipeline等の配置が複数の領域に分散していたため、Renderer用途のResourceをRenderer Domainへ統合した。この統合は当時のResource LifecycleやDependencyを理解しやすくするために有効であり、実装も完了している。
+
+その後、Mesh Slice、Material、TextureおよびResource管理機能の実装が進み、Renderer自体の描画実行責務と、Rendererが利用するResourceの表現・生成・管理の責務を改めて区別できるようになった。Text Renderingの開発過程でもCPU Pixel LayoutとGPU Storage Formatを分離し、静的Font AssetとGPU Resourceの異なるLifetimeを表現するようにした。
+
+また、Renderer DomainのSource規模が拡大していることを契機として、各Moduleの責務とDirectory配置を見直した。CPU Geometry、CPU Texture、Asset Loader等は必ずしもRendererだけをConsumerとするものではなく、将来的にはCollision / Physics等からの利用も考えられる。
+
+このため、ResourceをすべてRendererの内部概念とする構造を恒久的な方針とはせず、Systemsとは別のDomainとして表現する方向へ変更した。Source規模だけを理由とする分割ではなく、Resourceの責務とConsumerの関係をDirectory Architectureへ反映するための判断である。
+
+```text
+現行:
+engine/
+├── memory/
+├── containers/
+└── systems/
+    └── renderer/
+        ├── renderer_backend/
+        ├── renderer_frontend/
+        └── resources/
+
+将来の方向性（概念図）:
+engine/
+├── memory/
+├── containers/
+├── resources/       # Systemsから独立するResource Domain
+└── systems/
+    └── renderer/    # 描画実行とRenderer固有の責務
+```
+
+### Rationale
+
+- Resourceの表現・生成・管理と、Resourceを利用するSystemの責務を区別できる。
+- Renderer以外のSystemが同一Resource表現を利用する場合の不自然なRenderer依存を避ける方向で設計できる。
+- CPU / GPU Resourceの分離やSemantic Ownerの整理を、今後のDomain再編へ接続できる。
+- 現行Text Renderingの実装を大規模なDirectory再編から分離できる。
+
+### Considered Alternatives
+
+- **Resource群を恒久的にRenderer配下へ維持する。** 現時点の主ConsumerはRendererであるが、Resource自身の責務が必ずしもRenderer固有ではないため、恒久的な配置方針とはしない。
+- **直ちに現在のResource群をすべてSystems外へ移動する。** Text Renderingの作業Scopeを広げ、GPU依存やOwnershipの問題を配置変更だけでは解消できないため、今回は実施しない。
+- **Directory移動と同時に共有RegistryやResource Serviceの最終構造を確定する。** 配置・共有Identity・Lifetime Ownerは独立して判断すべきであり、現在のDecisionだけでは確定しない。
+
+### Consequences
+
+- Text Rendering完了までは現行のResource配置とVertical Sliceを維持する。
+- 後続の再編ではResource DomainとRendererのDependency方向、CPU / GPU Resourceの責務、PipelineおよびRegistryの配置とOwnershipを検討する。
+- Renderer BackendはApplicationから隠蔽する方針を維持し、Applicationが利用する型をBackendへ移すことで新たな依存を作らない。
+- Registryインスタンスの共有、Resource Serviceの具体構造、GPU Resource / Shader等の最終的な配置、Renderer Frontend Configの再編は未確定とする。
+- 2026-10-15のRange AllocatorのMemory Domainへの移動、旧Resource Core廃止、Result Domain再編を取り消すものではない。
+
+### Revisit Conditions
+
+- Text Rendering完了後、実際のResource利用経路が揃った段階で具体的な移行計画を策定する。
+- Collision / Physics等のConsumerが必要とするResource表現・共有契約が具体化した場合。
+- Backend依存を持つResourceとSystems非依存のResourceとの境界が明確になった場合。
+
+### Related Decisions / Documents
+
+- 2026-10-15「Renderer専用ResourceをRenderer Domainへ統合し、Range AllocatorをMemory Domainへ移動する」
+- 2026-10-15「Renderer Resource Directory Consolidationの実装完了とResource Core廃止に伴うResult Domain再編」
+- 2026-11-24「Renderer Resource Ownershipの再構成は描画Resource群の実装後に再評価する」
+- 2026-11-26「TextureのCPU側Pixel RepresentationとGPU側Storage Formatを分離する」
+- `design_notes.md`
+- `glce_near_term_todo.md`
+- `glce_font_text_rendering_workplan.md`
+---
+
+## Decision: Font Asset Identityの解決とRuntime Resource管理を分離する
+
+**Status:** Accepted / Implemented（Font Registry / GPU Resource Lifecycle / Pipeline実装済み。Renderer Frontend統合およびRuntime Verificationは未完了）  
+**Date:** 2026-11-27  
+**Scope:** Font Catalog / Asset Identity / Resource Registry / Resource Pipeline / GPU Resource Lifecycle / Dependency  
+**Updates:** 2026-11-26「Font GPU Resourceの管理には既存Registry Architectureを適用する」
+
+### Decision
+
+Font Name、Cell Width、Cell HeightによるAssetの選択はFont Catalogの責務とする。Font RegistryおよびFont Pipelineは、解決済みの`const font_atlas_asset_t*`を受け取る。
+
+Font Registry内でのResource Identityは、Font Atlas AssetのPointer Identityとする。AssetのFieldやPixel Dataの内容を比較するのではなく、同一Asset ObjectへのPointerであるかによって既存GPU Resourceの再利用を判断する。
+
+```text
+Font Catalog
+    Font Name + Cell Width + Cell Height
+        ↓ Asset Identityの解決
+    const font_atlas_asset_t*
+
+Font Pipeline
+    resolved Asset + Backend Context + Registry + Texture Unit
+        ↓ Resource Operation Orchestration
+    Font GPU Resource / Font Registry
+        ↓
+    Font ID
+```
+
+Font Catalogは標準Font Assetの検索機能であり、Pipelineが利用できるAssetの供給元をCatalogに限定しない。ただし、現在の実装対象はOffline生成済みの静的Font Assetであり、Runtime Font Loaderや外部Fontの公開APIを今回追加するものではない。
+
+Registry Entryは以下の関係を保持する。
+
+```text
+Font Registry Entry
+    borrows  const font_atlas_asset_t* atlas_asset
+    owns     texture_gpu_resource_t* gpu_resource
+    manages  reference_count
+```
+
+Resource NameおよびCell DimensionsはRegistry Entryへ保持しない。`exists` / `acquire` / `register`のすべてで同じAsset PointerをIdentityとして使用する。Reference Count、固定Capacity、GPU ResourceのOwnership Transfer、Font IDによるBorrow / Releaseという前Decisionの管理方式は維持する。
+
+### Context — Registryの検索Keyと登録Keyの非対称性
+
+当初のRegistryでは、Font NameとCell Dimensionsの組み合わせを検索Keyとして使用し、EntryにはResource Name、Asset Pointer、GPU Resource、Reference Countを保持していた。Cell Dimensionsは静的AssetのFieldから取得できるため、重複保持しない設計とした。
+
+しかしこの構造では、`exists` / `acquire`へ渡すCell DimensionsはCallerが指定する一方、`register`で成立するIdentityのCell DimensionsはAssetから決まる。検索に使用する寸法と実際に登録するAssetの寸法とが一致しない組み合わせをAPI上表現できる。
+
+最初に、`exists` / `acquire`にもAssetを渡してCell Dimensionsの供給元を統一する案を検討した。さらに、CatalogがすでにNameとCell Dimensionsから一意の静的Assetを取得する役割を持つことに着目し、RegistryでNameやDimensionsを再解釈する必要そのものを見直した。
+
+現在のGenerated Asset Getterは同じ静的ObjectへのPointerを返す。このためCatalogで解決済みのPointerをそのままRegistry内のIdentityとして使用できる。文字列比較、Name用Storage、寸法の比較、NameとAssetの対応関係をRegistryで管理する必要がなくなる。
+
+この変更は単なる検索処理の最適化ではなく、**Assetの選択とRuntime Resourceの管理を異なる責務として扱うための設計変更**である。
+
+### Font Pipelineの入力と責務
+
+Pipelineの入口をFont Name + Cell Dimensionsとする案も検討した。しかし、この方式ではPipelineがFont Catalogという特定のAsset供給元へ依存することになる。
+
+Font Pipelineの責務は指定されたFont Atlas Assetに対応するGPU Resourceを取得可能にすることであり、どのFontを選択するかを決めることではない。そのため`font_pipeline_import()`は解決済みAssetを直接受け取る。
+
+Importでは、登録済みAssetに対してAcquireを行い、未登録Assetに対してはGPU Resource生成とRegisterを行う。登録成功時にGPU ResourceのOwnershipをRegistryへ移転する。登録前のRecoverable FailureではPipelineが一時所有するGPU Resourceを破棄し、`DATA_CORRUPTED`確定時は既存のFail-stop Policyに従う。ReleaseはRegistryへ委譲する。Pipelineは長寿命Stateを所有しない。
+
+これによりCatalog検索はPipelineの前段で独立して実行できる。将来的に別の供給元が同じAsset表現とLifetime契約を満たす場合、Pipelineを変更せずに利用できる。Application向けAPIがName / Dimensionsを受け取るか、Assetを直接受け取るか、または両方を提供するかはRenderer Frontend統合時に決定する。
+
+### GPU ResourceのLifecycleをfont_gpu_resourceへ集約する
+
+当初、Font用GPU Resourceの生成には`font_gpu_resource_create()`を使用する一方、その破棄にはCallerが直接`texture_gpu_resource_destroy()`を使用していた。
+
+GPU Resourceの実体型は`texture_gpu_resource_t`であるため、この構造でも破棄は可能である。しかし生成側のSemantic APIと破棄側のMechanism APIが異なり、PipelineやRegistryがFont Resourceの破棄方法を知る必要があった。
+
+そのため`font_gpu_resource_destroy()`を追加し、Font用GPU ResourceのCreate / Destroyを同じModuleへ集約する。現在のDestroyは下位のTexture GPU Resource Destroyへ委譲するだけであり、独自のStateやAllocationを追加しない。PipelineのFailure CleanupとRegistryのEntry Deinitializeの双方で、このLifecycle APIを使用する。
+
+独立した`font_gpu_resource_t`は設けない。Font固有のGPU Stateが存在しない現段階では既存型の再利用を維持する。独立した`font_gpu_resource_is_valid()`も設けず、Registryでは既存の`texture_gpu_resource_is_valid()`を利用する。Lifecycleの対称性を確保することと、GPU Resourceの実体型まで隠蔽することは別の判断として扱う。
+
+### Ownership / Identity / Validation Boundary
+
+- Asset ObjectとPixel DataはBorrowされる。少なくともRegistryに登録されている期間中、有効で不変であることをCaller側の契約とする。現在の静的Generated AssetではこのLifetimeを実行期間全体で満たす。
+- Pointer IdentityはObject Identityであり、内容の等価性ではない。同一のPixel DataやMetadataを持つ別Objectは別Identityとして扱う。
+- RegistryはAssetのFieldをDereferenceせず、Font Name、Cell Dimensions、Glyph LayoutのSemantic Validationを担当しない。各Semanticを直接ConsumeするModuleが必要な契約に従って検査する。
+- RegistryはEmpty / Registered State、Reference Count、Borrowed Asset Pointerの存在、Owned GPU ResourceのValidity等、自身の管理契約を検査する。GPU ResourceのAllocation方式への直接依存を除去する前Decisionは維持する。Choco String自体が不要になったため、その所有・Allocation検査もRegistryから除去する。
+- 登録するGPU Resourceが指定されたAssetから生成されたものであることは、Registryへ渡す側の契約とする。Pipelineは同じAsset PointerをGPU生成とRegisterへ渡すことによってこの対応関係を成立させる。
+- 同一Registryを利用する際のBackend Contextの整合、およびTexture Unitの利用方針は上位Ownerで保証する。登録済みAssetのAcquireでは既存GPU Resourceが再利用され、新たなTexture Unitを指定して再生成することはない。これらの値を新たなRegistry Keyとすることは要求しない。
+
+### Rationale
+
+- Assetの選択に使用するName / Dimensionsと、Runtime GPU Resourceを識別するObject Identityを分離できる。
+- 検索と登録のIdentity表現を統一し、検索時と登録時の寸法が異なる状態を作らずに済む。
+- RegistryのName用Allocation、文字列比較、Name / Asset間の対応管理を除去できる。
+- Pipelineを特定のAsset供給元から独立させ、追加のAbstractionなしで解決済みAssetを利用できる。
+- Create / Destroyの対称性によりFont GPU ResourceのLifecycle変更を対応Moduleへ局所化できる。
+- 独立したGPU Resource型を先行導入せず、既存のTexture ResourceのMechanismを再利用できる。
+- Resource、Registry、Pipelineの責務分離がInclude Dependencyにも反映される。PipelineはCatalog、CPU Texture表現、GPU Format Config、General Allocator等を直接必要としない。RegistryもChoco StringやAssetの完全型を必要としない。不要Includeの整理はこの責務分離の結果であり、Include数を減らすこと自体を設計目的とはしない。
+
+### Considered Alternatives
+
+- **Name + Cell DimensionsをRegistry Keyとして維持する。** Catalogがすでに解決したIdentityを再び表現し、検索と登録で寸法の供給元が異なるため採用しない。
+- **Assetを受け取り、そのDimensionsと別途渡されたNameを比較する。** 寸法供給元の非対称性は解消するが、Nameの管理とAsset内容への依存が残るため採用しない。
+- **Asset内容の比較やHashによるDeduplicationを行う。** 現在の静的AssetではObject Identityで共有できるため不要である。
+- **PipelineでCatalog検索を行う。** 特定のAsset供給元への依存が生じるため、検索を前段へ分離する。
+- **Font GPU Resourceの破棄をCallerからTexture GPU Resource APIへ直接委譲する。** Lifecycle APIの抽象化レベルが非対称になるため変更する。
+- **独立したFont GPU Resource ObjectとValidatorを導入する。** 現在は独自Stateがなく、既存型の再利用で成立するため導入しない。
+
+### Consequences
+
+- Font Catalog、Font GPU Resource、Font Registry、Font PipelineのModule実装は揃った。
+- 前DecisionのName所有、Name / Dimensions検索、Choco String検査、およびPipeline未実装という記述は2026-11-26時点の履歴となる。Reference Count方式とCPU Asset Borrow / GPU Resource Ownの判断は維持する。
+- Font Resourceの上位Ownerへの統合、Backend Context / Texture Unitの具体的な運用、Text Shader / Geometry / Draw経路は後続Workで扱う。
+- GPUを用いたImport / Acquire / Release / 再ImportのRuntime Verificationは未完了であり、Module実装完了と統合検証完了を区別する。
+
+### Revisit Conditions
+
+- Runtime Font Loading / Hot Reload等によってAsset Objectの安定したIdentityまたは不変性・Lifetimeを維持できなくなった場合。
+- 同一AssetについてBackend Context、Texture Unit、GPU Storage Configの異なるGPU Resourceを同一Registry内で管理する具体的な要求が生じた場合。
+- Font固有のGPU Stateが必要となり、独立した`font_gpu_resource_t`の導入に実際の価値が生じた場合。
+- Resource Domain再編によりCatalog、Registry、Pipelineの配置・Ownership・公開範囲を変更する場合。
+
+### Related Decisions / Documents
+
+- 2026-09-12「Resource Pipelineはstateless orchestrationとして維持する」
+- 2026-11-25「固定幅Bitmap FontをOfflineでC Asset化し、静的Catalogから参照する」
+- 2026-11-26「Font GPU Resourceの管理には既存Registry Architectureを適用する」
+- `font_text_rendering_spec.md`
+- `glce_font_text_rendering_workplan.md`
+

@@ -154,6 +154,7 @@ renderer_backend_result_t renderer_backend_vao_unbind(const renderer_backend_con
  * - RENDERER_TYPE_FLOAT
  * - RENDERER_TYPE_UNSIGNED_BYTE
  * - RENDERER_TYPE_BYTE
+ * - RENDERER_TYPE_UNSIGNED_SHORT
  *
  * layout_、size_、stride_、offset_については、
  * GL33 Concrete側で個別の値域検証を行わない。

@@ -44,6 +44,34 @@ bool is_equal_double(double a_, double b_) {
     }
 }
 
+vec2i16_t vec2i16_initialize(int16_t x_, int16_t y_) {
+    vec2i16_t ret = { 0 };
+    ret.elem[0] = x_;
+    ret.elem[1] = y_;
+    return ret;
+}
+
+vec2i16_t vec2i16_add(vec2i16_t a_, vec2i16_t b_) {
+    vec2i16_t ret = { 0 };
+    ret.elem[0] = a_.elem[0] + b_.elem[0];
+    ret.elem[1] = a_.elem[1] + b_.elem[1];
+    return ret;
+}
+
+vec2u16_t vec2u16_initialize(uint16_t x_, uint16_t y_) {
+    vec2u16_t ret = { 0 };
+    ret.elem[0] = x_;
+    ret.elem[1] = y_;
+    return ret;
+}
+
+vec2u16_t vec2u16_add(vec2u16_t a_, vec2u16_t b_) {
+    vec2u16_t ret = { 0 };
+    ret.elem[0] = a_.elem[0] + b_.elem[0];
+    ret.elem[1] = a_.elem[1] + b_.elem[1];
+    return ret;
+}
+
 vec2f_t vec2f_initialize(float x_, float y_) {
     vec2f_t ret = { 0.0f };
 

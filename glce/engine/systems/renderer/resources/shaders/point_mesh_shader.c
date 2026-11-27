@@ -320,6 +320,9 @@ bool point_mesh_shader_is_valid(const renderer_backend_context_t* backend_contex
     if(NULL == backend_context_ || NULL == shader_) {
         return false;
     }
+    if(!general_allocator_ptr_is_allocated(shader_)) {
+        return false;
+    }
     if(NULL == shader_->shader || NULL == shader_->vao) {
         return false;
     }

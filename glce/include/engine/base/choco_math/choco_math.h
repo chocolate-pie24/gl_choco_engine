@@ -45,6 +45,14 @@ bool is_equal_float(float a_, float b_);
 
 bool is_equal_double(double a_, double b_);
 
+vec2i16_t vec2i16_initialize(int16_t x_, int16_t y_);
+
+vec2i16_t vec2i16_add(vec2i16_t a_, vec2i16_t b_);
+
+vec2u16_t vec2u16_initialize(uint16_t x_, uint16_t y_);
+
+vec2u16_t vec2u16_add(vec2u16_t a_, vec2u16_t b_);
+
 /**
  * @brief 2次元ベクトルxyを初期化する
  *

@@ -257,6 +257,9 @@ static renderer_backend_result_t gl33_vao_attribute_set(uint32_t layout_, int32_
     case RENDERER_TYPE_BYTE:
         mock_glVertexAttribPointer(layout_, size_, GL_BYTE, normalized_ ? GL_TRUE : GL_FALSE, (GLsizei)stride_, (void*)offset_);
         break;
+    case RENDERER_TYPE_UNSIGNED_SHORT:
+        mock_glVertexAttribPointer(layout_, size_, GL_UNSIGNED_SHORT, normalized_ ? GL_TRUE : GL_FALSE, (GLsizei)stride_, (void*)offset_);
+        break;
     default:
         ret = RENDERER_BACKEND_RUNTIME_ERROR;
         goto cleanup;

@@ -23,6 +23,14 @@ extern "C" {
 #define CHOCO_DEG_TO_RAD(deg_) (((deg_) / 360.0f) * 2.0f * CHOCO_PI)        /**< degree -> radian */
 #define CHOCO_RAD_TO_DEG(rad_) (((rad_) / 2.0f / CHOCO_PI) * 360.0f)        /**< radian -> degree */
 
+typedef struct vec2i16 {
+    int16_t elem[2];
+} vec2i16_t;
+
+typedef struct vec2u16 {
+    uint16_t elem[2];
+} vec2u16_t;
+
 /**
  * @brief float型2次元ベクトル定義
  *

@@ -31,6 +31,11 @@ typedef struct ui_vertex {
     vec2f_t tex_coord;  /**< テクスチャUV座標 */
 } ui_vertex_t;
 
+typedef struct ui_text_vertex {
+    vec2f_t position;   /**< 頂点座標 */
+    vec2u16_t tex_coord;  /**< テクスチャUV座標(font atlasのpixel座標) */
+} ui_text_vertex_t;
+
 /**
  * @brief 線分描画用頂点情報構造体
  *
